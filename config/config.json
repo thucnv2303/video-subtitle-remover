@@ -1,0 +1,41 @@
+{
+    "Main": {
+        "CheckUpdateOnStartup": true,
+        "HardwareAcceleration": true,
+        "InpaintMode": "sttn-auto",
+        "SaveDirectory": "",
+        "SubtitleAreaDeviationPixel": 15,
+        "SubtitleAreaPixelToleranceXPixel": 20,
+        "SubtitleAreaPixelToleranceYPixel": 20,
+        "SubtitleAreaYAxisDifferencePixel": 30,
+        "SubtitleDetectMode": "PP_OCRv5_SERVER",
+        "SubtitleSelectionAreas": "0.88,0.99,0.15,0.85",
+        "SubtitleTimelineBackwardFrameCount": 3,
+        "subtitleTimelineForwardFrameCount": 3,
+        "SubtitleYXAxisDifferencePixel": 10
+    },
+    "QFluentWidgets": {
+        "FontFamilies": [
+            "Segoe UI",
+            "Microsoft YaHei",
+            "PingFang SC"
+        ],
+        "ThemeColor": "#ff009faa",
+        "ThemeMode": "Light"
+    },
+    "Window": {
+        "Interface": "ch",
+        "Height": 1200,
+        "Width": 1200,
+        "X": null,
+        "Y": null
+    },
+    "ProPainter": {
+        "MaxLoadNum": 70
+    },
+    "Sttn": {
+        "MaxLoadNum": 50,
+        "NeighborStride": 5,
+        "ReferenceLength": 10
+    }
+}

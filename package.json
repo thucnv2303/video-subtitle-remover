@@ -1,0 +1,19 @@
+{
+  "name": "video-subtitle-remover",
+  "version": "1.0.0",
+  "description": "AI-powered Video Subtitle Remover",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  }
+}
