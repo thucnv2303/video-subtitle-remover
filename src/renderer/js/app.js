@@ -245,9 +245,19 @@
   }
   window.addLog = addLog;
 
-  el.btnClearLog.addEventListener('click', () => { el.logOutput.innerHTML = ''; });
-  el.btnCopyLog.addEventListener('click', () => {
-    navigator.clipboard.writeText(el.logOutput.innerText).then(() => showToast('Đã sao chép!', 'success'));
+  window.addEventListener('error', (e) => {
+    console.error('Global Error:', e);
+    addLog(`[UI Error] ${e.message}`, 'error');
+  });
+
+  window.addEventListener('unhandledrejection', (e) => {
+    console.error('Unhandled Rejection:', e.reason);
+    addLog(`[UI Async Error] ${e.reason?.message || e.reason}`, 'error');
+  });
+
+  el.btnClearLog?.addEventListener('click', () => { if (el.logOutput) el.logOutput.innerHTML = ''; });
+  el.btnCopyLog?.addEventListener('click', () => {
+    if (el.logOutput) navigator.clipboard.writeText(el.logOutput.innerText).then(() => showToast('Đã sao chép!', 'success'));
   });
 
   // ─── Backend Connection ──────────────────────────

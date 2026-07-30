@@ -2,6 +2,10 @@ const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const { PythonBridge } = require('./python-bridge');
 
+// Prevent Windows cache lock errors (Access is Denied 0x5 / Gpu Cache Creation failed)
+app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
+app.commandLine.appendSwitch('disable-http-cache');
+
 let mainWindow;
 const pythonBridge = new PythonBridge({ appRoot: path.join(__dirname, '..', '..') });
 
@@ -73,21 +77,35 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(async () => {
-  createWindow();
+const gotTheLock = app.requestSingleInstanceLock();
 
-  // Start python backend - don't block window creation
-  pythonBridge.start().then(() => {
-    console.log(`Python backend started on port ${pythonBridge.getPort()}`);
-  }).catch((err) => {
-    console.error('Failed to start Python backend:', err.message);
-    console.log('You can start it manually: python api/server.py');
+if (!gotTheLock) {
+  console.log('Another instance of Video Subtitle Remover is already running. Quitting duplicate instance.');
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
   });
 
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  app.whenReady().then(async () => {
+    createWindow();
+
+    // Start python backend - don't block window creation
+    pythonBridge.start().then(() => {
+      console.log(`Python backend started on port ${pythonBridge.getPort()}`);
+    }).catch((err) => {
+      console.error('Failed to start Python backend:', err.message);
+      console.log('You can start it manually: python api/server.py');
+    });
+
+    app.on('activate', function () {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
   });
-});
+}
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
