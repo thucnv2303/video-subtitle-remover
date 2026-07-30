@@ -192,7 +192,12 @@
     const chkVS = el.chkVoiceSub;
     if (chkVS) chkVS.checked = job.voiceSub || false;
     // Toggle content panels
-    toggleContentPanels(job);
+    if (job) {
+      $('#card-srt')?.classList.toggle('active', job.extractSrt);
+      $('#card-ai')?.classList.toggle('active', job.aiRewrite);
+      $('#card-voice')?.classList.toggle('active', job.ttsGenerate);
+      $('#card-voicesub')?.classList.toggle('active', job.voiceSub);
+    }
     // Load content into panels
     if (el.srtContent) el.srtContent.value = job.srtContent || '';
     if (el.aiContent) el.aiContent.value = job.aiContent || '';
@@ -751,48 +756,40 @@
     });
   }
 
-  // ─── Content Panel Toggle ────────────────────────
-  function toggleContentPanels(job) {
-    if (!job) {
-      el.panelSrt?.classList.add('hidden');
-      el.panelAi?.classList.add('hidden');
-      el.panelVoice?.classList.add('hidden');
-      return;
-    }
-    el.panelSrt?.classList.toggle('hidden', !job.extractSrt);
-    el.panelAi?.classList.toggle('hidden', !job.aiRewrite);
-    el.panelVoice?.classList.toggle('hidden', !(job.ttsGenerate));
-    el.panelVoiceSub?.classList.toggle('hidden', !(job.voiceSub));
-  }
-
-  // Checkbox change → toggle panels
-  ['chk-extract-srt', 'chk-ai-rewrite'].forEach(id => {
-    const chk = $(`#${id}`);
-    if (chk) chk.addEventListener('change', () => {
-      const job = getActiveJob();
-      if (job) { saveControlsToJob(); toggleContentPanels(job); }
+  // ─── Job Cards (Accordion) Logic ─────────────────
+  document.querySelectorAll('.job-card-header').forEach(header => {
+    header.addEventListener('click', (e) => {
+      // Don't toggle accordion if they clicked the checkbox directly
+      if (e.target.tagName.toLowerCase() === 'input') return;
+      const card = header.closest('.job-card');
+      card.classList.toggle('active');
     });
   });
-  if (el.chkTtsGenerate) {
-    el.chkTtsGenerate.addEventListener('change', () => {
-      const job = getActiveJob();
-      if (job) { job.ttsGenerate = el.chkTtsGenerate.checked; toggleContentPanels(job); }
-    });
-  }
-  if (el.chkVoiceSub) {
-    el.chkVoiceSub.addEventListener('change', () => {
-      const job = getActiveJob();
-      if (job) {
-        job.voiceSub = el.chkVoiceSub.checked;
-        // Auto-populate voice sub content from AI content or SRT
-        if (job.voiceSub && !job.voiceSubContent) {
-          job.voiceSubContent = job.aiContent || job.srtContent || '';
-          if (el.voicesubContent) el.voicesubContent.value = job.voiceSubContent;
+
+  // Sync checkboxes with Job state
+  ['chk-extract-srt', 'chk-ai-rewrite', 'chk-tts-generate', 'chk-voice-sub'].forEach(id => {
+    const chk = $(`#${id}`);
+    if (chk) {
+      chk.addEventListener('change', () => {
+        const job = getActiveJob();
+        if (job) {
+          if (id === 'chk-extract-srt') job.extractSrt = chk.checked;
+          if (id === 'chk-ai-rewrite') job.aiRewrite = chk.checked;
+          if (id === 'chk-tts-generate') job.ttsGenerate = chk.checked;
+          if (id === 'chk-voice-sub') {
+            job.voiceSub = chk.checked;
+            if (job.voiceSub && !job.voiceSubContent) {
+              job.voiceSubContent = job.aiContent || job.srtContent || '';
+              const elSubContent = $('#voicesub-content');
+              if (elSubContent) elSubContent.value = job.voiceSubContent;
+            }
+          }
+          saveControlsToJob();
         }
-        toggleContentPanels(job);
-      }
-    });
-  }
+      });
+    }
+  });
+
 
   // ─── Voice Segments Renderer ─────────────────────
   function renderVoiceSegments(segments) {
@@ -946,6 +943,17 @@
       }
     });
   }
+
+  
+  const subModeSelect = document.getElementById('voicesub-mode');
+  const styleSettings = document.getElementById('sub-style-settings');
+  if (subModeSelect && styleSettings) {
+    subModeSelect.addEventListener('change', () => {
+      styleSettings.style.display = subModeSelect.value === 'hard' ? 'block' : 'none';
+    });
+    styleSettings.style.display = subModeSelect.value === 'hard' ? 'block' : 'none';
+  }
+
 
   // ─── Column Resize ──────────────────────────────
   function initColumnResize() {
@@ -1545,4 +1553,137 @@
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   }
 
+})();
+
+
+// ─── Prompt Manager ──────────────────────────────
+(function initPromptManager() {
+  const elBtnManage = document.getElementById('btn-manage-prompts');
+  const modal = document.getElementById('prompt-modal');
+  const btnClose = document.getElementById('btn-close-prompt-modal');
+  const select = document.getElementById('ai-prompt-select');
+  const list = document.getElementById('modal-prompt-list');
+  const inpName = document.getElementById('modal-prompt-name');
+  const inpContent = document.getElementById('modal-prompt-content');
+  const btnSave = document.getElementById('btn-save-prompt');
+  const btnDelete = document.getElementById('btn-delete-prompt');
+
+  const defaultPrompts = [
+    { id: 'p1', name: 'Dịch sang Tiếng Việt (Mặc định)', content: 'Bạn là chuyên gia dịch thuật phụ đề. Hãy dịch phụ đề sau sang Tiếng Việt thật tự nhiên. Giữ nguyên định dạng dòng.' }
+  ];
+
+  function getPrompts() {
+    try {
+      const p = JSON.parse(localStorage.getItem('ai_prompts'));
+      return p && p.length ? p : defaultPrompts;
+    } catch { return defaultPrompts; }
+  }
+
+  function savePrompts(p) {
+    localStorage.setItem('ai_prompts', JSON.stringify(p));
+  }
+
+  function renderDropdown() {
+    if (!select) return;
+    const prompts = getPrompts();
+    select.innerHTML = '';
+    prompts.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      select.appendChild(opt);
+    });
+    // restore selected
+    const activeId = localStorage.getItem('ai_active_prompt_id');
+    if (activeId && prompts.find(p => p.id === activeId)) {
+      select.value = activeId;
+    }
+  }
+
+  function renderList() {
+    if (!list) return;
+    const prompts = getPrompts();
+    list.innerHTML = '';
+    prompts.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      list.appendChild(opt);
+    });
+  }
+
+  if (elBtnManage) {
+    elBtnManage.addEventListener('click', () => {
+      renderList();
+      modal.classList.remove('hidden');
+    });
+  }
+
+  if (btnClose) {
+    btnClose.addEventListener('click', () => modal.classList.add('hidden'));
+  }
+
+  if (list) {
+    list.addEventListener('change', () => {
+      const prompts = getPrompts();
+      const p = prompts.find(x => x.id === list.value);
+      if (p) {
+        inpName.value = p.name;
+        inpContent.value = p.content;
+      }
+    });
+  }
+
+  if (btnSave) {
+    btnSave.addEventListener('click', () => {
+      const name = inpName.value.trim();
+      const content = inpContent.value.trim();
+      if (!name || !content) { showToast('Vui lòng nhập tên và nội dung', 'warn'); return; }
+      
+      const prompts = getPrompts();
+      const existingId = list.value;
+      if (existingId) {
+        const p = prompts.find(x => x.id === existingId);
+        if (p) { p.name = name; p.content = content; }
+      } else {
+        prompts.push({ id: 'p' + Date.now(), name, content });
+      }
+      savePrompts(prompts);
+      renderList();
+      renderDropdown();
+      showToast('Đã lưu prompt', 'success');
+      inpName.value = ''; inpContent.value = '';
+      list.value = '';
+    });
+  }
+
+  if (btnDelete) {
+    btnDelete.addEventListener('click', () => {
+      const existingId = list.value;
+      if (!existingId) return;
+      if (existingId === 'p1') { showToast('Không thể xóa prompt mặc định', 'error'); return; }
+      const prompts = getPrompts().filter(x => x.id !== existingId);
+      savePrompts(prompts);
+      renderList();
+      renderDropdown();
+      showToast('Đã xóa prompt', 'success');
+      inpName.value = ''; inpContent.value = '';
+    });
+  }
+
+  if (select) {
+    select.addEventListener('change', () => {
+      localStorage.setItem('ai_active_prompt_id', select.value);
+      const p = getPrompts().find(x => x.id === select.value);
+      if (p) localStorage.setItem('ai_prompt', p.content);
+    });
+  }
+
+  // init
+  renderDropdown();
+  if (!localStorage.getItem('ai_prompt')) {
+    localStorage.setItem('ai_prompt', defaultPrompts[0].content);
+    localStorage.setItem('ai_active_prompt_id', 'p1');
+    if (select) select.value = 'p1';
+  }
 })();

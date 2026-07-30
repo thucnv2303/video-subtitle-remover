@@ -96,74 +96,101 @@
 
             <div class="ctrl-divider"></div>
 
-            <div class="ctrl-section">
-              <label class="chk-label">
-                <input type="checkbox" id="chk-extract-srt" checked>
-                <span>Trích xuất SRT (OCR)</span>
-              </label>
-              <label class="chk-label">
-                <input type="checkbox" id="chk-ai-rewrite">
-                <span>AI Viết lại phụ đề</span>
-              </label>
-              <label class="chk-label">
-                <input type="checkbox" id="chk-tts-generate">
-                <span>🎤 Tạo Voice (OmniVoice)</span>
-              </label>
-              <label class="chk-label">
-                <input type="checkbox" id="chk-voice-sub">
-                <span>📝 Gán phụ đề từ Voice</span>
-              </label>
-            </div>
-
-            <!-- Collapsible: SRT Content -->
-            <div class="content-panel hidden" id="panel-srt">
-              <div class="content-panel-header">
-                <span>📝 Phụ đề trích xuất</span>
-              </div>
-              <textarea class="content-panel-body" id="srt-content" readonly placeholder="Nội dung SRT sẽ hiện sau khi xử lý..."></textarea>
-            </div>
-
-            <!-- Collapsible: AI Rewrite Content -->
-            <div class="content-panel hidden" id="panel-ai">
-              <div class="content-panel-header">
-                <span>🤖 Phụ đề AI viết lại</span>
-                <div class="content-panel-actions">
-                  <button class="btn btn-xs btn-ghost" id="btn-ai-regenerate" title="Tạo lại">🔄</button>
-                  <button class="btn btn-xs btn-ghost" id="btn-ai-import" title="Nhập SRT">📁</button>
+            <!-- Job Cards Container -->
+            <div class="job-cards-container">
+              
+              <!-- SRT Extraction -->
+              <div class="job-card" id="card-srt">
+                <div class="job-card-header">
+                  <label class="chk-label"><input type="checkbox" id="chk-extract-srt" checked><span>Trích xuất SRT</span></label>
+                  <button class="btn-expand">▼</button>
+                </div>
+                <div class="job-card-body" id="body-srt">
+                  <textarea class="form-input" id="srt-content" rows="3" readonly placeholder="Nội dung SRT..."></textarea>
                 </div>
               </div>
-              <textarea class="content-panel-body" id="ai-content" placeholder="Nội dung AI rewrite sẽ hiện ở đây..."></textarea>
-              <button class="btn btn-xs btn-accent btn-block" id="btn-ai-apply">💾 Áp dụng phụ đề vào video</button>
-            </div>
 
-            <!-- Collapsible: Voice Content -->
-            <div class="content-panel hidden" id="panel-voice">
-              <div class="content-panel-header">
-                <span>🎤 Voice đã tạo</span>
-                <div class="content-panel-actions">
-                  <button class="btn btn-xs btn-ghost" id="btn-voice-regenerate" title="Tạo lại">🔄</button>
-                  <button class="btn btn-xs btn-ghost" id="btn-voice-import" title="Nhập Audio">📁</button>
+              <!-- AI Rewrite -->
+              <div class="job-card" id="card-ai">
+                <div class="job-card-header">
+                  <label class="chk-label"><input type="checkbox" id="chk-ai-rewrite"><span>AI Viết lại phụ đề</span></label>
+                  <button class="btn-expand">▼</button>
+                </div>
+                <div class="job-card-body" id="body-ai">
+                  <div class="form-group" style="margin-bottom:8px">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+                      <label class="form-label" style="margin:0">Chọn Prompt</label>
+                      <button class="btn btn-xs btn-ghost" id="btn-manage-prompts">⚙️ Quản lý</button>
+                    </div>
+                    <select id="ai-prompt-select" class="dropdown form-input"></select>
+                  </div>
+                  <textarea class="form-input" id="ai-content" rows="4" placeholder="Nội dung AI..."></textarea>
+                  <button class="btn btn-xs btn-accent btn-block" style="margin-top:8px" id="btn-ai-apply">💾 Áp dụng phụ đề</button>
                 </div>
               </div>
-              <div class="voice-segments-list" id="voice-segments"></div>
-              <button class="btn btn-xs btn-accent btn-block" id="btn-voice-apply">🔊 Ghép voice vào video</button>
-            </div>
 
-            <!-- Collapsible: Voice Subtitle -->
-            <div class="content-panel hidden" id="panel-voice-sub">
-              <div class="content-panel-header">
-                <span>📝 Phụ đề từ Voice</span>
-                <div class="content-panel-actions">
-                  <button class="btn btn-xs btn-ghost" id="btn-voicesub-import" title="Nhập SRT">📁</button>
+              <!-- Voice Generation -->
+              <div class="job-card" id="card-voice">
+                <div class="job-card-header">
+                  <label class="chk-label"><input type="checkbox" id="chk-tts-generate"><span>🎤 Tạo Voice</span></label>
+                  <button class="btn-expand">▼</button>
+                </div>
+                <div class="job-card-body" id="body-voice">
+                  
+                  <div class="voice-segments-list" id="voice-segments" style="max-height:100px"></div>
+                  <button class="btn btn-xs btn-accent btn-block" id="btn-voice-apply">🔊 Ghép voice vào video</button>
                 </div>
               </div>
-              <textarea class="content-panel-body" id="voicesub-content" placeholder="Phụ đề sẽ được tạo từ SRT dùng cho voice..."></textarea>
-              <div class="content-panel-footer">
-                <select id="voicesub-mode" class="dropdown" style="font-size:10px;padding:2px 6px;flex:1">
-                  <option value="soft">Soft sub (tắt được)</option>
-                  <option value="hard">Hard sub (đốt vào video)</option>
-                </select>
-                <button class="btn btn-xs btn-accent" id="btn-voicesub-apply">📝 Gán sub vào video</button>
+
+              <!-- Voice Subtitle (Burn Sub) -->
+              <div class="job-card" id="card-voicesub">
+                <div class="job-card-header">
+                  <label class="chk-label"><input type="checkbox" id="chk-voice-sub"><span>📝 Gán phụ đề</span></label>
+                  <button class="btn-expand">▼</button>
+                </div>
+                <div class="job-card-body" id="body-voicesub">
+                  <div class="form-group">
+                    <label class="form-label">Chế độ</label>
+                    <select id="voicesub-mode" class="dropdown form-input">
+                      <option value="soft">Soft sub (tắt được)</option>
+                      <option value="hard">Hard sub (đốt vào video)</option>
+                    </select>
+                  </div>
+                  
+                  <!-- Subtitle Styling (Only for hard sub) -->
+                  <div id="sub-style-settings" class="sub-style-settings">
+                    <div class="form-group">
+                      <label class="form-label">Font chữ</label>
+                      <select id="sub-font" class="dropdown form-input">
+                        <option value="Arial">Arial</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Tahoma">Tahoma</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Consolas">Consolas</option>
+                      </select>
+                    </div>
+                    
+                    <div style="display:flex; gap:8px; margin-bottom: 8px;">
+                      <div class="form-group" style="flex:1">
+                        <label class="form-label">Cỡ chữ</label>
+                        <input type="number" id="sub-size" class="form-input" value="24" min="10" max="100">
+                      </div>
+                      <div class="form-group" style="flex:1">
+                        <label class="form-label">Màu sắc</label>
+                        <input type="color" id="sub-color" class="form-input" style="padding:0; height:28px" value="#ffffff">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Vị trí (Lề dưới)</label>
+                      <input type="range" id="sub-margin-v" min="0" max="100" value="10">
+                    </div>
+                  </div>
+                  
+                  <textarea class="form-input" id="voicesub-content" rows="2" placeholder="Nội dung phụ đề..."></textarea>
+                  <button class="btn btn-xs btn-accent btn-block" style="margin-top:8px" id="btn-voicesub-apply">📝 Gán sub vào video</button>
+                </div>
               </div>
             </div>
 
@@ -420,5 +447,34 @@
   <div id="toast-container" class="toast-container"></div>
   <script src="js/api.js"></script>
   <script src="js/app.js"></script>
+
+  <!-- Prompt Management Modal -->
+  <div id="prompt-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Quản lý Prompt AI</h3>
+        <button id="btn-close-prompt-modal" class="btn-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Danh sách Prompt</label>
+          <select id="modal-prompt-list" class="dropdown form-input" size="5"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tên Prompt</label>
+          <input type="text" id="modal-prompt-name" class="form-input" placeholder="VD: Dịch sang Tiếng Anh">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nội dung Prompt</label>
+          <textarea id="modal-prompt-content" class="form-input" rows="4"></textarea>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px">
+          <button id="btn-save-prompt" class="btn btn-accent" style="flex:1">💾 Lưu Prompt</button>
+          <button id="btn-delete-prompt" class="btn btn-danger" style="flex:1">🗑 Xóa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
 </body>
 </html>

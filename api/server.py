@@ -441,6 +441,12 @@ class BurnSubtitleRequest(BaseModel):
     srt_path: str
     output_path: str
     mode: str = "soft"  # "soft" (mux) or "hard" (burn)
+    # Styling options
+    font_name: Optional[str] = "Arial"
+    font_size: Optional[int] = 24
+    primary_color: Optional[str] = "&H00FFFFFF" # ASS hex format (AABBGGRR)
+    alignment: Optional[int] = 2 # 1: BotL, 2: BotC, 3: BotR, 5: TopL, 8: TopC, etc.
+    margin_v: Optional[int] = 10
 
 
 @app.post("/api/replace-audio")
@@ -449,8 +455,8 @@ def replace_audio(req: ReplaceAudioRequest):
     import subprocess
     bg_vol = req.bg_volume / 100.0
     try:
-        if bg_vol <= 0:
-            # Full replace: drop original audio
+        if req.bg_volume == 0:
+            # Replace entirely
             cmd = [
                 'ffmpeg', '-y', '-i', req.video_path, '-i', req.audio_path,
                 '-map', '0:v', '-map', '1:a',
@@ -484,9 +490,22 @@ def burn_subtitle(req: BurnSubtitleRequest):
         if req.mode == "hard":
             # Hard sub: burn into video frames
             srt_escaped = req.srt_path.replace('\\', '/').replace(':', '\\:')
+            # Build force_style string
+            style_parts = []
+            if req.font_name: style_parts.append(f"FontName={req.font_name}")
+            if req.font_size: style_parts.append(f"FontSize={req.font_size}")
+            if req.primary_color: style_parts.append(f"PrimaryColour={req.primary_color}")
+            if req.alignment: style_parts.append(f"Alignment={req.alignment}")
+            if req.margin_v: style_parts.append(f"MarginV={req.margin_v}")
+            
+            force_style = ",".join(style_parts)
+            sub_filter = f"subtitles='{srt_escaped}'"
+            if force_style:
+                sub_filter += f":force_style='{force_style}'"
+
             cmd = [
                 'ffmpeg', '-y', '-i', req.video_path,
-                '-vf', f"subtitles='{srt_escaped}'",
+                '-vf', sub_filter,
                 '-c:a', 'copy',
                 req.output_path
             ]

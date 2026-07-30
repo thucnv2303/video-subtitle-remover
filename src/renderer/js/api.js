@@ -136,11 +136,17 @@ class APIClient {
     return r.json();
   }
 
-  async burnSubtitle(videoPath, srtPath, outputPath, mode = 'soft') {
+  async burnSubtitle(videoPath, srtPath, outputPath, mode = 'soft', styleArgs = {}) {
     const r = await fetch(`${this.base}/api/burn-subtitle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ video_path: videoPath, srt_path: srtPath, output_path: outputPath, mode })
+      body: JSON.stringify({ 
+        video_path: videoPath, 
+        srt_path: srtPath, 
+        output_path: outputPath, 
+        mode,
+        ...styleArgs
+      })
     });
     return r.json();
   }
