@@ -40,6 +40,10 @@ function createWindow() {
       mainWindow.focus();
     }
     console.log('Page loaded successfully');
+    // Open DevTools in dev mode
+    if (process.argv.includes('--dev')) {
+      mainWindow.webContents.openDevTools({ mode: 'detach' });
+    }
   });
 
   // Log any page errors
