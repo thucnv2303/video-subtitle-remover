@@ -215,7 +215,8 @@
   el.navItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
-      const page = item.dataset.page;
+      const page = item.getAttribute('data-page') || item.dataset?.page;
+      if (!page) return;
       el.navItems.forEach(n => n.classList.remove('active'));
       item.classList.add('active');
       el.pages.forEach(p => p.classList.remove('active'));
