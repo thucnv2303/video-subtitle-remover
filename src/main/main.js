@@ -123,23 +123,25 @@ ipcMain.handle('dialog:openFile', async (event, customFilters) => {
     { name: 'Subtitle Files', extensions: ['srt', 'ass', 'vtt', 'txt'] },
     { name: 'All Files', extensions: ['*'] }
   ];
-  const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ['openFile'],
+  const result = await dialog.showOpenDialog({
+    title: 'Chọn file',
+    properties: ['openFile', 'multiSelections'],
     filters: customFilters || defaultFilters
   });
   return result;
 });
 
 ipcMain.handle('dialog:openDirectory', async () => {
-  const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ['openDirectory'],
-    title: 'Chọn thư mục đầu ra'
+  const result = await dialog.showOpenDialog({
+    title: 'Chọn thư mục đầu ra',
+    properties: ['openDirectory']
   });
   return result;
 });
 
 ipcMain.handle('dialog:saveFile', async (event, defaultPath) => {
-  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    title: 'Lưu file',
     defaultPath
   });
   if (canceled) {
