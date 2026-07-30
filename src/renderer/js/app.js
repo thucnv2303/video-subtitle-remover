@@ -300,12 +300,39 @@
 
   // ─── File Selection ──────────────────────────────
   async function selectFile() {
-    if (!window.electronAPI) return;
-    const result = await window.electronAPI.openFile();
-    if (result && !result.canceled && result.filePaths.length > 0) {
-      result.filePaths.forEach(fp => addToQueue(fp));
-      if (!state.activeJobId && state.jobs.length > 0) selectJob(state.jobs[state.jobs.length - 1].id);
+    if (window.electronAPI && window.electronAPI.openFile) {
+      try {
+        const result = await window.electronAPI.openFile();
+        if (result && !result.canceled && result.filePaths?.length > 0) {
+          result.filePaths.forEach(fp => addToQueue(fp));
+          if (!state.activeJobId && state.jobs.length > 0) selectJob(state.jobs[state.jobs.length - 1].id);
+          return;
+        }
+      } catch (e) {
+        addLog('Lỗi dialog file: ' + e.message, 'error');
+      }
     }
+    // Fallback: HTML File Input
+    let fileInp = $('#hidden-file-input');
+    if (!fileInp) {
+      fileInp = document.createElement('input');
+      fileInp.type = 'file';
+      fileInp.id = 'hidden-file-input';
+      fileInp.accept = 'video/*,.mp4,.avi,.mkv,.mov';
+      fileInp.multiple = true;
+      fileInp.style.display = 'none';
+      document.body.appendChild(fileInp);
+      fileInp.addEventListener('change', (e) => {
+        if (e.target.files?.length > 0) {
+          Array.from(e.target.files).forEach(f => {
+            const fp = f.path || f.name;
+            if (fp) addToQueue(fp);
+          });
+          if (!state.activeJobId && state.jobs.length > 0) selectJob(state.jobs[state.jobs.length - 1].id);
+        }
+      });
+    }
+    fileInp.click();
   }
 
   function addToQueue(filePath) {
