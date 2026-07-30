@@ -5,10 +5,10 @@
 (function () {
   'use strict';
 
-  // ─── Constants ──────────────────────────────────
+  // ΓöÇΓöÇΓöÇ Constants ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   const REGION_COLORS = ['#7c3aed', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#ef4444'];
 
-  // ─── State ───────────────────────────────────────
+  // ΓöÇΓöÇΓöÇ State ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   const state = {
     jobs: [],
     activeJobId: null,
@@ -63,163 +63,7 @@
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => document.querySelectorAll(s);
 
-  // ─── DOM Refs ────────────────────────────────────
-  const el = {
-    navItems: $$('.nav-item'),
-    pages: $$('.page'),
-    statusDot: $('#backend-status .status-dot'),
-    statusText: $('#backend-status .status-text'),
-    gpuBadge: $('#gpu-badge'),
-    gpuDetail: $('#gpu-detail'),
-    gpuChip: $('#gpu-chip'),
-    cudaVersion: $('#cuda-version'),
-    canvasOrig: $('#canvas-original'),
-    canvasResult: $('#canvas-result'),
-    dropZone: $('#drop-zone'),
-    subtitleOverlay: $('#subtitle-overlay'),
-    resultPlaceholder: $('#result-placeholder'),
-    btnOpenFile: $('#btn-open-file'),
-    btnOutputDir: $('#btn-output-dir'),
-    btnDrawRegion: $('#btn-draw-region'),
-    regionsPanel: $('#regions-panel'),
-    regionsList: $('#regions-list'),
-    maskMode: $('#mask-mode'),
-    timelineOrig: $('#timeline-orig'),
-    frameInfoOrig: $('#frame-info-orig'),
-    btnPlayOrig: $('#btn-play-orig'),
-    btnPrevOrig: $('#btn-prev-orig'),
-    btnNextOrig: $('#btn-next-orig'),
-    timelineResult: $('#timeline-result'),
-    frameInfoResult: $('#frame-info-result'),
-    btnPlayResult: $('#btn-play-result'),
-    btnPrevResult: $('#btn-prev-result'),
-    btnNextResult: $('#btn-next-result'),
-    metaName: $('#meta-name'),
-    metaRes: $('#meta-res'),
-    metaFps: $('#meta-fps'),
-    metaDur: $('#meta-dur'),
-    modeAuto: $('#mode-auto'),
-    modeManual: $('#mode-manual'),
-    algoSelect: $('#algo-select'),
-
-    btnStart: $('#btn-start'),
-    btnCancel: $('#btn-cancel'),
-    progressSection: $('#progress-section'),
-    progressBar: $('#progress-bar'),
-    progressLabel: $('#progress-label'),
-    progressEta: $('#progress-eta'),
-    logOutput: $('#log-output'),
-    btnCopyLog: $('#btn-copy-log'),
-    btnClearLog: $('#btn-clear-log'),
-    jobList: $('#job-list'),
-    aiProvider: $('#ai-provider'),
-    aiApiKey: $('#ai-api-key'),
-    aiEndpoint: $('#ai-endpoint'),
-    aiPrompt: $('#ai-prompt'),
-    ttsVoice: $('#tts-voice'),
-    ttsLanguage: $('#tts-language'),
-    ttsBgVolume: $('#tts-bg-volume'),
-    volLabel: $('#vol-label'),
-    btnSaveAi: $('#btn-save-ai'),
-    ttsStatusChip: $('#tts-status-chip'),
-    cloneVoiceName: $('#clone-voice-name'),
-    btnUploadRefAudio: $('#btn-upload-ref-audio'),
-    refAudioName: $('#ref-audio-name'),
-    refAudioPreview: $('#ref-audio-preview'),
-    btnCloneVoice: $('#btn-clone-voice'),
-    savedVoicesList: $('#saved-voices-list'),
-    ttsTestText: $('#tts-test-text'),
-    btnTestTts: $('#btn-test-tts'),
-    ttsTestAudio: $('#tts-test-audio'),
-    // Content panels
-    chkTtsGenerate: $('#chk-tts-generate'),
-    panelSrt: $('#panel-srt'),
-    panelAi: $('#panel-ai'),
-    panelVoice: $('#panel-voice'),
-    srtContent: $('#srt-content'),
-    aiContent: $('#ai-content'),
-    voiceSegments: $('#voice-segments'),
-    // Panel action buttons
-    btnAiRegenerate: $('#btn-ai-regenerate'),
-    btnAiImport: $('#btn-ai-import'),
-    btnAiApply: $('#btn-ai-apply'),
-    btnVoiceRegenerate: $('#btn-voice-regenerate'),
-    btnVoiceImport: $('#btn-voice-import'),
-    btnVoiceApply: $('#btn-voice-apply'),
-    // Voice sub panel
-    chkVoiceSub: $('#chk-voice-sub'),
-    panelVoiceSub: $('#panel-voice-sub'),
-    voicesubContent: $('#voicesub-content'),
-    voicesubMode: $('#voicesub-mode'),
-    btnVoicesubImport: $('#btn-voicesub-import'),
-    btnVoicesubApply: $('#btn-voicesub-apply'),
-/**
- * Video Subtitle Remover - Main App Logic
- * Each job is independently configurable and queued for sequential processing.
- */
-(function () {
-  'use strict';
-
-  // ─── Constants ──────────────────────────────────
-  const REGION_COLORS = ['#7c3aed', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#ef4444'];
-
-  // ─── State ───────────────────────────────────────
-  const state = {
-    jobs: [],
-    activeJobId: null,
-    outputDir: null,
-    isBackendReady: false,
-    isDrawing: false,      // draw mode active
-    isSelecting: false,    // currently dragging
-    selectionStart: null,
-    playIntervalOrig: null,
-    playIntervalResult: null,
-    currentFrameOrig: 0,
-    currentFrameResult: 0,
-    videoInfo: null,
-    processingJobId: null,
-    processingPassIndex: 0, // current pass in multi-pass
-    pollTimer: null,
-  };
-
-  // Job factory: each job has its own settings
-  function createJob(filePath) {
-    const fileName = filePath.split(/[\\/]/).pop();
-    const baseName = fileName.replace(/\.[^.]+$/, '');
-    let outputPath;
-    if (state.outputDir) {
-      outputPath = state.outputDir.replace(/\\/g, '/') + '/' + baseName + '_no_sub.mp4';
-    } else {
-      const dir = filePath.replace(/\\/g, '/').replace(/\/[^/]+$/, '');
-      outputPath = dir + '/' + baseName + '_no_sub.mp4';
-    }
-    return {
-      id: Math.random().toString(36).substr(2, 9),
-      filePath,
-      fileName,
-      outputPath,
-      status: 'idle',
-      progress: 0,
-      algorithm: 'sttn-auto',
-      maskMode: 'box',
-      subtitleMode: 'auto',
-      regions: [],
-      extractSrt: true,
-      aiRewrite: false,
-      ttsGenerate: false,
-      ttsVoice: 'none',
-      voiceSub: false,
-      srtContent: '',
-      aiContent: '',
-      voiceSubContent: '',
-      voiceSegments: [],
-    };
-  }
-
-  const $ = (s) => document.querySelector(s);
-  const $$ = (s) => document.querySelectorAll(s);
-
-  // ─── DOM Refs ────────────────────────────────────
+  // ΓöÇΓöÇΓöÇ DOM Refs ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   const el = {
     navItems: $$('.nav-item'),
     pages: $$('.page'),
@@ -317,7 +161,7 @@
   const ctxOrig = el.canvasOrig.getContext('2d');
   const ctxResult = el.canvasResult.getContext('2d');
 
-  // ─── Helpers: Active Job ─────────────────────────
+  // ΓöÇΓöÇΓöÇ Helpers: Active Job ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   function getActiveJob() {
     return state.jobs.find(j => j.id === state.activeJobId) || null;
   }
@@ -332,7 +176,6 @@
     job.aiRewrite = $('#chk-ai-rewrite')?.checked || false;
     job.ttsGenerate = el.chkTtsGenerate?.checked || false;
     job.voiceSub = el.chkVoiceSub?.checked || false;
-    job.ttsVoice = $('#job-tts-voice')?.value || 'none';
   }
 
   // Load a job's settings INTO the controls panel
@@ -373,7 +216,7 @@
     updateStartButton();
   }
 
-  // ─── Navigation ──────────────────────────────────
+  // ΓöÇΓöÇΓöÇ Navigation ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   el.navItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
@@ -388,7 +231,7 @@
     });
   });
 
-  // ─── Toast & Log ─────────────────────────────────
+  // ΓöÇΓöÇΓöÇ Toast & Log ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   function showToast(msg, type = 'info', dur = 3000) {
     const c = $('#toast-container');
     const t = document.createElement('div');
@@ -420,26 +263,25 @@
 
   el.btnClearLog?.addEventListener('click', () => { if (el.logOutput) el.logOutput.innerHTML = ''; });
   el.btnCopyLog?.addEventListener('click', () => {
-    if (el.logOutput) navigator.clipboard.writeText(el.logOutput.innerText).then(() => showToast('Đã sao chép!', 'success'));
+    if (el.logOutput) navigator.clipboard.writeText(el.logOutput.innerText).then(() => showToast('─É├ú sao ch├⌐p!', 'success'));
   });
 
-  // ─── Backend Connection ──────────────────────────
+  // ΓöÇΓöÇΓöÇ Backend Connection ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   async function connectToBackend() {
-    addLog('Đang kết nối đến Python backend...', 'info');
+    addLog('─Éang kß║┐t nß╗æi ─æß║┐n Python backend...', 'info');
     setStatus('connecting');
     const ready = await api.waitForBackend(60, 1000);
     if (ready) {
       state.isBackendReady = true;
       setStatus('online');
-      addLog('Backend đã sẵn sàng!', 'success');
-      updateJobVoiceDropdown();
+      addLog('Backend ─æ├ú sß║╡n s├áng!', 'success');
       api.connectWebSocket();
       api.onWebSocketMessage(handleWSMessage);
       loadGpuInfo();
       updateStartButton();
     } else {
       setStatus('offline');
-      addLog('Không thể kết nối backend!', 'error');
+      addLog('Kh├┤ng thß╗â kß║┐t nß╗æi backend!', 'error');
     }
   }
 
@@ -458,11 +300,11 @@
       el.cudaVersion.textContent = info.cuda_version || 'N/A';
       const dot = el.gpuChip.querySelector('.status-dot');
       if (info.gpu_available) { dot.classList.add('online'); addLog(`GPU: ${name} (VRAM: ${info.vram_total || '?'})`, 'success'); }
-      else { dot.classList.add('offline'); addLog('Không phát hiện GPU → CPU.', 'warning'); }
-    } catch (e) { addLog('Lỗi GPU: ' + e.message, 'error'); }
+      else { dot.classList.add('offline'); addLog('Kh├┤ng ph├ít hiß╗çn GPU ΓåÆ CPU.', 'warning'); }
+    } catch (e) { addLog('Lß╗ùi GPU: ' + e.message, 'error'); }
   }
 
-  // ─── File Selection ──────────────────────────────
+  // ΓöÇΓöÇΓöÇ File Selection ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   async function selectFile() {
     if (window.electronAPI && window.electronAPI.openFile) {
       try {
@@ -473,7 +315,7 @@
           return;
         }
       } catch (e) {
-        addLog('Lỗi dialog file: ' + e.message, 'error');
+        addLog('Lß╗ùi dialog file: ' + e.message, 'error');
       }
     }
     // Fallback: HTML File Input
@@ -505,10 +347,10 @@
     state.jobs.push(job);
     renderJobList();
     updateStartButton();
-    addLog(`Đã thêm: ${job.fileName}`, 'info');
+    addLog(`─É├ú th├¬m: ${job.fileName}`, 'info');
   }
 
-  // ─── Select / Switch Job ─────────────────────────
+  // ΓöÇΓöÇΓöÇ Select / Switch Job ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   function selectJob(jobId) {
     // Save current job settings first
     saveControlsToJob();
@@ -521,10 +363,10 @@
     renderJobList();
   }
 
-  // ─── Render Job List ─────────────────────────────
+  // ΓöÇΓöÇΓöÇ Render Job List ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   function renderJobList() {
     if (state.jobs.length === 0) {
-      el.jobList.innerHTML = '<div class="job-empty">Chưa có video nào.<br>Hãy kéo thả hoặc bấm "Chọn Video".</div>';
+      el.jobList.innerHTML = '<div class="job-empty">Ch╞░a c├│ video n├áo.<br>H├úy k├⌐o thß║ú hoß║╖c bß║Ñm "Chß╗ìn Video".</div>';
       return;
     }
     el.jobList.innerHTML = '';
@@ -534,11 +376,11 @@
       card.addEventListener('click', () => selectJob(job.id));
 
       const statusLabel = {
-        idle: '⏸ Chờ cài đặt',
-        queued: '⏳ Đang chờ',
-        processing: '🔄 Đang xử lý',
-        finished: '✅ Hoàn tất',
-        error: '❌ Lỗi',
+        idle: 'ΓÅ╕ Chß╗¥ c├ái ─æß║╖t',
+        queued: 'ΓÅ│ ─Éang chß╗¥',
+        processing: '≡ƒöä ─Éang xß╗¡ l├╜',
+        finished: 'Γ£à Ho├án tß║Ñt',
+        error: 'Γ¥î Lß╗ùi',
       }[job.status] || job.status;
 
       card.innerHTML = `
@@ -584,21 +426,21 @@
       const result = await window.electronAPI.openDirectory();
       if (result && !result.canceled && result.filePaths.length > 0) {
         state.outputDir = result.filePaths[0];
-        addLog(`Thư mục xuất: ${state.outputDir}`, 'info');
+        addLog(`Th╞░ mß╗Ñc xuß║Ñt: ${state.outputDir}`, 'info');
         const textEl = $('#output-dir-text');
         if (textEl) textEl.textContent = state.outputDir;
       }
     });
   }
 
-  // ─── Load Video for a Job ────────────────────────
+  // ΓöÇΓöÇΓöÇ Load Video for a Job ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   async function loadVideo(job) {
     try {
-      if (!state.isBackendReady) { addLog('Backend chưa sẵn sàng!', 'warning'); return; }
+      if (!state.isBackendReady) { addLog('Backend ch╞░a sß║╡n s├áng!', 'warning'); return; }
       const info = await api.videoInfo(job.filePath);
       state.videoInfo = info;
       el.metaName.textContent = job.fileName;
-      el.metaRes.textContent = `${info.width}×${info.height}`;
+      el.metaRes.textContent = `${info.width}├ù${info.height}`;
       el.metaFps.textContent = `${info.fps.toFixed(1)} fps`;
       el.metaDur.textContent = fmtTime(info.duration);
       el.timelineOrig.max = info.total_frames - 1;
@@ -632,7 +474,7 @@
         el.btnNextResult.disabled = true;
       }
     } catch (e) {
-      addLog('Lỗi tải video: ' + e.message, 'error');
+      addLog('Lß╗ùi tß║úi video: ' + e.message, 'error');
     }
   }
 
@@ -667,7 +509,7 @@
     } catch (e) { /* silent */ }
   }
 
-  // ─── Synced Playback (both panes follow same frame) ──
+  // ΓöÇΓöÇΓöÇ Synced Playback (both panes follow same frame) ΓöÇΓöÇ
   // Load both frames at the same position
   function loadSyncedFrame(n) {
     loadOrigFrame(n);
@@ -715,7 +557,7 @@
   el.btnPrevResult.addEventListener('click', () => { if (state.currentFrameOrig > 0) loadSyncedFrame(state.currentFrameOrig - 1); });
   el.btnNextResult.addEventListener('click', () => { if (state.videoInfo && state.currentFrameOrig < state.videoInfo.total_frames - 1) loadSyncedFrame(state.currentFrameOrig + 1); });
 
-  // ─── Subtitle Mode (per job) ─────────────────────
+  // ΓöÇΓöÇΓöÇ Subtitle Mode (per job) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   el.modeAuto.addEventListener('click', () => {
     const job = getActiveJob();
     if (job) job.subtitleMode = 'auto';
@@ -738,7 +580,7 @@
   el.btnDrawRegion.addEventListener('click', () => {
     const job = getActiveJob();
     if (!job || !state.videoInfo || job.regions.length >= 6) {
-      if (job && job.regions.length >= 6) showToast('Tối đa 6 vùng!', 'warning');
+      if (job && job.regions.length >= 6) showToast('Tß╗æi ─æa 6 v├╣ng!', 'warning');
       return;
     }
     state.isDrawing = true;
@@ -748,10 +590,10 @@
     if (!hint) {
       hint = document.createElement('div');
       hint.className = 'draw-mode-hint';
-      hint.textContent = 'Kéo chuột để vẽ vùng sub';
+      hint.textContent = 'K├⌐o chuß╗Öt ─æß╗â vß║╜ v├╣ng sub';
       el.subtitleOverlay.appendChild(hint);
     }
-    addLog('Kéo chuột trên video để vẽ vùng subtitle mới.', 'info');
+    addLog('K├⌐o chuß╗Öt tr├¬n video ─æß╗â vß║╜ v├╣ng subtitle mß╗¢i.', 'info');
   });
 
   // Mouse drawing
@@ -801,19 +643,18 @@
       endFrame: state.videoInfo.total_frames - 1,
       color: REGION_COLORS[idx % REGION_COLORS.length],
       label: idx + 1,
-      maskMode: 'box'
     };
     job.regions.push(region);
-    addLog(`Vùng #${region.label} đã thêm: Y[${region.ymin}-${region.ymax}] X[${region.xmin}-${region.xmax}]`, 'success');
+    addLog(`V├╣ng #${region.label} ─æ├ú th├¬m: Y[${region.ymin}-${region.ymax}] X[${region.xmin}-${region.xmax}]`, 'success');
     renderRegionsList();
     renderRegionOverlays();
   });
 
-  // ─── Render Region List (controls panel) ──────────
+  // ΓöÇΓöÇΓöÇ Render Region List (controls panel) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   function renderRegionsList() {
     const job = getActiveJob();
     if (!job || job.regions.length === 0) {
-      el.regionsList.innerHTML = '<div class="region-empty">Bấm "+ Vẽ vùng" rồi kéo chuột trên video</div>';
+      el.regionsList.innerHTML = '<div class="region-empty">Bß║Ñm "+ Vß║╜ v├╣ng" rß╗ôi k├⌐o chuß╗Öt tr├¬n video</div>';
       return;
     }
     const totalFrames = state.videoInfo ? state.videoInfo.total_frames - 1 : 0;
@@ -822,24 +663,17 @@
       const card = document.createElement('div');
       card.className = 'region-card';
       card.style.setProperty('--region-color', r.color);
-      const maskMode = r.maskMode || 'box';
       card.innerHTML = `
         <div class="region-top">
-          <span class="region-label" style="color:${r.color}">● Vùng #${r.label}</span>
-          <button class="btn-del" data-rid="${r.id}" title="Xóa vùng">✕</button>
+          <span class="region-label" style="color:${r.color}">ΓùÅ V├╣ng #${r.label}</span>
+          <button class="btn-del" data-rid="${r.id}" title="X├│a v├╣ng">Γ£ò</button>
         </div>
         <div class="region-coords">Y:${r.ymin}-${r.ymax} X:${r.xmin}-${r.xmax}</div>
         <div class="region-timeline">
-          <span>Từ</span>
+          <span>Tß╗½</span>
           <input type="number" class="region-start" data-rid="${r.id}" value="${r.startFrame}" min="0" max="${totalFrames}">
-          <span>→</span>
+          <span>ΓåÆ</span>
           <input type="number" class="region-end" data-rid="${r.id}" value="${r.endFrame}" min="0" max="${totalFrames}">
-        </div>
-        <div class="region-mask-wrap">
-          <select class="region-mask-mode" data-rid="${r.id}">
-            <option value="box" ${maskMode==='box'?'selected':''}>Box</option>
-            <option value="mask" ${maskMode==='mask'?'selected':''}>Mask</option>
-          </select>
         </div>
       `;
       el.regionsList.appendChild(card);
@@ -868,15 +702,9 @@
         if (r) r.endFrame = parseInt(inp.value) || 0;
       });
     });
-    el.regionsList.querySelectorAll('.region-mask-mode').forEach(sel => {
-      sel.addEventListener('change', () => {
-        const r = job.regions.find(x => x.id === sel.dataset.rid);
-        if (r) r.maskMode = sel.value;
-      });
-    });
   }
 
-  // ─── Render Region Overlays on Canvas ─────────────
+  // ΓöÇΓöÇΓöÇ Render Region Overlays on Canvas ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   // Cached overlays: create once, toggle visibility per frame
   let _regionOverlayCache = [];
 
@@ -928,7 +756,7 @@
     });
   }
 
-  // ─── Job Cards (Accordion) Logic ─────────────────
+  // ΓöÇΓöÇΓöÇ Job Cards (Accordion) Logic ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   document.querySelectorAll('.job-card-header').forEach(header => {
     header.addEventListener('click', (e) => {
       // Don't toggle accordion if they clicked the checkbox directly
@@ -963,11 +791,11 @@
   });
 
 
-  // ─── Voice Segments Renderer ─────────────────────
+  // ΓöÇΓöÇΓöÇ Voice Segments Renderer ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   function renderVoiceSegments(segments) {
     if (!el.voiceSegments) return;
     if (!segments || segments.length === 0) {
-      el.voiceSegments.innerHTML = '<div class="voice-empty">Chưa có voice nào.</div>';
+      el.voiceSegments.innerHTML = '<div class="voice-empty">Ch╞░a c├│ voice n├áo.</div>';
       return;
     }
     el.voiceSegments.innerHTML = segments.map((s, i) => `
@@ -977,7 +805,7 @@
       </div>`).join('');
   }
 
-  // ─── Action Buttons: AI ──────────────────────────
+  // ΓöÇΓöÇΓöÇ Action Buttons: AI ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   if (el.btnAiImport) {
     el.btnAiImport.addEventListener('click', async () => {
       if (!window.electronAPI?.openFile) return;
@@ -990,8 +818,8 @@
           if (el.aiContent) el.aiContent.value = text;
           const job = getActiveJob();
           if (job) job.aiContent = text;
-          addLog('[AI] Đã nhập SRT: ' + fp.split(/[\\\\/]/).pop(), 'info');
-        } catch (e) { addLog('[AI] Lỗi đọc file: ' + e.message, 'error'); }
+          addLog('[AI] ─É├ú nhß║¡p SRT: ' + fp.split(/[\\\\/]/).pop(), 'info');
+        } catch (e) { addLog('[AI] Lß╗ùi ─æß╗ìc file: ' + e.message, 'error'); }
       }
     });
   }
@@ -1001,28 +829,28 @@
       const job = getActiveJob();
       if (!job) return;
       const srtText = el.aiContent?.value?.trim();
-      if (!srtText) { showToast('Chưa có nội dung phụ đề!', 'warn'); return; }
+      if (!srtText) { showToast('Ch╞░a c├│ nß╗Öi dung phß╗Ñ ─æß╗ü!', 'warn'); return; }
       // Save SRT to temp file
       const srtPath = job.outputPath.replace(/_no_sub\.mp4$/, '_ai_rewrite.srt');
       try {
-        // Write SRT via backend — we'll use burn-subtitle directly
+        // Write SRT via backend ΓÇö we'll use burn-subtitle directly
         const outputPath = job.outputPath.replace(/_no_sub\.mp4$/, '_subtitled.mp4');
         el.btnAiApply.disabled = true;
-        el.btnAiApply.textContent = '⏳ Đang xử lý...';
-        addLog('[AI] Đang burn phụ đề vào video...', 'info');
+        el.btnAiApply.textContent = 'ΓÅ│ ─Éang xß╗¡ l├╜...';
+        addLog('[AI] ─Éang burn phß╗Ñ ─æß╗ü v├áo video...', 'info');
         const result = await api.burnSubtitle(job.outputPath, srtPath, outputPath, 'soft');
         if (result.status === 'ok') {
-          addLog('[AI] ✅ Đã thêm phụ đề: ' + outputPath, 'success');
-          showToast('Đã áp dụng phụ đề!', 'success');
+          addLog('[AI] Γ£à ─É├ú th├¬m phß╗Ñ ─æß╗ü: ' + outputPath, 'success');
+          showToast('─É├ú ├íp dß╗Ñng phß╗Ñ ─æß╗ü!', 'success');
         } else {
-          addLog('[AI] ❌ Lỗi: ' + result.error, 'error');
+          addLog('[AI] Γ¥î Lß╗ùi: ' + result.error, 'error');
         }
-      } catch (e) { addLog('[AI] ❌ ' + e.message, 'error'); }
-      finally { el.btnAiApply.disabled = false; el.btnAiApply.textContent = '💾 Áp dụng phụ đề vào video'; }
+      } catch (e) { addLog('[AI] Γ¥î ' + e.message, 'error'); }
+      finally { el.btnAiApply.disabled = false; el.btnAiApply.textContent = '≡ƒÆ╛ ├üp dß╗Ñng phß╗Ñ ─æß╗ü v├áo video'; }
     });
   }
 
-  // ─── Action Buttons: Voice ───────────────────────
+  // ΓöÇΓöÇΓöÇ Action Buttons: Voice ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   if (el.btnVoiceImport) {
     el.btnVoiceImport.addEventListener('click', async () => {
       if (!window.electronAPI?.openFile) return;
@@ -1033,7 +861,7 @@
         if (job) {
           job.voiceSegments = [{ text: 'Imported audio', audio_path: fp }];
           renderVoiceSegments(job.voiceSegments);
-          addLog('[Voice] Đã nhập audio: ' + fp.split(/[\\\\/]/).pop(), 'info');
+          addLog('[Voice] ─É├ú nhß║¡p audio: ' + fp.split(/[\\\\/]/).pop(), 'info');
         }
       }
     });
@@ -1042,26 +870,26 @@
   if (el.btnVoiceApply) {
     el.btnVoiceApply.addEventListener('click', async () => {
       const job = getActiveJob();
-      if (!job || !job.voiceSegments?.length) { showToast('Chưa có voice nào!', 'warn'); return; }
+      if (!job || !job.voiceSegments?.length) { showToast('Ch╞░a c├│ voice n├áo!', 'warn'); return; }
       const audioPath = job.voiceSegments[0]?.audio_path;
       if (!audioPath) return;
       const outputPath = job.outputPath.replace(/_no_sub\.mp4$/, '_voiced.mp4');
       el.btnVoiceApply.disabled = true;
-      el.btnVoiceApply.textContent = '⏳ Đang ghép...';
-      addLog('[Voice] Đang ghép audio vào video...', 'info');
+      el.btnVoiceApply.textContent = 'ΓÅ│ ─Éang gh├⌐p...';
+      addLog('[Voice] ─Éang gh├⌐p audio v├áo video...', 'info');
       try {
         const bgVol = parseInt(localStorage.getItem('tts_bg_volume') || '10');
         const result = await api.replaceAudio(job.outputPath, audioPath, outputPath, bgVol);
         if (result.status === 'ok') {
-          addLog('[Voice] ✅ Đã ghép voice: ' + outputPath, 'success');
-          showToast('Đã ghép voice vào video!', 'success');
-        } else { addLog('[Voice] ❌ ' + result.error, 'error'); }
-      } catch (e) { addLog('[Voice] ❌ ' + e.message, 'error'); }
-      finally { el.btnVoiceApply.disabled = false; el.btnVoiceApply.textContent = '🔊 Ghép voice vào video'; }
+          addLog('[Voice] Γ£à ─É├ú gh├⌐p voice: ' + outputPath, 'success');
+          showToast('─É├ú gh├⌐p voice v├áo video!', 'success');
+        } else { addLog('[Voice] Γ¥î ' + result.error, 'error'); }
+      } catch (e) { addLog('[Voice] Γ¥î ' + e.message, 'error'); }
+      finally { el.btnVoiceApply.disabled = false; el.btnVoiceApply.textContent = '≡ƒöè Gh├⌐p voice v├áo video'; }
     });
   }
 
-  // ─── Action Buttons: Voice Sub ────────────────────
+  // ΓöÇΓöÇΓöÇ Action Buttons: Voice Sub ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   if (el.btnVoicesubImport) {
     el.btnVoicesubImport.addEventListener('click', async () => {
       if (!window.electronAPI?.openFile) return;
@@ -1074,8 +902,8 @@
           if (el.voicesubContent) el.voicesubContent.value = text;
           const job = getActiveJob();
           if (job) job.voiceSubContent = text;
-          addLog('[VoiceSub] Đã nhập SRT: ' + fp.split(/[\\\\/]/).pop(), 'info');
-        } catch (e) { addLog('[VoiceSub] Lỗi: ' + e.message, 'error'); }
+          addLog('[VoiceSub] ─É├ú nhß║¡p SRT: ' + fp.split(/[\\\\/]/).pop(), 'info');
+        } catch (e) { addLog('[VoiceSub] Lß╗ùi: ' + e.message, 'error'); }
       }
     });
   }
@@ -1085,7 +913,7 @@
       const job = getActiveJob();
       if (!job) return;
       const srtText = el.voicesubContent?.value?.trim();
-      if (!srtText) { showToast('Chưa có nội dung phụ đề!', 'warn'); return; }
+      if (!srtText) { showToast('Ch╞░a c├│ nß╗Öi dung phß╗Ñ ─æß╗ü!', 'warn'); return; }
 
       // Determine input video: voiced version if exists, otherwise no_sub version
       const voicedPath = job.outputPath.replace(/_no_sub\.mp4$/, '_voiced.mp4');
@@ -1097,21 +925,21 @@
       const outputPath = job.outputPath.replace(/_no_sub\.mp4$/, '_final.mp4');
 
       el.btnVoicesubApply.disabled = true;
-      el.btnVoicesubApply.textContent = '⏳ Đang gán...';
-      addLog(`[VoiceSub] Đang gán phụ đề (${subMode})...`, 'info');
+      el.btnVoicesubApply.textContent = 'ΓÅ│ ─Éang g├ín...';
+      addLog(`[VoiceSub] ─Éang g├ín phß╗Ñ ─æß╗ü (${subMode})...`, 'info');
 
       try {
         const result = await api.burnSubtitle(inputVideo, srtPath, outputPath, subMode);
         if (result.status === 'ok') {
-          addLog('[VoiceSub] ✅ Đã gán phụ đề: ' + outputPath, 'success');
-          showToast('Đã gán phụ đề thành công!', 'success');
+          addLog('[VoiceSub] Γ£à ─É├ú g├ín phß╗Ñ ─æß╗ü: ' + outputPath, 'success');
+          showToast('─É├ú g├ín phß╗Ñ ─æß╗ü th├ánh c├┤ng!', 'success');
         } else {
-          addLog('[VoiceSub] ❌ ' + result.error, 'error');
+          addLog('[VoiceSub] Γ¥î ' + result.error, 'error');
         }
-      } catch (e) { addLog('[VoiceSub] ❌ ' + e.message, 'error'); }
+      } catch (e) { addLog('[VoiceSub] Γ¥î ' + e.message, 'error'); }
       finally {
         el.btnVoicesubApply.disabled = false;
-        el.btnVoicesubApply.textContent = '📝 Gán sub vào video';
+        el.btnVoicesubApply.textContent = '≡ƒô¥ G├ín sub v├áo video';
       }
     });
   }
@@ -1127,6 +955,165 @@
   }
 
 
+  // ΓöÇΓöÇΓöÇ Column Resize ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  function initColumnResize() {
+    const container = document.querySelector('.three-col');
+    if (!container) return;
+    const colCtrl = container.querySelector('.col-controls');
+    const colPreview = container.querySelector('.col-preview');
+    const colJobs = container.querySelector('.col-jobs');
+    if (!colCtrl || !colPreview || !colJobs) return;
+
+    // Load saved widths
+    const savedWidths = localStorage.getItem('col_widths');
+    if (savedWidths) {
+      try {
+        const w = JSON.parse(savedWidths);
+        if (w.ctrl) colCtrl.style.width = w.ctrl + 'px';
+        if (w.jobs) colJobs.style.width = w.jobs + 'px';
+      } catch {}
+    }
+
+    function setupHandle(handle, leftCol, rightCol, isLeft) {
+      if (!handle) return;
+      let startX, startLeftW, startRightW;
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        startX = e.clientX;
+        startLeftW = leftCol.offsetWidth;
+        startRightW = rightCol.offsetWidth;
+        handle.classList.add('dragging');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        function onMove(e) {
+          const dx = e.clientX - startX;
+          const newLeftW = Math.max(160, Math.min(startLeftW + dx, 500));
+          leftCol.style.width = newLeftW + 'px';
+          if (!isLeft) {
+            const newRightW = Math.max(160, Math.min(startRightW - dx, 500));
+            rightCol.style.width = newRightW + 'px';
+          }
+        }
+        function onUp() {
+          handle.classList.remove('dragging');
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          // Save
+          localStorage.setItem('col_widths', JSON.stringify({
+            ctrl: colCtrl.offsetWidth,
+            jobs: colJobs.offsetWidth
+          }));
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    }
+
+    setupHandle(el.resizeHandle1, colCtrl, colPreview, true);
+    setupHandle(el.resizeHandle2, colPreview, colJobs, false);
+  }
+  initColumnResize();
+
+  // ΓöÇΓöÇΓöÇ Audio format for ref upload ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ΓöÇΓöÇΓöÇ Processing: Per-Job Queue ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  function updateStartButton() {
+    const job = getActiveJob();
+    // Enable if: there's an active job, it's idle (not yet queued), and backend is ready
+    const canStart = job && job.status === 'idle' && state.isBackendReady;
+    el.btnStart.disabled = !canStart;
+
+    // Show cancel only if active job is processing
+    if (job && (job.status === 'processing' || job.status === 'queued')) {
+      el.btnStart.classList.add('hidden');
+      el.btnCancel.classList.remove('hidden');
+    } else {
+      el.btnStart.classList.remove('hidden');
+      el.btnCancel.classList.add('hidden');
+    }
+  }
+
+  el.btnStart.addEventListener('click', () => {
+    const job = getActiveJob();
+    if (!job || job.status !== 'idle' || !state.isBackendReady) return;
+
+    // Save current controls to job before queuing
+    saveControlsToJob();
+
+    // Mark as queued
+    job.status = 'queued';
+    addLog(`Job "${job.fileName}" ─æ├ú th├¬m v├áo h├áng ─æß╗úi.`, 'info');
+    renderJobList();
+    updateStartButton();
+
+    // Try to start processing if nothing is running
+    processNextJob();
+  });
+
+  el.btnCancel.addEventListener('click', async () => {
+    const job = getActiveJob();
+    if (!job) return;
+    if (job.status === 'processing') {
+      try { await api.cancelProcess(); } catch (e) {}
+      job.status = 'idle';
+      job.progress = 0;
+      state.processingJobId = null;
+      if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
+      addLog(`─É├ú hß╗ºy job "${job.fileName}".`, 'warning');
+    } else if (job.status === 'queued') {
+      job.status = 'idle';
+      addLog(`─É├ú gß╗í "${job.fileName}" khß╗Åi h├áng ─æß╗úi.`, 'warning');
+    }
+    renderJobList();
+    updateStartButton();
+    el.progressSection.classList.add('hidden');
+  });
+
+  // Process the next queued job (multi-pass for multi-region)
+  async function processNextJob() {
+    if (state.processingJobId) return;
+    const nextJob = state.jobs.find(j => j.status === 'queued');
+    if (!nextJob) return;
+
+    nextJob.status = 'processing';
+    nextJob.progress = 0;
+    state.processingJobId = nextJob.id;
+    state.processingPassIndex = 0;
+    renderJobList();
+
+    addLog(`Γû╢ Bß║»t ─æß║ºu xß╗¡ l├╜: ${nextJob.fileName}`, 'success');
+    if (state.activeJobId === nextJob.id) {
+      el.progressSection.classList.remove('hidden');
+      updateStartButton();
+    }
+
+    await runNextPass(nextJob);
+  }
+
+  async function runNextPass(job) {
+    const aiConfig = {
+      provider: localStorage.getItem('ai_provider') || 'gemini',
+      api_key: localStorage.getItem('ai_api_key') || '',
+      endpoint: localStorage.getItem('ai_endpoint') || '',
+      prompt: localStorage.getItem('ai_prompt') || ''
+    };
+
+    let subtitleAreas = [];
+    let frameRange = null;
+    let inputPath = job.filePath;
+
+    if (job.subtitleMode === 'manual' && job.regions.length > 0) {
+      // Multi-pass: each region is a separate pass
+      const passIdx = state.processingPassIndex;
+      if (passIdx >= job.regions.length) {
+        // All passes done
+        onJobFinished(job);
+        return;
+      }
+      const region = job.regions[passIdx];
+      subtitleAreas = [[region.ymin, region.ymax, region.xmin, region.xmax]];
       frameRange = { start: region.startFrame, end: region.endFrame };
 
       // For pass > 0: input is the output of previous pass
@@ -1145,7 +1132,7 @@
         outputPath = job.outputPath;
       }
 
-      addLog(`  Pass ${passIdx + 1}/${job.regions.length}: Vùng #${region.label} (frame ${region.startFrame}-${region.endFrame})`, 'info');
+      addLog(`  Pass ${passIdx + 1}/${job.regions.length}: V├╣ng #${region.label} (frame ${region.startFrame}-${region.endFrame})`, 'info');
 
       const jobPayload = [{
         input_path: inputPath,
@@ -1157,7 +1144,7 @@
         extract_srt: passIdx === 0 ? job.extractSrt : false,
         ai_rewrite: passIdx === 0 ? job.aiRewrite : false,
         ai_config: aiConfig,
-        tts_voice: passIdx === job.regions.length - 1 && job.ttsGenerate ? (job.ttsVoice || localStorage.getItem('tts_voice') || 'none') : 'none',
+        tts_voice: (passIdx === job.regions.length - 1 && job.ttsGenerate) ? (job.ttsVoice || localStorage.getItem('tts_voice') || 'none') : 'none',
         tts_bg_volume: parseInt(localStorage.getItem('tts_bg_volume') || '10')
       }];
 
@@ -1165,7 +1152,7 @@
         await api.startProcessBatch(jobPayload);
         state.pollTimer = setInterval(pollProgress, 2000);
       } catch (e) {
-        addLog('Lỗi pass: ' + e.message, 'error');
+        addLog('Lß╗ùi pass: ' + e.message, 'error');
         job.status = 'error';
         state.processingJobId = null;
         renderJobList();
@@ -1182,7 +1169,7 @@
         extract_srt: job.extractSrt,
         ai_rewrite: job.aiRewrite,
         ai_config: aiConfig,
-        tts_voice: localStorage.getItem('tts_voice') || 'none',
+        tts_voice: job.ttsGenerate ? (job.ttsVoice || localStorage.getItem('tts_voice') || 'none') : 'none',
         tts_bg_volume: parseInt(localStorage.getItem('tts_bg_volume') || '10')
       }];
 
@@ -1190,7 +1177,7 @@
         await api.startProcessBatch(jobPayload);
         state.pollTimer = setInterval(pollProgress, 2000);
       } catch (e) {
-        addLog('Lỗi: ' + e.message, 'error');
+        addLog('Lß╗ùi: ' + e.message, 'error');
         job.status = 'error';
         state.processingJobId = null;
         renderJobList();
@@ -1270,7 +1257,7 @@
       state.processingPassIndex++;
       if (state.processingPassIndex < job.regions.length) {
         // More passes to go
-        addLog(`  Pass ${state.processingPassIndex}/${job.regions.length} hoàn tất, tiếp tục...`, 'info');
+        addLog(`  Pass ${state.processingPassIndex}/${job.regions.length} ho├án tß║Ñt, tiß║┐p tß╗Ñc...`, 'info');
         job.progress = Math.round((state.processingPassIndex / job.regions.length) * 100);
         renderJobList();
         runNextPass(job);
@@ -1284,14 +1271,14 @@
     state.processingJobId = null;
     state.processingPassIndex = 0;
 
-    addLog(`✅ Hoàn tất: ${job.fileName}`, 'success');
-    showToast(`"${job.fileName}" đã xử lý xong!`, 'success', 5000);
+    addLog(`Γ£à Ho├án tß║Ñt: ${job.fileName}`, 'success');
+    showToast(`"${job.fileName}" ─æ├ú xß╗¡ l├╜ xong!`, 'success', 5000);
 
     renderJobList();
 
     // If this is the active job, update UI
     if (state.activeJobId === job.id) {
-      setProgress(100, 'Hoàn tất!');
+      setProgress(100, 'Ho├án tß║Ñt!');
       updateStartButton();
       if (job.outputPath) {
         el.timelineResult.disabled = false;
@@ -1306,7 +1293,7 @@
     processNextJob();
   }
 
-  // ─── Settings Page ───────────────────────────────
+  // ΓöÇΓöÇΓöÇ Settings Page ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   function loadSettingsValues() {
     if (el.aiProvider) el.aiProvider.value = localStorage.getItem('ai_provider') || 'gemini';
     if (el.aiApiKey) el.aiApiKey.value = localStorage.getItem('ai_api_key') || '';
@@ -1333,12 +1320,12 @@
       localStorage.setItem('tts_voice', el.ttsVoice.value);
       localStorage.setItem('tts_language', el.ttsLanguage?.value || 'vi');
       localStorage.setItem('tts_bg_volume', el.ttsBgVolume.value);
-      addLog('Đã lưu cấu hình AI & TTS!', 'success');
-      showToast('Đã lưu cài đặt!', 'success');
+      addLog('─É├ú l╞░u cß║Ñu h├¼nh AI & TTS!', 'success');
+      showToast('─É├ú l╞░u c├ái ─æß║╖t!', 'success');
     });
   }
 
-  // ─── TTS Voice Clone Management ─────────────────────
+  // ΓöÇΓöÇΓöÇ TTS Voice Clone Management ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   let _ttsRefAudioPath = null;
 
   function getSavedVoices() {
@@ -1355,17 +1342,17 @@
     const list = el.savedVoicesList;
     if (!list) return;
     if (voices.length === 0) {
-      list.innerHTML = '<div class="voice-empty">Chưa có giọng clone nào.</div>';
+      list.innerHTML = '<div class="voice-empty">Ch╞░a c├│ giß╗ìng clone n├áo.</div>';
     } else {
       list.innerHTML = voices.map((v, i) => `
         <div class="voice-card">
-          <div class="voice-icon">🎤</div>
+          <div class="voice-icon">≡ƒÄñ</div>
           <div class="voice-info">
             <div class="voice-name">${v.name}</div>
-            <div class="voice-meta">${v.audioFile} • ${v.date}</div>
+            <div class="voice-meta">${v.audioFile} ΓÇó ${v.date}</div>
           </div>
           <div class="voice-actions">
-            <button class="btn-voice-del" data-idx="${i}" title="Xóa">✕</button>
+            <button class="btn-voice-del" data-idx="${i}" title="X├│a">Γ£ò</button>
           </div>
         </div>`).join('');
     }
@@ -1379,7 +1366,7 @@
         vs.splice(idx, 1);
         saveSavedVoices(vs);
         renderSavedVoices();
-        showToast('Đã xóa giọng!', 'info');
+        showToast('─É├ú x├│a giß╗ìng!', 'info');
       });
     });
   }
@@ -1391,7 +1378,7 @@
     voices.forEach((v, i) => {
       const opt = document.createElement('option');
       opt.value = `clone:${i}`;
-      opt.textContent = `🧬 ${v.name}`;
+      opt.textContent = `≡ƒº¼ ${v.name}`;
       el.ttsVoice.appendChild(opt);
     });
     // Restore selection
@@ -1413,7 +1400,7 @@
           el.btnCloneVoice.disabled = false;
         }
       } else {
-        showToast('Chức năng chọn file chỉ khả dụng trong app', 'warn');
+        showToast('Chß╗⌐c n─âng chß╗ìn file chß╗ë khß║ú dß╗Ñng trong app', 'warn');
       }
     });
   }
@@ -1426,24 +1413,24 @@
       if (!_ttsRefAudioPath) { showToast('Chon file audio mau!', 'warn'); return; }
 
       el.btnCloneVoice.disabled = true;
-      el.btnCloneVoice.textContent = 'Đang tạo mẫu (0%)...';
-      addLog(`[TTS] Đang clone giọng "${name}"...`, 'info');
+      el.btnCloneVoice.textContent = '─Éang tß║ío mß║½u (0%)...';
+      addLog(`[TTS] ─Éang clone giß╗ìng "${name}"...`, 'info');
 
       // Simulate progress
       let simProgress = 0;
       const progressTimer = setInterval(() => {
         simProgress += Math.random() * 8 + 2;
         if (simProgress > 95) simProgress = 95;
-        el.btnCloneVoice.textContent = `Đang tạo mẫu (${Math.floor(simProgress)}%)...`;
+        el.btnCloneVoice.textContent = `─Éang tß║ío mß║½u (${Math.floor(simProgress)}%)...`;
       }, 1000);
 
       try {
         const lang = el.ttsLanguage?.value || 'vi';
-        const testText = 'Xin chào, đây là giọng đọc được clone bởi OmniVoice.';
+        const testText = 'Xin ch├áo, ─æ├óy l├á giß╗ìng ─æß╗ìc ─æ╞░ß╗úc clone bß╗ƒi OmniVoice.';
         const result = await api.generateTTS(testText, _ttsRefAudioPath, lang);
 
         clearInterval(progressTimer);
-        el.btnCloneVoice.textContent = `Đang hoàn tất (100%)...`;
+        el.btnCloneVoice.textContent = `─Éang ho├án tß║Ñt (100%)...`;
 
         if (result.status === 'ok' && result.audio_path) {
           const voices = getSavedVoices();
@@ -1455,10 +1442,9 @@
             date: new Date().toLocaleDateString('vi-VN'),
           });
           saveSavedVoices(voices);
-      renderSavedVoices();
-      updateJobVoiceDropdown();
+          renderSavedVoices();
           
-          // Tự động CHỌN luôn giọng vừa clone để người dùng Thử phát
+          // Tß╗▒ ─æß╗Öng CHß╗îN lu├┤n giß╗ìng vß╗½a clone ─æß╗â ng╞░ß╗¥i d├╣ng Thß╗¡ ph├ít
           if (el.ttsVoice) {
             el.ttsVoice.value = `clone:${voices.length - 1}`;
             localStorage.setItem('tts_voice', el.ttsVoice.value);
@@ -1472,23 +1458,23 @@
 
           el.cloneVoiceName.value = '';
           _ttsRefAudioPath = null;
-          if (el.refAudioName) el.refAudioName.textContent = 'Chưa chọn file';
+          if (el.refAudioName) el.refAudioName.textContent = 'Ch╞░a chß╗ìn file';
           if (el.refAudioPreview) el.refAudioPreview.style.display = 'none';
 
-          showToast('Đã clone giọng "' + name + '" thành công!', 'success');
-          addLog('[TTS] Clone giọng "' + name + '" thành công!', 'success');
+          showToast('─É├ú clone giß╗ìng "' + name + '" th├ánh c├┤ng!', 'success');
+          addLog('[TTS] Clone giß╗ìng "' + name + '" th├ánh c├┤ng!', 'success');
         } else {
-          addLog('[TTS] Clone thất bại: ' + (result.error || 'Unknown'), 'error');
-          showToast('Clone giọng thất bại: ' + (result.error || ''), 'error');
+          addLog('[TTS] Clone thß║Ñt bß║íi: ' + (result.error || 'Unknown'), 'error');
+          showToast('Clone giß╗ìng thß║Ñt bß║íi: ' + (result.error || ''), 'error');
         }
       } catch (e) {
         clearInterval(progressTimer);
-        addLog('[TTS] Lỗi: ' + e.message, 'error');
-        showToast('Không thể kết nối TTS engine', 'error');
+        addLog('[TTS] Lß╗ùi: ' + e.message, 'error');
+        showToast('Kh├┤ng thß╗â kß║┐t nß╗æi TTS engine', 'error');
       } finally {
         clearInterval(progressTimer);
         el.btnCloneVoice.disabled = false;
-        el.btnCloneVoice.textContent = 'Thêm giọng clone';
+        el.btnCloneVoice.textContent = 'Th├¬m giß╗ìng clone';
       }
     });
   }
@@ -1570,7 +1556,7 @@
 })();
 
 
-// ─── Prompt Manager ──────────────────────────────
+// ΓöÇΓöÇΓöÇ Prompt Manager ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 (function initPromptManager() {
   const elBtnManage = document.getElementById('btn-manage-prompts');
   const modal = document.getElementById('prompt-modal');
@@ -1583,7 +1569,7 @@
   const btnDelete = document.getElementById('btn-delete-prompt');
 
   const defaultPrompts = [
-    { id: 'p1', name: 'Dịch sang Tiếng Việt (Mặc định)', content: 'Bạn là chuyên gia dịch thuật phụ đề. Hãy dịch phụ đề sau sang Tiếng Việt thật tự nhiên. Giữ nguyên định dạng dòng.' }
+    { id: 'p1', name: 'Dß╗ïch sang Tiß║┐ng Viß╗çt (Mß║╖c ─æß╗ïnh)', content: 'Bß║ín l├á chuy├¬n gia dß╗ïch thuß║¡t phß╗Ñ ─æß╗ü. H├úy dß╗ïch phß╗Ñ ─æß╗ü sau sang Tiß║┐ng Viß╗çt thß║¡t tß╗▒ nhi├¬n. Giß╗» nguy├¬n ─æß╗ïnh dß║íng d├▓ng.' }
   ];
 
   function getPrompts() {
@@ -1652,7 +1638,7 @@
     btnSave.addEventListener('click', () => {
       const name = inpName.value.trim();
       const content = inpContent.value.trim();
-      if (!name || !content) { showToast('Vui lòng nhập tên và nội dung', 'warn'); return; }
+      if (!name || !content) { showToast('Vui l├▓ng nhß║¡p t├¬n v├á nß╗Öi dung', 'warn'); return; }
       
       const prompts = getPrompts();
       const existingId = list.value;
@@ -1665,7 +1651,7 @@
       savePrompts(prompts);
       renderList();
       renderDropdown();
-      showToast('Đã lưu prompt', 'success');
+      showToast('─É├ú l╞░u prompt', 'success');
       inpName.value = ''; inpContent.value = '';
       list.value = '';
     });
@@ -1675,12 +1661,12 @@
     btnDelete.addEventListener('click', () => {
       const existingId = list.value;
       if (!existingId) return;
-      if (existingId === 'p1') { showToast('Không thể xóa prompt mặc định', 'error'); return; }
+      if (existingId === 'p1') { showToast('Kh├┤ng thß╗â x├│a prompt mß║╖c ─æß╗ïnh', 'error'); return; }
       const prompts = getPrompts().filter(x => x.id !== existingId);
       savePrompts(prompts);
       renderList();
       renderDropdown();
-      showToast('Đã xóa prompt', 'success');
+      showToast('─É├ú x├│a prompt', 'success');
       inpName.value = ''; inpContent.value = '';
     });
   }
