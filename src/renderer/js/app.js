@@ -1405,13 +1405,24 @@
       if (!_ttsRefAudioPath) { showToast('Chon file audio mau!', 'warn'); return; }
 
       el.btnCloneVoice.disabled = true;
-      el.btnCloneVoice.textContent = 'Dang tao mau giong...';
-      addLog(`[TTS] Dang clone giong "${name}"...`, 'info');
+      el.btnCloneVoice.textContent = 'Đang tạo mẫu (0%)...';
+      addLog(`[TTS] Đang clone giọng "${name}"...`, 'info');
+
+      // Simulate progress
+      let simProgress = 0;
+      const progressTimer = setInterval(() => {
+        simProgress += Math.random() * 8 + 2;
+        if (simProgress > 95) simProgress = 95;
+        el.btnCloneVoice.textContent = `Đang tạo mẫu (${Math.floor(simProgress)}%)...`;
+      }, 1000);
 
       try {
         const lang = el.ttsLanguage?.value || 'vi';
-        const testText = 'Xin chao, day la giong doc duoc clone boi OmniVoice.';
+        const testText = 'Xin chào, đây là giọng đọc được clone bởi OmniVoice.';
         const result = await api.generateTTS(testText, _ttsRefAudioPath, lang);
+
+        clearInterval(progressTimer);
+        el.btnCloneVoice.textContent = `Đang hoàn tất (100%)...`;
 
         if (result.status === 'ok' && result.audio_path) {
           const voices = getSavedVoices();
@@ -1424,6 +1435,12 @@
           });
           saveSavedVoices(voices);
           renderSavedVoices();
+          
+          // Tự động CHỌN luôn giọng vừa clone để người dùng Thử phát
+          if (el.ttsVoice) {
+            el.ttsVoice.value = `clone:${voices.length - 1}`;
+            localStorage.setItem('tts_voice', el.ttsVoice.value);
+          }
 
           if (el.ttsTestAudio) {
             el.ttsTestAudio.src = 'file:///' + result.audio_path.replace(/\\/g, '/');
@@ -1433,21 +1450,23 @@
 
           el.cloneVoiceName.value = '';
           _ttsRefAudioPath = null;
-          el.refAudioName.textContent = 'Chua chon file';
-          el.refAudioPreview.style.display = 'none';
+          if (el.refAudioName) el.refAudioName.textContent = 'Chưa chọn file';
+          if (el.refAudioPreview) el.refAudioPreview.style.display = 'none';
 
-          showToast('Da clone giong "' + name + '" thanh cong!', 'success');
-          addLog('[TTS] Clone giong "' + name + '" thanh cong!', 'success');
+          showToast('Đã clone giọng "' + name + '" thành công!', 'success');
+          addLog('[TTS] Clone giọng "' + name + '" thành công!', 'success');
         } else {
-          addLog('[TTS] Clone that bai: ' + (result.error || 'Unknown'), 'error');
-          showToast('Clone giong that bai: ' + (result.error || ''), 'error');
+          addLog('[TTS] Clone thất bại: ' + (result.error || 'Unknown'), 'error');
+          showToast('Clone giọng thất bại: ' + (result.error || ''), 'error');
         }
       } catch (e) {
-        addLog('[TTS] Loi: ' + e.message, 'error');
-        showToast('Khong the ket noi TTS engine', 'error');
+        clearInterval(progressTimer);
+        addLog('[TTS] Lỗi: ' + e.message, 'error');
+        showToast('Không thể kết nối TTS engine', 'error');
       } finally {
+        clearInterval(progressTimer);
         el.btnCloneVoice.disabled = false;
-        el.btnCloneVoice.textContent = 'Them giong clone';
+        el.btnCloneVoice.textContent = 'Thêm giọng clone';
       }
     });
   }
