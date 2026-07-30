@@ -1485,9 +1485,10 @@
     }
   }
 
-  // Init saved voices and TTS status
+  // Init backend connection, saved voices and TTS status
+  connectToBackend();
   renderSavedVoices();
-  setTimeout(checkTTSStatus, 8000);
+  setTimeout(checkTTSStatus, 3000);
 
   // Utils
   function fmtTime(s) {
