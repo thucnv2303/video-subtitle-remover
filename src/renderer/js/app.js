@@ -221,7 +221,7 @@
       el.pages.forEach(p => p.classList.remove('active'));
       const target = $(`#page-${page}`);
       if (target) target.classList.add('active');
-      if (page === 'settings') loadSettingsValues();
+      if (page === 'settings') { loadSettingsValues(); checkTTSStatus(); }
     });
   });
 
@@ -1429,7 +1429,8 @@
   async function checkTTSStatus() {
     if (!el.ttsStatusChip) return;
     try {
-      const status = await api.getTTSStatus();
+      const r = await fetch(`${api.base || 'http://localhost:8765'}/api/tts/status`);
+      const status = await r.json();
       if (status.available) {
         el.ttsStatusChip.textContent = '✅ Sẵn sàng';
         el.ttsStatusChip.className = 'status-chip online';
@@ -1437,15 +1438,18 @@
         el.ttsStatusChip.textContent = '❌ Chưa cài OmniVoice';
         el.ttsStatusChip.className = 'status-chip offline';
       }
-    } catch {
+    } catch (e) {
+      console.warn('[TTS] Status check failed:', e.message);
       el.ttsStatusChip.textContent = '⚠ Backend chưa kết nối';
       el.ttsStatusChip.className = 'status-chip offline';
+      // Retry after 10s
+      setTimeout(checkTTSStatus, 10000);
     }
   }
 
-  // Init saved voices and TTS status
+  // Init saved voices and TTS status — delay enough for backend to start
   renderSavedVoices();
-  setTimeout(checkTTSStatus, 3000);
+  setTimeout(checkTTSStatus, 8000);
 
   // ─── Utils ───────────────────────────────────────
   function fmtTime(s) {

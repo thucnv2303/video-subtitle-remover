@@ -5,6 +5,7 @@ const API_BASE = 'http://localhost:8765';
 
 class APIClient {
   constructor() {
+    this.base = API_BASE;
     this.ws = null;
     this.wsListeners = [];
     this.currentVideoPath = null;
