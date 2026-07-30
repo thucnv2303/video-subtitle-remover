@@ -109,6 +109,10 @@
                 <input type="checkbox" id="chk-tts-generate">
                 <span>🎤 Tạo Voice (OmniVoice)</span>
               </label>
+              <label class="chk-label">
+                <input type="checkbox" id="chk-voice-sub">
+                <span>📝 Gán phụ đề từ Voice</span>
+              </label>
             </div>
 
             <!-- Collapsible: SRT Content -->
@@ -143,6 +147,24 @@
               </div>
               <div class="voice-segments-list" id="voice-segments"></div>
               <button class="btn btn-xs btn-accent btn-block" id="btn-voice-apply">🔊 Ghép voice vào video</button>
+            </div>
+
+            <!-- Collapsible: Voice Subtitle -->
+            <div class="content-panel hidden" id="panel-voice-sub">
+              <div class="content-panel-header">
+                <span>📝 Phụ đề từ Voice</span>
+                <div class="content-panel-actions">
+                  <button class="btn btn-xs btn-ghost" id="btn-voicesub-import" title="Nhập SRT">📁</button>
+                </div>
+              </div>
+              <textarea class="content-panel-body" id="voicesub-content" placeholder="Phụ đề sẽ được tạo từ SRT dùng cho voice..."></textarea>
+              <div class="content-panel-footer">
+                <select id="voicesub-mode" class="dropdown" style="font-size:10px;padding:2px 6px;flex:1">
+                  <option value="soft">Soft sub (tắt được)</option>
+                  <option value="hard">Hard sub (đốt vào video)</option>
+                </select>
+                <button class="btn btn-xs btn-accent" id="btn-voicesub-apply">📝 Gán sub vào video</button>
+              </div>
             </div>
 
             <div class="ctrl-divider"></div>

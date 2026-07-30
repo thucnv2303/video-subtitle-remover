@@ -52,8 +52,10 @@
       extractSrt: true,
       aiRewrite: false,
       ttsGenerate: false,
+      voiceSub: false,
       srtContent: '',
       aiContent: '',
+      voiceSubContent: '',
       voiceSegments: [],
     };
   }
@@ -144,6 +146,13 @@
     btnVoiceRegenerate: $('#btn-voice-regenerate'),
     btnVoiceImport: $('#btn-voice-import'),
     btnVoiceApply: $('#btn-voice-apply'),
+    // Voice sub panel
+    chkVoiceSub: $('#chk-voice-sub'),
+    panelVoiceSub: $('#panel-voice-sub'),
+    voicesubContent: $('#voicesub-content'),
+    voicesubMode: $('#voicesub-mode'),
+    btnVoicesubImport: $('#btn-voicesub-import'),
+    btnVoicesubApply: $('#btn-voicesub-apply'),
     // Resize handles
     resizeHandle1: $('#resize-handle-1'),
     resizeHandle2: $('#resize-handle-2'),
@@ -166,6 +175,7 @@
     job.extractSrt = $('#chk-extract-srt')?.checked || false;
     job.aiRewrite = $('#chk-ai-rewrite')?.checked || false;
     job.ttsGenerate = el.chkTtsGenerate?.checked || false;
+    job.voiceSub = el.chkVoiceSub?.checked || false;
   }
 
   // Load a job's settings INTO the controls panel
@@ -179,11 +189,14 @@
     if (chkAi) chkAi.checked = job.aiRewrite;
     const chkTts = el.chkTtsGenerate;
     if (chkTts) chkTts.checked = job.ttsGenerate || false;
+    const chkVS = el.chkVoiceSub;
+    if (chkVS) chkVS.checked = job.voiceSub || false;
     // Toggle content panels
     toggleContentPanels(job);
     // Load content into panels
     if (el.srtContent) el.srtContent.value = job.srtContent || '';
     if (el.aiContent) el.aiContent.value = job.aiContent || '';
+    if (el.voicesubContent) el.voicesubContent.value = job.voiceSubContent || '';
     renderVoiceSegments(job.voiceSegments || []);
     if (job.subtitleMode === 'manual') {
       el.modeManual.classList.add('active'); el.modeAuto.classList.remove('active');
@@ -711,6 +724,7 @@
     el.panelSrt?.classList.toggle('hidden', !job.extractSrt);
     el.panelAi?.classList.toggle('hidden', !job.aiRewrite);
     el.panelVoice?.classList.toggle('hidden', !(job.ttsGenerate));
+    el.panelVoiceSub?.classList.toggle('hidden', !(job.voiceSub));
   }
 
   // Checkbox change → toggle panels
@@ -725,6 +739,20 @@
     el.chkTtsGenerate.addEventListener('change', () => {
       const job = getActiveJob();
       if (job) { job.ttsGenerate = el.chkTtsGenerate.checked; toggleContentPanels(job); }
+    });
+  }
+  if (el.chkVoiceSub) {
+    el.chkVoiceSub.addEventListener('change', () => {
+      const job = getActiveJob();
+      if (job) {
+        job.voiceSub = el.chkVoiceSub.checked;
+        // Auto-populate voice sub content from AI content or SRT
+        if (job.voiceSub && !job.voiceSubContent) {
+          job.voiceSubContent = job.aiContent || job.srtContent || '';
+          if (el.voicesubContent) el.voicesubContent.value = job.voiceSubContent;
+        }
+        toggleContentPanels(job);
+      }
     });
   }
 
@@ -821,6 +849,60 @@
         } else { addLog('[Voice] ❌ ' + result.error, 'error'); }
       } catch (e) { addLog('[Voice] ❌ ' + e.message, 'error'); }
       finally { el.btnVoiceApply.disabled = false; el.btnVoiceApply.textContent = '🔊 Ghép voice vào video'; }
+    });
+  }
+
+  // ─── Action Buttons: Voice Sub ────────────────────
+  if (el.btnVoicesubImport) {
+    el.btnVoicesubImport.addEventListener('click', async () => {
+      if (!window.electronAPI?.openFile) return;
+      const fp = await window.electronAPI.openFile([{name:'SRT',extensions:['srt','txt']}]);
+      if (fp) {
+        try {
+          const resp = await fetch('file:///' + fp.replace(/\\\\/g, '/'));
+          const text = await resp.text();
+          if (el.voicesubContent) el.voicesubContent.value = text;
+          const job = getActiveJob();
+          if (job) job.voiceSubContent = text;
+          addLog('[VoiceSub] Đã nhập SRT: ' + fp.split(/[\\\\/]/).pop(), 'info');
+        } catch (e) { addLog('[VoiceSub] Lỗi: ' + e.message, 'error'); }
+      }
+    });
+  }
+
+  if (el.btnVoicesubApply) {
+    el.btnVoicesubApply.addEventListener('click', async () => {
+      const job = getActiveJob();
+      if (!job) return;
+      const srtText = el.voicesubContent?.value?.trim();
+      if (!srtText) { showToast('Chưa có nội dung phụ đề!', 'warn'); return; }
+
+      // Determine input video: voiced version if exists, otherwise no_sub version
+      const voicedPath = job.outputPath.replace(/_no_sub\.mp4$/, '_voiced.mp4');
+      const inputVideo = job.outputPath; // Use the no_sub output as base
+
+      // Write SRT content to file via a temp endpoint or assume it's already saved
+      const srtPath = job.outputPath.replace(/_no_sub\.mp4$/, '_voice.srt');
+      const subMode = el.voicesubMode?.value || 'soft';
+      const outputPath = job.outputPath.replace(/_no_sub\.mp4$/, '_final.mp4');
+
+      el.btnVoicesubApply.disabled = true;
+      el.btnVoicesubApply.textContent = '⏳ Đang gán...';
+      addLog(`[VoiceSub] Đang gán phụ đề (${subMode})...`, 'info');
+
+      try {
+        const result = await api.burnSubtitle(inputVideo, srtPath, outputPath, subMode);
+        if (result.status === 'ok') {
+          addLog('[VoiceSub] ✅ Đã gán phụ đề: ' + outputPath, 'success');
+          showToast('Đã gán phụ đề thành công!', 'success');
+        } else {
+          addLog('[VoiceSub] ❌ ' + result.error, 'error');
+        }
+      } catch (e) { addLog('[VoiceSub] ❌ ' + e.message, 'error'); }
+      finally {
+        el.btnVoicesubApply.disabled = false;
+        el.btnVoicesubApply.textContent = '📝 Gán sub vào video';
+      }
     });
   }
 
