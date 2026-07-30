@@ -51,6 +51,10 @@
       regions: [],
       extractSrt: true,
       aiRewrite: false,
+      ttsGenerate: false,
+      srtContent: '',
+      aiContent: '',
+      voiceSegments: [],
     };
   }
 
@@ -125,6 +129,24 @@
     ttsTestText: $('#tts-test-text'),
     btnTestTts: $('#btn-test-tts'),
     ttsTestAudio: $('#tts-test-audio'),
+    // Content panels
+    chkTtsGenerate: $('#chk-tts-generate'),
+    panelSrt: $('#panel-srt'),
+    panelAi: $('#panel-ai'),
+    panelVoice: $('#panel-voice'),
+    srtContent: $('#srt-content'),
+    aiContent: $('#ai-content'),
+    voiceSegments: $('#voice-segments'),
+    // Panel action buttons
+    btnAiRegenerate: $('#btn-ai-regenerate'),
+    btnAiImport: $('#btn-ai-import'),
+    btnAiApply: $('#btn-ai-apply'),
+    btnVoiceRegenerate: $('#btn-voice-regenerate'),
+    btnVoiceImport: $('#btn-voice-import'),
+    btnVoiceApply: $('#btn-voice-apply'),
+    // Resize handles
+    resizeHandle1: $('#resize-handle-1'),
+    resizeHandle2: $('#resize-handle-2'),
   };
 
   const ctxOrig = el.canvasOrig.getContext('2d');
@@ -143,6 +165,7 @@
     job.maskMode = el.maskMode?.value || 'box';
     job.extractSrt = $('#chk-extract-srt')?.checked || false;
     job.aiRewrite = $('#chk-ai-rewrite')?.checked || false;
+    job.ttsGenerate = el.chkTtsGenerate?.checked || false;
   }
 
   // Load a job's settings INTO the controls panel
@@ -154,6 +177,14 @@
     const chkAi = $('#chk-ai-rewrite');
     if (chkSrt) chkSrt.checked = job.extractSrt;
     if (chkAi) chkAi.checked = job.aiRewrite;
+    const chkTts = el.chkTtsGenerate;
+    if (chkTts) chkTts.checked = job.ttsGenerate || false;
+    // Toggle content panels
+    toggleContentPanels(job);
+    // Load content into panels
+    if (el.srtContent) el.srtContent.value = job.srtContent || '';
+    if (el.aiContent) el.aiContent.value = job.aiContent || '';
+    renderVoiceSegments(job.voiceSegments || []);
     if (job.subtitleMode === 'manual') {
       el.modeManual.classList.add('active'); el.modeAuto.classList.remove('active');
       el.regionsPanel.classList.remove('hidden');
@@ -669,6 +700,193 @@
     });
   }
 
+  // ─── Content Panel Toggle ────────────────────────
+  function toggleContentPanels(job) {
+    if (!job) {
+      el.panelSrt?.classList.add('hidden');
+      el.panelAi?.classList.add('hidden');
+      el.panelVoice?.classList.add('hidden');
+      return;
+    }
+    el.panelSrt?.classList.toggle('hidden', !job.extractSrt);
+    el.panelAi?.classList.toggle('hidden', !job.aiRewrite);
+    el.panelVoice?.classList.toggle('hidden', !(job.ttsGenerate));
+  }
+
+  // Checkbox change → toggle panels
+  ['chk-extract-srt', 'chk-ai-rewrite'].forEach(id => {
+    const chk = $(`#${id}`);
+    if (chk) chk.addEventListener('change', () => {
+      const job = getActiveJob();
+      if (job) { saveControlsToJob(); toggleContentPanels(job); }
+    });
+  });
+  if (el.chkTtsGenerate) {
+    el.chkTtsGenerate.addEventListener('change', () => {
+      const job = getActiveJob();
+      if (job) { job.ttsGenerate = el.chkTtsGenerate.checked; toggleContentPanels(job); }
+    });
+  }
+
+  // ─── Voice Segments Renderer ─────────────────────
+  function renderVoiceSegments(segments) {
+    if (!el.voiceSegments) return;
+    if (!segments || segments.length === 0) {
+      el.voiceSegments.innerHTML = '<div class="voice-empty">Chưa có voice nào.</div>';
+      return;
+    }
+    el.voiceSegments.innerHTML = segments.map((s, i) => `
+      <div class="voice-segment">
+        <span class="seg-text">#${i+1}: ${s.text?.substring(0, 40) || '...'}...</span>
+        <audio src="file:///${(s.audio_path || '').replace(/\\\\/g, '/')}" controls></audio>
+      </div>`).join('');
+  }
+
+  // ─── Action Buttons: AI ──────────────────────────
+  if (el.btnAiImport) {
+    el.btnAiImport.addEventListener('click', async () => {
+      if (!window.electronAPI?.openFile) return;
+      const fp = await window.electronAPI.openFile([{name:'SRT',extensions:['srt','txt']}]);
+      if (fp) {
+        try {
+          const resp = await fetch('file:///' + fp.replace(/\\\\/g, '/'));
+          const text = await resp.text();
+          if (el.aiContent) el.aiContent.value = text;
+          const job = getActiveJob();
+          if (job) job.aiContent = text;
+          addLog('[AI] Đã nhập SRT: ' + fp.split(/[\\\\/]/).pop(), 'info');
+        } catch (e) { addLog('[AI] Lỗi đọc file: ' + e.message, 'error'); }
+      }
+    });
+  }
+
+  if (el.btnAiApply) {
+    el.btnAiApply.addEventListener('click', async () => {
+      const job = getActiveJob();
+      if (!job) return;
+      const srtText = el.aiContent?.value?.trim();
+      if (!srtText) { showToast('Chưa có nội dung phụ đề!', 'warn'); return; }
+      // Save SRT to temp file
+      const srtPath = job.outputPath.replace(/_no_sub\.mp4$/, '_ai_rewrite.srt');
+      try {
+        // Write SRT via backend — we'll use burn-subtitle directly
+        const outputPath = job.outputPath.replace(/_no_sub\.mp4$/, '_subtitled.mp4');
+        el.btnAiApply.disabled = true;
+        el.btnAiApply.textContent = '⏳ Đang xử lý...';
+        addLog('[AI] Đang burn phụ đề vào video...', 'info');
+        const result = await api.burnSubtitle(job.outputPath, srtPath, outputPath, 'soft');
+        if (result.status === 'ok') {
+          addLog('[AI] ✅ Đã thêm phụ đề: ' + outputPath, 'success');
+          showToast('Đã áp dụng phụ đề!', 'success');
+        } else {
+          addLog('[AI] ❌ Lỗi: ' + result.error, 'error');
+        }
+      } catch (e) { addLog('[AI] ❌ ' + e.message, 'error'); }
+      finally { el.btnAiApply.disabled = false; el.btnAiApply.textContent = '💾 Áp dụng phụ đề vào video'; }
+    });
+  }
+
+  // ─── Action Buttons: Voice ───────────────────────
+  if (el.btnVoiceImport) {
+    el.btnVoiceImport.addEventListener('click', async () => {
+      if (!window.electronAPI?.openFile) return;
+      const fp = await window.electronAPI.openFile([{name:'Audio',extensions:['wav','mp3','flac','ogg','m4a','aac','wma','opus']}]);
+      if (fp) {
+        const job = getActiveJob();
+        if (job) {
+          job.voiceSegments = [{ text: 'Imported audio', audio_path: fp }];
+          renderVoiceSegments(job.voiceSegments);
+          addLog('[Voice] Đã nhập audio: ' + fp.split(/[\\\\/]/).pop(), 'info');
+        }
+      }
+    });
+  }
+
+  if (el.btnVoiceApply) {
+    el.btnVoiceApply.addEventListener('click', async () => {
+      const job = getActiveJob();
+      if (!job || !job.voiceSegments?.length) { showToast('Chưa có voice nào!', 'warn'); return; }
+      const audioPath = job.voiceSegments[0]?.audio_path;
+      if (!audioPath) return;
+      const outputPath = job.outputPath.replace(/_no_sub\.mp4$/, '_voiced.mp4');
+      el.btnVoiceApply.disabled = true;
+      el.btnVoiceApply.textContent = '⏳ Đang ghép...';
+      addLog('[Voice] Đang ghép audio vào video...', 'info');
+      try {
+        const bgVol = parseInt(localStorage.getItem('tts_bg_volume') || '10');
+        const result = await api.replaceAudio(job.outputPath, audioPath, outputPath, bgVol);
+        if (result.status === 'ok') {
+          addLog('[Voice] ✅ Đã ghép voice: ' + outputPath, 'success');
+          showToast('Đã ghép voice vào video!', 'success');
+        } else { addLog('[Voice] ❌ ' + result.error, 'error'); }
+      } catch (e) { addLog('[Voice] ❌ ' + e.message, 'error'); }
+      finally { el.btnVoiceApply.disabled = false; el.btnVoiceApply.textContent = '🔊 Ghép voice vào video'; }
+    });
+  }
+
+  // ─── Column Resize ──────────────────────────────
+  function initColumnResize() {
+    const container = document.querySelector('.three-col');
+    if (!container) return;
+    const colCtrl = container.querySelector('.col-controls');
+    const colPreview = container.querySelector('.col-preview');
+    const colJobs = container.querySelector('.col-jobs');
+    if (!colCtrl || !colPreview || !colJobs) return;
+
+    // Load saved widths
+    const savedWidths = localStorage.getItem('col_widths');
+    if (savedWidths) {
+      try {
+        const w = JSON.parse(savedWidths);
+        if (w.ctrl) colCtrl.style.width = w.ctrl + 'px';
+        if (w.jobs) colJobs.style.width = w.jobs + 'px';
+      } catch {}
+    }
+
+    function setupHandle(handle, leftCol, rightCol, isLeft) {
+      if (!handle) return;
+      let startX, startLeftW, startRightW;
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        startX = e.clientX;
+        startLeftW = leftCol.offsetWidth;
+        startRightW = rightCol.offsetWidth;
+        handle.classList.add('dragging');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        function onMove(e) {
+          const dx = e.clientX - startX;
+          const newLeftW = Math.max(160, Math.min(startLeftW + dx, 500));
+          leftCol.style.width = newLeftW + 'px';
+          if (!isLeft) {
+            const newRightW = Math.max(160, Math.min(startRightW - dx, 500));
+            rightCol.style.width = newRightW + 'px';
+          }
+        }
+        function onUp() {
+          handle.classList.remove('dragging');
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          // Save
+          localStorage.setItem('col_widths', JSON.stringify({
+            ctrl: colCtrl.offsetWidth,
+            jobs: colJobs.offsetWidth
+          }));
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    }
+
+    setupHandle(el.resizeHandle1, colCtrl, colPreview, true);
+    setupHandle(el.resizeHandle2, colPreview, colJobs, false);
+  }
+  initColumnResize();
+
+  // ─── Audio format for ref upload ─────────────────
   // ─── Processing: Per-Job Queue ───────────────────
   function updateStartButton() {
     const job = getActiveJob();
@@ -1041,7 +1259,7 @@
   if (el.btnUploadRefAudio) {
     el.btnUploadRefAudio.addEventListener('click', async () => {
       if (window.electronAPI && window.electronAPI.openFile) {
-        const fp = await window.electronAPI.openFile([{name:'Audio',extensions:['wav','mp3','flac','ogg','m4a']}]);
+        const fp = await window.electronAPI.openFile([{name:'Audio',extensions:['wav','mp3','flac','ogg','m4a','aac','wma','opus']}]);
         if (fp) {
           _ttsRefAudioPath = fp;
           el.refAudioName.textContent = fp.split(/[\\/]/).pop();

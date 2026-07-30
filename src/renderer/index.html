@@ -105,6 +105,44 @@
                 <input type="checkbox" id="chk-ai-rewrite">
                 <span>AI Viết lại phụ đề</span>
               </label>
+              <label class="chk-label">
+                <input type="checkbox" id="chk-tts-generate">
+                <span>🎤 Tạo Voice (OmniVoice)</span>
+              </label>
+            </div>
+
+            <!-- Collapsible: SRT Content -->
+            <div class="content-panel hidden" id="panel-srt">
+              <div class="content-panel-header">
+                <span>📝 Phụ đề trích xuất</span>
+              </div>
+              <textarea class="content-panel-body" id="srt-content" readonly placeholder="Nội dung SRT sẽ hiện sau khi xử lý..."></textarea>
+            </div>
+
+            <!-- Collapsible: AI Rewrite Content -->
+            <div class="content-panel hidden" id="panel-ai">
+              <div class="content-panel-header">
+                <span>🤖 Phụ đề AI viết lại</span>
+                <div class="content-panel-actions">
+                  <button class="btn btn-xs btn-ghost" id="btn-ai-regenerate" title="Tạo lại">🔄</button>
+                  <button class="btn btn-xs btn-ghost" id="btn-ai-import" title="Nhập SRT">📁</button>
+                </div>
+              </div>
+              <textarea class="content-panel-body" id="ai-content" placeholder="Nội dung AI rewrite sẽ hiện ở đây..."></textarea>
+              <button class="btn btn-xs btn-accent btn-block" id="btn-ai-apply">💾 Áp dụng phụ đề vào video</button>
+            </div>
+
+            <!-- Collapsible: Voice Content -->
+            <div class="content-panel hidden" id="panel-voice">
+              <div class="content-panel-header">
+                <span>🎤 Voice đã tạo</span>
+                <div class="content-panel-actions">
+                  <button class="btn btn-xs btn-ghost" id="btn-voice-regenerate" title="Tạo lại">🔄</button>
+                  <button class="btn btn-xs btn-ghost" id="btn-voice-import" title="Nhập Audio">📁</button>
+                </div>
+              </div>
+              <div class="voice-segments-list" id="voice-segments"></div>
+              <button class="btn btn-xs btn-accent btn-block" id="btn-voice-apply">🔊 Ghép voice vào video</button>
             </div>
 
             <div class="ctrl-divider"></div>
@@ -143,6 +181,8 @@
               </button>
             </div>
           </div>
+
+          <div class="col-resize-handle" id="resize-handle-1"></div>
 
           <!-- COL 2: Preview + Log -->
           <div class="col-preview">
@@ -203,6 +243,8 @@
               <div class="log-content" id="log-output"></div>
             </div>
           </div>
+
+          <div class="col-resize-handle" id="resize-handle-2"></div>
 
           <!-- COL 3: Job Queue -->
           <div class="col-jobs">
@@ -293,7 +335,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Audio mẫu (WAV/MP3, 3-15s)</label>
+              <label class="form-label">Audio mẫu (WAV/MP3/M4A/FLAC/OGG, 3-15s)</label>
               <div class="file-upload-row">
                 <button class="btn btn-outline" id="btn-upload-ref-audio">📁 Chọn file audio</button>
                 <span class="form-desc" id="ref-audio-name">Chưa chọn file</span>

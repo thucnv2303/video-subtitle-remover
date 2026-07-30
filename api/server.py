@@ -428,6 +428,85 @@ def tts_from_srt(req: TTSSrtRequest):
         return {"status": "error", "error": str(e)}
 
 
+# ─── Audio/Subtitle Replacement Endpoints ────────────
+class ReplaceAudioRequest(BaseModel):
+    video_path: str
+    audio_path: str
+    output_path: str
+    bg_volume: int = 10  # 0-100, original audio volume
+
+
+class BurnSubtitleRequest(BaseModel):
+    video_path: str
+    srt_path: str
+    output_path: str
+    mode: str = "soft"  # "soft" (mux) or "hard" (burn)
+
+
+@app.post("/api/replace-audio")
+def replace_audio(req: ReplaceAudioRequest):
+    """Replace or mix audio in video with generated voice"""
+    import subprocess
+    bg_vol = req.bg_volume / 100.0
+    try:
+        if bg_vol <= 0:
+            # Full replace: drop original audio
+            cmd = [
+                'ffmpeg', '-y', '-i', req.video_path, '-i', req.audio_path,
+                '-map', '0:v', '-map', '1:a',
+                '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
+                req.output_path
+            ]
+        else:
+            # Mix: original audio at bg_volume + new audio
+            cmd = [
+                'ffmpeg', '-y', '-i', req.video_path, '-i', req.audio_path,
+                '-filter_complex',
+                f'[0:a]volume={bg_vol}[bg];[bg][1:a]amix=inputs=2:duration=first[out]',
+                '-map', '0:v', '-map', '[out]',
+                '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
+                req.output_path
+            ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+        if result.returncode == 0:
+            return {"status": "ok", "output_path": req.output_path}
+        else:
+            return {"status": "error", "error": result.stderr[:500]}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+@app.post("/api/burn-subtitle")
+def burn_subtitle(req: BurnSubtitleRequest):
+    """Burn or mux subtitles into video"""
+    import subprocess
+    try:
+        if req.mode == "hard":
+            # Hard sub: burn into video frames
+            srt_escaped = req.srt_path.replace('\\', '/').replace(':', '\\:')
+            cmd = [
+                'ffmpeg', '-y', '-i', req.video_path,
+                '-vf', f"subtitles='{srt_escaped}'",
+                '-c:a', 'copy',
+                req.output_path
+            ]
+        else:
+            # Soft sub: mux as subtitle track
+            cmd = [
+                'ffmpeg', '-y', '-i', req.video_path, '-i', req.srt_path,
+                '-map', '0:v', '-map', '0:a', '-map', '1:0',
+                '-c:v', 'copy', '-c:a', 'copy', '-c:s', 'mov_text',
+                req.output_path
+            ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+        if result.returncode == 0:
+            return {"status": "ok", "output_path": req.output_path}
+        else:
+            return {"status": "error", "error": result.stderr[:500]}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
 @app.websocket("/ws/progress")
 async def websocket_progress(websocket: WebSocket):
     await websocket.accept()

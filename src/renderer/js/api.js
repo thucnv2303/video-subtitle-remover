@@ -124,6 +124,25 @@ class APIClient {
     });
     return r.json();
   }
+
+  // ─── Audio/Subtitle Replacement ────────────
+  async replaceAudio(videoPath, audioPath, outputPath, bgVolume = 10) {
+    const r = await fetch(`${this.base}/api/replace-audio`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, audio_path: audioPath, output_path: outputPath, bg_volume: bgVolume })
+    });
+    return r.json();
+  }
+
+  async burnSubtitle(videoPath, srtPath, outputPath, mode = 'soft') {
+    const r = await fetch(`${this.base}/api/burn-subtitle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, srt_path: srtPath, output_path: outputPath, mode })
+    });
+    return r.json();
+  }
 }
 
 window.api = new APIClient();
