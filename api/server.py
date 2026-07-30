@@ -373,7 +373,7 @@ def video_info(path: str = Query(...)):
 def tts_status():
     """Check TTS engine availability"""
     try:
-        from api.tts_engine import get_status
+        from tts_engine import get_status
         return get_status()
     except ImportError:
         return {"available": False, "model_loaded": False, "error": "tts_engine not found"}
@@ -397,7 +397,7 @@ class TTSSrtRequest(BaseModel):
 def tts_generate(req: TTSRequest):
     """Generate speech from text"""
     try:
-        from api.tts_engine import generate_speech
+        from tts_engine import generate_speech
         result = generate_speech(
             text=req.text,
             ref_audio_path=req.ref_audio_path,
@@ -416,7 +416,7 @@ def tts_generate(req: TTSRequest):
 def tts_from_srt(req: TTSSrtRequest):
     """Generate voice for all SRT segments"""
     try:
-        from api.tts_engine import generate_from_srt
+        from tts_engine import generate_from_srt
         results = generate_from_srt(
             srt_path=req.srt_path,
             ref_audio_path=req.ref_audio_path,
