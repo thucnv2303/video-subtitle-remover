@@ -111,9 +111,20 @@
     aiEndpoint: $('#ai-endpoint'),
     aiPrompt: $('#ai-prompt'),
     ttsVoice: $('#tts-voice'),
+    ttsLanguage: $('#tts-language'),
     ttsBgVolume: $('#tts-bg-volume'),
     volLabel: $('#vol-label'),
     btnSaveAi: $('#btn-save-ai'),
+    ttsStatusChip: $('#tts-status-chip'),
+    cloneVoiceName: $('#clone-voice-name'),
+    btnUploadRefAudio: $('#btn-upload-ref-audio'),
+    refAudioName: $('#ref-audio-name'),
+    refAudioPreview: $('#ref-audio-preview'),
+    btnCloneVoice: $('#btn-clone-voice'),
+    savedVoicesList: $('#saved-voices-list'),
+    ttsTestText: $('#tts-test-text'),
+    btnTestTts: $('#btn-test-tts'),
+    ttsTestAudio: $('#tts-test-audio'),
   };
 
   const ctxOrig = el.canvasOrig.getContext('2d');
@@ -940,6 +951,7 @@
     if (el.aiEndpoint) el.aiEndpoint.value = localStorage.getItem('ai_endpoint') || '';
     if (el.aiPrompt) el.aiPrompt.value = localStorage.getItem('ai_prompt') || el.aiPrompt.defaultValue;
     if (el.ttsVoice) el.ttsVoice.value = localStorage.getItem('tts_voice') || 'none';
+    if (el.ttsLanguage) el.ttsLanguage.value = localStorage.getItem('tts_language') || 'vi';
     if (el.ttsBgVolume) {
       el.ttsBgVolume.value = localStorage.getItem('tts_bg_volume') || '10';
       if (el.volLabel) el.volLabel.textContent = el.ttsBgVolume.value + '%';
@@ -957,11 +969,179 @@
       localStorage.setItem('ai_endpoint', el.aiEndpoint.value);
       localStorage.setItem('ai_prompt', el.aiPrompt.value);
       localStorage.setItem('tts_voice', el.ttsVoice.value);
+      localStorage.setItem('tts_language', el.ttsLanguage?.value || 'vi');
       localStorage.setItem('tts_bg_volume', el.ttsBgVolume.value);
       addLog('Đã lưu cấu hình AI & TTS!', 'success');
       showToast('Đã lưu cài đặt!', 'success');
     });
   }
+
+  // ─── TTS Voice Clone Management ─────────────────────
+  let _ttsRefAudioPath = null;
+
+  function getSavedVoices() {
+    try { return JSON.parse(localStorage.getItem('tts_voices') || '[]'); }
+    catch { return []; }
+  }
+
+  function saveSavedVoices(voices) {
+    localStorage.setItem('tts_voices', JSON.stringify(voices));
+  }
+
+  function renderSavedVoices() {
+    const voices = getSavedVoices();
+    const list = el.savedVoicesList;
+    if (!list) return;
+    if (voices.length === 0) {
+      list.innerHTML = '<div class="voice-empty">Chưa có giọng clone nào.</div>';
+    } else {
+      list.innerHTML = voices.map((v, i) => `
+        <div class="voice-card">
+          <div class="voice-icon">🎤</div>
+          <div class="voice-info">
+            <div class="voice-name">${v.name}</div>
+            <div class="voice-meta">${v.audioFile} • ${v.date}</div>
+          </div>
+          <div class="voice-actions">
+            <button class="btn-voice-del" data-idx="${i}" title="Xóa">✕</button>
+          </div>
+        </div>`).join('');
+    }
+    // Update voice dropdown
+    updateVoiceDropdown(voices);
+    // Bind delete
+    list.querySelectorAll('.btn-voice-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx);
+        const vs = getSavedVoices();
+        vs.splice(idx, 1);
+        saveSavedVoices(vs);
+        renderSavedVoices();
+        showToast('Đã xóa giọng!', 'info');
+      });
+    });
+  }
+
+  function updateVoiceDropdown(voices) {
+    if (!el.ttsVoice) return;
+    // Keep first 2 options (none, default), remove rest
+    while (el.ttsVoice.options.length > 2) el.ttsVoice.remove(2);
+    voices.forEach((v, i) => {
+      const opt = document.createElement('option');
+      opt.value = `clone:${i}`;
+      opt.textContent = `🧬 ${v.name}`;
+      el.ttsVoice.appendChild(opt);
+    });
+    // Restore selection
+    const saved = localStorage.getItem('tts_voice') || 'none';
+    el.ttsVoice.value = saved;
+  }
+
+  // Upload ref audio
+  if (el.btnUploadRefAudio) {
+    el.btnUploadRefAudio.addEventListener('click', async () => {
+      if (window.electronAPI && window.electronAPI.openFile) {
+        const fp = await window.electronAPI.openFile([{name:'Audio',extensions:['wav','mp3','flac','ogg','m4a']}]);
+        if (fp) {
+          _ttsRefAudioPath = fp;
+          el.refAudioName.textContent = fp.split(/[\\/]/).pop();
+          el.refAudioPreview.src = 'file:///' + fp.replace(/\\/g, '/');
+          el.refAudioPreview.style.display = '';
+          el.btnCloneVoice.disabled = false;
+        }
+      } else {
+        showToast('Chức năng chọn file chỉ khả dụng trong app', 'warn');
+      }
+    });
+  }
+
+  // Clone voice button
+  if (el.btnCloneVoice) {
+    el.btnCloneVoice.addEventListener('click', () => {
+      const name = el.cloneVoiceName?.value?.trim();
+      if (!name) { showToast('Hãy nhập tên giọng!', 'warn'); return; }
+      if (!_ttsRefAudioPath) { showToast('Hãy chọn file audio mẫu!', 'warn'); return; }
+      const voices = getSavedVoices();
+      voices.push({
+        name,
+        audioPath: _ttsRefAudioPath,
+        audioFile: _ttsRefAudioPath.split(/[\\/]/).pop(),
+        date: new Date().toLocaleDateString('vi-VN'),
+      });
+      saveSavedVoices(voices);
+      renderSavedVoices();
+      // Reset form
+      el.cloneVoiceName.value = '';
+      _ttsRefAudioPath = null;
+      el.refAudioName.textContent = 'Chưa chọn file';
+      el.refAudioPreview.style.display = 'none';
+      el.btnCloneVoice.disabled = true;
+      showToast(`Đã thêm giọng "${name}"!`, 'success');
+      addLog(`[TTS] Thêm giọng clone: ${name}`, 'info');
+    });
+  }
+
+  // Test TTS button
+  if (el.btnTestTts) {
+    el.btnTestTts.addEventListener('click', async () => {
+      const text = el.ttsTestText?.value?.trim();
+      if (!text) { showToast('Hãy nhập text để thử!', 'warn'); return; }
+
+      const voiceVal = el.ttsVoice?.value || 'default';
+      let refAudio = null;
+      if (voiceVal.startsWith('clone:')) {
+        const idx = parseInt(voiceVal.split(':')[1]);
+        const voices = getSavedVoices();
+        if (voices[idx]) refAudio = voices[idx].audioPath;
+      }
+
+      el.btnTestTts.disabled = true;
+      el.btnTestTts.textContent = '⏳ Đang tạo...';
+      addLog(`[TTS] Đang tạo giọng thử: "${text.substring(0, 50)}..."`, 'info');
+
+      try {
+        const lang = el.ttsLanguage?.value || 'vi';
+        const result = await api.generateTTS(text, refAudio, lang);
+        if (result.status === 'ok' && result.audio_path) {
+          el.ttsTestAudio.src = 'file:///' + result.audio_path.replace(/\\/g, '/');
+          el.ttsTestAudio.style.display = '';
+          el.ttsTestAudio.play();
+          addLog('[TTS] ✅ Tạo voice thành công!', 'success');
+        } else {
+          addLog('[TTS] ❌ Lỗi: ' + (result.error || 'Unknown'), 'error');
+          showToast('Lỗi TTS: ' + (result.error || 'Không rõ'), 'error');
+        }
+      } catch (e) {
+        addLog('[TTS] ❌ Lỗi kết nối: ' + e.message, 'error');
+        showToast('Không thể kết nối TTS engine', 'error');
+      } finally {
+        el.btnTestTts.disabled = false;
+        el.btnTestTts.textContent = '▶ Thử phát';
+      }
+    });
+  }
+
+  // Check TTS status
+  async function checkTTSStatus() {
+    if (!el.ttsStatusChip) return;
+    try {
+      const status = await api.getTTSStatus();
+      if (status.available) {
+        el.ttsStatusChip.textContent = '✅ Sẵn sàng';
+        el.ttsStatusChip.className = 'status-chip online';
+      } else {
+        el.ttsStatusChip.textContent = '❌ Chưa cài OmniVoice';
+        el.ttsStatusChip.className = 'status-chip offline';
+      }
+    } catch {
+      el.ttsStatusChip.textContent = '⚠ Backend chưa kết nối';
+      el.ttsStatusChip.className = 'status-chip offline';
+    }
+  }
+
+  // Init saved voices and TTS status
+  renderSavedVoices();
+  setTimeout(checkTTSStatus, 3000);
 
   // ─── Utils ───────────────────────────────────────
   function fmtTime(s) {

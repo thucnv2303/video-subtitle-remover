@@ -247,18 +247,83 @@
               <textarea id="ai-prompt" class="form-input" rows="3">Hãy dịch các phụ đề sau sang Tiếng Việt. Giữ nguyên định dạng SRT (chỉ dịch nội dung chữ, không đổi timestamp). Nếu đã là Tiếng Việt, hãy kiểm tra lỗi chính tả và viết lại cho tự nhiên hơn.</textarea>
             </div>
             <div class="form-divider"></div>
+
+            <!-- OmniVoice TTS Section -->
+            <h3 style="margin-top:8px">🎤 Lồng tiếng AI (OmniVoice TTS)</h3>
             <div class="form-group">
-              <label class="form-label accent">🎤 Lồng tiếng AI (TTS)</label>
+              <label class="form-label">Trạng thái TTS</label>
+              <div class="tts-status-row">
+                <span class="status-chip" id="tts-status-chip">⏳ Đang kiểm tra...</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Chọn giọng đọc</label>
               <select id="tts-voice" class="dropdown form-input">
                 <option value="none">Không lồng tiếng</option>
-                <option value="vi-VN-HoaiMyNeural">Giọng Nữ (Hoài My)</option>
-                <option value="vi-VN-NamMinhNeural">Giọng Nam (Nam Minh)</option>
+                <option value="default">Giọng mặc định (OmniVoice)</option>
               </select>
             </div>
+
+            <div class="form-group">
+              <label class="form-label">Ngôn ngữ</label>
+              <select id="tts-language" class="dropdown form-input">
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="ko">🇰🇷 한국어</option>
+              </select>
+            </div>
+
             <div class="form-group">
               <label class="form-label"><span>Âm lượng gốc (Nhạc nền)</span><span id="vol-label" class="vol-val">10%</span></label>
               <input type="range" id="tts-bg-volume" min="0" max="100" value="10">
             </div>
+
+            <div class="form-divider"></div>
+
+            <!-- Voice Clone Section -->
+            <h3>🧬 Clone giọng mới</h3>
+            <p class="form-desc" style="margin-bottom:8px">Upload audio mẫu (3-15 giây) để clone giọng nói bất kỳ</p>
+
+            <div class="form-group">
+              <label class="form-label">Tên giọng</label>
+              <input type="text" id="clone-voice-name" class="form-input" placeholder="VD: Giọng MC Thúy, Narrator...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Audio mẫu (WAV/MP3, 3-15s)</label>
+              <div class="file-upload-row">
+                <button class="btn btn-outline" id="btn-upload-ref-audio">📁 Chọn file audio</button>
+                <span class="form-desc" id="ref-audio-name">Chưa chọn file</span>
+              </div>
+              <audio id="ref-audio-preview" controls style="width:100%;margin-top:6px;display:none"></audio>
+            </div>
+
+            <button id="btn-clone-voice" class="btn btn-accent" style="margin-top:4px" disabled>🧬 Thêm giọng clone</button>
+
+            <div class="form-divider"></div>
+
+            <!-- Saved Voices List -->
+            <h3>📋 Giọng đã lưu</h3>
+            <div id="saved-voices-list" class="saved-voices-list">
+              <div class="voice-empty">Chưa có giọng clone nào.</div>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <!-- Test TTS -->
+            <h3>🔊 Thử giọng</h3>
+            <div class="form-group">
+              <textarea id="tts-test-text" class="form-input" rows="2" placeholder="Nhập text để thử giọng...">Xin chào, đây là giọng đọc được tạo bởi OmniVoice.</textarea>
+            </div>
+            <div class="tts-test-row">
+              <button id="btn-test-tts" class="btn btn-primary">▶ Thử phát</button>
+              <audio id="tts-test-audio" controls style="flex:1;display:none"></audio>
+            </div>
+
+            <div class="form-divider"></div>
             <button id="btn-save-ai" class="btn btn-primary" style="margin-top:12px;">💾 Lưu cài đặt AI</button>
           </div>
 
