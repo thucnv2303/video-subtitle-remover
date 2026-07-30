@@ -1359,29 +1359,58 @@
     });
   }
 
-  // Clone voice button
+  // Clone voice button - test-generate to validate clone
   if (el.btnCloneVoice) {
-    el.btnCloneVoice.addEventListener('click', () => {
+    el.btnCloneVoice.addEventListener('click', async () => {
       const name = el.cloneVoiceName?.value?.trim();
-      if (!name) { showToast('Hãy nhập tên giọng!', 'warn'); return; }
-      if (!_ttsRefAudioPath) { showToast('Hãy chọn file audio mẫu!', 'warn'); return; }
-      const voices = getSavedVoices();
-      voices.push({
-        name,
-        audioPath: _ttsRefAudioPath,
-        audioFile: _ttsRefAudioPath.split(/[\\/]/).pop(),
-        date: new Date().toLocaleDateString('vi-VN'),
-      });
-      saveSavedVoices(voices);
-      renderSavedVoices();
-      // Reset form
-      el.cloneVoiceName.value = '';
-      _ttsRefAudioPath = null;
-      el.refAudioName.textContent = 'Chưa chọn file';
-      el.refAudioPreview.style.display = 'none';
+      if (!name) { showToast('Nhap ten giong!', 'warn'); return; }
+      if (!_ttsRefAudioPath) { showToast('Chon file audio mau!', 'warn'); return; }
+
       el.btnCloneVoice.disabled = true;
-      showToast(`Đã thêm giọng "${name}"!`, 'success');
-      addLog(`[TTS] Thêm giọng clone: ${name}`, 'info');
+      el.btnCloneVoice.textContent = 'Dang tao mau giong...';
+      addLog(`[TTS] Dang clone giong "${name}"...`, 'info');
+
+      try {
+        const lang = el.ttsLanguage?.value || 'vi';
+        const testText = 'Xin chao, day la giong doc duoc clone boi OmniVoice.';
+        const result = await api.generateTTS(testText, _ttsRefAudioPath, lang);
+
+        if (result.status === 'ok' && result.audio_path) {
+          const voices = getSavedVoices();
+          voices.push({
+            name,
+            audioPath: _ttsRefAudioPath,
+            audioFile: _ttsRefAudioPath.split(/[\\/]/).pop(),
+            samplePath: result.audio_path,
+            date: new Date().toLocaleDateString('vi-VN'),
+          });
+          saveSavedVoices(voices);
+          renderSavedVoices();
+
+          if (el.ttsTestAudio) {
+            el.ttsTestAudio.src = 'file:///' + result.audio_path.replace(/\\/g, '/');
+            el.ttsTestAudio.style.display = '';
+            el.ttsTestAudio.play();
+          }
+
+          el.cloneVoiceName.value = '';
+          _ttsRefAudioPath = null;
+          el.refAudioName.textContent = 'Chua chon file';
+          el.refAudioPreview.style.display = 'none';
+
+          showToast('Da clone giong "' + name + '" thanh cong!', 'success');
+          addLog('[TTS] Clone giong "' + name + '" thanh cong!', 'success');
+        } else {
+          addLog('[TTS] Clone that bai: ' + (result.error || 'Unknown'), 'error');
+          showToast('Clone giong that bai: ' + (result.error || ''), 'error');
+        }
+      } catch (e) {
+        addLog('[TTS] Loi: ' + e.message, 'error');
+        showToast('Khong the ket noi TTS engine', 'error');
+      } finally {
+        el.btnCloneVoice.disabled = false;
+        el.btnCloneVoice.textContent = 'Them giong clone';
+      }
     });
   }
 
@@ -1389,7 +1418,7 @@
   if (el.btnTestTts) {
     el.btnTestTts.addEventListener('click', async () => {
       const text = el.ttsTestText?.value?.trim();
-      if (!text) { showToast('Hãy nhập text để thử!', 'warn'); return; }
+      if (!text) { showToast('Nhap text de thu!', 'warn'); return; }
 
       const voiceVal = el.ttsVoice?.value || 'default';
       let refAudio = null;
@@ -1400,8 +1429,8 @@
       }
 
       el.btnTestTts.disabled = true;
-      el.btnTestTts.textContent = '⏳ Đang tạo...';
-      addLog(`[TTS] Đang tạo giọng thử: "${text.substring(0, 50)}..."`, 'info');
+      el.btnTestTts.textContent = 'Dang tao...';
+      addLog(`[TTS] Dang tao giong thu: "${text.substring(0, 50)}..."`, 'info');
 
       try {
         const lang = el.ttsLanguage?.value || 'vi';
@@ -1410,17 +1439,17 @@
           el.ttsTestAudio.src = 'file:///' + result.audio_path.replace(/\\/g, '/');
           el.ttsTestAudio.style.display = '';
           el.ttsTestAudio.play();
-          addLog('[TTS] ✅ Tạo voice thành công!', 'success');
+          addLog('[TTS] Tao voice thanh cong!', 'success');
         } else {
-          addLog('[TTS] ❌ Lỗi: ' + (result.error || 'Unknown'), 'error');
-          showToast('Lỗi TTS: ' + (result.error || 'Không rõ'), 'error');
+          addLog('[TTS] Loi: ' + (result.error || 'Unknown'), 'error');
+          showToast('Loi TTS: ' + (result.error || ''), 'error');
         }
       } catch (e) {
-        addLog('[TTS] ❌ Lỗi kết nối: ' + e.message, 'error');
-        showToast('Không thể kết nối TTS engine', 'error');
+        addLog('[TTS] Loi ket noi: ' + e.message, 'error');
+        showToast('Khong the ket noi TTS engine', 'error');
       } finally {
         el.btnTestTts.disabled = false;
-        el.btnTestTts.textContent = '▶ Thử phát';
+        el.btnTestTts.textContent = 'Thu phat';
       }
     });
   }
@@ -1432,47 +1461,30 @@
       const r = await fetch(`${api.base || 'http://localhost:8765'}/api/tts/status`);
       const status = await r.json();
       if (status.available) {
-        el.ttsStatusChip.textContent = '✅ Sẵn sàng';
+        el.ttsStatusChip.textContent = 'San sang';
         el.ttsStatusChip.className = 'status-chip online';
       } else {
-        el.ttsStatusChip.textContent = '❌ Chưa cài OmniVoice';
+        el.ttsStatusChip.textContent = 'Chua cai OmniVoice';
         el.ttsStatusChip.className = 'status-chip offline';
       }
     } catch (e) {
       console.warn('[TTS] Status check failed:', e.message);
-      el.ttsStatusChip.textContent = '⚠ Backend chưa kết nối';
+      el.ttsStatusChip.textContent = 'Backend chua ket noi';
       el.ttsStatusChip.className = 'status-chip offline';
-      // Retry after 10s
       setTimeout(checkTTSStatus, 10000);
     }
   }
 
-  // Init saved voices and TTS status — delay enough for backend to start
+  // Init saved voices and TTS status
   renderSavedVoices();
   setTimeout(checkTTSStatus, 8000);
 
-  // ─── Utils ───────────────────────────────────────
+  // Utils
   function fmtTime(s) {
     if (!s || isNaN(s)) return '00:00';
-    const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   }
 
-  // ─── Python Log ──────────────────────────────────
-  if (window.electronAPI) {
-    window.electronAPI.onPythonLog((msg) => { if (msg && msg.trim()) addLog(msg.trim()); });
-    window.electronAPI.onPythonError((msg) => { if (msg && msg.trim()) addLog(msg.trim(), 'error'); });
-  }
-
-  // ─── Init ────────────────────────────────────────
-  async function init() {
-    addLog('Video Subtitle Remover v1.0', 'info');
-    if (window.electronAPI) {
-      try { await window.electronAPI.startPython(); }
-      catch (e) { addLog('Không thể khởi động Python: ' + e.message, 'error'); }
-    }
-    connectToBackend();
-  }
-
-  init();
-})();
+});
