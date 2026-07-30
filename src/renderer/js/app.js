@@ -153,6 +153,162 @@
     voicesubMode: $('#voicesub-mode'),
     btnVoicesubImport: $('#btn-voicesub-import'),
     btnVoicesubApply: $('#btn-voicesub-apply'),
+/**
+ * Video Subtitle Remover - Main App Logic
+ * Each job is independently configurable and queued for sequential processing.
+ */
+(function () {
+  'use strict';
+
+  // ─── Constants ──────────────────────────────────
+  const REGION_COLORS = ['#7c3aed', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#ef4444'];
+
+  // ─── State ───────────────────────────────────────
+  const state = {
+    jobs: [],
+    activeJobId: null,
+    outputDir: null,
+    isBackendReady: false,
+    isDrawing: false,      // draw mode active
+    isSelecting: false,    // currently dragging
+    selectionStart: null,
+    playIntervalOrig: null,
+    playIntervalResult: null,
+    currentFrameOrig: 0,
+    currentFrameResult: 0,
+    videoInfo: null,
+    processingJobId: null,
+    processingPassIndex: 0, // current pass in multi-pass
+    pollTimer: null,
+  };
+
+  // Job factory: each job has its own settings
+  function createJob(filePath) {
+    const fileName = filePath.split(/[\\/]/).pop();
+    const baseName = fileName.replace(/\.[^.]+$/, '');
+    let outputPath;
+    if (state.outputDir) {
+      outputPath = state.outputDir.replace(/\\/g, '/') + '/' + baseName + '_no_sub.mp4';
+    } else {
+      const dir = filePath.replace(/\\/g, '/').replace(/\/[^/]+$/, '');
+      outputPath = dir + '/' + baseName + '_no_sub.mp4';
+    }
+    return {
+      id: Math.random().toString(36).substr(2, 9),
+      filePath,
+      fileName,
+      outputPath,
+      status: 'idle',
+      progress: 0,
+      algorithm: 'sttn-auto',
+      maskMode: 'box',
+      subtitleMode: 'auto',
+      regions: [],
+      extractSrt: true,
+      aiRewrite: false,
+      ttsGenerate: false,
+      ttsVoice: 'none',
+      voiceSub: false,
+      srtContent: '',
+      aiContent: '',
+      voiceSubContent: '',
+      voiceSegments: [],
+    };
+  }
+
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => document.querySelectorAll(s);
+
+  // ─── DOM Refs ────────────────────────────────────
+  const el = {
+    navItems: $$('.nav-item'),
+    pages: $$('.page'),
+    statusDot: $('#backend-status .status-dot'),
+    statusText: $('#backend-status .status-text'),
+    gpuBadge: $('#gpu-badge'),
+    gpuDetail: $('#gpu-detail'),
+    gpuChip: $('#gpu-chip'),
+    cudaVersion: $('#cuda-version'),
+    canvasOrig: $('#canvas-original'),
+    canvasResult: $('#canvas-result'),
+    dropZone: $('#drop-zone'),
+    subtitleOverlay: $('#subtitle-overlay'),
+    resultPlaceholder: $('#result-placeholder'),
+    btnOpenFile: $('#btn-open-file'),
+    btnOutputDir: $('#btn-output-dir'),
+    btnDrawRegion: $('#btn-draw-region'),
+    regionsPanel: $('#regions-panel'),
+    regionsList: $('#regions-list'),
+    maskMode: $('#mask-mode'),
+    timelineOrig: $('#timeline-orig'),
+    frameInfoOrig: $('#frame-info-orig'),
+    btnPlayOrig: $('#btn-play-orig'),
+    btnPrevOrig: $('#btn-prev-orig'),
+    btnNextOrig: $('#btn-next-orig'),
+    timelineResult: $('#timeline-result'),
+    frameInfoResult: $('#frame-info-result'),
+    btnPlayResult: $('#btn-play-result'),
+    btnPrevResult: $('#btn-prev-result'),
+    btnNextResult: $('#btn-next-result'),
+    metaName: $('#meta-name'),
+    metaRes: $('#meta-res'),
+    metaFps: $('#meta-fps'),
+    metaDur: $('#meta-dur'),
+    modeAuto: $('#mode-auto'),
+    modeManual: $('#mode-manual'),
+    algoSelect: $('#algo-select'),
+
+    btnStart: $('#btn-start'),
+    btnCancel: $('#btn-cancel'),
+    progressSection: $('#progress-section'),
+    progressBar: $('#progress-bar'),
+    progressLabel: $('#progress-label'),
+    progressEta: $('#progress-eta'),
+    logOutput: $('#log-output'),
+    btnCopyLog: $('#btn-copy-log'),
+    btnClearLog: $('#btn-clear-log'),
+    jobList: $('#job-list'),
+    aiProvider: $('#ai-provider'),
+    aiApiKey: $('#ai-api-key'),
+    aiEndpoint: $('#ai-endpoint'),
+    aiPrompt: $('#ai-prompt'),
+    ttsVoice: $('#tts-voice'),
+    ttsLanguage: $('#tts-language'),
+    ttsBgVolume: $('#tts-bg-volume'),
+    volLabel: $('#vol-label'),
+    btnSaveAi: $('#btn-save-ai'),
+    ttsStatusChip: $('#tts-status-chip'),
+    cloneVoiceName: $('#clone-voice-name'),
+    btnUploadRefAudio: $('#btn-upload-ref-audio'),
+    refAudioName: $('#ref-audio-name'),
+    refAudioPreview: $('#ref-audio-preview'),
+    btnCloneVoice: $('#btn-clone-voice'),
+    savedVoicesList: $('#saved-voices-list'),
+    ttsTestText: $('#tts-test-text'),
+    btnTestTts: $('#btn-test-tts'),
+    ttsTestAudio: $('#tts-test-audio'),
+    // Content panels
+    chkTtsGenerate: $('#chk-tts-generate'),
+    panelSrt: $('#panel-srt'),
+    panelAi: $('#panel-ai'),
+    panelVoice: $('#panel-voice'),
+    srtContent: $('#srt-content'),
+    aiContent: $('#ai-content'),
+    voiceSegments: $('#voice-segments'),
+    // Panel action buttons
+    btnAiRegenerate: $('#btn-ai-regenerate'),
+    btnAiImport: $('#btn-ai-import'),
+    btnAiApply: $('#btn-ai-apply'),
+    btnVoiceRegenerate: $('#btn-voice-regenerate'),
+    btnVoiceImport: $('#btn-voice-import'),
+    btnVoiceApply: $('#btn-voice-apply'),
+    // Voice sub panel
+    chkVoiceSub: $('#chk-voice-sub'),
+    panelVoiceSub: $('#panel-voice-sub'),
+    voicesubContent: $('#voicesub-content'),
+    voicesubMode: $('#voicesub-mode'),
+    btnVoicesubImport: $('#btn-voicesub-import'),
+    btnVoicesubApply: $('#btn-voicesub-apply'),
     // Resize handles
     resizeHandle1: $('#resize-handle-1'),
     resizeHandle2: $('#resize-handle-2'),
@@ -176,6 +332,7 @@
     job.aiRewrite = $('#chk-ai-rewrite')?.checked || false;
     job.ttsGenerate = el.chkTtsGenerate?.checked || false;
     job.voiceSub = el.chkVoiceSub?.checked || false;
+    job.ttsVoice = $('#job-tts-voice')?.value || 'none';
   }
 
   // Load a job's settings INTO the controls panel
@@ -275,6 +432,7 @@
       state.isBackendReady = true;
       setStatus('online');
       addLog('Backend đã sẵn sàng!', 'success');
+      updateJobVoiceDropdown();
       api.connectWebSocket();
       api.onWebSocketMessage(handleWSMessage);
       loadGpuInfo();
@@ -643,6 +801,7 @@
       endFrame: state.videoInfo.total_frames - 1,
       color: REGION_COLORS[idx % REGION_COLORS.length],
       label: idx + 1,
+      maskMode: 'box'
     };
     job.regions.push(region);
     addLog(`Vùng #${region.label} đã thêm: Y[${region.ymin}-${region.ymax}] X[${region.xmin}-${region.xmax}]`, 'success');
@@ -663,6 +822,7 @@
       const card = document.createElement('div');
       card.className = 'region-card';
       card.style.setProperty('--region-color', r.color);
+      const maskMode = r.maskMode || 'box';
       card.innerHTML = `
         <div class="region-top">
           <span class="region-label" style="color:${r.color}">● Vùng #${r.label}</span>
@@ -674,6 +834,12 @@
           <input type="number" class="region-start" data-rid="${r.id}" value="${r.startFrame}" min="0" max="${totalFrames}">
           <span>→</span>
           <input type="number" class="region-end" data-rid="${r.id}" value="${r.endFrame}" min="0" max="${totalFrames}">
+        </div>
+        <div class="region-mask-wrap">
+          <select class="region-mask-mode" data-rid="${r.id}">
+            <option value="box" ${maskMode==='box'?'selected':''}>Box</option>
+            <option value="mask" ${maskMode==='mask'?'selected':''}>Mask</option>
+          </select>
         </div>
       `;
       el.regionsList.appendChild(card);
@@ -700,6 +866,12 @@
       inp.addEventListener('change', () => {
         const r = job.regions.find(x => x.id === inp.dataset.rid);
         if (r) r.endFrame = parseInt(inp.value) || 0;
+      });
+    });
+    el.regionsList.querySelectorAll('.region-mask-mode').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const r = job.regions.find(x => x.id === sel.dataset.rid);
+        if (r) r.maskMode = sel.value;
       });
     });
   }
@@ -955,165 +1127,6 @@
   }
 
 
-  // ─── Column Resize ──────────────────────────────
-  function initColumnResize() {
-    const container = document.querySelector('.three-col');
-    if (!container) return;
-    const colCtrl = container.querySelector('.col-controls');
-    const colPreview = container.querySelector('.col-preview');
-    const colJobs = container.querySelector('.col-jobs');
-    if (!colCtrl || !colPreview || !colJobs) return;
-
-    // Load saved widths
-    const savedWidths = localStorage.getItem('col_widths');
-    if (savedWidths) {
-      try {
-        const w = JSON.parse(savedWidths);
-        if (w.ctrl) colCtrl.style.width = w.ctrl + 'px';
-        if (w.jobs) colJobs.style.width = w.jobs + 'px';
-      } catch {}
-    }
-
-    function setupHandle(handle, leftCol, rightCol, isLeft) {
-      if (!handle) return;
-      let startX, startLeftW, startRightW;
-      handle.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        startX = e.clientX;
-        startLeftW = leftCol.offsetWidth;
-        startRightW = rightCol.offsetWidth;
-        handle.classList.add('dragging');
-        document.body.style.cursor = 'col-resize';
-        document.body.style.userSelect = 'none';
-
-        function onMove(e) {
-          const dx = e.clientX - startX;
-          const newLeftW = Math.max(160, Math.min(startLeftW + dx, 500));
-          leftCol.style.width = newLeftW + 'px';
-          if (!isLeft) {
-            const newRightW = Math.max(160, Math.min(startRightW - dx, 500));
-            rightCol.style.width = newRightW + 'px';
-          }
-        }
-        function onUp() {
-          handle.classList.remove('dragging');
-          document.body.style.cursor = '';
-          document.body.style.userSelect = '';
-          document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup', onUp);
-          // Save
-          localStorage.setItem('col_widths', JSON.stringify({
-            ctrl: colCtrl.offsetWidth,
-            jobs: colJobs.offsetWidth
-          }));
-        }
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
-      });
-    }
-
-    setupHandle(el.resizeHandle1, colCtrl, colPreview, true);
-    setupHandle(el.resizeHandle2, colPreview, colJobs, false);
-  }
-  initColumnResize();
-
-  // ─── Audio format for ref upload ─────────────────
-  // ─── Processing: Per-Job Queue ───────────────────
-  function updateStartButton() {
-    const job = getActiveJob();
-    // Enable if: there's an active job, it's idle (not yet queued), and backend is ready
-    const canStart = job && job.status === 'idle' && state.isBackendReady;
-    el.btnStart.disabled = !canStart;
-
-    // Show cancel only if active job is processing
-    if (job && (job.status === 'processing' || job.status === 'queued')) {
-      el.btnStart.classList.add('hidden');
-      el.btnCancel.classList.remove('hidden');
-    } else {
-      el.btnStart.classList.remove('hidden');
-      el.btnCancel.classList.add('hidden');
-    }
-  }
-
-  el.btnStart.addEventListener('click', () => {
-    const job = getActiveJob();
-    if (!job || job.status !== 'idle' || !state.isBackendReady) return;
-
-    // Save current controls to job before queuing
-    saveControlsToJob();
-
-    // Mark as queued
-    job.status = 'queued';
-    addLog(`Job "${job.fileName}" đã thêm vào hàng đợi.`, 'info');
-    renderJobList();
-    updateStartButton();
-
-    // Try to start processing if nothing is running
-    processNextJob();
-  });
-
-  el.btnCancel.addEventListener('click', async () => {
-    const job = getActiveJob();
-    if (!job) return;
-    if (job.status === 'processing') {
-      try { await api.cancelProcess(); } catch (e) {}
-      job.status = 'idle';
-      job.progress = 0;
-      state.processingJobId = null;
-      if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
-      addLog(`Đã hủy job "${job.fileName}".`, 'warning');
-    } else if (job.status === 'queued') {
-      job.status = 'idle';
-      addLog(`Đã gỡ "${job.fileName}" khỏi hàng đợi.`, 'warning');
-    }
-    renderJobList();
-    updateStartButton();
-    el.progressSection.classList.add('hidden');
-  });
-
-  // Process the next queued job (multi-pass for multi-region)
-  async function processNextJob() {
-    if (state.processingJobId) return;
-    const nextJob = state.jobs.find(j => j.status === 'queued');
-    if (!nextJob) return;
-
-    nextJob.status = 'processing';
-    nextJob.progress = 0;
-    state.processingJobId = nextJob.id;
-    state.processingPassIndex = 0;
-    renderJobList();
-
-    addLog(`▶ Bắt đầu xử lý: ${nextJob.fileName}`, 'success');
-    if (state.activeJobId === nextJob.id) {
-      el.progressSection.classList.remove('hidden');
-      updateStartButton();
-    }
-
-    await runNextPass(nextJob);
-  }
-
-  async function runNextPass(job) {
-    const aiConfig = {
-      provider: localStorage.getItem('ai_provider') || 'gemini',
-      api_key: localStorage.getItem('ai_api_key') || '',
-      endpoint: localStorage.getItem('ai_endpoint') || '',
-      prompt: localStorage.getItem('ai_prompt') || ''
-    };
-
-    let subtitleAreas = [];
-    let frameRange = null;
-    let inputPath = job.filePath;
-
-    if (job.subtitleMode === 'manual' && job.regions.length > 0) {
-      // Multi-pass: each region is a separate pass
-      const passIdx = state.processingPassIndex;
-      if (passIdx >= job.regions.length) {
-        // All passes done
-        onJobFinished(job);
-        return;
-      }
-      const region = job.regions[passIdx];
-      subtitleAreas = [[region.ymin, region.ymax, region.xmin, region.xmax]];
       frameRange = { start: region.startFrame, end: region.endFrame };
 
       // For pass > 0: input is the output of previous pass
@@ -1144,7 +1157,7 @@
         extract_srt: passIdx === 0 ? job.extractSrt : false,
         ai_rewrite: passIdx === 0 ? job.aiRewrite : false,
         ai_config: aiConfig,
-        tts_voice: passIdx === job.regions.length - 1 ? (localStorage.getItem('tts_voice') || 'none') : 'none',
+        tts_voice: passIdx === job.regions.length - 1 && job.ttsGenerate ? (job.ttsVoice || localStorage.getItem('tts_voice') || 'none') : 'none',
         tts_bg_volume: parseInt(localStorage.getItem('tts_bg_volume') || '10')
       }];
 
@@ -1442,7 +1455,8 @@
             date: new Date().toLocaleDateString('vi-VN'),
           });
           saveSavedVoices(voices);
-          renderSavedVoices();
+      renderSavedVoices();
+      updateJobVoiceDropdown();
           
           // Tự động CHỌN luôn giọng vừa clone để người dùng Thử phát
           if (el.ttsVoice) {

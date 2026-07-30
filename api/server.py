@@ -526,6 +526,23 @@ def burn_subtitle(req: BurnSubtitleRequest):
         return {"status": "error", "error": str(e)}
 
 
+class WriteFileRequest(BaseModel):
+    path: str
+    content: str
+
+@app.post("/api/write-file")
+def write_file(req: WriteFileRequest):
+    """Write text content to a file path"""
+    try:
+        import os as _os
+        _os.makedirs(_os.path.dirname(req.path), exist_ok=True)
+        with open(req.path, 'w', encoding='utf-8') as f:
+            f.write(req.content)
+        return {"status": "ok", "path": req.path}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
 @app.websocket("/ws/progress")
 async def websocket_progress(websocket: WebSocket):
     await websocket.accept()

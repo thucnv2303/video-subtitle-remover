@@ -150,6 +150,24 @@ class APIClient {
     });
     return r.json();
   }
+
+  async writeFile(path, content) {
+    const r = await fetch(`${this.base}/api/write-file`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, content })
+    });
+    return r.json();
+  }
+
+  async generateTTS(srtPath, voice, bgVolume = 10) {
+    const r = await fetch(`${this.base}/api/tts/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ srt_path: srtPath, voice, bg_volume: bgVolume })
+    });
+    return r.json();
+  }
 }
 
 window.api = new APIClient();

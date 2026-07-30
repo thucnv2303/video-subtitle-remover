@@ -935,7 +935,6 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .job-card-header .chk-label {
   margin: 0;
-  pointer-events: none; /* Let the header handle clicks */
 }
 .btn-expand {
   background: transparent;

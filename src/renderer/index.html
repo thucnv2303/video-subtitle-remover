@@ -136,7 +136,20 @@
                   <button class="btn-expand">▼</button>
                 </div>
                 <div class="job-card-body" id="body-voice">
-                  
+                  <div class="form-group">
+                    <label class="form-label">Chọn giọng đọc</label>
+                    <select id="job-tts-voice" class="dropdown form-input">
+                      <option value="none">— Không tạo voice —</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Test giọng</label>
+                    <input type="text" id="job-tts-test-text" class="form-input" placeholder="Nhập văn bản để nghe thử..." value="Xin chào, đây là giọng đọc AI.">
+                    <div style="display:flex; gap:6px; margin-top:6px;">
+                      <button class="btn btn-xs btn-ghost" id="job-btn-test-voice">▶ Nghe thử</button>
+                      <audio id="job-tts-test-audio" style="display:none;"></audio>
+                    </div>
+                  </div>
                   <div class="voice-segments-list" id="voice-segments" style="max-height:100px"></div>
                   <button class="btn btn-xs btn-accent btn-block" id="btn-voice-apply">🔊 Ghép voice vào video</button>
                 </div>
@@ -333,10 +346,6 @@
               <label class="form-label">Endpoint URL (Ollama)</label>
               <input type="text" id="ai-endpoint" class="form-input" placeholder="VD: http://localhost:11434/api/chat">
             </div>
-            <div class="form-group">
-              <label class="form-label">System Prompt</label>
-              <textarea id="ai-prompt" class="form-input" rows="3">Hãy dịch các phụ đề sau sang Tiếng Việt. Giữ nguyên định dạng SRT (chỉ dịch nội dung chữ, không đổi timestamp). Nếu đã là Tiếng Việt, hãy kiểm tra lỗi chính tả và viết lại cho tự nhiên hơn.</textarea>
-            </div>
             <div class="form-divider"></div>
 
             <!-- OmniVoice TTS Section -->
@@ -445,9 +454,6 @@
   </div>
 
   <div id="toast-container" class="toast-container"></div>
-  <script src="js/api.js"></script>
-  <script src="js/app.js"></script>
-
   <!-- Prompt Management Modal -->
   <div id="prompt-modal" class="modal-overlay hidden">
     <div class="modal-content">
@@ -476,5 +482,7 @@
     </div>
   </div>
   
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
