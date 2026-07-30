@@ -268,20 +268,20 @@
 
   // ΓöÇΓöÇΓöÇ Backend Connection ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   async function connectToBackend() {
-    addLog('─Éang kß║┐t nß╗æi ─æß║┐n Python backend...', 'info');
+    addLog('Đang kết nối đến Python backend...', 'info');
     setStatus('connecting');
     const ready = await api.waitForBackend(60, 1000);
     if (ready) {
       state.isBackendReady = true;
       setStatus('online');
-      addLog('Backend ─æ├ú sß║╡n s├áng!', 'success');
+      addLog('Backend đã sẵn sàng!', 'success');
       api.connectWebSocket();
       api.onWebSocketMessage(handleWSMessage);
       loadGpuInfo();
       updateStartButton();
     } else {
       setStatus('offline');
-      addLog('Kh├┤ng thß╗â kß║┐t nß╗æi backend!', 'error');
+      addLog('Không thể kết nối backend!', 'error');
     }
   }
 
@@ -300,8 +300,8 @@
       el.cudaVersion.textContent = info.cuda_version || 'N/A';
       const dot = el.gpuChip.querySelector('.status-dot');
       if (info.gpu_available) { dot.classList.add('online'); addLog(`GPU: ${name} (VRAM: ${info.vram_total || '?'})`, 'success'); }
-      else { dot.classList.add('offline'); addLog('Kh├┤ng ph├ít hiß╗çn GPU ΓåÆ CPU.', 'warning'); }
-    } catch (e) { addLog('Lß╗ùi GPU: ' + e.message, 'error'); }
+      else { dot.classList.add('offline'); addLog('Không phát hiện GPU ΓåÆ CPU.', 'warning'); }
+    } catch (e) { addLog('Lỗi GPU: ' + e.message, 'error'); }
   }
 
   // ΓöÇΓöÇΓöÇ File Selection ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -315,7 +315,7 @@
           return;
         }
       } catch (e) {
-        addLog('Lß╗ùi dialog file: ' + e.message, 'error');
+        addLog('Lỗi dialog file: ' + e.message, 'error');
       }
     }
     // Fallback: HTML File Input
@@ -347,7 +347,7 @@
     state.jobs.push(job);
     renderJobList();
     updateStartButton();
-    addLog(`─É├ú th├¬m: ${job.fileName}`, 'info');
+    addLog(`Đã thêm: ${job.fileName}`, 'info');
   }
 
   // ΓöÇΓöÇΓöÇ Select / Switch Job ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -366,7 +366,7 @@
   // ΓöÇΓöÇΓöÇ Render Job List ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   function renderJobList() {
     if (state.jobs.length === 0) {
-      el.jobList.innerHTML = '<div class="job-empty">Ch╞░a c├│ video n├áo.<br>H├úy k├⌐o thß║ú hoß║╖c bß║Ñm "Chß╗ìn Video".</div>';
+      el.jobList.innerHTML = '<div class="job-empty">Chưa có video nào.<br>Hãy kéo thả hoặc bấm "Chọn Video".</div>';
       return;
     }
     el.jobList.innerHTML = '';
@@ -426,7 +426,7 @@
       const result = await window.electronAPI.openDirectory();
       if (result && !result.canceled && result.filePaths.length > 0) {
         state.outputDir = result.filePaths[0];
-        addLog(`Th╞░ mß╗Ñc xuß║Ñt: ${state.outputDir}`, 'info');
+        addLog(`Thư mục xuất: ${state.outputDir}`, 'info');
         const textEl = $('#output-dir-text');
         if (textEl) textEl.textContent = state.outputDir;
       }
@@ -436,11 +436,11 @@
   // ΓöÇΓöÇΓöÇ Load Video for a Job ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   async function loadVideo(job) {
     try {
-      if (!state.isBackendReady) { addLog('Backend ch╞░a sß║╡n s├áng!', 'warning'); return; }
+      if (!state.isBackendReady) { addLog('Backend chưa sẵn sàng!', 'warning'); return; }
       const info = await api.videoInfo(job.filePath);
       state.videoInfo = info;
       el.metaName.textContent = job.fileName;
-      el.metaRes.textContent = `${info.width}├ù${info.height}`;
+      el.metaRes.textContent = `${info.width}×${info.height}`;
       el.metaFps.textContent = `${info.fps.toFixed(1)} fps`;
       el.metaDur.textContent = fmtTime(info.duration);
       el.timelineOrig.max = info.total_frames - 1;
@@ -474,7 +474,7 @@
         el.btnNextResult.disabled = true;
       }
     } catch (e) {
-      addLog('Lß╗ùi tß║úi video: ' + e.message, 'error');
+      addLog('Lỗi tải video: ' + e.message, 'error');
     }
   }
 
@@ -590,10 +590,10 @@
     if (!hint) {
       hint = document.createElement('div');
       hint.className = 'draw-mode-hint';
-      hint.textContent = 'K├⌐o chuß╗Öt ─æß╗â vß║╜ v├╣ng sub';
+      hint.textContent = 'Kéo chuột để vẽ vùng sub';
       el.subtitleOverlay.appendChild(hint);
     }
-    addLog('K├⌐o chuß╗Öt tr├¬n video ─æß╗â vß║╜ v├╣ng subtitle mß╗¢i.', 'info');
+    addLog('Kéo chuột trên video để vẽ vùng subtitle mới.', 'info');
   });
 
   // Mouse drawing
@@ -645,7 +645,7 @@
       label: idx + 1,
     };
     job.regions.push(region);
-    addLog(`V├╣ng #${region.label} ─æ├ú th├¬m: Y[${region.ymin}-${region.ymax}] X[${region.xmin}-${region.xmax}]`, 'success');
+    addLog(`Vùng #${region.label} đã thêm: Y[${region.ymin}-${region.ymax}] X[${region.xmin}-${region.xmax}]`, 'success');
     renderRegionsList();
     renderRegionOverlays();
   });
@@ -654,7 +654,7 @@
   function renderRegionsList() {
     const job = getActiveJob();
     if (!job || job.regions.length === 0) {
-      el.regionsList.innerHTML = '<div class="region-empty">Bß║Ñm "+ Vß║╜ v├╣ng" rß╗ôi k├⌐o chuß╗Öt tr├¬n video</div>';
+      el.regionsList.innerHTML = '<div class="region-empty">Bấm "+ Vẽ vùng" rồi kéo chuột trên video</div>';
       return;
     }
     const totalFrames = state.videoInfo ? state.videoInfo.total_frames - 1 : 0;
@@ -665,7 +665,7 @@
       card.style.setProperty('--region-color', r.color);
       card.innerHTML = `
         <div class="region-top">
-          <span class="region-label" style="color:${r.color}">ΓùÅ V├╣ng #${r.label}</span>
+          <span class="region-label" style="color:${r.color}">ΓùÅ Vùng #${r.label}</span>
           <button class="btn-del" data-rid="${r.id}" title="X├│a v├╣ng">Γ£ò</button>
         </div>
         <div class="region-coords">Y:${r.ymin}-${r.ymax} X:${r.xmin}-${r.xmax}</div>
@@ -795,7 +795,7 @@
   function renderVoiceSegments(segments) {
     if (!el.voiceSegments) return;
     if (!segments || segments.length === 0) {
-      el.voiceSegments.innerHTML = '<div class="voice-empty">Ch╞░a c├│ voice n├áo.</div>';
+      el.voiceSegments.innerHTML = '<div class="voice-empty">Chưa có voice nào.</div>';
       return;
     }
     el.voiceSegments.innerHTML = segments.map((s, i) => `
@@ -818,8 +818,8 @@
           if (el.aiContent) el.aiContent.value = text;
           const job = getActiveJob();
           if (job) job.aiContent = text;
-          addLog('[AI] ─É├ú nhß║¡p SRT: ' + fp.split(/[\\\\/]/).pop(), 'info');
-        } catch (e) { addLog('[AI] Lß╗ùi ─æß╗ìc file: ' + e.message, 'error'); }
+          addLog('[AI] Đã nhập SRT: ' + fp.split(/[\\\\/]/).pop(), 'info');
+        } catch (e) { addLog('[AI] Lỗi đọc file: ' + e.message, 'error'); }
       }
     });
   }
@@ -829,24 +829,24 @@
       const job = getActiveJob();
       if (!job) return;
       const srtText = el.aiContent?.value?.trim();
-      if (!srtText) { showToast('Ch╞░a c├│ nß╗Öi dung phß╗Ñ ─æß╗ü!', 'warn'); return; }
+      if (!srtText) { showToast('Chưa có nß╗Öi dung phß╗Ñ ─æß╗ü!', 'warn'); return; }
       // Save SRT to temp file
       const srtPath = job.outputPath.replace(/_no_sub\.mp4$/, '_ai_rewrite.srt');
       try {
         // Write SRT via backend ΓÇö we'll use burn-subtitle directly
         const outputPath = job.outputPath.replace(/_no_sub\.mp4$/, '_subtitled.mp4');
         el.btnAiApply.disabled = true;
-        el.btnAiApply.textContent = 'ΓÅ│ ─Éang xß╗¡ l├╜...';
-        addLog('[AI] ─Éang burn phß╗Ñ ─æß╗ü v├áo video...', 'info');
+        el.btnAiApply.textContent = '⏳ Đang xử lý...';
+        addLog('[AI] Đang burn phụ đề vào video...', 'info');
         const result = await api.burnSubtitle(job.outputPath, srtPath, outputPath, 'soft');
         if (result.status === 'ok') {
-          addLog('[AI] Γ£à ─É├ú th├¬m phß╗Ñ ─æß╗ü: ' + outputPath, 'success');
+          addLog('[AI] ✅ Đã thêm phụ đề: ' + outputPath, 'success');
           showToast('─É├ú ├íp dß╗Ñng phß╗Ñ ─æß╗ü!', 'success');
         } else {
-          addLog('[AI] Γ¥î Lß╗ùi: ' + result.error, 'error');
+          addLog('[AI] Γ¥î Lỗi: ' + result.error, 'error');
         }
       } catch (e) { addLog('[AI] Γ¥î ' + e.message, 'error'); }
-      finally { el.btnAiApply.disabled = false; el.btnAiApply.textContent = '≡ƒÆ╛ ├üp dß╗Ñng phß╗Ñ ─æß╗ü v├áo video'; }
+      finally { el.btnAiApply.disabled = false; el.btnAiApply.textContent = '💾 Áp dụng phụ đề vào video'; }
     });
   }
 
@@ -861,7 +861,7 @@
         if (job) {
           job.voiceSegments = [{ text: 'Imported audio', audio_path: fp }];
           renderVoiceSegments(job.voiceSegments);
-          addLog('[Voice] ─É├ú nhß║¡p audio: ' + fp.split(/[\\\\/]/).pop(), 'info');
+          addLog('[Voice] Đã nhập audio: ' + fp.split(/[\\\\/]/).pop(), 'info');
         }
       }
     });
@@ -870,22 +870,22 @@
   if (el.btnVoiceApply) {
     el.btnVoiceApply.addEventListener('click', async () => {
       const job = getActiveJob();
-      if (!job || !job.voiceSegments?.length) { showToast('Ch╞░a c├│ voice n├áo!', 'warn'); return; }
+      if (!job || !job.voiceSegments?.length) { showToast('Chưa có voice n├áo!', 'warn'); return; }
       const audioPath = job.voiceSegments[0]?.audio_path;
       if (!audioPath) return;
       const outputPath = job.outputPath.replace(/_no_sub\.mp4$/, '_voiced.mp4');
       el.btnVoiceApply.disabled = true;
-      el.btnVoiceApply.textContent = 'ΓÅ│ ─Éang gh├⌐p...';
-      addLog('[Voice] ─Éang gh├⌐p audio v├áo video...', 'info');
+      el.btnVoiceApply.textContent = '⏳ Đang ghép...';
+      addLog('[Voice] Đang ghép audio vào video...', 'info');
       try {
         const bgVol = parseInt(localStorage.getItem('tts_bg_volume') || '10');
         const result = await api.replaceAudio(job.outputPath, audioPath, outputPath, bgVol);
         if (result.status === 'ok') {
-          addLog('[Voice] Γ£à ─É├ú gh├⌐p voice: ' + outputPath, 'success');
+          addLog('[Voice] ✅ Đã ghép voice: ' + outputPath, 'success');
           showToast('─É├ú gh├⌐p voice v├áo video!', 'success');
         } else { addLog('[Voice] Γ¥î ' + result.error, 'error'); }
       } catch (e) { addLog('[Voice] Γ¥î ' + e.message, 'error'); }
-      finally { el.btnVoiceApply.disabled = false; el.btnVoiceApply.textContent = '≡ƒöè Gh├⌐p voice v├áo video'; }
+      finally { el.btnVoiceApply.disabled = false; el.btnVoiceApply.textContent = '🔊 Ghép voice vào video'; }
     });
   }
 
@@ -897,13 +897,13 @@
       const fp = result && !result.canceled && result.filePaths?.[0];
       if (fp) {
         try {
-          const resp = await fetch('file:///' + fp.replace(/\\\\/g, '/'));
+          const resp = await fetch('file:///' + fp.replace(/\\/g, '/'));
           const text = await resp.text();
           if (el.voicesubContent) el.voicesubContent.value = text;
           const job = getActiveJob();
           if (job) job.voiceSubContent = text;
-          addLog('[VoiceSub] ─É├ú nhß║¡p SRT: ' + fp.split(/[\\\\/]/).pop(), 'info');
-        } catch (e) { addLog('[VoiceSub] Lß╗ùi: ' + e.message, 'error'); }
+          addLog('[VoiceSub] Đã nhập SRT: ' + fp.split(/[\\/]/).pop(), 'info');
+        } catch (e) { addLog('[VoiceSub] Lỗi: ' + e.message, 'error'); }
       }
     });
   }
@@ -913,7 +913,7 @@
       const job = getActiveJob();
       if (!job) return;
       const srtText = el.voicesubContent?.value?.trim();
-      if (!srtText) { showToast('Ch╞░a c├│ nß╗Öi dung phß╗Ñ ─æß╗ü!', 'warn'); return; }
+      if (!srtText) { showToast('Chưa có nß╗Öi dung phß╗Ñ ─æß╗ü!', 'warn'); return; }
 
       // Determine input video: voiced version if exists, otherwise no_sub version
       const voicedPath = job.outputPath.replace(/_no_sub\.mp4$/, '_voiced.mp4');
@@ -925,21 +925,21 @@
       const outputPath = job.outputPath.replace(/_no_sub\.mp4$/, '_final.mp4');
 
       el.btnVoicesubApply.disabled = true;
-      el.btnVoicesubApply.textContent = 'ΓÅ│ ─Éang g├ín...';
-      addLog(`[VoiceSub] ─Éang g├ín phß╗Ñ ─æß╗ü (${subMode})...`, 'info');
+      el.btnVoicesubApply.textContent = '⏳ Đang gán...';
+      addLog(`[VoiceSub] Đang gán phụ đề (${subMode})...`, 'info');
 
       try {
         const result = await api.burnSubtitle(inputVideo, srtPath, outputPath, subMode);
         if (result.status === 'ok') {
-          addLog('[VoiceSub] Γ£à ─É├ú g├ín phß╗Ñ ─æß╗ü: ' + outputPath, 'success');
-          showToast('─É├ú g├ín phß╗Ñ ─æß╗ü th├ánh c├┤ng!', 'success');
+          addLog('[VoiceSub] ✅ Đã gán phụ đề: ' + outputPath, 'success');
+          showToast('Đã gán phụ đề thành công!', 'success');
         } else {
           addLog('[VoiceSub] Γ¥î ' + result.error, 'error');
         }
       } catch (e) { addLog('[VoiceSub] Γ¥î ' + e.message, 'error'); }
       finally {
         el.btnVoicesubApply.disabled = false;
-        el.btnVoicesubApply.textContent = '≡ƒô¥ G├ín sub v├áo video';
+        el.btnVoicesubApply.textContent = '📝 Gán sub vào video';
       }
     });
   }
@@ -1044,7 +1044,7 @@
 
     // Mark as queued
     job.status = 'queued';
-    addLog(`Job "${job.fileName}" ─æ├ú th├¬m v├áo h├áng ─æß╗úi.`, 'info');
+    addLog(`Job "${job.fileName}" đã thêm vào hàng đợi.`, 'info');
     renderJobList();
     updateStartButton();
 
@@ -1061,10 +1061,10 @@
       job.progress = 0;
       state.processingJobId = null;
       if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
-      addLog(`─É├ú hß╗ºy job "${job.fileName}".`, 'warning');
+      addLog(`Đã hủy job "${job.fileName}".`, 'warning');
     } else if (job.status === 'queued') {
       job.status = 'idle';
-      addLog(`─É├ú gß╗í "${job.fileName}" khß╗Åi h├áng ─æß╗úi.`, 'warning');
+      addLog(`Đã gỡ "${job.fileName}" khỏi hàng đợi.`, 'warning');
     }
     renderJobList();
     updateStartButton();
@@ -1083,7 +1083,7 @@
     state.processingPassIndex = 0;
     renderJobList();
 
-    addLog(`Γû╢ Bß║»t ─æß║ºu xß╗¡ l├╜: ${nextJob.fileName}`, 'success');
+    addLog(`✅ Bắt đầu xử lý: ${nextJob.fileName}`, 'success');
     if (state.activeJobId === nextJob.id) {
       el.progressSection.classList.remove('hidden');
       updateStartButton();
@@ -1132,7 +1132,7 @@
         outputPath = job.outputPath;
       }
 
-      addLog(`  Pass ${passIdx + 1}/${job.regions.length}: V├╣ng #${region.label} (frame ${region.startFrame}-${region.endFrame})`, 'info');
+      addLog(`  Pass ${passIdx + 1}/${job.regions.length}: Vùng #${region.label} (frame ${region.startFrame}-${region.endFrame})`, 'info');
 
       const jobPayload = [{
         input_path: inputPath,
@@ -1152,7 +1152,7 @@
         await api.startProcessBatch(jobPayload);
         state.pollTimer = setInterval(pollProgress, 2000);
       } catch (e) {
-        addLog('Lß╗ùi pass: ' + e.message, 'error');
+        addLog('Lỗi pass: ' + e.message, 'error');
         job.status = 'error';
         state.processingJobId = null;
         renderJobList();
@@ -1174,10 +1174,11 @@
       }];
 
       try {
+        addLog(`[Debug] Payload: extract_srt=${jobPayload[0].extract_srt}, ai_rewrite=${jobPayload[0].ai_rewrite}, tts_voice=${jobPayload[0].tts_voice}`, 'info');
         await api.startProcessBatch(jobPayload);
         state.pollTimer = setInterval(pollProgress, 2000);
       } catch (e) {
-        addLog('Lß╗ùi: ' + e.message, 'error');
+        addLog('Lỗi: ' + e.message, 'error');
         job.status = 'error';
         state.processingJobId = null;
         renderJobList();
@@ -1257,7 +1258,7 @@
       state.processingPassIndex++;
       if (state.processingPassIndex < job.regions.length) {
         // More passes to go
-        addLog(`  Pass ${state.processingPassIndex}/${job.regions.length} ho├án tß║Ñt, tiß║┐p tß╗Ñc...`, 'info');
+        addLog(`  Pass ${state.processingPassIndex}/${job.regions.length} hoàn tất, tiếp tục...`, 'info');
         job.progress = Math.round((state.processingPassIndex / job.regions.length) * 100);
         renderJobList();
         runNextPass(job);
@@ -1271,7 +1272,7 @@
     state.processingJobId = null;
     state.processingPassIndex = 0;
 
-    addLog(`Γ£à Ho├án tß║Ñt: ${job.fileName}`, 'success');
+    addLog(`✅ Hoàn tất: ${job.fileName}`, 'success');
     showToast(`"${job.fileName}" ─æ├ú xß╗¡ l├╜ xong!`, 'success', 5000);
 
     renderJobList();
@@ -1320,7 +1321,7 @@
       localStorage.setItem('tts_voice', el.ttsVoice.value);
       localStorage.setItem('tts_language', el.ttsLanguage?.value || 'vi');
       localStorage.setItem('tts_bg_volume', el.ttsBgVolume.value);
-      addLog('─É├ú l╞░u cß║Ñu h├¼nh AI & TTS!', 'success');
+      addLog('Đã lưu cấu hình AI & TTS!', 'success');
       showToast('─É├ú l╞░u c├ái ─æß║╖t!', 'success');
     });
   }
@@ -1342,7 +1343,7 @@
     const list = el.savedVoicesList;
     if (!list) return;
     if (voices.length === 0) {
-      list.innerHTML = '<div class="voice-empty">Ch╞░a c├│ giß╗ìng clone n├áo.</div>';
+      list.innerHTML = '<div class="voice-empty">Chưa có giọng clone nào.</div>';
     } else {
       list.innerHTML = voices.map((v, i) => `
         <div class="voice-card">
@@ -1413,15 +1414,15 @@
       if (!_ttsRefAudioPath) { showToast('Chon file audio mau!', 'warn'); return; }
 
       el.btnCloneVoice.disabled = true;
-      el.btnCloneVoice.textContent = '─Éang tß║ío mß║½u (0%)...';
-      addLog(`[TTS] ─Éang clone giß╗ìng "${name}"...`, 'info');
+      el.btnCloneVoice.textContent = 'Đang tạo mẫu (0%)...';
+      addLog(`[TTS] Đang clone giọng "${name}"...`, 'info');
 
       // Simulate progress
       let simProgress = 0;
       const progressTimer = setInterval(() => {
         simProgress += Math.random() * 8 + 2;
         if (simProgress > 95) simProgress = 95;
-        el.btnCloneVoice.textContent = `─Éang tß║ío mß║½u (${Math.floor(simProgress)}%)...`;
+        el.btnCloneVoice.textContent = `Đang tạo mẫu (${Math.floor(simProgress)}%)...`;
       }, 1000);
 
       try {
@@ -1430,7 +1431,7 @@
         const result = await api.generateTTS(testText, _ttsRefAudioPath, lang);
 
         clearInterval(progressTimer);
-        el.btnCloneVoice.textContent = `─Éang ho├án tß║Ñt (100%)...`;
+        el.btnCloneVoice.textContent = `Đang hoàn tất (100%)...`;
 
         if (result.status === 'ok' && result.audio_path) {
           const voices = getSavedVoices();
@@ -1458,23 +1459,23 @@
 
           el.cloneVoiceName.value = '';
           _ttsRefAudioPath = null;
-          if (el.refAudioName) el.refAudioName.textContent = 'Ch╞░a chß╗ìn file';
+          if (el.refAudioName) el.refAudioName.textContent = 'Chưa chọn file';
           if (el.refAudioPreview) el.refAudioPreview.style.display = 'none';
 
           showToast('─É├ú clone giß╗ìng "' + name + '" th├ánh c├┤ng!', 'success');
-          addLog('[TTS] Clone giß╗ìng "' + name + '" th├ánh c├┤ng!', 'success');
+          addLog('[TTS] Clone giọng "' + name + '" thành công!', 'success');
         } else {
-          addLog('[TTS] Clone thß║Ñt bß║íi: ' + (result.error || 'Unknown'), 'error');
+          addLog('[TTS] Clone thất bại: ' + (result.error || 'Unknown'), 'error');
           showToast('Clone giß╗ìng thß║Ñt bß║íi: ' + (result.error || ''), 'error');
         }
       } catch (e) {
         clearInterval(progressTimer);
-        addLog('[TTS] Lß╗ùi: ' + e.message, 'error');
+        addLog('[TTS] Lỗi: ' + e.message, 'error');
         showToast('Kh├┤ng thß╗â kß║┐t nß╗æi TTS engine', 'error');
       } finally {
         clearInterval(progressTimer);
         el.btnCloneVoice.disabled = false;
-        el.btnCloneVoice.textContent = 'Th├¬m giß╗ìng clone';
+        el.btnCloneVoice.textContent = 'Thêm giọng clone';
       }
     });
   }

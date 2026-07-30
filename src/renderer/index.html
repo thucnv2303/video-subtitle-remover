@@ -137,21 +137,14 @@
                 </div>
                 <div class="job-card-body" id="body-voice">
                   <div class="form-group">
-                    <label class="form-label">Chọn giọng đọc</label>
+                    <label class="form-label">Chọn giọng (đã lưu trong Cài đặt)</label>
                     <select id="job-tts-voice" class="dropdown form-input">
-                      <option value="none">— Không tạo voice —</option>
+                      <option value="none">— Chọn giọng —</option>
                     </select>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Test giọng</label>
-                    <input type="text" id="job-tts-test-text" class="form-input" placeholder="Nhập văn bản để nghe thử..." value="Xin chào, đây là giọng đọc AI.">
-                    <div style="display:flex; gap:6px; margin-top:6px;">
-                      <button class="btn btn-xs btn-ghost" id="job-btn-test-voice">▶ Nghe thử</button>
-                      <audio id="job-tts-test-audio" style="display:none;"></audio>
-                    </div>
-                  </div>
-                  <div class="voice-segments-list" id="voice-segments" style="max-height:100px"></div>
-                  <button class="btn btn-xs btn-accent btn-block" id="btn-voice-apply">🔊 Ghép voice vào video</button>
+                  <button class="btn btn-xs btn-ghost btn-block" id="job-btn-preview-voice" style="margin-top:4px">▶ Nghe thử giọng</button>
+                  <audio id="job-tts-preview-audio" style="display:none"></audio>
+                  <div class="voice-segments-list" id="voice-segments" style="max-height:80px"></div>
                 </div>
               </div>
 

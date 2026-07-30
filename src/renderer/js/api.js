@@ -160,13 +160,40 @@ class APIClient {
     return r.json();
   }
 
-  async generateTTS(srtPath, voice, bgVolume = 10) {
+  // generateTTS: OmniVoice clone voice (ref audio required)
+  async generateTTS(text, refAudioPath = null, language = 'vi') {
     const r = await fetch(`${this.base}/api/tts/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ srt_path: srtPath, voice, bg_volume: bgVolume })
+      body: JSON.stringify({ text, ref_audio_path: refAudioPath, language })
     });
     return r.json();
+  }
+
+  // testTTS: test a voice by name (Edge TTS system voice OR clone index)
+  // voiceValue can be: 'vi-VN-NamMinhNeural', 'clone:0', etc.
+  async testTTS({ voice, text }) {
+    // For clone voices, look up ref audio from saved voices in localStorage
+    let refAudio = null;
+    let language = 'vi';
+    if (voice && voice.startsWith('clone:')) {
+      const idx = parseInt(voice.split(':')[1]);
+      try {
+        const voices = JSON.parse(localStorage.getItem('tts_voices') || '[]');
+        if (voices[idx]) refAudio = voices[idx].audioPath;
+      } catch(e) {}
+    }
+    // Use edge-tts for system voices by passing voice name as language hint
+    // The backend generateTTS endpoint handles both OmniVoice (ref_audio_path) and edge_tts (voice param)
+    const r = await fetch(`${this.base}/api/tts/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, ref_audio_path: refAudio, language, voice_name: voice })
+    });
+    const result = await r.json();
+    // Normalize response to { audio_path } format
+    if (result.status === 'ok') return { audio_path: result.audio_path };
+    return result;
   }
 }
 

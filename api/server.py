@@ -384,6 +384,7 @@ class TTSRequest(BaseModel):
     ref_audio_path: Optional[str] = None
     language: str = "vi"
     output_path: Optional[str] = None
+    voice_name: Optional[str] = None  # Edge TTS voice name e.g. vi-VN-NamMinhNeural
 
 
 class TTSSrtRequest(BaseModel):
@@ -395,7 +396,24 @@ class TTSSrtRequest(BaseModel):
 
 @app.post("/api/tts/generate")
 def tts_generate(req: TTSRequest):
-    """Generate speech from text"""
+    """Generate speech from text - supports OmniVoice (ref_audio) or Edge TTS (voice_name)"""
+    import tempfile, os
+    
+    # If voice_name provided and no ref_audio → use Edge TTS
+    if req.voice_name and req.voice_name not in ('none', 'default') and not req.ref_audio_path:
+        try:
+            import asyncio
+            import edge_tts
+            out_path = req.output_path or os.path.join(tempfile.gettempdir(), f'tts_test_{abs(hash(req.text))}.mp3')
+            async def _gen():
+                communicate = edge_tts.Communicate(req.text, req.voice_name)
+                await communicate.save(out_path)
+            asyncio.run(_gen())
+            return {"status": "ok", "audio_path": out_path}
+        except Exception as e:
+            return {"status": "error", "error": f"Edge TTS error: {str(e)}"}
+    
+    # Otherwise use OmniVoice
     try:
         from tts_engine import generate_speech
         result = generate_speech(
