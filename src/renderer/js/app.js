@@ -774,7 +774,8 @@
   if (el.btnAiImport) {
     el.btnAiImport.addEventListener('click', async () => {
       if (!window.electronAPI?.openFile) return;
-      const fp = await window.electronAPI.openFile([{name:'SRT',extensions:['srt','txt']}]);
+      const result = await window.electronAPI.openFile([{name:'SRT',extensions:['srt','txt']}]);
+      const fp = result && !result.canceled && result.filePaths?.[0];
       if (fp) {
         try {
           const resp = await fetch('file:///' + fp.replace(/\\\\/g, '/'));
@@ -818,7 +819,8 @@
   if (el.btnVoiceImport) {
     el.btnVoiceImport.addEventListener('click', async () => {
       if (!window.electronAPI?.openFile) return;
-      const fp = await window.electronAPI.openFile([{name:'Audio',extensions:['wav','mp3','flac','ogg','m4a','aac','wma','opus']}]);
+      const result = await window.electronAPI.openFile([{name:'Audio',extensions:['wav','mp3','flac','ogg','m4a','aac','wma','opus']}]);
+      const fp = result && !result.canceled && result.filePaths?.[0];
       if (fp) {
         const job = getActiveJob();
         if (job) {
@@ -856,7 +858,8 @@
   if (el.btnVoicesubImport) {
     el.btnVoicesubImport.addEventListener('click', async () => {
       if (!window.electronAPI?.openFile) return;
-      const fp = await window.electronAPI.openFile([{name:'SRT',extensions:['srt','txt']}]);
+      const result = await window.electronAPI.openFile([{name:'SRT',extensions:['srt','txt']}]);
+      const fp = result && !result.canceled && result.filePaths?.[0];
       if (fp) {
         try {
           const resp = await fetch('file:///' + fp.replace(/\\\\/g, '/'));
@@ -1341,7 +1344,8 @@
   if (el.btnUploadRefAudio) {
     el.btnUploadRefAudio.addEventListener('click', async () => {
       if (window.electronAPI && window.electronAPI.openFile) {
-        const fp = await window.electronAPI.openFile([{name:'Audio',extensions:['wav','mp3','flac','ogg','m4a','aac','wma','opus']}]);
+        const result = await window.electronAPI.openFile([{name:'Audio',extensions:['wav','mp3','flac','ogg','m4a','aac','wma','opus']}]);
+        const fp = result && !result.canceled && result.filePaths?.[0];
         if (fp) {
           _ttsRefAudioPath = fp;
           el.refAudioName.textContent = fp.split(/[\\/]/).pop();

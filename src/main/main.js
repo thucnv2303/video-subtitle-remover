@@ -94,12 +94,16 @@ app.on('will-quit', () => {
 });
 
 // IPC Handlers
-ipcMain.handle('dialog:openFile', async () => {
+ipcMain.handle('dialog:openFile', async (event, customFilters) => {
+  const defaultFilters = [
+    { name: 'Media Files', extensions: ['mp4', 'avi', 'mkv', 'mov', 'jpg', 'png', 'bmp'] },
+    { name: 'Audio Files', extensions: ['wav', 'mp3', 'flac', 'ogg', 'm4a', 'aac', 'wma', 'opus'] },
+    { name: 'Subtitle Files', extensions: ['srt', 'ass', 'vtt', 'txt'] },
+    { name: 'All Files', extensions: ['*'] }
+  ];
   const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ['openFile', 'multiSelections'],
-    filters: [
-      { name: 'Media Files', extensions: ['mp4', 'avi', 'mkv', 'mov', 'jpg', 'png', 'bmp'] }
-    ]
+    properties: ['openFile'],
+    filters: customFilters || defaultFilters
   });
   return result;
 });
