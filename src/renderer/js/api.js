@@ -100,6 +100,30 @@ class APIClient {
   }
 
   _notify(msg) { this.wsListeners.forEach(cb => cb(msg)); }
+
+  // ─── TTS Methods ──────────────────────────
+  async getTTSStatus() {
+    const r = await fetch(`${this.base}/api/tts/status`);
+    return r.json();
+  }
+
+  async generateTTS(text, refAudioPath = null, language = 'vi') {
+    const r = await fetch(`${this.base}/api/tts/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, ref_audio_path: refAudioPath, language })
+    });
+    return r.json();
+  }
+
+  async generateTTSFromSrt(srtPath, refAudioPath = null, language = 'vi', outputDir = null) {
+    const r = await fetch(`${this.base}/api/tts/from-srt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ srt_path: srtPath, ref_audio_path: refAudioPath, language, output_dir: outputDir })
+    });
+    return r.json();
+  }
 }
 
 window.api = new APIClient();

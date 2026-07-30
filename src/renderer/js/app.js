@@ -46,8 +46,9 @@
       status: 'idle',
       progress: 0,
       algorithm: 'sttn-auto',
+      maskMode: 'box',
       subtitleMode: 'auto',
-      regions: [],        // Multi-region: [{id, ymin, ymax, xmin, xmax, startFrame, endFrame, color, label}]
+      regions: [],
       extractSrt: true,
       aiRewrite: false,
     };
@@ -76,6 +77,7 @@
     btnDrawRegion: $('#btn-draw-region'),
     regionsPanel: $('#regions-panel'),
     regionsList: $('#regions-list'),
+    maskMode: $('#mask-mode'),
     timelineOrig: $('#timeline-orig'),
     frameInfoOrig: $('#frame-info-orig'),
     btnPlayOrig: $('#btn-play-orig'),
@@ -127,6 +129,7 @@
     const job = getActiveJob();
     if (!job || job.status === 'processing' || job.status === 'finished') return;
     job.algorithm = el.algoSelect.value;
+    job.maskMode = el.maskMode?.value || 'box';
     job.extractSrt = $('#chk-extract-srt')?.checked || false;
     job.aiRewrite = $('#chk-ai-rewrite')?.checked || false;
   }
@@ -135,6 +138,7 @@
   function loadControlsFromJob(job) {
     if (!job) return;
     el.algoSelect.value = job.algorithm;
+    if (el.maskMode) el.maskMode.value = job.maskMode || 'box';
     const chkSrt = $('#chk-extract-srt');
     const chkAi = $('#chk-ai-rewrite');
     if (chkSrt) chkSrt.checked = job.extractSrt;
@@ -388,7 +392,7 @@
       state.currentFrameOrig = n;
       el.timelineOrig.value = n;
       if (state.videoInfo) el.frameInfoOrig.textContent = `${n}/${state.videoInfo.total_frames - 1}`;
-      renderRegionOverlays(); // Update region visibility based on current frame
+      updateRegionVisibility(); // Fast: toggle region visibility by frame
     } catch (e) { /* silent */ }
   }
 
@@ -603,30 +607,56 @@
   }
 
   // ─── Render Region Overlays on Canvas ─────────────
-  function renderRegionOverlays() {
-    // Remove old overlays
-    el.subtitleOverlay.querySelectorAll('.region-overlay-rect').forEach(el => el.remove());
+  // Cached overlays: create once, toggle visibility per frame
+  let _regionOverlayCache = [];
+
+  function buildRegionOverlays() {
+    // Full rebuild: called when regions list changes (add/remove/switch job)
+    _regionOverlayCache.forEach(d => d.remove());
+    _regionOverlayCache = [];
     const job = getActiveJob();
     if (!job || job.subtitleMode !== 'manual' || !state.videoInfo) return;
     const scaleX = el.canvasOrig.offsetWidth / state.videoInfo.width;
     const scaleY = el.canvasOrig.offsetHeight / state.videoInfo.height;
     job.regions.forEach(r => {
-      // Only show if current frame is within region timeline
-      if (state.currentFrameOrig < r.startFrame || state.currentFrameOrig > r.endFrame) return;
       const div = document.createElement('div');
       div.className = 'region-overlay-rect';
-      div.style.setProperty('--region-color', r.color);
-      div.style.cssText += `;left:${r.xmin * scaleX}px;top:${r.ymin * scaleY}px;width:${(r.xmax - r.xmin) * scaleX}px;height:${(r.ymax - r.ymin) * scaleY}px;border-color:${r.color}`;
+      div.dataset.rid = r.id;
+      div.dataset.startFrame = r.startFrame;
+      div.dataset.endFrame = r.endFrame;
+      div.style.cssText = `left:${r.xmin * scaleX}px;top:${r.ymin * scaleY}px;width:${(r.xmax - r.xmin) * scaleX}px;height:${(r.ymax - r.ymin) * scaleY}px;border-color:${r.color}`;
       div.innerHTML = `<span class="region-num" style="background:${r.color}">${r.label}</span>`;
       el.subtitleOverlay.appendChild(div);
+      _regionOverlayCache.push(div);
+    });
+    updateRegionVisibility();
+  }
+
+  function updateRegionVisibility() {
+    // Fast: just toggle display, no DOM creation
+    const f = state.currentFrameOrig;
+    _regionOverlayCache.forEach(div => {
+      const s = parseInt(div.dataset.startFrame);
+      const e = parseInt(div.dataset.endFrame);
+      div.style.display = (f >= s && f <= e) ? '' : 'none';
     });
   }
+
+  // Alias for backwards compat
+  function renderRegionOverlays() { buildRegionOverlays(); }
 
   // Algorithm change listener
   el.algoSelect.addEventListener('change', () => {
     const job = getActiveJob();
     if (job) job.algorithm = el.algoSelect.value;
   });
+  // Mask mode change listener
+  if (el.maskMode) {
+    el.maskMode.addEventListener('change', () => {
+      const job = getActiveJob();
+      if (job) job.maskMode = el.maskMode.value;
+    });
+  }
 
   // ─── Processing: Per-Job Queue ───────────────────
   function updateStartButton() {
@@ -750,7 +780,8 @@
         subtitle_areas: subtitleAreas,
         frame_range: frameRange,
         inpaint_mode: job.algorithm,
-        extract_srt: passIdx === 0 ? job.extractSrt : false, // SRT only on first pass
+        mask_mode: job.maskMode || 'box',
+        extract_srt: passIdx === 0 ? job.extractSrt : false,
         ai_rewrite: passIdx === 0 ? job.aiRewrite : false,
         ai_config: aiConfig,
         tts_voice: passIdx === job.regions.length - 1 ? (localStorage.getItem('tts_voice') || 'none') : 'none',
@@ -774,6 +805,7 @@
         output_path: job.outputPath,
         subtitle_areas: subtitleAreas,
         inpaint_mode: job.algorithm,
+        mask_mode: job.maskMode || 'box',
         extract_srt: job.extractSrt,
         ai_rewrite: job.aiRewrite,
         ai_config: aiConfig,

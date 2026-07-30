@@ -67,7 +67,8 @@ class JobRequest(BaseModel):
     ai_config: Optional[dict] = None
     tts_voice: str = "none"
     tts_bg_volume: int = 10
-    frame_range: Optional[dict] = None  # {"start": int, "end": int} — limit processing to frame range
+    frame_range: Optional[dict] = None  # {"start": int, "end": int}
+    mask_mode: str = "box"  # "box" | "tight" | "soft"
 
 
 class ProcessBatchRequest(BaseModel):
@@ -195,6 +196,9 @@ def worker_loop():
                 sr.sub_areas = [tuple(area) for area in job["subtitle_areas"]]
             # If no subtitle_areas, SubtitleRemover auto-detects (full screen)
             sr.video_out_path = job["output_path"]
+            
+            # Mask mode: pass to SubtitleRemover for tight/soft mask generation
+            sr.mask_mode = job.get("mask_mode", "box")
             
             # Frame range support: limit processing to specific frame range
             frame_range = job.get("frame_range")
@@ -363,6 +367,65 @@ def video_info(path: str = Query(...)):
         "total_frames": total_frames,
         "duration": duration
     }
+
+# ─── TTS API Endpoints ───────────────────────────────
+@app.get("/api/tts/status")
+def tts_status():
+    """Check TTS engine availability"""
+    try:
+        from api.tts_engine import get_status
+        return get_status()
+    except ImportError:
+        return {"available": False, "model_loaded": False, "error": "tts_engine not found"}
+
+
+class TTSRequest(BaseModel):
+    text: str
+    ref_audio_path: Optional[str] = None
+    language: str = "vi"
+    output_path: Optional[str] = None
+
+
+class TTSSrtRequest(BaseModel):
+    srt_path: str
+    ref_audio_path: Optional[str] = None
+    language: str = "vi"
+    output_dir: Optional[str] = None
+
+
+@app.post("/api/tts/generate")
+def tts_generate(req: TTSRequest):
+    """Generate speech from text"""
+    try:
+        from api.tts_engine import generate_speech
+        result = generate_speech(
+            text=req.text,
+            ref_audio_path=req.ref_audio_path,
+            output_path=req.output_path,
+            language=req.language
+        )
+        if result:
+            return {"status": "ok", "audio_path": result}
+        else:
+            return {"status": "error", "error": "Failed to generate speech. Is OmniVoice installed?"}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+@app.post("/api/tts/from-srt")
+def tts_from_srt(req: TTSSrtRequest):
+    """Generate voice for all SRT segments"""
+    try:
+        from api.tts_engine import generate_from_srt
+        results = generate_from_srt(
+            srt_path=req.srt_path,
+            ref_audio_path=req.ref_audio_path,
+            output_dir=req.output_dir,
+            language=req.language
+        )
+        return {"status": "ok", "segments": results, "count": len(results)}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 
 @app.websocket("/ws/progress")
