@@ -1,0 +1,11 @@
+LUÔN LUÔN đọc thiết kế kiến trúc trong `.ai/architecture.md` và các quy tắc cốt lõi trong `.ai/rules.md` TRƯỚC KHI trả lời câu hỏi hoặc tạo/sửa code.
+
+TUYỆT ĐỐI KHÔNG tự ý tạo file mới, nhánh mới hoặc thư mục mới nếu chưa lần theo cây thư mục hiện tại để xem nhánh đó đã tồn tại hay chưa. Đặt code vào đúng file, đúng nhánh, đúng module theo quy định, không triển khai bừa bãi. All code for the frontend must adhere to the modular structure outlined there.
+
+Bắt buộc phải tuân thủ: 1. Không bao giờ tự ý gộp, xóa, hoặc cấu trúc lại các file đang chạy ổn định trừ khi tôi yêu cầu. 2. Khi sửa lỗi, chỉ sửa chính xác dòng code bị lỗi (surgical fix), tuyệt đối không viết lại toàn bộ file. 3. Phải dùng log thực tế hoặc test kỹ trước khi khẳng định đã fix xong.
+
+# AGENTOS_BOOTSTRAP_V1
+Before every task, read and obey AGENTS.md.
+AGENTS.md is mandatory and .ai/ is the project source of truth.
+Do not edit source until the required CONTEXT LOADED report is produced.
+Do not finish a task until required .ai files are updated.

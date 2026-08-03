@@ -1,0 +1,13 @@
+﻿---
+description: Mandatory AgentOS project protocol
+globs:
+alwaysApply: true
+---
+
+Before every task, read and obey `AGENTS.md`.
+
+`AGENTS.md` and `.ai/` are mandatory project context.
+
+Do not edit source before returning the required `CONTEXT LOADED` summary.
+
+Do not finish a task until the required `.ai` memory files have been updated.
