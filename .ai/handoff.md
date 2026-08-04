@@ -1,40 +1,44 @@
-# Handoff
+# AgentOS Handoff Status
 
 ## Last completed task
-RECOVERY-004: AgentOS memory repair and finalized three-pipeline architecture documentation.
+RECOVERY-005 — Evidence-based read-only audit of Pipeline 1.
 
 ## Result
 PASS
 
-## Documentation approval
+## Audit approval
 PASS
 
-## Commit status
-PENDING — the approved documentation changes are staged and awaiting the documentation commit.
+## Audit report
+.ai/audits/pipeline1_readonly_audit.md
 
-## Current HEAD before documentation commit
-71184d295fffa94a615d38c4941efb1961a6a37c
+## Audit checkpoint baseline
+Current HEAD before the RECOVERY-005 audit documentation checkpoint:
+1808076
 
-## Changed files
-- AGENTS.md
-- .ai/architecture.md
+Resolve the final checkpoint commit from Git history after it is created.
+
+## Files intended for the audit documentation commit
+- .ai/audits/pipeline1_readonly_audit.md
 - .ai/bugs.md
 - .ai/current_state.md
-- .ai/decisions.md
-- .ai/handoff.md
-- .ai/migration_status.md
-- .ai/project.md
-- .ai/qa_checklist.md
 - .ai/task_current.md
+- .ai/handoff.md
 
-## Tests executed
-N/A (Documentation only)
+## Automated verification
+PASS — documentation and evidence-integrity checks.
+
+## Code review
+PASS — read-only audit documentation.
 
 ## Owner manual app verification
-NOT APPLICABLE — documentation-only task
+NOT APPLICABLE — read-only audit.
 
 ## Merge permission
 BLOCKED
 
-## Next recommended task
-Read-only audit of the current Pipeline 1 implementation and gap analysis against the proposed target artifact contract.
+## Next task
+RECOVERY-006 — Pipeline 1 Baseline Characterization.
+
+## Next task status
+NOT STARTED — audit documentation commit must be created first.

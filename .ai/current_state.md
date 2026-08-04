@@ -12,14 +12,17 @@ WAITING
 - Hard-subtitle removal (Pipeline 2) currently works.
 
 ## Documentation & Task State
-- RECOVERY-004 documentation review: PASS.
-- Documentation commit: PENDING.
-- No source files are included in the documentation commit.
-- Existing uncommitted source changes remain preserved and unaudited.
-- Pipeline 2 remains owner-confirmed as working and is not the current upgrade priority.
-- Pipeline 1 is the current technical priority.
-- RECOVERY-005 is the next active task.
-- RECOVERY-005 is read-only and must not implement or modify code.
+- RECOVERY-004 complete at commit 1808076.
+- RECOVERY-005 audit execution: COMPLETED.
+- RECOVERY-005 project-manager review: PASS.
+- Audit report:
+  .ai/audits/pipeline1_readonly_audit.md
+- Existing uncommitted source changes remain preserved.
+- No source files will be included in the RECOVERY-005 audit documentation commit.
+- Pipeline 2 remains OWNER CONFIRMED working and is not the upgrade priority.
+- Pipeline 1 remains the current technical priority.
+- RECOVERY-006 is approved as the next task but is NOT STARTED.
+- Merge permission remains BLOCKED.
 
 ## Current branch
 rescue/wip-20260803
