@@ -13,16 +13,21 @@ WAITING
 
 ## Documentation & Task State
 - RECOVERY-004 complete at commit 1808076.
-- RECOVERY-005 audit execution: COMPLETED.
-- RECOVERY-005 project-manager review: PASS.
-- Audit report:
+- RECOVERY-005 PASS.
+- RECOVERY-005 audit report:
   .ai/audits/pipeline1_readonly_audit.md
+- RECOVERY-006 execution: COMPLETED.
+- RECOVERY-006 project-manager review: PASS.
+- RECOVERY-006 baseline report:
+  .ai/audits/pipeline1_baseline_runtime.md
+- Automated verification: NOT RUN — manual runtime baseline.
+- Owner manual app verification: PASS.
+- Feature result: FAIL/BLOCKED.
 - Existing uncommitted source changes remain preserved.
-- No source files will be included in the RECOVERY-005 audit documentation commit.
-- Pipeline 2 remains OWNER CONFIRMED working and is not the upgrade priority.
-- Pipeline 1 remains the current technical priority.
-- RECOVERY-006 is approved as the next task but is NOT STARTED.
-- Merge permission remains BLOCKED.
+- No source files changed by RECOVERY-006.
+- Pipeline 2 remains OWNER CONFIRMED working.
+- RECOVERY-007 approved as next task but NOT STARTED.
+- Merge permission: BLOCKED.
 
 ## Current branch
 rescue/wip-20260803

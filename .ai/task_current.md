@@ -1,60 +1,79 @@
 # Current Task
 
 ## Task ID
-RECOVERY-006
+RECOVERY-007
 
 ## Name
-Pipeline 1 Baseline Characterization
+Dedicated Pipeline 1 Text Extraction Path
 
 ## Goal
-Capture and verify the current Pipeline 1 behavior before any architecture
-refactoring or feature implementation.
+Make Step 1 extract OCR/ASR text and return SRT to the frontend without
+executing Pipeline 2 subtitle removal, inpainting or video rendering.
 
 ## Status
-NOT STARTED — RECOVERY-005 audit documentation commit must be created first.
+NOT STARTED — RECOVERY-006 documentation checkpoint must be committed first.
 
-## Required baseline
+## Single objective
 
-- Use one fixed Chinese product-review sample video.
-- Record the exact sample path, duration and basic metadata.
-- Run the current application without source modification.
-- Verify video import and job creation.
-- Verify the current OCR/ASR path.
-- Record extracted subtitle/text output.
-- Verify the AI rewrite path.
-- Verify existing-voice TTS.
-- Verify cloned-voice TTS.
-- Verify generated timed SRT.
-- Record relevant frontend state fields.
-- Record API requests and responses where observable.
-- Record actual generated filenames, paths and extensions.
-- Record errors, missing bindings and unexpected behavior.
-- Compare runtime results with the RECOVERY-005 code audit.
+Replace the current Step 1 dependency on the legacy Pipeline 2 processing path
+with a dedicated Pipeline 1 text-extraction flow.
 
-## Allowed
+## Required behavior
 
-- Run the existing application.
-- Use one fixed test video.
-- Inspect application logs.
-- Inspect generated output files.
-- Record runtime evidence in .ai documentation.
-- Ask the owner to perform and confirm manual app actions.
+- Step 1 accepts the selected original video.
+- Pipeline 1 can run OCR and/or ASR using existing available engines.
+- Pipeline 1 must not run subtitle removal or inpainting.
+- Pipeline 1 must not create an OCR temporary rendered MP4.
+- Pipeline 1 returns extracted SRT/text associated with the correct job.
+- Frontend displays the returned text in the Step 1 editor.
+- Progress, success and error states are visible.
+- Existing Pipeline 2 behavior remains unchanged.
+- Existing TTS and voice-clone code must not be refactored in this task.
+
+## Initial allowed source scope
+
+- api/server.py
+- src/renderer/js/api.js
+- src/renderer/js/app.js
+- src/renderer/index.html
+- relevant existing Pipeline 1 module only when direct evidence shows it is
+  part of the active Step 1 call path
+- required .ai memory files
+
+Any additional source file requires project-manager approval before editing.
 
 ## Forbidden
 
-- No source-code changes.
-- No patch scripts.
-- No dependency installation.
-- No refactoring.
-- No route changes.
-- No UI binding fixes.
-- No Pipeline 2 changes.
+- No scene detection.
+- No keyframe extraction.
+- No AI Vision.
+- No multimodal timeline.
+- No product/customer insight JSON.
+- No edit_plan.json.
 - No Pipeline 3 implementation.
-- No staging or commit until separately approved.
+- No Pipeline 2 behavior changes.
+- No dependency installation.
+- No broad frontend state refactor.
+- No unrelated UI fixes.
+- No cleanup of historical patch scripts.
+- No commit, push or merge without approval.
 
-## Required verification status
+## Acceptance criteria
 
-- Automated verification: WAITING
-- Code review: NOT APPLICABLE unless source unexpectedly changes
-- Owner manual app verification: WAITING
-- Merge permission: BLOCKED
+- Step 1 video import: PASS.
+- Step 1 extraction request reaches a dedicated P1 route: PASS.
+- OCR or ASR produces text/SRT: PASS.
+- Correct job receives the result: PASS.
+- Step 1 editor displays the result: PASS.
+- No `Subtitle Removing` or inpaint operation during Step 1: PASS.
+- No unintended `*_ocr_tmp.mp4` rendered output: PASS.
+- No OCR/SRT frontend timeout: PASS.
+- Pipeline 2 regression check: PASS.
+- Owner manual app verification: PASS.
+
+## Verification gates
+
+- Automated verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: WAITING.
+- Merge permission: BLOCKED.
