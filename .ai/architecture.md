@@ -1,6 +1,6 @@
 # Project Architecture
 
-## Cấu trúc tổng thể (Frontend)
+## 1. CURRENT IMPLEMENTATION — CODE OBSERVED
 
 Dự án tuân theo kiến trúc ES6 Modules với bridge pattern để tương thích script thường.
 TUYỆT ĐỐI tuân thủ khi tìm kiếm hoặc thêm mới tính năng.
@@ -49,54 +49,41 @@ src/renderer/
                                updateVoiceDropdown, checkTTSStatus, voice clone management)
 ```
 
-## Luồng Pipeline
+Vì `index.html` load `app.js` dạng `<script src="...">` (non-module), các ES6 module được bridge qua `<script type="module">` inline trong HTML để expose hàm lên `window.*`. `app.js` gọi các hàm module qua `window.*`. Các module tự gọi `window.addLog` và `window.showToast`.
 
-```
-Video Input
-    │
-    ▼
-[Pipeline 2 — app.js] ──── inpaint (xóa hardcoded sub)
-    │ job.outputPath = _no_sub.mp4
-    │ job.srtContent = SRT trích xuất (OCR/ASR)
-    ▼
-[Pipeline 1 — pipeline1-ai.js]
-    │ triggerAutoAiRewrite(job, srt) → AI dịch/viết lại
-    │   └─ chain → triggerAutoTts(job, srt) → tạo TTS audio
-    │ job.aiContent    = SRT đã dịch
-    │ job.ttsAudioPath = audio TTS
-    │ job.ttsTimedSrt  = SRT timing khớp TTS
-    ▼
-[Pipeline 3 — pipeline3-finalize.js]
-    │ finalizeVideo(job)
-    │   Bước 1: adjust tempo
-    │   Bước 2: tách vocal (optional)
-    │   Bước 3: ghép audio → _with_voice.mp4
-    │   Bước 4: burn sub   → _final.mp4
-    ▼
-job.finalOutputPath = _final.mp4
-```
+## 2. TARGET PRODUCT ARCHITECTURE — OWNER CONFIRMED / PROPOSED
 
-## Module Bridge Pattern
+Kiến trúc chia thành 3 pipeline hoạt động hoàn toàn độc lập, giao tiếp qua Artifact Boundaries.
 
-Vì `index.html` load `app.js` dạng `<script src="...">` (non-module),
-các ES6 module được bridge qua `<script type="module">` inline trong HTML:
+### Pipeline 1: Analysis, Script and Voice
+- Phân tích ORIGINAL video.
+- Dịch vụ/chức năng: detect scenes/keyframes, build multimodal timeline, extract insights, remix script (chia đoạn có cấu trúc), hỗ trợ script approval.
+- Output sinh ra: TTS/Voice cloned, SRT dựa trên TTS timing.
+- Các artifacts JSON: `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`.
+- **Strict Rule:** Tuyệt đối không xóa subtitle, không cắt video, không ráp hay render video ở Pipeline này.
 
-```html
-<script type="module">
-  import { triggerAutoAiRewrite } from './js/pipelines/pipeline1-ai.js';
-  window.triggerAutoAiRewrite = triggerAutoAiRewrite;
-  // ... tương tự cho các module khác
-</script>
-<script src="js/app.js" defer></script>
-```
+### Pipeline 2: Subtitle Removal
+- Nhận input là ORIGINAL video.
+- Chỉ thực hiện xóa hard subtitles. Hỗ trợ chọn vùng xóa tự động/thủ công.
+- Output: `clean_video.mp4`.
+- **Timeline Contract:** Pipeline 2 `clean_video.mp4` must remain timeline-compatible with the original source within a defined and verified tolerance.
+  - no trimming of beginning or end;
+  - no scene reordering;
+  - no speed changes;
+  - no automatic crop;
+  - original scene timecodes remain valid or deterministically mappable.
 
-`app.js` gọi các hàm module qua `window.*`.
-Các module tự gọi `window.addLog` và `window.showToast` (expose bởi app.js).
+  **Exact allowed tolerance for duration, FPS, frame count and timebase: NOT YET VERIFIED.**
+  Giá trị tolerance này phải được xác định thông qua audit và owner runtime testing trước khi Pipeline 3 có thể phụ thuộc vào nó một cách an toàn.
 
-## Quy định HTML/CSS
-- JS không được định nghĩa global function trên thẻ HTML (onclick="...").
-  Phải dùng addEventListener trong các module components/.
-- Mọi logic mới thuộc Pipeline 1 → pipeline1-ai.js.
-- Mọi logic finalize video → pipeline3-finalize.js.
-- Settings/Voice clone → settings.js.
-- State toàn cục → store.js (hoặc window._appState cho tương thích).
+### Pipeline 3: Video Remix and Finalize
+- Đọc artifacts từ Pipeline 1 (approved script, TTS audio, SRT, scenes, edit plan).
+- Đọc `clean_video.mp4` từ Pipeline 2 làm nguồn video mặc định.
+- Cắt cảnh dùng original source timecodes, sắp xếp lại theo `edit_plan.json` (khi cần).
+- Mix TTS và background audio, burn SRT mới.
+- Render final video.
+- **Strict Rule:** Tuyệt đối không được sửa đổi (modify) outputs của Pipeline 1 và Pipeline 2. Bắt buộc BLOCK operation nếu artifacts từ P1 và P2 không đến từ cùng một source video.
+
+### Artifact Boundaries & Source Identity
+Artifacts P1 được lưu ở `jobs/<job_id>/p1/`.
+Mọi pipeline artifact phải chứa: `job_id`, `source_fingerprint`, `source duration`, `FPS/timebase`, và `artifact version`.

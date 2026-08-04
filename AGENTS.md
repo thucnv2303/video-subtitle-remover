@@ -1,4 +1,4 @@
-﻿# AgentOS Project Protocol
+# AgentOS Project Protocol
 
 ## Mandatory startup
 
@@ -39,6 +39,21 @@ Do not edit source until this context summary has been produced.
 - Do not push or merge `main` or `dev`.
 - Do not replace a working module without runtime evidence.
 - Do not claim completion from code inspection alone.
+
+## Owner Manual Verification Gate (OWNER CONFIRMED)
+
+The project owner is the mandatory final manual app tester. For every source-code task:
+- Anti completes implementation and automated verification;
+- Project manager reviews scope and diff;
+- Owner runs the real application;
+- Owner reports PASS or FAIL;
+- Merge remains blocked until owner reports PASS.
+
+Reports must include:
+Automated verification:
+Code review:
+Owner manual app verification: [Default: WAITING]
+Merge permission: [Default: BLOCKED]
 
 ## Mandatory completion
 
