@@ -22,21 +22,16 @@ WAITING
   .ai/audits/pipeline1_baseline_runtime.md
 - INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
 - RECOVERY-007E-SOURCE-BASELINE-001: COMPLETED
-- Active task: INCIDENT-RECOVERY-007E-STAGED-TREE-001 (WAITING_REVIEW)
-- Incident facts:
-  - PR #5 evidence review INVALIDATED by original-index-state conflict.
-  - Import/export reconciliation is logically 23/23 PASS but source publication remains unauthorized.
-  - Audit claims staged status EMPTY.
-  - Manifest reports M-space for index.html, app.js and api.js.
-  - Cause is VERIFIED (due to python script stripping whitespace).
-  - AI Settings implementation remains NOT STARTED.
-  - BUG-008 ACTIVE
-  - BUG-009 ACTIVE
-  - RECOVERY-007 owner verification PAUSED
-  - PR #4 DO NOT MERGE
-  - PR #5 DO NOT MERGE
-  - PR #6 DO NOT MERGE
-  - Original dirty worktree must remain untouched.
+- RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT: INVALIDATED/PENDING RESUMPTION AFTER INCIDENT CLOSURE
+- Active task: INCIDENT-RECOVERY-007E-STAGED-TREE-001
+- Project Manager review: NEEDS_REVISION — CORE INDEX FINDING CONFIRMED; FINAL DOCUMENTATION CORRECTION REQUIRED
+- AI Settings implementation NOT STARTED
+- BUG-008 ACTIVE
+- BUG-009 ACTIVE
+- RECOVERY-007 owner verification PAUSED
+- PR #4 DO NOT MERGE
+- PR #5 DO NOT MERGE
+- PR #6 DO NOT MERGE
 
 ## Verification gates
 - Execution: PASS — read-only index-state capture published

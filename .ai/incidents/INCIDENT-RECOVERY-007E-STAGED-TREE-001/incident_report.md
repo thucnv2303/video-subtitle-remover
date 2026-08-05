@@ -4,9 +4,11 @@
 VERIFIED
 
 ## Explanation
-The previously reported M-space status for index.html, app.js, and api.js was caused by a defect in the Python evidence extraction script. The script read the output of git status --short, which is  M path (indicating unstaged modifications). However, it called .strip() on the subprocess stdout before extracting the first two characters. This stripped the leading space, turning  M into M  (staged).
+The previously reported M-space status for index.html, app.js, and api.js was caused by a defect in the Python evidence extraction script. The script read the output of git status --short, which is  M path (indicating unstaged modifications). However, it called .strip() on the subprocess stdout before extracting the first two characters. This short-status serializer lost a leading space, turning  M into M  (staged).
 
-The forensic capture confirms that the actual staged tree is completely EMPTY. The HEAD and index are completely identical. The index size, LastWriteTime, and hash have been verified. The before and after states match exactly, confirming that the forensic process was fully non-destructive.
+No staged content was present. The published before/after porcelain-v2 state is identical, and no source or worktree-status change caused by the forensic capture was detected.
 
 ## Conclusion
-The original worktree is safe and untouched. The published audit claiming the staged status was EMPTY is actually completely correct. The manifest was incorrect due to the trailing whitespace stripping bug in the evidence extractor script. The porcelain-v2 .M status is the official source of truth, definitively proving these files were modified in the worktree but unmodified in the index.
+Porcelain-v2 is authoritative for XY status.
+The .M status means the index is unchanged and the worktree is modified.
+All global cached-diff outputs are empty.

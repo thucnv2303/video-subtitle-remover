@@ -1,32 +1,29 @@
 # AgentOS Handoff Status
 
 ## Last completed task
-RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT (INVALIDATED BY INDEX STATE CONFLICT)
+RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE
+
+## Pending Resumption
+RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT: INVALIDATED/PENDING RESUMPTION AFTER INCIDENT CLOSURE
 
 ## Active Task
 INCIDENT-RECOVERY-007E-STAGED-TREE-001 (WAITING_REVIEW)
 
 ## Incident Resume Point
-Task is in WAITING_REVIEW for project manager to approve the staged tree evidence capture.
+Task is in WAITING_REVIEW for project manager to approve the finalized documentation.
 
 ## Status
-- **Incident facts**:
-  - PR #5 evidence review INVALIDATED by original-index-state conflict.
-  - Import/export reconciliation is logically 23/23 PASS but source publication remains unauthorized.
-  - Audit claims staged status EMPTY.
-  - Manifest reports M-space for index.html, app.js and api.js.
-  - Cause is VERIFIED (due to python script stripping whitespace).
-  - AI Settings implementation remains NOT STARTED.
-  - BUG-008 ACTIVE
-  - BUG-009 ACTIVE
-  - RECOVERY-007 owner verification PAUSED
-  - PR #4 DO NOT MERGE
-  - PR #5 DO NOT MERGE
-  - PR #6 DO NOT MERGE
-  - Original dirty worktree must remain untouched.
+- **Project Manager review**: NEEDS_REVISION — CORE INDEX FINDING CONFIRMED; FINAL DOCUMENTATION CORRECTION REQUIRED
+- **AI Settings implementation**: NOT STARTED
+- **BUG-008**: ACTIVE
+- **BUG-009**: ACTIVE
+- **RECOVERY-007 owner verification**: PAUSED
+- **PR #4**: DO NOT MERGE
+- **PR #5**: DO NOT MERGE
+- **PR #6**: DO NOT MERGE
 
 ## Next Permitted Action
-Project manager to review the incident report and captured index metadata.
+Project manager to review the finalized incident report and index metadata.
 
 ## Execution
 PASS — read-only index-state capture published

@@ -1,5 +1,6 @@
 Path: src/renderer/index.html
-  Status: .M
+  Porcelain-v2 XY: .M
+  Interpretation: unstaged modification only
   Tracked: tracked
   Stage: 100644 23db1343ebb9578dcbaf27826e97f1976d02b7e5 0	src/renderer/index.html
   HEAD blob: 23db1343ebb9578dcbaf27826e97f1976d02b7e5
@@ -12,7 +13,8 @@ Path: src/renderer/index.html
   Has Unstaged Diff: True
 
 Path: src/renderer/js/app.js
-  Status: .M
+  Porcelain-v2 XY: .M
+  Interpretation: unstaged modification only
   Tracked: tracked
   Stage: 100644 7876e583cbe42a4895ecd9c643caca6ea2471af5 0	src/renderer/js/app.js
   HEAD blob: 7876e583cbe42a4895ecd9c643caca6ea2471af5
@@ -25,7 +27,8 @@ Path: src/renderer/js/app.js
   Has Unstaged Diff: True
 
 Path: src/renderer/js/api.js
-  Status: .M
+  Porcelain-v2 XY: .M
+  Interpretation: unstaged modification only
   Tracked: tracked
   Stage: 100644 4b03585eebfd32902efa4e7a42d9672f6791862e 0	src/renderer/js/api.js
   HEAD blob: 4b03585eebfd32902efa4e7a42d9672f6791862e
@@ -38,7 +41,8 @@ Path: src/renderer/js/api.js
   Has Unstaged Diff: True
 
 Path: src/renderer/js/components/settings.js
-  Status: ?
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
   Tracked: untracked
   Stage: NOT TRACKED
   HEAD blob: NOT IN HEAD
@@ -48,10 +52,11 @@ Path: src/renderer/js/components/settings.js
   HEAD == Index: False
   Index == Worktree: False
   Has Staged Diff: False
-  Has Unstaged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
 
 Path: src/renderer/js/pipelines/pipeline2-remove.js
-  Status: ?
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
   Tracked: untracked
   Stage: NOT TRACKED
   HEAD blob: NOT IN HEAD
@@ -61,10 +66,11 @@ Path: src/renderer/js/pipelines/pipeline2-remove.js
   HEAD == Index: False
   Index == Worktree: False
   Has Staged Diff: False
-  Has Unstaged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
 
 Path: api/server.py
-  Status: .M
+  Porcelain-v2 XY: .M
+  Interpretation: unstaged modification only
   Tracked: tracked
   Stage: 100644 5ada627ff132f575b2eaab24b282e12856d614f9 0	api/server.py
   HEAD blob: 5ada627ff132f575b2eaab24b282e12856d614f9
@@ -77,7 +83,8 @@ Path: api/server.py
   Has Unstaged Diff: True
 
 Path: src/renderer/js/pipelines/pipeline1-ai.js
-  Status: ?
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
   Tracked: untracked
   Stage: NOT TRACKED
   HEAD blob: NOT IN HEAD
@@ -87,10 +94,11 @@ Path: src/renderer/js/pipelines/pipeline1-ai.js
   HEAD == Index: False
   Index == Worktree: False
   Has Staged Diff: False
-  Has Unstaged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
 
 Path: src/renderer/js/pipelines/pipeline3-finalize.js
-  Status: ?
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
   Tracked: untracked
   Stage: NOT TRACKED
   HEAD blob: NOT IN HEAD
@@ -100,10 +108,11 @@ Path: src/renderer/js/pipelines/pipeline3-finalize.js
   HEAD == Index: False
   Index == Worktree: False
   Has Staged Diff: False
-  Has Unstaged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
 
 Path: src/renderer/js/components/prompt-manager.js
-  Status: ?
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
   Tracked: untracked
   Stage: NOT TRACKED
   HEAD blob: NOT IN HEAD
@@ -113,10 +122,11 @@ Path: src/renderer/js/components/prompt-manager.js
   HEAD == Index: False
   Index == Worktree: False
   Has Staged Diff: False
-  Has Unstaged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
 
 Path: src/renderer/js/store.js
-  Status: ?
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
   Tracked: untracked
   Stage: NOT TRACKED
   HEAD blob: NOT IN HEAD
@@ -126,10 +136,11 @@ Path: src/renderer/js/store.js
   HEAD == Index: False
   Index == Worktree: False
   Has Staged Diff: False
-  Has Unstaged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
 
 Path: src/renderer/js/utils/logger.js
-  Status: ?
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
   Tracked: untracked
   Stage: NOT TRACKED
   HEAD blob: NOT IN HEAD
@@ -139,10 +150,11 @@ Path: src/renderer/js/utils/logger.js
   HEAD == Index: False
   Index == Worktree: False
   Has Staged Diff: False
-  Has Unstaged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
 
 Path: src/renderer/js/utils/dom.js
-  Status: ?
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
   Tracked: untracked
   Stage: NOT TRACKED
   HEAD blob: NOT IN HEAD
@@ -152,7 +164,4 @@ Path: src/renderer/js/utils/dom.js
   HEAD == Index: False
   Index == Worktree: False
   Has Staged Diff: False
-  Has Unstaged Diff: False
-
-
-
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
