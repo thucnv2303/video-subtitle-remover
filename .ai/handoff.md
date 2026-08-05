@@ -10,7 +10,7 @@ RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT (WAITING_REVIEW)
 Task is in WAITING_REVIEW for project manager to approve the dependency closure evidence revision.
 
 ## Status
-- **Project Manager review**: NEEDS_REVISION — IMPORT CLOSURE NOT YET PROVEN COMPLETE
+- **Project Manager review**: NEEDS_REVISION — EVIDENCE GENERATOR OUTPUT INTERNALLY INCONSISTENT
 - **Source baseline**: Six-file byte-for-byte publication remains verified. Its classification as a complete runtime source baseline is invalidated because imported dependencies were not included.
 - **RECOVERY-007 owner verification**: PAUSED
 - **RECOVERY-007E implementation**: NOT STARTED
@@ -23,7 +23,7 @@ Task is in WAITING_REVIEW for project manager to approve the dependency closure 
 Project manager to review the dependency capture evidence revision.
 
 ## Execution
-PREFLIGHT REVISION REQUIRED
+BLOCKED — targeted evidence correction only
 
 ## Code review
 NEEDS_REVISION

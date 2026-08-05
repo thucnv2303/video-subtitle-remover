@@ -6,13 +6,7 @@
     "stmt": "import { triggerAutoAiRewrite, triggerAutoTts, _buildTimedSrt } from './js/pipelines/pipeline1-ai.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/pipelines/pipeline1-ai.js",
-    "resolved": "src/renderer/js/pipelines/pipeline1-ai.js",
-    "exists": "YES",
-    "in_github": "NO",
-    "tracked_head": "NO",
-    "local_status": "??",
-    "ignored": "NO",
-    "another_transitive": "NO"
+    "resolved": "src/renderer/js/pipelines/pipeline1-ai.js"
   },
   {
     "importer": "src/renderer/index.html",
@@ -20,13 +14,7 @@
     "stmt": "import { finalizeVideo } from './js/pipelines/pipeline3-finalize.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/pipelines/pipeline3-finalize.js",
-    "resolved": "src/renderer/js/pipelines/pipeline3-finalize.js",
-    "exists": "YES",
-    "in_github": "NO",
-    "tracked_head": "NO",
-    "local_status": "??",
-    "ignored": "NO",
-    "another_transitive": "NO"
+    "resolved": "src/renderer/js/pipelines/pipeline3-finalize.js"
   },
   {
     "importer": "src/renderer/index.html",
@@ -34,13 +22,7 @@
     "stmt": "import { initSettings, loadSettingsValues, renderSavedVoices, updateVoiceDropdown, checkTTSStatus } from",
     "kind": "STATIC_FROM",
     "specifier": "./js/components/settings.js",
-    "resolved": "src/renderer/js/components/settings.js",
-    "exists": "YES",
-    "in_github": "YES",
-    "tracked_head": "NO",
-    "local_status": "??",
-    "ignored": "NO",
-    "another_transitive": "YES"
+    "resolved": "src/renderer/js/components/settings.js"
   },
   {
     "importer": "src/renderer/index.html",
@@ -48,13 +30,7 @@
     "stmt": "import { initPromptManager, renderPromptDropdown } from './js/components/prompt-manager.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/components/prompt-manager.js",
-    "resolved": "src/renderer/js/components/prompt-manager.js",
-    "exists": "YES",
-    "in_github": "NO",
-    "tracked_head": "NO",
-    "local_status": "??",
-    "ignored": "NO",
-    "another_transitive": "YES"
+    "resolved": "src/renderer/js/components/prompt-manager.js"
   },
   {
     "importer": "src/renderer/js/components/settings.js",
@@ -62,13 +38,7 @@
     "stmt": "import { state, saveState } from '../store.js';",
     "kind": "STATIC_FROM",
     "specifier": "../store.js",
-    "resolved": "src/renderer/js/store.js",
-    "exists": "YES",
-    "in_github": "NO",
-    "tracked_head": "NO",
-    "local_status": "??",
-    "ignored": "NO",
-    "another_transitive": "NO"
+    "resolved": "src/renderer/js/store.js"
   },
   {
     "importer": "src/renderer/js/components/settings.js",
@@ -76,13 +46,7 @@
     "stmt": "import { addLog, showToast } from '../utils/logger.js';",
     "kind": "STATIC_FROM",
     "specifier": "../utils/logger.js",
-    "resolved": "src/renderer/js/utils/logger.js",
-    "exists": "YES",
-    "in_github": "NO",
-    "tracked_head": "NO",
-    "local_status": "??",
-    "ignored": "NO",
-    "another_transitive": "NO"
+    "resolved": "src/renderer/js/utils/logger.js"
   },
   {
     "importer": "src/renderer/js/components/prompt-manager.js",
@@ -90,41 +54,23 @@
     "stmt": "import { showToast } from '../utils/logger.js';",
     "kind": "STATIC_FROM",
     "specifier": "../utils/logger.js",
-    "resolved": "src/renderer/js/utils/logger.js",
-    "exists": "YES",
-    "in_github": "NO",
-    "tracked_head": "NO",
-    "local_status": "??",
-    "ignored": "NO",
-    "another_transitive": "NO"
+    "resolved": "src/renderer/js/utils/logger.js"
   },
   {
     "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
     "line": 1,
-    "stmt": "import { $, el } from '../utils/dom.js';",
+    "stmt": "import { $, el, $$ } from '../utils/dom.js';",
     "kind": "STATIC_FROM",
     "specifier": "../utils/dom.js",
-    "resolved": "src/renderer/js/utils/dom.js",
-    "exists": "YES",
-    "in_github": "NO",
-    "tracked_head": "NO",
-    "local_status": "??",
-    "ignored": "NO",
-    "another_transitive": "NO"
+    "resolved": "src/renderer/js/utils/dom.js"
   },
   {
     "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
     "line": 2,
-    "stmt": "import { state } from '../store.js';",
+    "stmt": "import { state, saveState } from '../store.js';",
     "kind": "STATIC_FROM",
     "specifier": "../store.js",
-    "resolved": "src/renderer/js/store.js",
-    "exists": "YES",
-    "in_github": "NO",
-    "tracked_head": "NO",
-    "local_status": "??",
-    "ignored": "NO",
-    "another_transitive": "NO"
+    "resolved": "src/renderer/js/store.js"
   },
   {
     "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
@@ -132,13 +78,7 @@
     "stmt": "import { addLog, showToast, setActiveLogTab } from '../utils/logger.js';",
     "kind": "STATIC_FROM",
     "specifier": "../utils/logger.js",
-    "resolved": "src/renderer/js/utils/logger.js",
-    "exists": "YES",
-    "in_github": "NO",
-    "tracked_head": "NO",
-    "local_status": "??",
-    "ignored": "NO",
-    "another_transitive": "NO"
+    "resolved": "src/renderer/js/utils/logger.js"
   }
 ]
 ===== FILE METADATA =====
@@ -146,35 +86,43 @@
   "src/renderer/index.html": {
     "size": 48059,
     "sha256": "15653AF95D50006040DD9A3571F359D1BBBAA24F839071CB4CDE684453105A2B",
-    "mtime": "2026-08-03T07:22:20.590520+00:00",
-    "status": " M",
-    "stage": "100644 4c89fc7d04e4663dfdd9ffc8eb1ff0cd4e6ccf5e 0\tsrc/renderer/index.html",
+    "mtime": "2026-08-03T13:56:12.086358+00:00",
+    "status": "M ",
+    "stage": "100644 23db1343ebb9578dcbaf27826e97f1976d02b7e5 0\tsrc/renderer/index.html",
     "ignore": "NOT IGNORED",
-    "exports": [],
-    "in_github": "YES",
-    "is_entry": true
+    "imported_by": [],
+    "direct_imports": [
+      "src/renderer/js/pipelines/pipeline1-ai.js",
+      "src/renderer/js/pipelines/pipeline3-finalize.js",
+      "src/renderer/js/components/settings.js",
+      "src/renderer/js/components/prompt-manager.js"
+    ],
+    "exports": {},
+    "in_github": "YES"
   },
   "src/renderer/js/app.js": {
     "size": 67768,
     "sha256": "95BAE3351D9437C5B1F8ADE173200996738F6C4785A1DBBE6F6C8563614D0ED4",
-    "mtime": "2026-08-03T07:54:15.539304+00:00",
-    "status": " M",
-    "stage": "100644 ea3e6f6a73c1d5334795b5ba3f86eef927233261 0\tsrc/renderer/js/app.js",
+    "mtime": "2026-08-04T13:29:47.125870+00:00",
+    "status": "M ",
+    "stage": "100644 7876e583cbe42a4895ecd9c643caca6ea2471af5 0\tsrc/renderer/js/app.js",
     "ignore": "NOT IGNORED",
-    "exports": [],
-    "in_github": "YES",
-    "is_entry": true
+    "imported_by": [],
+    "direct_imports": [],
+    "exports": {},
+    "in_github": "YES"
   },
   "src/renderer/js/api.js": {
     "size": 9477,
     "sha256": "485CEC25E950A61B3858D0B06AF1488402BAA066AC94CD3269903AC25AA39664",
-    "mtime": "2026-08-03T02:37:37.378946+00:00",
-    "status": " M",
-    "stage": "100644 c2243d578b9b5f9227f2c695b281cfc843058b88 0\tsrc/renderer/js/api.js",
+    "mtime": "2026-08-04T09:57:11.463670+00:00",
+    "status": "M ",
+    "stage": "100644 4b03585eebfd32902efa4e7a42d9672f6791862e 0\tsrc/renderer/js/api.js",
     "ignore": "NOT IGNORED",
-    "exports": [],
-    "in_github": "YES",
-    "is_entry": true
+    "imported_by": [],
+    "direct_imports": [],
+    "exports": {},
+    "in_github": "YES"
   },
   "src/renderer/js/components/settings.js": {
     "size": 15377,
@@ -183,15 +131,22 @@
     "status": "??",
     "stage": "NOT TRACKED",
     "ignore": "NOT IGNORED",
-    "exports": [
-      "initSettings (line 12)",
-      "loadSettingsValues (line 23)",
-      "getSavedVoices (line 83)",
-      "renderSavedVoices (line 92)",
-      "updateVoiceDropdown (line 129)"
+    "imported_by": [
+      "src/renderer/index.html"
     ],
-    "in_github": "YES",
-    "is_entry": true
+    "direct_imports": [
+      "src/renderer/js/store.js",
+      "src/renderer/js/utils/logger.js"
+    ],
+    "exports": {
+      "initSettings": 12,
+      "loadSettingsValues": 23,
+      "getSavedVoices": 83,
+      "renderSavedVoices": 92,
+      "updateVoiceDropdown": 129,
+      "checkTTSStatus": 161
+    },
+    "in_github": "YES"
   },
   "src/renderer/js/pipelines/pipeline2-remove.js": {
     "size": 5811,
@@ -200,11 +155,18 @@
     "status": "??",
     "stage": "NOT TRACKED",
     "ignore": "NOT IGNORED",
-    "exports": [
-      "handleWSMessage (line 137)"
+    "imported_by": [],
+    "direct_imports": [
+      "src/renderer/js/utils/dom.js",
+      "src/renderer/js/store.js",
+      "src/renderer/js/utils/logger.js"
     ],
-    "in_github": "YES",
-    "is_entry": true
+    "exports": {
+      "runNextPass": 5,
+      "pollProgress": 100,
+      "handleWSMessage": 137
+    },
+    "in_github": "YES"
   },
   "src/renderer/js/pipelines/pipeline1-ai.js": {
     "size": 10277,
@@ -213,12 +175,17 @@
     "status": "??",
     "stage": "NOT TRACKED",
     "ignore": "NOT IGNORED",
-    "exports": [
-      "_buildTimedSrt (line 191)",
-      "_msToSrtTime (line 236)"
+    "imported_by": [
+      "src/renderer/index.html"
     ],
-    "in_github": "NO",
-    "is_entry": false
+    "direct_imports": [],
+    "exports": {
+      "triggerAutoAiRewrite": 19,
+      "triggerAutoTts": 109,
+      "_buildTimedSrt": 191,
+      "_msToSrtTime": 236
+    },
+    "in_github": "NO"
   },
   "src/renderer/js/pipelines/pipeline3-finalize.js": {
     "size": 12610,
@@ -227,9 +194,14 @@
     "status": "??",
     "stage": "NOT TRACKED",
     "ignore": "NOT IGNORED",
-    "exports": [],
-    "in_github": "NO",
-    "is_entry": false
+    "imported_by": [
+      "src/renderer/index.html"
+    ],
+    "direct_imports": [],
+    "exports": {
+      "finalizeVideo": 26
+    },
+    "in_github": "NO"
   },
   "src/renderer/js/components/prompt-manager.js": {
     "size": 5806,
@@ -238,12 +210,17 @@
     "status": "??",
     "stage": "NOT TRACKED",
     "ignore": "NOT IGNORED",
-    "exports": [
-      "renderPromptDropdown (line 27)",
-      "initPromptManager (line 42)"
+    "imported_by": [
+      "src/renderer/index.html"
     ],
-    "in_github": "NO",
-    "is_entry": false
+    "direct_imports": [
+      "src/renderer/js/utils/logger.js"
+    ],
+    "exports": {
+      "renderPromptDropdown": 27,
+      "initPromptManager": 42
+    },
+    "in_github": "NO"
   },
   "src/renderer/js/store.js": {
     "size": 793,
@@ -252,13 +229,17 @@
     "status": "??",
     "stage": "NOT TRACKED",
     "ignore": "NOT IGNORED",
-    "exports": [
-      "state (line 1)",
-      "loadState (line 24)",
-      "saveState (line 31)"
+    "imported_by": [
+      "src/renderer/js/components/settings.js",
+      "src/renderer/js/pipelines/pipeline2-remove.js"
     ],
-    "in_github": "NO",
-    "is_entry": false
+    "direct_imports": [],
+    "exports": {
+      "state": 1,
+      "loadState": 24,
+      "saveState": 31
+    },
+    "in_github": "NO"
   },
   "src/renderer/js/utils/logger.js": {
     "size": 4456,
@@ -267,14 +248,19 @@
     "status": "??",
     "stage": "NOT TRACKED",
     "ignore": "NOT IGNORED",
-    "exports": [
-      "setActiveLogTab (line 13)",
-      "getLogCategory (line 15)",
-      "addLog (line 41)",
-      "showToast (line 94)"
+    "imported_by": [
+      "src/renderer/js/components/settings.js",
+      "src/renderer/js/pipelines/pipeline2-remove.js",
+      "src/renderer/js/components/prompt-manager.js"
     ],
-    "in_github": "NO",
-    "is_entry": false
+    "direct_imports": [],
+    "exports": {
+      "setActiveLogTab": 13,
+      "getLogCategory": 15,
+      "addLog": 41,
+      "showToast": 94
+    },
+    "in_github": "NO"
   },
   "src/renderer/js/utils/dom.js": {
     "size": 4186,
@@ -283,106 +269,15 @@
     "status": "??",
     "stage": "NOT TRACKED",
     "ignore": "NOT IGNORED",
-    "exports": [
-      "el (line 4)"
+    "imported_by": [
+      "src/renderer/js/pipelines/pipeline2-remove.js"
     ],
-    "in_github": "NO",
-    "is_entry": false
+    "direct_imports": [],
+    "exports": {
+      "$": 1,
+      "$$": 2,
+      "el": 4
+    },
+    "in_github": "NO"
   }
-}
-===== SYMBOL EVIDENCE =====
-{
-  "pipeline1": [
-    {
-      "line": 25,
-      "match": "const provider = localStorage.getItem('ai_provider') || 'gemini';"
-    },
-    {
-      "line": 27,
-      "match": "try { api_keys = JSON.parse(localStorage.getItem(`ai_api_keys_${provider}`) || '[]'); } catch { api_keys = []; }"
-    },
-    {
-      "line": 28,
-      "match": "const selectedModel = localStorage.getItem(`ai_model_${provider}`) || '';"
-    },
-    {
-      "line": 33,
-      "match": "else if (localStorage.getItem('ai_api_key')) api_keys = [{ key: localStorage.getItem('ai_api_key') }];"
-    },
-    {
-      "line": 55,
-      "match": "const aiConfig = {"
-    },
-    {
-      "line": 59,
-      "match": "endpoint: localStorage.getItem('ai_endpoint') || '',"
-    },
-    {
-      "line": 63,
-      "match": "const res = await fetch(`${window.api.base}/api/ai-rewrite`, {"
-    },
-    {
-      "line": 66,
-      "match": "body: JSON.stringify({ srt_content: srtText, ai_config: aiConfig }),"
-    }
-  ],
-  "pipeline3": [],
-  "prompt_manager": [
-    {
-      "line": 18,
-      "match": "const p = JSON.parse(localStorage.getItem('ai_prompts'));"
-    },
-    {
-      "line": 24,
-      "match": "localStorage.setItem('ai_prompts', JSON.stringify(p));"
-    },
-    {
-      "line": 38,
-      "match": "const activeId = localStorage.getItem('ai_active_prompt_id');"
-    },
-    {
-      "line": 155,
-      "match": "localStorage.setItem('ai_active_prompt_id', select.value);"
-    },
-    {
-      "line": 157,
-      "match": "if (p) localStorage.setItem('ai_prompt', p.content);"
-    },
-    {
-      "line": 163,
-      "match": "if (!localStorage.getItem('ai_prompt')) {"
-    },
-    {
-      "line": 164,
-      "match": "localStorage.setItem('ai_prompt', DEFAULT_PROMPTS[0].content);"
-    },
-    {
-      "line": 165,
-      "match": "localStorage.setItem('ai_active_prompt_id', 'p1');"
-    }
-  ],
-  "store": [
-    {
-      "line": 1,
-      "match": "export const state = {"
-    },
-    {
-      "line": 22,
-      "match": "window._appState = state; // Keep global for backward compatibility for now"
-    },
-    {
-      "line": 27,
-      "match": "Object.assign(state.settings, JSON.parse(s));"
-    },
-    {
-      "line": 31,
-      "match": "export function saveState() {"
-    },
-    {
-      "line": 32,
-      "match": "localStorage.setItem('appState', JSON.stringify(state.settings));"
-    }
-  ],
-  "logger": [],
-  "dom": []
 }

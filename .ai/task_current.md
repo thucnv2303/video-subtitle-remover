@@ -13,7 +13,7 @@ WAITING_REVIEW
 Determine the complete local renderer-module dependency closure required by the already-published `index.html`, `settings.js` and `pipeline2-remove.js`.
 
 ## Verified Facts
-- **Project Manager review**: NEEDS_REVISION — IMPORT CLOSURE NOT YET PROVEN COMPLETE
+- **Project Manager review**: NEEDS_REVISION — EVIDENCE GENERATOR OUTPUT INTERNALLY INCONSISTENT
 - **Six-file byte-for-byte publication**: remains verified.
 - **Classification**: Its classification as a complete runtime source baseline is invalidated because imported dependencies were not included.
 - **AI Settings implementation**: NOT STARTED.
@@ -23,7 +23,7 @@ Determine the complete local renderer-module dependency closure required by the 
 - **PR #5**: DO NOT MERGE.
 
 ## Verification gates
-- Execution: PREFLIGHT REVISION REQUIRED
+- Execution: BLOCKED — targeted evidence correction only
 - Automated verification: NOT APPLICABLE — evidence-only
 - Code review: NEEDS_REVISION
 - Owner manual app verification: BLOCKED

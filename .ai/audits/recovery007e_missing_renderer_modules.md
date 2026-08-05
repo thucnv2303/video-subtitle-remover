@@ -1,39 +1,63 @@
 # RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT Evidence Revision
 
 ## Objective
-Complete the dependency-capture method and publish enough reviewable evidence to prove the complete renderer-module dependency closure.
+Replace inferred scanner conclusions with direct, repository-line-numbered import/export evidence and an internally reconciled dependency graph.
 
 ## Phase 1 — Original Worktree Identity
 - **Branch**: `rescue/wip-20260803`
 - **HEAD**: `d67a427f1c90a2e98da560977736ead80637db3a`
 - **Original Renderer Staged Status**: EMPTY
 
-## Phase 6 — Precise Counts
+## Phase 3 — Named-Import Reconciliation
+
+| Importer | Imported Symbol | Target Module | Import Line | Exact Export Line | Result |
+|---|---|---|---|---|---|
+| index.html | triggerAutoAiRewrite | pipeline1-ai.js | 13 | 19 | PASS |
+| index.html | triggerAutoTts | pipeline1-ai.js | 13 | 109 | PASS |
+| index.html | _buildTimedSrt | pipeline1-ai.js | 13 | 191 | PASS |
+| index.html | finalizeVideo | pipeline3-finalize.js | 14 | 26 | PASS |
+| index.html | initSettings | settings.js | 15 | 12 | PASS |
+| index.html | loadSettingsValues | settings.js | 15 | 23 | PASS |
+| index.html | renderSavedVoices | settings.js | 15 | 92 | PASS |
+| index.html | updateVoiceDropdown | settings.js | 15 | 129 | PASS |
+| index.html | checkTTSStatus | settings.js | 15 | 161 | PASS |
+| index.html | initPromptManager | prompt-manager.js | 17 | 42 | PASS |
+| index.html | renderPromptDropdown | prompt-manager.js | 17 | 27 | PASS |
+| settings.js | state | store.js | 1 | 1 | PASS |
+| settings.js | saveState | store.js | 1 | 31 | PASS |
+| settings.js | addLog | logger.js | 2 | 41 | PASS |
+| settings.js | showToast | logger.js | 2 | 94 | PASS |
+| prompt-manager.js | showToast | logger.js | 1 | 94 | PASS |
+| pipeline2-remove.js | $ | dom.js | 1 | 1 | PASS |
+| pipeline2-remove.js | el | dom.js | 1 | 4 | PASS |
+| pipeline2-remove.js | $$ | dom.js | 1 | 2 | PASS |
+| pipeline2-remove.js | state | store.js | 2 | 1 | PASS |
+| pipeline2-remove.js | addLog | logger.js | 3 | 41 | PASS |
+| pipeline2-remove.js | showToast | logger.js | 3 | 94 | PASS |
+| pipeline2-remove.js | setActiveLogTab | logger.js | 3 | 13 | PASS |
+
+## Phase 4 — Precise Counts
+- **exact row count**: 10 rows (edges) in the import graph
+- **count by import kind**: 
+  - STATIC_FROM: 10
+  - SIDE_EFFECT: 0
+  - DYNAMIC: 0
+  - RE_EXPORT: 0
+  - HTML_MODULE_SRC: 0
+- **unique resolved target set**: `pipeline1-ai.js`, `pipeline3-finalize.js`, `settings.js`, `prompt-manager.js`, `store.js`, `logger.js`, `dom.js`
+- **unique target count**: 7
+- **duplicate edge count**: 0
 - **entry-root count**: 5 (`index.html`, `app.js`, `api.js`, `settings.js`, `pipeline2-remove.js`)
-- **static-from import statement count**: 11
-- **side-effect import statement count**: 0
-- **dynamic import statement count**: 0
-- **re-export statement count**: 0
-- **HTML module-src count**: 0
-- **total real dependency edges**: 11
-- **duplicate dependency-edge count**: 0
-- **unique resolved-module count**: 8 (targets)
-- **unique missing-from-GitHub count**: 6
-- **total closure file count**: 11 (5 entry + 6 missing dependencies)
+- **total unique closure files**: 11 (5 entries + 6 missing)
 
-## Phase 7 — Re-Answered Required Questions
-1. **Do all six known missing paths exist in the original dirty worktree?** Yes.
-2. **Which are tracked, untracked, ignored or absent?** All 6 are untracked (`??`), `NOT TRACKED` by git ls-files, and `NOT IGNORED`.
-3. **Are additional transitive modules missing from GitHub?** No. The closure reached a fixed point and all import forms were checked.
-4. **Does pipeline1-ai.js construct or consume ai_config?** Yes, it constructs and consumes `aiConfig` (line 55, line 66).
-5. **Does pipeline1-ai.js call /api/ai-rewrite?** Yes, on line 63.
-6. **Does pipeline3-finalize.js depend on AI provider settings?** NONE FOUND.
-7. **Does prompt-manager.js depend on settings storage?** Yes, relies on `localStorage` for `ai_prompts` (lines 18, 24) and `ai_active_prompt_id` (lines 38, 155).
-8. **Are store.js, logger.js and dom.js shared by Pipeline 2?** Yes, `pipeline2-remove.js` directly imports them.
-9. **Can the complete module closure be published byte-for-byte without including unrelated files?** Yes. Isolation is safe as the closure is fixed and no other files are referenced.
-10. **What exact file set is required for RECOVERY-007E-SOURCE-BASELINE-002 publication?** The exact proposed publication set is the 6 JS files: `pipeline1-ai.js`, `pipeline3-finalize.js`, `prompt-manager.js`, `store.js`, `logger.js`, `dom.js`.
-11. **Does any candidate file contain secrets, embedded API keys or captured localStorage values?** SECRET SCAN: NO SUSPECTED VALUES FOUND.
-12. **Does index.html reference any module that is absent both locally and on GitHub?** No.
+## Phase 7 — SAFE PUBLICATION DECISION
+- Every import edge is recorded with actual whole-file line numbers.
+- Every named import resolves to an exported symbol.
+- Counts match the graph.
+- All import/export forms were directly checked.
+- Responsibilities and importing files are recorded.
+- No local module is missing.
+- SECRET SCAN: NO SUSPECTED VALUES FOUND
 
-## Conclusion
-The dependency closure is now proven complete. The exact proposed publication set is isolated and safe for publication.
+**Decision:** SAFE TO PUBLISH
+The exact publication file set is: `src/renderer/js/pipelines/pipeline1-ai.js`, `src/renderer/js/pipelines/pipeline3-finalize.js`, `src/renderer/js/components/prompt-manager.js`, `src/renderer/js/store.js`, `src/renderer/js/utils/logger.js`, `src/renderer/js/utils/dom.js`.
