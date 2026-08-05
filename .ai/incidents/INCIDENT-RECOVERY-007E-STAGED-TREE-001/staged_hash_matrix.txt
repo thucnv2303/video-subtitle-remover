@@ -1,0 +1,167 @@
+Path: src/renderer/index.html
+  Porcelain-v2 XY: .M
+  Interpretation: unstaged modification only
+  Tracked: tracked
+  Stage: 100644 23db1343ebb9578dcbaf27826e97f1976d02b7e5 0	src/renderer/index.html
+  HEAD blob: 23db1343ebb9578dcbaf27826e97f1976d02b7e5
+  Index blob: 23db1343ebb9578dcbaf27826e97f1976d02b7e5
+  Size: 48059 bytes
+  SHA256: 15653AF95D50006040DD9A3571F359D1BBBAA24F839071CB4CDE684453105A2B
+  HEAD == Index: True
+  Index == Worktree: False
+  Has Staged Diff: False
+  Has Unstaged Diff: True
+
+Path: src/renderer/js/app.js
+  Porcelain-v2 XY: .M
+  Interpretation: unstaged modification only
+  Tracked: tracked
+  Stage: 100644 7876e583cbe42a4895ecd9c643caca6ea2471af5 0	src/renderer/js/app.js
+  HEAD blob: 7876e583cbe42a4895ecd9c643caca6ea2471af5
+  Index blob: 7876e583cbe42a4895ecd9c643caca6ea2471af5
+  Size: 67768 bytes
+  SHA256: 95BAE3351D9437C5B1F8ADE173200996738F6C4785A1DBBE6F6C8563614D0ED4
+  HEAD == Index: True
+  Index == Worktree: False
+  Has Staged Diff: False
+  Has Unstaged Diff: True
+
+Path: src/renderer/js/api.js
+  Porcelain-v2 XY: .M
+  Interpretation: unstaged modification only
+  Tracked: tracked
+  Stage: 100644 4b03585eebfd32902efa4e7a42d9672f6791862e 0	src/renderer/js/api.js
+  HEAD blob: 4b03585eebfd32902efa4e7a42d9672f6791862e
+  Index blob: 4b03585eebfd32902efa4e7a42d9672f6791862e
+  Size: 9477 bytes
+  SHA256: 485CEC25E950A61B3858D0B06AF1488402BAA066AC94CD3269903AC25AA39664
+  HEAD == Index: True
+  Index == Worktree: False
+  Has Staged Diff: False
+  Has Unstaged Diff: True
+
+Path: src/renderer/js/components/settings.js
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
+  Tracked: untracked
+  Stage: NOT TRACKED
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
+  Size: 15377 bytes
+  SHA256: 40D845884D896A58A4D9D89EF7A755D53DC8373361D5604F645C7BDCD9DCC130
+  HEAD == Index: False
+  Index == Worktree: False
+  Has Staged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
+
+Path: src/renderer/js/pipelines/pipeline2-remove.js
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
+  Tracked: untracked
+  Stage: NOT TRACKED
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
+  Size: 5811 bytes
+  SHA256: 0B83DD7748FE800EAFF9E53D49485D5BC0F8776DA5A13747E49C3B7C8AD44850
+  HEAD == Index: False
+  Index == Worktree: False
+  Has Staged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
+
+Path: api/server.py
+  Porcelain-v2 XY: .M
+  Interpretation: unstaged modification only
+  Tracked: tracked
+  Stage: 100644 5ada627ff132f575b2eaab24b282e12856d614f9 0	api/server.py
+  HEAD blob: 5ada627ff132f575b2eaab24b282e12856d614f9
+  Index blob: 5ada627ff132f575b2eaab24b282e12856d614f9
+  Size: 117725 bytes
+  SHA256: 0D3212626B0121E3D316B7128D0345817039128D2781B1017053F5DEB9098287
+  HEAD == Index: True
+  Index == Worktree: False
+  Has Staged Diff: False
+  Has Unstaged Diff: True
+
+Path: src/renderer/js/pipelines/pipeline1-ai.js
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
+  Tracked: untracked
+  Stage: NOT TRACKED
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
+  Size: 10277 bytes
+  SHA256: B2A111BEDADFBA9EE0E08F295779E27F83DD6C7FCCAB2A64FB1D75A03C294C05
+  HEAD == Index: False
+  Index == Worktree: False
+  Has Staged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
+
+Path: src/renderer/js/pipelines/pipeline3-finalize.js
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
+  Tracked: untracked
+  Stage: NOT TRACKED
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
+  Size: 12610 bytes
+  SHA256: B22B80B1975921B3ACF4D5858C0ECD5279767D72EE5C976D74DD8F79015712EB
+  HEAD == Index: False
+  Index == Worktree: False
+  Has Staged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
+
+Path: src/renderer/js/components/prompt-manager.js
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
+  Tracked: untracked
+  Stage: NOT TRACKED
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
+  Size: 5806 bytes
+  SHA256: E4DDF9D2703BA793D372554C80AAEBBA5012BB1AE21861C404F1CA4882579589
+  HEAD == Index: False
+  Index == Worktree: False
+  Has Staged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
+
+Path: src/renderer/js/store.js
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
+  Tracked: untracked
+  Stage: NOT TRACKED
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
+  Size: 793 bytes
+  SHA256: 128AC86B9FE0BA4D21A47C677C9E580458394CC7459EC37F68DA9F1D370EEB2E
+  HEAD == Index: False
+  Index == Worktree: False
+  Has Staged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
+
+Path: src/renderer/js/utils/logger.js
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
+  Tracked: untracked
+  Stage: NOT TRACKED
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
+  Size: 4456 bytes
+  SHA256: 48EC726A3ECD4FBC297DC52549CF4E7A473414626D93D4FE97E12C680823D2A5
+  HEAD == Index: False
+  Index == Worktree: False
+  Has Staged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index
+
+Path: src/renderer/js/utils/dom.js
+  Porcelain-v2 XY: ??
+  Interpretation: untracked, not present in index
+  Tracked: untracked
+  Stage: NOT TRACKED
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
+  Size: 4186 bytes
+  SHA256: 82964ACE02A114592CDA01D8E3E72D14449BF62801ACBF79FA1E1BBCC96DD05E
+  HEAD == Index: False
+  Index == Worktree: False
+  Has Staged Diff: False
+  Unstaged classification: UNTRACKED — not represented by git diff without --no-index

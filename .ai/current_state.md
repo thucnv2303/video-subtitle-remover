@@ -22,24 +22,24 @@ WAITING
   .ai/audits/pipeline1_baseline_runtime.md
 - INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
 - RECOVERY-007E-SOURCE-BASELINE-001: COMPLETED
-- Active task: RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT (WAITING_REVIEW)
-- Project Manager review: NEEDS_REVISION — FINAL LINE AND RECONCILIATION ERRORS REMAIN
-- Verified facts:
-  - Six-file byte-for-byte publication remains verified.
-  - Its classification as a complete runtime source baseline is invalidated because imported dependencies were not included.
-  - AI Settings implementation remains NOT STARTED.
-  - BUG-008 and BUG-009 remain ACTIVE.
-  - RECOVERY-007 owner verification remains PAUSED.
-  - PR #4: DO NOT MERGE.
-  - PR #5: DO NOT MERGE.
+- RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT: INVALIDATED/PENDING RESUMPTION AFTER INCIDENT CLOSURE
+- Active task: INCIDENT-RECOVERY-007E-STAGED-TREE-001
+- Project Manager review: NEEDS_REVISION — CORE INDEX FINDING CONFIRMED; FINAL DOCUMENTATION CORRECTION REQUIRED
+- AI Settings implementation NOT STARTED
+- BUG-008 ACTIVE
+- BUG-009 ACTIVE
+- RECOVERY-007 owner verification PAUSED
+- PR #4 DO NOT MERGE
+- PR #5 DO NOT MERGE
+- PR #6 DO NOT MERGE
 
 ## Verification gates
-- Execution: BLOCKED — documentation correction only
+- Execution: PASS — read-only index-state capture published
 - Automated verification: NOT APPLICABLE — evidence-only
-- Code review: NEEDS_REVISION
+- Code review: WAITING
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
 
 ## Current branch
-review/RECOVERY-007E-SOURCE-BASELINE-002-missing-modules-evidence
+review/INCIDENT-RECOVERY-007E-STAGED-TREE-001-evidence

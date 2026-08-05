@@ -1,31 +1,32 @@
 # Current Task
 
 ## Task ID
-RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT
+INCIDENT-RECOVERY-007E-STAGED-TREE-001
 
 ## Name
-CAPTURE MISSING RENDERER MODULE CLOSURE
+CAPTURE UNEXPECTED ORIGINAL WORKTREE INDEX STATE
 
 ## Status
 WAITING_REVIEW
 
 ## Purpose
-Determine the complete local renderer-module dependency closure required by the already-published `index.html`, `settings.js` and `pipeline2-remove.js`.
+Capture the actual Git index, worktree and HEAD state without modifying any source or index entry.
 
 ## Verified Facts
-- **Project Manager review**: NEEDS_REVISION — FINAL LINE AND RECONCILIATION ERRORS REMAIN
-- **Six-file byte-for-byte publication**: remains verified.
-- **Classification**: Its classification as a complete runtime source baseline is invalidated because imported dependencies were not included.
-- **AI Settings implementation**: NOT STARTED.
-- **BUG-008 and BUG-009**: ACTIVE.
-- **RECOVERY-007 owner verification**: PAUSED.
-- **PR #4**: DO NOT MERGE.
-- **PR #5**: DO NOT MERGE.
+- **Project Manager review**: NEEDS_REVISION — CORE INDEX FINDING CONFIRMED; FINAL DOCUMENTATION CORRECTION REQUIRED
+- **RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT**: INVALIDATED/PENDING RESUMPTION AFTER INCIDENT CLOSURE
+- **AI Settings implementation**: NOT STARTED
+- **BUG-008**: ACTIVE
+- **BUG-009**: ACTIVE
+- **RECOVERY-007 owner verification**: PAUSED
+- **PR #4**: DO NOT MERGE
+- **PR #5**: DO NOT MERGE
+- **PR #6**: DO NOT MERGE
 
 ## Verification gates
-- Execution: BLOCKED — documentation correction only
+- Execution: PASS — read-only index-state capture published
 - Automated verification: NOT APPLICABLE — evidence-only
-- Code review: NEEDS_REVISION
+- Code review: WAITING
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
