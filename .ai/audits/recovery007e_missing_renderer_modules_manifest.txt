@@ -1,0 +1,205 @@
+===== IMPORT GRAPH =====
+[
+  {
+    "importer": "src/renderer/index.html",
+    "specifier": "./js/pipelines/pipeline1-ai.js",
+    "resolved": "src/renderer/js/pipelines/pipeline1-ai.js",
+    "exists": "YES",
+    "in_github": "NO",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "NO"
+  },
+  {
+    "importer": "src/renderer/index.html",
+    "specifier": "./js/pipelines/pipeline3-finalize.js",
+    "resolved": "src/renderer/js/pipelines/pipeline3-finalize.js",
+    "exists": "YES",
+    "in_github": "NO",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "NO"
+  },
+  {
+    "importer": "src/renderer/index.html",
+    "specifier": "./js/components/settings.js",
+    "resolved": "src/renderer/js/components/settings.js",
+    "exists": "YES",
+    "in_github": "YES",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "YES"
+  },
+  {
+    "importer": "src/renderer/index.html",
+    "specifier": "./js/components/prompt-manager.js",
+    "resolved": "src/renderer/js/components/prompt-manager.js",
+    "exists": "YES",
+    "in_github": "NO",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "YES"
+  },
+  {
+    "importer": "(entry)",
+    "specifier": "src/renderer/js/pipelines/pipeline2-remove.js",
+    "resolved": "src/renderer/js/pipelines/pipeline2-remove.js",
+    "exists": "YES",
+    "in_github": "YES",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "YES"
+  },
+  {
+    "importer": "src/renderer/js/components/settings.js",
+    "specifier": "../store.js",
+    "resolved": "src/renderer/js/store.js",
+    "exists": "YES",
+    "in_github": "NO",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "NO"
+  },
+  {
+    "importer": "src/renderer/js/components/settings.js",
+    "specifier": "../utils/logger.js",
+    "resolved": "src/renderer/js/utils/logger.js",
+    "exists": "YES",
+    "in_github": "NO",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "NO"
+  },
+  {
+    "importer": "src/renderer/js/components/prompt-manager.js",
+    "specifier": "../utils/logger.js",
+    "resolved": "src/renderer/js/utils/logger.js",
+    "exists": "YES",
+    "in_github": "NO",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "NO"
+  },
+  {
+    "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
+    "specifier": "../utils/dom.js",
+    "resolved": "src/renderer/js/utils/dom.js",
+    "exists": "YES",
+    "in_github": "NO",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "NO"
+  },
+  {
+    "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
+    "specifier": "../store.js",
+    "resolved": "src/renderer/js/store.js",
+    "exists": "YES",
+    "in_github": "NO",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "NO"
+  },
+  {
+    "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
+    "specifier": "../utils/logger.js",
+    "resolved": "src/renderer/js/utils/logger.js",
+    "exists": "YES",
+    "in_github": "NO",
+    "tracked_head": "NO",
+    "local_status": "??",
+    "another_transitive": "NO"
+  }
+]
+===== FILE METADATA =====
+{
+  "src/renderer/js/pipelines/pipeline1-ai.js": {
+    "size": 10277,
+    "sha256": "B2A111BEDADFBA9EE0E08F295779E27F83DD6C7FCCAB2A64FB1D75A03C294C05",
+    "mtime": 1785747951.595127,
+    "status": "??",
+    "stage": "",
+    "ignore": "",
+    "direct_imports": [],
+    "mtime_human": 1785747951.595127
+  },
+  "src/renderer/js/pipelines/pipeline3-finalize.js": {
+    "size": 12610,
+    "sha256": "B22B80B1975921B3ACF4D5858C0ECD5279767D72EE5C976D74DD8F79015712EB",
+    "mtime": 1785748025.1104667,
+    "status": "??",
+    "stage": "",
+    "ignore": "",
+    "direct_imports": [],
+    "mtime_human": 1785748025.1104667
+  },
+  "src/renderer/js/components/settings.js": {
+    "size": 15377,
+    "sha256": "40D845884D896A58A4D9D89EF7A755D53DC8373361D5604F645C7BDCD9DCC130",
+    "mtime": 1785748126.6195464,
+    "status": "??",
+    "stage": "",
+    "ignore": "",
+    "direct_imports": [
+      "../store.js",
+      "../utils/logger.js"
+    ],
+    "mtime_human": 1785748126.6195464
+  },
+  "src/renderer/js/components/prompt-manager.js": {
+    "size": 5806,
+    "sha256": "E4DDF9D2703BA793D372554C80AAEBBA5012BB1AE21861C404F1CA4882579589",
+    "mtime": 1785748208.6619806,
+    "status": "??",
+    "stage": "",
+    "ignore": "",
+    "direct_imports": [
+      "../utils/logger.js"
+    ],
+    "mtime_human": 1785748208.6619806
+  },
+  "src/renderer/js/pipelines/pipeline2-remove.js": {
+    "size": 5811,
+    "sha256": "0B83DD7748FE800EAFF9E53D49485D5BC0F8776DA5A13747E49C3B7C8AD44850",
+    "mtime": 1785727689.8320456,
+    "status": "??",
+    "stage": "",
+    "ignore": "",
+    "direct_imports": [
+      "../utils/dom.js",
+      "../store.js",
+      "../utils/logger.js"
+    ],
+    "mtime_human": 1785727689.8320456
+  },
+  "src/renderer/js/store.js": {
+    "size": 793,
+    "sha256": "128AC86B9FE0BA4D21A47C677C9E580458394CC7459EC37F68DA9F1D370EEB2E",
+    "mtime": 1785729548.6335392,
+    "status": "??",
+    "stage": "",
+    "ignore": "",
+    "direct_imports": [],
+    "mtime_human": 1785729548.6335392
+  },
+  "src/renderer/js/utils/logger.js": {
+    "size": 4456,
+    "sha256": "48EC726A3ECD4FBC297DC52549CF4E7A473414626D93D4FE97E12C680823D2A5",
+    "mtime": 1785748182.2881553,
+    "status": "??",
+    "stage": "",
+    "ignore": "",
+    "direct_imports": [],
+    "mtime_human": 1785748182.2881553
+  },
+  "src/renderer/js/utils/dom.js": {
+    "size": 4186,
+    "sha256": "82964ACE02A114592CDA01D8E3E72D14449BF62801ACBF79FA1E1BBCC96DD05E",
+    "mtime": 1785724615.8220813,
+    "status": "??",
+    "stage": "",
+    "ignore": "",
+    "direct_imports": [],
+    "mtime_human": 1785724615.8220813
+  }
+}
