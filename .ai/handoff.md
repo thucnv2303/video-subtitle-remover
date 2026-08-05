@@ -4,30 +4,34 @@
 INCIDENT-RECOVERY-007E-002 — Targeted restoration of invalid RECOVERY-007E changes
 
 ## Incident Resume Point
-Project Manager re-review of PR #2.
+Task completed. Documentation closed.
 
 ## Status
-- Restoration evidence is complete.
-- PR #2 base: rescue/wip-20260803@d67a427f1c90a2e98da560977736ead80637db3a
-- PR #2 review branch: review/INCIDENT-RECOVERY-007E-002-targeted-restoration
-- Restoration evidence commit: bc447d515b05a1e13eb1b20aee3fbe422f1edf7b
-- Initial state synchronization commit: 1a940da5e7c2bda6fe980f9b54df8e3f9d5cc8d5
-- First canonical correction commit: 55dde57ee0e63b2f9dafaf8df7da938e5ca50afa
+- **INCIDENT-RECOVERY-007E-002 review**: PASS
+- **Verified review head**: 7fba3964a5b175e0fed43312fb8a0485eedc7c61 (immutable reviewed-head reference)
+- **Targeted restoration**: PASS
+- **Hash verification**: PASS
+- **Static syntax verification**: PASS
+- **RECOVERY-007 ASR**: Preserved.
+- **Invalid RECOVERY-007E implementation**: Reverted.
+- **RECOVERY-007E implementation status**: NOT IMPLEMENTED.
+- **No application source committed in PR #2**.
 - Current PR head: resolve directly from GitHub; intentionally not hard-coded.
-- RECOVERY-007 ASR: Preserved.
-- RECOVERY-007E: NOT IMPLEMENTED.
 
 ## Next Permitted Action
-Documentation re-review only.
+Prepare a separate controlled task for RECOVERY-007 owner manual app verification. Do not begin RECOVERY-007E implementation. Owner testing must not be performed as part of this documentation commit.
+
+## Code review
+PASS
 
 ## Automated verification
 PASS — static restoration checks only
 
-## Code review
-WAITING
-
 ## Owner manual app verification
-DO NOT START
+NOT STARTED
+
+## Documentation synchronization
+PASS
 
 ## Merge permission
 BLOCKED
