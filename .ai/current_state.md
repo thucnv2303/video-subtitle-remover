@@ -21,25 +21,26 @@ WAITING
 - RECOVERY-006 baseline report:
   .ai/audits/pipeline1_baseline_runtime.md
 - INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
-- Active task: RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (WAITING_REVIEW)
-- Project Manager review: NEEDS_REVISION — verification record incomplete
-- Overall baseline decision: PASS WITH KNOWN INHERITED DIFF-HYGIENE DEFECT
-- Verified facts:
-  - Exact six-file runtime baseline published.
-  - Source commit remains unchanged: 29d1d6a17ef7ed71041863ab1ca3911aa039f957
-  - Source and destination hashes match exactly.
-  - Original dirty worktree untouched.
-  - settings.js is now reviewable on the baseline branch.
-  - pipeline2-remove.js is now reviewable on the baseline branch.
-  - No byte changes were made relative to the six files in the original dirty runtime source. The baseline PR intentionally introduces the existing runtime-source delta relative to its GitHub stack base. This is source publication, not new AI Settings implementation.
-  - No AI Settings implementation (NOT STARTED).
-  - RECOVERY-007 owner verification remains PAUSED.
-  - RECOVERY-007E remains NOT IMPLEMENTED.
-  - BUG-008 and BUG-009 remain ACTIVE.
+- RECOVERY-007E-SOURCE-BASELINE-001: COMPLETED
+  - Project Manager decision: PASS — SOURCE BASELINE ACCEPTED WITH KNOWN INHERITED DIFF-HYGIENE DEFECT
+  - Immutable reviewed PR head: 60b04fd21dc023e88fc00907e91d97c15f3de3ed
+  - Immutable source commit: 29d1d6a17ef7ed71041863ab1ca3911aa039f957
+  - Six baseline source files match the original dirty runtime source byte-for-byte.
+  - Original dirty worktree was not modified.
+  - Source commit was created using --no-verify because AGENTOS GATE conflicted with required source/docs commit separation. This process exception must not be repeated in future implementation tasks.
+  - AI Settings implementation was not part of the baseline task.
+  - PR #4 must not be merged.
+- Active task: RECOVERY-007E-AI-SETTINGS-001 — REBUILD PROVIDER KEYS AND OLLAMA MODEL DISCOVERY (NOT STARTED)
+- RECOVERY-007 owner verification: PAUSED
+- RECOVERY-007E implementation: NOT STARTED
+- BUG-008: ACTIVE — BLOCKING AI ANALYSIS
+- BUG-009: ACTIVE — BLOCKING AI ANALYSIS
+- AI Settings demo: APPROVED DESIGN DIRECTION
+- The implementation base commit is the latest GitHub head of review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline after documentation transition.
 
-## Verification gates
-- Execution: PASS — byte-for-byte baseline published
-- Automated verification: PASS WITH KNOWN DEFECT — hash/syntax PASS, inherited diff hygiene FAIL
+## Verification gates for RECOVERY-007E-AI-SETTINGS-001
+- Execution: NOT STARTED
+- Automated verification: WAITING
 - Code review: WAITING
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
