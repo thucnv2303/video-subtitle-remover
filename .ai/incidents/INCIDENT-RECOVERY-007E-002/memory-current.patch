@@ -1,0 +1,132 @@
+diff --git a/.ai/current_state.md b/.ai/current_state.md
+index 76a1b20..c2b73e6 100644
+--- a/.ai/current_state.md
++++ b/.ai/current_state.md
+@@ -20,14 +20,13 @@ WAITING
+ - RECOVERY-006 project-manager review: PASS.
+ - RECOVERY-006 baseline report:
+   .ai/audits/pipeline1_baseline_runtime.md
+-- Automated verification: NOT RUN — manual runtime baseline.
+-- Owner manual app verification: PASS.
+-- Feature result: FAIL/BLOCKED.
+-- Existing uncommitted source changes remain preserved.
+-- No source files changed by RECOVERY-006.
+-- Pipeline 2 remains OWNER CONFIRMED working.
+-- RECOVERY-007 approved as next task but NOT STARTED.
+-- Merge permission: BLOCKED.
++- RECOVERY-007 implementation: RECOVERY-007 ASR remains preserved but owner verification is NOT STARTED. Invalid RECOVERY-007E implementation has been reverted. RECOVERY-007E is NOT IMPLEMENTED and must be recreated in a later task.
++- Automated verification: limited to static recovery checks
++- Code review: WAITING
++- Owner manual app verification: DO NOT START
++- Merge permission: BLOCKED
++- Reference evidence PR #1 (HEAD: 7f84cca120a7cf08ba473181b1a70525990c04a0)
+ 
+ ## Current branch
+ rescue/wip-20260803
++
+diff --git a/.ai/handoff.md b/.ai/handoff.md
+index 510e9d1..c1f7266 100644
+--- a/.ai/handoff.md
++++ b/.ai/handoff.md
+@@ -1,44 +1,45 @@
+ # AgentOS Handoff Status
+ 
+ ## Last completed task
+-RECOVERY-006 — Pipeline 1 Baseline Characterization.
++INCIDENT-RECOVERY-007E-002 — TARGETED RESTORATION OF INVALID RECOVERY-007E CHANGES
+ 
+ ## Result
+-PASS
++WAITING
+ 
+ ## Baseline report
+ .ai/audits/pipeline1_baseline_runtime.md
+ 
+-## Baseline checkpoint
+-Current HEAD before the RECOVERY-006 documentation checkpoint:
+-5b87037
+-
+-Resolve the final checkpoint commit from Git history after it is created.
+-
+-## Files intended for the RECOVERY-006 documentation commit
+-- .ai/audits/pipeline1_baseline_runtime.md
+-- .ai/bugs.md
++## Preflight report
++.ai/audits/recovery007_preflight.md
++
++## Files intended for the RECOVERY-007 commit
++- api/server.py
++- src/renderer/js/api.js
++- src/renderer/js/app.js
++- src/renderer/index.html
++- src/renderer/js/components/settings.js
++- src/renderer/js/pipelines/pipeline2-remove.js
++- patch scripts
++- .ai/audits/recovery007_preflight.md
+ - .ai/current_state.md
+ - .ai/task_current.md
+ - .ai/handoff.md
+ 
+ ## Automated verification
+-NOT RUN — baseline was manually executed.
++limited to static recovery checks
+ 
+ ## Code review
+-NOT APPLICABLE — no source was modified.
++WAITING
+ 
+ ## Owner manual app verification
+-PASS — owner executed the baseline procedure.
++DO NOT START
+ 
+ ## Feature result
+-FAIL/BLOCKED — the current Pipeline 1 path did not complete.
++WAITING
+ 
+ ## Merge permission
+ BLOCKED
+ 
+-## Next task
+-RECOVERY-007 — Dedicated Pipeline 1 Text Extraction Path.
+-
+ ## Next task status
+-NOT STARTED — RECOVERY-006 documentation checkpoint must be committed first.
++WAITING
++
+diff --git a/.ai/task_current.md b/.ai/task_current.md
+index e04a6f0..e078cec 100644
+--- a/.ai/task_current.md
++++ b/.ai/task_current.md
+@@ -1,17 +1,16 @@
+ # Current Task
+ 
+ ## Task ID
+-RECOVERY-007
++INCIDENT-RECOVERY-007E-002
+ 
+ ## Name
+-Dedicated Pipeline 1 Text Extraction Path
++TARGETED RESTORATION OF INVALID RECOVERY-007E CHANGES
+ 
+ ## Goal
+-Make Step 1 extract OCR/ASR text and return SRT to the frontend without
+-executing Pipeline 2 subtitle removal, inpainting or video rendering.
++Restore only the verified invalid RECOVERY-007E changes and the six deleted pre-existing scripts. Preserve RECOVERY-007 ASR and every unrelated dirty-tree change.
+ 
+ ## Status
+-NOT STARTED — RECOVERY-006 documentation checkpoint must be committed first.
++WAITING
+ 
+ ## Single objective
+ 
+@@ -73,7 +72,8 @@ Any additional source file requires project-manager approval before editing.
+ 
+ ## Verification gates
+ 
+-- Automated verification: WAITING.
++- Automated verification: limited to static recovery checks.
+ - Code review: WAITING.
+-- Owner manual app verification: WAITING.
++- Owner manual app verification: DO NOT START.
+ - Merge permission: BLOCKED.
++

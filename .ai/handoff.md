@@ -1,44 +1,41 @@
 # AgentOS Handoff Status
 
 ## Last completed task
-RECOVERY-006 — Pipeline 1 Baseline Characterization.
+RECOVERY-007-OWNER-VERIFY-001-DOCFIX — CORRECT BUG LEDGER AND CANONICAL GATES (Documentation closed)
 
-## Result
-PASS
+## Active Task
+RECOVERY-007E-REBUILD-001-PREFLIGHT — LOCATE AI SETTINGS SOURCE AND DEFINE SAFE REBUILD
 
-## Baseline report
-.ai/audits/pipeline1_baseline_runtime.md
+## Incident Resume Point
+Task is in PREFLIGHT REVISION REQUIRED. Project Manager to re-review the corrected preflight report in Draft PR #2.
 
-## Baseline checkpoint
-Current HEAD before the RECOVERY-006 documentation checkpoint:
-5b87037
+## Status
+- **RECOVERY-007 owner verification**: PAUSED — owner observed BUG-008/BUG-009 before completing the workflow.
+- **BUG-008**: ACTIVE — BLOCKING AI ANALYSIS
+- **BUG-009**: ACTIVE — BLOCKING AI ANALYSIS
+- **RECOVERY-007E**: NOT IMPLEMENTED — PREFLIGHT ONLY
+- **INCIDENT-RECOVERY-007E-002 review**: PASS
+- **Incident reviewed head**: 7fba3964a5b175e0fed43312fb8a0485eedc7c61 (immutable reviewed-head reference)
+- **RECOVERY-007E-REBUILD-001-PREFLIGHT review**: NEEDS_REVISION
+- Current PR head: resolve directly from GitHub; intentionally not hard-coded.
 
-Resolve the final checkpoint commit from Git history after it is created.
+## Next Permitted Action
+Project Manager review of the corrected preflight report `.ai/audits/recovery007e_rebuild_preflight.md` published in PR #2.
 
-## Files intended for the RECOVERY-006 documentation commit
-- .ai/audits/pipeline1_baseline_runtime.md
-- .ai/bugs.md
-- .ai/current_state.md
-- .ai/task_current.md
-- .ai/handoff.md
-
-## Automated verification
-NOT RUN — baseline was manually executed.
+## Execution
+PREFLIGHT REVISION REQUIRED
 
 ## Code review
-NOT APPLICABLE — no source was modified.
+NEEDS_REVISION
+
+## Automated verification
+WAITING
 
 ## Owner manual app verification
-PASS — owner executed the baseline procedure.
+BLOCKED
 
-## Feature result
-FAIL/BLOCKED — the current Pipeline 1 path did not complete.
+## Documentation synchronization
+WAITING_REVIEW
 
 ## Merge permission
 BLOCKED
-
-## Next task
-RECOVERY-007 — Dedicated Pipeline 1 Text Extraction Path.
-
-## Next task status
-NOT STARTED — RECOVERY-006 documentation checkpoint must be committed first.

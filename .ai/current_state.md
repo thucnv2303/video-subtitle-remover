@@ -20,14 +20,29 @@ WAITING
 - RECOVERY-006 project-manager review: PASS.
 - RECOVERY-006 baseline report:
   .ai/audits/pipeline1_baseline_runtime.md
-- Automated verification: NOT RUN — manual runtime baseline.
-- Owner manual app verification: PASS.
-- Feature result: FAIL/BLOCKED.
-- Existing uncommitted source changes remain preserved.
-- No source files changed by RECOVERY-006.
-- Pipeline 2 remains OWNER CONFIRMED working.
-- RECOVERY-007 approved as next task but NOT STARTED.
-- Merge permission: BLOCKED.
+- Active task: RECOVERY-007E-REBUILD-001-PREFLIGHT
+- RECOVERY-007 owner verification: PAUSED — owner observed BUG-008/BUG-009 before completing the workflow.
+- INCIDENT-RECOVERY-007E-002 review: PASS
+- Verified review head: 7fba3964a5b175e0fed43312fb8a0485eedc7c61 (immutable reviewed-head reference)
+- Targeted restoration: PASS
+- Hash verification: PASS
+- Static syntax verification: PASS
+- RECOVERY-007 ASR: preserved
+- Invalid RECOVERY-007E implementation: reverted
+- RECOVERY-007E: NOT IMPLEMENTED — PREFLIGHT ONLY
+- No application source committed in PR #2
+- Current PR head must be resolved directly from GitHub and must not be hard-coded in canonical files.
+- RECOVERY-007E-REBUILD-001-PREFLIGHT review: NEEDS_REVISION
+- Documentation synchronization: WAITING_REVIEW
+- Merge permission: BLOCKED
+
+## Verification gates
+- Execution: PREFLIGHT REVISION REQUIRED
+- Automated verification: WAITING
+- Code review: NEEDS_REVISION
+- Owner manual app verification: BLOCKED
+- Documentation synchronization: WAITING_REVIEW
+- Merge permission: BLOCKED
 
 ## Current branch
 rescue/wip-20260803
