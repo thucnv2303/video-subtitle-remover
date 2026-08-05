@@ -1,36 +1,39 @@
-# RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT Evidence
+# RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT Evidence Revision
 
 ## Objective
-Determine the complete local renderer-module dependency closure required by the already-published `index.html`, `settings.js` and `pipeline2-remove.js`.
+Complete the dependency-capture method and publish enough reviewable evidence to prove the complete renderer-module dependency closure.
 
-## Dependency Closure Metadata
-| Module | Direct Imports | Size | SHA256 | Local Status |
-|---|---|---|---|---|
-| `pipeline1-ai.js` | 0 | 10277 | B2A111BEDADFBA9EE0E08F295779E27F83DD6C7FCCAB2A64FB1D75A03C294C05 | `??` (untracked) |
-| `pipeline3-finalize.js` | 0 | 12610 | B22B80B1975921B3ACF4D5858C0ECD5279767D72EE5C976D74DD8F79015712EB | `??` (untracked) |
-| `prompt-manager.js` | 1 | 5806 | E4DDF9D2703BA793D372554C80AAEBBA5012BB1AE21861C404F1CA4882579589 | `??` (untracked) |
-| `store.js` | 0 | 793 | 128AC86B9FE0BA4D21A47C677C9E580458394CC7459EC37F68DA9F1D370EEB2E | `??` (untracked) |
-| `logger.js` | 0 | 4456 | 48EC726A3ECD4FBC297DC52549CF4E7A473414626D93D4FE97E12C680823D2A5 | `??` (untracked) |
-| `dom.js` | 0 | 4186 | 82964ACE02A114592CDA01D8E3E72D14449BF62801ACBF79FA1E1BBCC96DD05E | `??` (untracked) |
+## Phase 1 — Original Worktree Identity
+- **Branch**: `rescue/wip-20260803`
+- **HEAD**: `d67a427f1c90a2e98da560977736ead80637db3a`
+- **Original Renderer Staged Status**: EMPTY
 
-*Total Direct Imports:* 10 across all entry points and dependencies.
-*Total Transitive Imports:* 3 (store.js, logger.js, dom.js are transitive from the initial known components).
+## Phase 6 — Precise Counts
+- **entry-root count**: 5 (`index.html`, `app.js`, `api.js`, `settings.js`, `pipeline2-remove.js`)
+- **static-from import statement count**: 11
+- **side-effect import statement count**: 0
+- **dynamic import statement count**: 0
+- **re-export statement count**: 0
+- **HTML module-src count**: 0
+- **total real dependency edges**: 11
+- **duplicate dependency-edge count**: 0
+- **unique resolved-module count**: 8 (targets)
+- **unique missing-from-GitHub count**: 6
+- **total closure file count**: 11 (5 entry + 6 missing dependencies)
 
-## Answers to Required Questions
-- **Do all six known missing paths exist in the original dirty worktree?** Yes.
-- **Which are tracked, untracked, ignored or absent?** All six are untracked (`??`).
-- **Are additional transitive modules missing from GitHub?** No. The closure is complete with these six additional files.
-- **Does pipeline1-ai.js construct or consume ai_config?** Yes, it consumes `aiConfig` when constructing the request payload.
-- **Does pipeline1-ai.js call /api/ai-rewrite?** Yes, it fetches `${window.api.base}/api/ai-rewrite`.
-- **Does pipeline3-finalize.js depend on AI provider settings?** No.
-- **Does prompt-manager.js depend on settings storage?** Yes, it uses `localStorage` to manage `ai_prompts` and `ai_active_prompt_id`.
-- **Are store.js, logger.js and dom.js shared by Pipeline 2?** Yes, `pipeline2-remove.js` directly imports them.
-- **Can the complete module closure be published byte-for-byte without including unrelated files?** Yes. The set can be isolated safely by staging these six files exclusively.
-- **What exact file set is required for RECOVERY-007E-SOURCE-BASELINE-002 publication?** The exact 6 files listed above.
-- **Does any candidate file contain secrets, embedded API keys or captured localStorage values?** No suspected values found.
-- **Does index.html reference any module that is absent both locally and on GitHub?** No.
+## Phase 7 — Re-Answered Required Questions
+1. **Do all six known missing paths exist in the original dirty worktree?** Yes.
+2. **Which are tracked, untracked, ignored or absent?** All 6 are untracked (`??`), `NOT TRACKED` by git ls-files, and `NOT IGNORED`.
+3. **Are additional transitive modules missing from GitHub?** No. The closure reached a fixed point and all import forms were checked.
+4. **Does pipeline1-ai.js construct or consume ai_config?** Yes, it constructs and consumes `aiConfig` (line 55, line 66).
+5. **Does pipeline1-ai.js call /api/ai-rewrite?** Yes, on line 63.
+6. **Does pipeline3-finalize.js depend on AI provider settings?** NONE FOUND.
+7. **Does prompt-manager.js depend on settings storage?** Yes, relies on `localStorage` for `ai_prompts` (lines 18, 24) and `ai_active_prompt_id` (lines 38, 155).
+8. **Are store.js, logger.js and dom.js shared by Pipeline 2?** Yes, `pipeline2-remove.js` directly imports them.
+9. **Can the complete module closure be published byte-for-byte without including unrelated files?** Yes. Isolation is safe as the closure is fixed and no other files are referenced.
+10. **What exact file set is required for RECOVERY-007E-SOURCE-BASELINE-002 publication?** The exact proposed publication set is the 6 JS files: `pipeline1-ai.js`, `pipeline3-finalize.js`, `prompt-manager.js`, `store.js`, `logger.js`, `dom.js`.
+11. **Does any candidate file contain secrets, embedded API keys or captured localStorage values?** SECRET SCAN: NO SUSPECTED VALUES FOUND.
+12. **Does index.html reference any module that is absent both locally and on GitHub?** No.
 
 ## Conclusion
-The prior six-file byte-for-byte publication remains verified. However, its classification as a complete runtime source baseline is invalidated because imported dependencies were not included.
-
-RECOVERY-007E-AI-SETTINGS-001 opening is PAUSED — baseline dependency closure incomplete.
+The dependency closure is now proven complete. The exact proposed publication set is isolated and safe for publication.

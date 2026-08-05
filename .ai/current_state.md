@@ -23,19 +23,20 @@ WAITING
 - INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
 - RECOVERY-007E-SOURCE-BASELINE-001: COMPLETED
 - Active task: RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT (WAITING_REVIEW)
-- Previous transition: RECOVERY-007E-AI-SETTINGS-001 opening is PAUSED — baseline dependency closure incomplete.
+- Project Manager review: NEEDS_REVISION — IMPORT CLOSURE NOT YET PROVEN COMPLETE
 - Verified facts:
   - Six-file byte-for-byte publication remains verified.
   - Its classification as a complete runtime source baseline is invalidated because imported dependencies were not included.
   - AI Settings implementation remains NOT STARTED.
   - BUG-008 and BUG-009 remain ACTIVE.
   - RECOVERY-007 owner verification remains PAUSED.
-  - PR #4 must not be merged.
+  - PR #4: DO NOT MERGE.
+  - PR #5: DO NOT MERGE.
 
 ## Verification gates
-- Execution: PASS — dependency capture published
+- Execution: PREFLIGHT REVISION REQUIRED
 - Automated verification: NOT APPLICABLE — evidence-only
-- Code review: WAITING
+- Code review: NEEDS_REVISION
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
