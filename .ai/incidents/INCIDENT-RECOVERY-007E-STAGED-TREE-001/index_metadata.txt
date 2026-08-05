@@ -1,6 +1,6 @@
 Index Path: E:\Project AI\Video-sub-remove\.git\index
 Index Size: 4868 bytes
-Index LastWriteTime: 08/05/2026 10:26:10
+Index LastWriteTime: 2026-08-05T03:26:10.530346+00:00
 Index SHA256: C352DAE87364CCD090253E97B99FDB57D2A273F7D902E81ACA07EE63F0CBBF06
 
 Diff Cached Name Only:
@@ -44,3 +44,4 @@ b3ccda4 HEAD@{2026-07-30 08:27:27 +0700}: commit: feat: Major UI upgrade - resiz
 9f6b8b0 HEAD@{2026-07-30 07:34:56 +0700}: Branch: renamed refs/heads/master to refs/heads/main
 9f6b8b0 HEAD@{2026-07-30 07:26:00 +0700}: commit: feat: Tight mask mode for better text removal + OmniVoice TTS integration
 f5a03c4 HEAD@{2026-07-29 19:25:49 +0700}: commit (initial): feat: Multi-region subtitle detection with timelines, per-job processing queue, synced dual-preview
+

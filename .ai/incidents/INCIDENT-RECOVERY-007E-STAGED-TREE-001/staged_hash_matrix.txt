@@ -1,5 +1,5 @@
 Path: src/renderer/index.html
-  Status: M src/renderer/index.html
+  Status: .M
   Tracked: tracked
   Stage: 100644 23db1343ebb9578dcbaf27826e97f1976d02b7e5 0	src/renderer/index.html
   HEAD blob: 23db1343ebb9578dcbaf27826e97f1976d02b7e5
@@ -12,7 +12,7 @@ Path: src/renderer/index.html
   Has Unstaged Diff: True
 
 Path: src/renderer/js/app.js
-  Status: M src/renderer/js/app.js
+  Status: .M
   Tracked: tracked
   Stage: 100644 7876e583cbe42a4895ecd9c643caca6ea2471af5 0	src/renderer/js/app.js
   HEAD blob: 7876e583cbe42a4895ecd9c643caca6ea2471af5
@@ -25,7 +25,7 @@ Path: src/renderer/js/app.js
   Has Unstaged Diff: True
 
 Path: src/renderer/js/api.js
-  Status: M src/renderer/js/api.js
+  Status: .M
   Tracked: tracked
   Stage: 100644 4b03585eebfd32902efa4e7a42d9672f6791862e 0	src/renderer/js/api.js
   HEAD blob: 4b03585eebfd32902efa4e7a42d9672f6791862e
@@ -38,11 +38,11 @@ Path: src/renderer/js/api.js
   Has Unstaged Diff: True
 
 Path: src/renderer/js/components/settings.js
-  Status: ?? src/renderer/js/components/settings.js
+  Status: ?
   Tracked: untracked
   Stage: NOT TRACKED
-  HEAD blob: HEAD:src/renderer/js/components/settings.js
-  Index blob: :src/renderer/js/components/settings.js
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
   Size: 15377 bytes
   SHA256: 40D845884D896A58A4D9D89EF7A755D53DC8373361D5604F645C7BDCD9DCC130
   HEAD == Index: False
@@ -51,11 +51,11 @@ Path: src/renderer/js/components/settings.js
   Has Unstaged Diff: False
 
 Path: src/renderer/js/pipelines/pipeline2-remove.js
-  Status: ?? src/renderer/js/pipelines/pipeline2-remove.js
+  Status: ?
   Tracked: untracked
   Stage: NOT TRACKED
-  HEAD blob: HEAD:src/renderer/js/pipelines/pipeline2-remove.js
-  Index blob: :src/renderer/js/pipelines/pipeline2-remove.js
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
   Size: 5811 bytes
   SHA256: 0B83DD7748FE800EAFF9E53D49485D5BC0F8776DA5A13747E49C3B7C8AD44850
   HEAD == Index: False
@@ -64,7 +64,7 @@ Path: src/renderer/js/pipelines/pipeline2-remove.js
   Has Unstaged Diff: False
 
 Path: api/server.py
-  Status: M api/server.py
+  Status: .M
   Tracked: tracked
   Stage: 100644 5ada627ff132f575b2eaab24b282e12856d614f9 0	api/server.py
   HEAD blob: 5ada627ff132f575b2eaab24b282e12856d614f9
@@ -77,11 +77,11 @@ Path: api/server.py
   Has Unstaged Diff: True
 
 Path: src/renderer/js/pipelines/pipeline1-ai.js
-  Status: ?? src/renderer/js/pipelines/pipeline1-ai.js
+  Status: ?
   Tracked: untracked
   Stage: NOT TRACKED
-  HEAD blob: HEAD:src/renderer/js/pipelines/pipeline1-ai.js
-  Index blob: :src/renderer/js/pipelines/pipeline1-ai.js
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
   Size: 10277 bytes
   SHA256: B2A111BEDADFBA9EE0E08F295779E27F83DD6C7FCCAB2A64FB1D75A03C294C05
   HEAD == Index: False
@@ -90,11 +90,11 @@ Path: src/renderer/js/pipelines/pipeline1-ai.js
   Has Unstaged Diff: False
 
 Path: src/renderer/js/pipelines/pipeline3-finalize.js
-  Status: ?? src/renderer/js/pipelines/pipeline3-finalize.js
+  Status: ?
   Tracked: untracked
   Stage: NOT TRACKED
-  HEAD blob: HEAD:src/renderer/js/pipelines/pipeline3-finalize.js
-  Index blob: :src/renderer/js/pipelines/pipeline3-finalize.js
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
   Size: 12610 bytes
   SHA256: B22B80B1975921B3ACF4D5858C0ECD5279767D72EE5C976D74DD8F79015712EB
   HEAD == Index: False
@@ -103,11 +103,11 @@ Path: src/renderer/js/pipelines/pipeline3-finalize.js
   Has Unstaged Diff: False
 
 Path: src/renderer/js/components/prompt-manager.js
-  Status: ?? src/renderer/js/components/prompt-manager.js
+  Status: ?
   Tracked: untracked
   Stage: NOT TRACKED
-  HEAD blob: HEAD:src/renderer/js/components/prompt-manager.js
-  Index blob: :src/renderer/js/components/prompt-manager.js
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
   Size: 5806 bytes
   SHA256: E4DDF9D2703BA793D372554C80AAEBBA5012BB1AE21861C404F1CA4882579589
   HEAD == Index: False
@@ -116,11 +116,11 @@ Path: src/renderer/js/components/prompt-manager.js
   Has Unstaged Diff: False
 
 Path: src/renderer/js/store.js
-  Status: ?? src/renderer/js/store.js
+  Status: ?
   Tracked: untracked
   Stage: NOT TRACKED
-  HEAD blob: HEAD:src/renderer/js/store.js
-  Index blob: :src/renderer/js/store.js
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
   Size: 793 bytes
   SHA256: 128AC86B9FE0BA4D21A47C677C9E580458394CC7459EC37F68DA9F1D370EEB2E
   HEAD == Index: False
@@ -129,11 +129,11 @@ Path: src/renderer/js/store.js
   Has Unstaged Diff: False
 
 Path: src/renderer/js/utils/logger.js
-  Status: ?? src/renderer/js/utils/logger.js
+  Status: ?
   Tracked: untracked
   Stage: NOT TRACKED
-  HEAD blob: HEAD:src/renderer/js/utils/logger.js
-  Index blob: :src/renderer/js/utils/logger.js
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
   Size: 4456 bytes
   SHA256: 48EC726A3ECD4FBC297DC52549CF4E7A473414626D93D4FE97E12C680823D2A5
   HEAD == Index: False
@@ -142,16 +142,17 @@ Path: src/renderer/js/utils/logger.js
   Has Unstaged Diff: False
 
 Path: src/renderer/js/utils/dom.js
-  Status: ?? src/renderer/js/utils/dom.js
+  Status: ?
   Tracked: untracked
   Stage: NOT TRACKED
-  HEAD blob: HEAD:src/renderer/js/utils/dom.js
-  Index blob: :src/renderer/js/utils/dom.js
+  HEAD blob: NOT IN HEAD
+  Index blob: NOT IN INDEX
   Size: 4186 bytes
   SHA256: 82964ACE02A114592CDA01D8E3E72D14449BF62801ACBF79FA1E1BBCC96DD05E
   HEAD == Index: False
   Index == Worktree: False
   Has Staged Diff: False
   Has Unstaged Diff: False
+
 
 

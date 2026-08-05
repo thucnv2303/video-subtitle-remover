@@ -9,4 +9,4 @@ The previously reported M-space status for index.html, app.js, and api.js was ca
 The forensic capture confirms that the actual staged tree is completely EMPTY. The HEAD and index are completely identical. The index size, LastWriteTime, and hash have been verified. The before and after states match exactly, confirming that the forensic process was fully non-destructive.
 
 ## Conclusion
-The original worktree is safe and untouched. The published audit claiming the staged status was EMPTY is actually completely correct. The manifest was incorrect due to the trailing whitespace stripping bug in the evidence extractor script.
+The original worktree is safe and untouched. The published audit claiming the staged status was EMPTY is actually completely correct. The manifest was incorrect due to the trailing whitespace stripping bug in the evidence extractor script. The porcelain-v2 .M status is the official source of truth, definitively proving these files were modified in the worktree but unmodified in the index.

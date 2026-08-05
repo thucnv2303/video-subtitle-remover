@@ -30,7 +30,12 @@ WAITING
   - Manifest reports M-space for index.html, app.js and api.js.
   - Cause is VERIFIED (due to python script stripping whitespace).
   - AI Settings implementation remains NOT STARTED.
-  - PR #4 and PR #5 must not be merged.
+  - BUG-008 ACTIVE
+  - BUG-009 ACTIVE
+  - RECOVERY-007 owner verification PAUSED
+  - PR #4 DO NOT MERGE
+  - PR #5 DO NOT MERGE
+  - PR #6 DO NOT MERGE
   - Original dirty worktree must remain untouched.
 
 ## Verification gates
