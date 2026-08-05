@@ -31,5 +31,13 @@ WAITING
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
 
+## Verification gates
+- Execution: NOT STARTED
+- Automated verification: PASS — existing static RECOVERY-007/restoration checks
+- Code review: PASS — existing reviewed candidate
+- Owner manual app verification: DO NOT START — awaiting Project Manager review of this preparation correction
+- Documentation synchronization: WAITING_REVIEW
+- Merge permission: BLOCKED
+
 ## Current branch
 rescue/wip-20260803
