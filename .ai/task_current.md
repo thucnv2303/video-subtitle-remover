@@ -1,44 +1,45 @@
 # Current Task
 
 ## Task ID
-INCIDENT-RECOVERY-007E-TRACKING-001-CLOSE
+RECOVERY-007E-SOURCE-BASELINE-001
 
 ## Name
-RECORD EVIDENCE REVIEW PASS
+PUBLISH REVIEWABLE SOURCE BASELINE
+
+## Status
+NOT STARTED
 
 ## Purpose
-Record the Project Manager review result for the completed source-tracking incident.
+Publish the exact existing approved/restored runtime source as a reviewable source baseline without altering the original dirty working tree. The baseline will allow later AI Settings implementation hunks to be isolated and reviewed.
 
-## Verified Facts
-- **Incident**: INCIDENT-RECOVERY-007E-TRACKING-001
-- **Project Manager decision**: PASS
+## Task Constraints
+- Source baseline publication only.
+- No functional source changes.
+- No AI Settings implementation.
+- No restoration or overwrite of the original dirty working tree.
+- No wholesale staging of untracked settings.js or pipeline2-remove.js.
+- No owner test.
+- No merge.
+
+## Historical Verified Facts
+- **Incident**: INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
+- **Project Manager evidence review**: PASS
 - **Immutable reviewed evidence head**: fb94d94e66c27470d665cb1fa4ca9620cfad0984
-- **Verified classifications**:
-  - `src/renderer/index.html`: TRACKED — MODIFIED
-  - `src/renderer/js/app.js`: TRACKED — MODIFIED
-  - `src/renderer/js/api.js`: TRACKED — MODIFIED
-  - `api/server.py`: TRACKED — MODIFIED
-  - `src/renderer/js/components/settings.js`: UNTRACKED
-  - `src/renderer/js/pipelines/pipeline2-remove.js`: UNTRACKED
-- **Verified ownership**:
-  - AI settings persistence: `settings.js`
-  - provider-change binding: `settings.js`
-  - Pipeline 1 `ai_config` construction: `app.js`
-  - frontend API wrappers: `api.js`
-  - backend provider execution and analysis/rewrite APIs: `server.py`
-- **Verified isolation finding**: The current untracked `settings.js` and `pipeline2-remove.js` files cannot be committed wholesale as part of an AI Settings feature task because doing so would include their complete existing contents. A separate source-baseline publication and review is required first.
-- **Next Permitted Task**: RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (NOT STARTED)
-- **Implementation**: NOT STARTED
+- **Incident execution**: PASS — forensic capture completed
+- **Incident automated verification**: NOT APPLICABLE — evidence-only
+- **Incident code review**: PASS
+- **Six verified source-path classifications**: `settings.js` and `pipeline2-remove.js` are UNTRACKED, others are TRACKED — MODIFIED.
+- **Verified source ownership and isolation finding**: AI Settings logic is split across `settings.js` and `app.js`. Untracked files require a separate source baseline review.
 - **RECOVERY-007 owner verification**: PAUSED
 - **RECOVERY-007E**: NOT IMPLEMENTED
-- **BUG-008**: ACTIVE — BLOCKING AI ANALYSIS
-- **BUG-009**: ACTIVE — BLOCKING AI ANALYSIS
+- **BUG-008 and BUG-009**: ACTIVE — BLOCKING AI ANALYSIS
 - **AI Settings demo**: DESIGN DIRECTION APPROVED, IMPLEMENTATION NOT STARTED
+- **Current PR head**: must be resolved directly from GitHub and must not be hard-coded as current state.
 
-## Verification gates
-- Execution: PASS — forensic capture completed
-- Automated verification: NOT APPLICABLE — evidence-only
-- Code review: PASS
+## Active Task Verification gates
+- Execution: NOT STARTED
+- Automated verification: WAITING
+- Code review: WAITING
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
