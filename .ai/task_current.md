@@ -16,12 +16,13 @@ Perform a read-only local preflight to locate AI settings source and define a sa
 - **RECOVERY-007E**: NOT IMPLEMENTED — PREFLIGHT ONLY
 - **INCIDENT-RECOVERY-007E-002 review**: PASS
 - **Incident reviewed head**: 7fba3964a5b175e0fed43312fb8a0485eedc7c61
+- **RECOVERY-007E-REBUILD-001-PREFLIGHT review**: NEEDS_REVISION
 - **Current PR head must be resolved directly from GitHub and must not be hard-coded**
 
 ## Verification gates
-- Execution: PREFLIGHT IN PROGRESS
+- Execution: PREFLIGHT REVISION REQUIRED
 - Automated verification: WAITING
-- Code review: WAITING
+- Code review: NEEDS_REVISION
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED

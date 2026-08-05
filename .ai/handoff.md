@@ -7,7 +7,7 @@ RECOVERY-007-OWNER-VERIFY-001-DOCFIX — CORRECT BUG LEDGER AND CANONICAL GATES 
 RECOVERY-007E-REBUILD-001-PREFLIGHT — LOCATE AI SETTINGS SOURCE AND DEFINE SAFE REBUILD
 
 ## Incident Resume Point
-Task is in PREFLIGHT IN PROGRESS. Project Manager to review the preflight report in Draft PR #2.
+Task is in PREFLIGHT REVISION REQUIRED. Project Manager to re-review the corrected preflight report in Draft PR #2.
 
 ## Status
 - **RECOVERY-007 owner verification**: PAUSED — owner observed BUG-008/BUG-009 before completing the workflow.
@@ -16,13 +16,17 @@ Task is in PREFLIGHT IN PROGRESS. Project Manager to review the preflight report
 - **RECOVERY-007E**: NOT IMPLEMENTED — PREFLIGHT ONLY
 - **INCIDENT-RECOVERY-007E-002 review**: PASS
 - **Incident reviewed head**: 7fba3964a5b175e0fed43312fb8a0485eedc7c61 (immutable reviewed-head reference)
+- **RECOVERY-007E-REBUILD-001-PREFLIGHT review**: NEEDS_REVISION
 - Current PR head: resolve directly from GitHub; intentionally not hard-coded.
 
 ## Next Permitted Action
-Review the preflight report `.ai/audits/recovery007e_rebuild_preflight.md` published in PR #2.
+Project Manager review of the corrected preflight report `.ai/audits/recovery007e_rebuild_preflight.md` published in PR #2.
+
+## Execution
+PREFLIGHT REVISION REQUIRED
 
 ## Code review
-WAITING
+NEEDS_REVISION
 
 ## Automated verification
 WAITING

@@ -32,13 +32,14 @@ WAITING
 - RECOVERY-007E: NOT IMPLEMENTED — PREFLIGHT ONLY
 - No application source committed in PR #2
 - Current PR head must be resolved directly from GitHub and must not be hard-coded in canonical files.
+- RECOVERY-007E-REBUILD-001-PREFLIGHT review: NEEDS_REVISION
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
 
 ## Verification gates
-- Execution: PREFLIGHT IN PROGRESS
+- Execution: PREFLIGHT REVISION REQUIRED
 - Automated verification: WAITING
-- Code review: WAITING
+- Code review: NEEDS_REVISION
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
