@@ -1,0 +1,20 @@
+git cat-file -e HEAD:src/renderer/index.html exit code: 0
+git cat-file -e HEAD:src/renderer/js/app.js exit code: 0
+git cat-file -e HEAD:src/renderer/js/api.js exit code: 0
+git cat-file -e HEAD:src/renderer/js/components/settings.js exit code: 128
+git cat-file -e HEAD:src/renderer/js/pipelines/pipeline2-remove.js exit code: 128
+git cat-file -e HEAD:api/server.py exit code: 0
+
+HEAD canonical tree:
+api/server.py
+src/renderer/index.html
+src/renderer/js/api.js
+src/renderer/js/app.js
+src/renderer/styles/main.css
+
+d67a427f1c90a2e98da560977736ead80637db3a canonical tree:
+api/server.py
+src/renderer/index.html
+src/renderer/js/api.js
+src/renderer/js/app.js
+src/renderer/styles/main.css

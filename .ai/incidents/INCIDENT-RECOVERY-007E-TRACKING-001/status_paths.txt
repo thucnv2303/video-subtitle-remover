@@ -1,0 +1,6 @@
+ M api/server.py
+ M src/renderer/index.html
+ M src/renderer/js/api.js
+ M src/renderer/js/app.js
+?? src/renderer/js/components/settings.js
+?? src/renderer/js/pipelines/pipeline2-remove.js

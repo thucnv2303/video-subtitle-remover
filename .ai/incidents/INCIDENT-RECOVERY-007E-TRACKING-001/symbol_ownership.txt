@@ -1,0 +1,232 @@
+[
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\index.html",
+    "LineNumber": 629,
+    "Line": "              <select id=\"ai-provider\" class=\"dropdown form-input\">"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\index.html",
+    "LineNumber": 637,
+    "Line": "              <input type=\"password\" id=\"ai-api-key\" class=\"form-input\" placeholder=\"Nhập API Key hoặc tên model (VD: gemma4:12b)...\">"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\app.js",
+    "LineNumber": 115,
+    "Line": "    aiProvider: $('#ai-provider'), aiApiKey: $('#ai-api-key'),"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\app.js",
+    "LineNumber": 621,
+    "Line": "      provider:  localStorage.getItem('ai_provider')  || 'gemini',"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\app.js",
+    "LineNumber": 622,
+    "Line": "      api_key:   localStorage.getItem('ai_api_key')   || '',"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\app.js",
+    "LineNumber": 623,
+    "Line": "      endpoint:  localStorage.getItem('ai_endpoint')  || '',"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\app.js",
+    "LineNumber": 648,
+    "Line": "          ai_rewrite: false, ai_config: aiConfig, tts_voice: 'none',"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\app.js",
+    "LineNumber": 661,
+    "Line": "          ai_rewrite: false, ai_config: aiConfig, tts_voice: 'none',"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\api.js",
+    "LineNumber": 79,
+    "Line": "      ai_config: aiConfig,"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 26,
+    "Line": "  const aiProvider  = get('ai-provider');"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 27,
+    "Line": "  const aiApiKey    = get('ai-api-key');"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 37,
+    "Line": "  if (aiProvider)  aiProvider.value  = localStorage.getItem('ai_provider')  || 'gemini';"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 38,
+    "Line": "  if (aiApiKey)    aiApiKey.value    = localStorage.getItem('ai_api_key')    || '';"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 39,
+    "Line": "  if (aiEndpoint)  aiEndpoint.value  = localStorage.getItem('ai_endpoint')   || '';"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 63,
+    "Line": "  localStorage.setItem('ai_provider',       val('ai-provider'));"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 64,
+    "Line": "  localStorage.setItem('ai_api_key',        val('ai-api-key'));"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 65,
+    "Line": "  localStorage.setItem('ai_endpoint',       val('ai-endpoint'));"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 73,
+    "Line": "  const provider = val('ai-provider');"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 74,
+    "Line": "  const key      = val('ai-api-key');"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\components\\settings.js",
+    "LineNumber": 77,
+    "Line": "    localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify(keys));"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\pipelines\\pipeline2-remove.js",
+    "LineNumber": 7,
+    "Line": "      provider: localStorage.getItem('ai_provider') || 'gemini',"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\pipelines\\pipeline2-remove.js",
+    "LineNumber": 8,
+    "Line": "      api_key: localStorage.getItem('ai_api_key') || '',"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\pipelines\\pipeline2-remove.js",
+    "LineNumber": 9,
+    "Line": "      endpoint: localStorage.getItem('ai_endpoint') || '',"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\pipelines\\pipeline2-remove.js",
+    "LineNumber": 56,
+    "Line": "        ai_config: aiConfig,"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\src\\renderer\\js\\pipelines\\pipeline2-remove.js",
+    "LineNumber": 81,
+    "Line": "        ai_config: aiConfig,"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 67,
+    "Line": "    ai_config: Optional[dict] = None"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 246,
+    "Line": "            sr.ai_config = job.get(\"ai_config\", None)"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 539,
+    "Line": "            \"ai_config\": j.ai_config,"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 780,
+    "Line": "    ai_config: dict"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 784,
+    "Line": "def api_analyze_video(req: AnalyzeVideoReq):"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 819,
+    "Line": "        ai_config = req.ai_config"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 820,
+    "Line": "        provider = ai_config.get('provider', 'ollama')"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 821,
+    "Line": "        api_keys = ai_config.get('api_keys', [])"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 823,
+    "Line": "            api_keys = [ai_config.get('api_key', '')]"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 824,
+    "Line": "        endpoint = ai_config.get('endpoint', '')"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 825,
+    "Line": "        model_name = ai_config.get('model', '')"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 989,
+    "Line": "def api_p1_extract_text(req: ExtractTextP1Req):"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 1105,
+    "Line": "    ai_config: dict"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 1108,
+    "Line": "def api_ai_rewrite(req: AIRewriteReq):"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 1117,
+    "Line": "        ai_config = req.ai_config"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 1118,
+    "Line": "        provider = ai_config.get('provider', 'gemini')"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 1119,
+    "Line": "        api_keys = ai_config.get('api_keys', [])"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 1121,
+    "Line": "            api_keys = [ai_config.get('api_key', '')]"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 1122,
+    "Line": "        endpoint = ai_config.get('endpoint', '')"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 1123,
+    "Line": "        prompt = ai_config.get('prompt', 'Hãy dịch các phụ đề sau sang Tiếng Việt. Giữ nguyên định dạng SRT.')"
+  },
+  {
+    "Path": "E:\\Project AI\\Video-sub-remove\\api\\server.py",
+    "LineNumber": 1124,
+    "Line": "        model = ai_config.get('model', '')"
+  }
+]

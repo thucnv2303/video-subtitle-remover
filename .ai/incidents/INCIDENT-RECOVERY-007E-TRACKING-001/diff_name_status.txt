@@ -1,0 +1,8 @@
+Dirty diff:
+M	api/server.py
+M	src/renderer/index.html
+M	src/renderer/js/api.js
+M	src/renderer/js/app.js
+
+Staged diff:
+(none)

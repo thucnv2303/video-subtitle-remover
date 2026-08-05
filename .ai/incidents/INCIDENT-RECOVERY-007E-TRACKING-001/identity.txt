@@ -1,0 +1,15 @@
+rescue/wip-20260803
+d67a427f1c90a2e98da560977736ead80637db3a
+origin	https://github.com/thucnv2303/video-subtitle-remover.git (fetch)
+origin	https://github.com/thucnv2303/video-subtitle-remover.git (push)
+worktree E:/Project AI/Video-sub-remove
+HEAD d67a427f1c90a2e98da560977736ead80637db3a
+branch refs/heads/rescue/wip-20260803
+
+worktree E:/Project AI/_review/INCIDENT-RECOVERY-007E-002
+HEAD 7f84cca120a7cf08ba473181b1a70525990c04a0
+branch refs/heads/review/INCIDENT-RECOVERY-007E-001-evidence
+
+worktree E:/Project AI/Video-sub-remove-worktree
+HEAD 7f7aad84d8eaab342882926e38a3d467fcae9265
+branch refs/heads/review/INCIDENT-RECOVERY-007E-002-targeted-restoration

@@ -1,28 +1,25 @@
 # Current Task
 
 ## Task ID
-RECOVERY-007E-REBUILD-001-PREFLIGHT
+INCIDENT-RECOVERY-007E-TRACKING-001
 
 ## Name
-LOCATE AI SETTINGS SOURCE AND DEFINE SAFE REBUILD
+CAPTURE SOURCE TRACKING STATE
 
 ## Purpose
-Perform a read-only local preflight to locate AI settings source and define a safe rebuild for the multi-provider API-key table and Ollama model scanner.
+Resolve the contradiction between the local preflight report and canonical GitHub. Determine the exact local tracking state without changing the dirty tree.
 
 ## Verified Facts
-- **RECOVERY-007 owner verification**: PAUSED — owner observed BUG-008/BUG-009 before completing the workflow.
-- **BUG-008**: ACTIVE — BLOCKING AI ANALYSIS
-- **BUG-009**: ACTIVE — BLOCKING AI ANALYSIS
-- **RECOVERY-007E**: NOT IMPLEMENTED — PREFLIGHT ONLY
-- **INCIDENT-RECOVERY-007E-002 review**: PASS
-- **Incident reviewed head**: 7fba3964a5b175e0fed43312fb8a0485eedc7c61
-- **RECOVERY-007E-REBUILD-001-PREFLIGHT review**: NEEDS_REVISION
+- **Active task**: INCIDENT-RECOVERY-007E-TRACKING-001
+- **Previous preflight**: INVALIDATED — SOURCE TRACKING STATE CONFLICT
+- **RECOVERY-007 owner verification**: PAUSED
+- **RECOVERY-007E**: NOT IMPLEMENTED
 - **Current PR head must be resolved directly from GitHub and must not be hard-coded**
 
 ## Verification gates
-- Execution: PREFLIGHT REVISION REQUIRED
+- Execution: FORENSIC CAPTURE ONLY
 - Automated verification: WAITING
-- Code review: NEEDS_REVISION
+- Code review: BLOCKED
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
