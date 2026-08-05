@@ -1,31 +1,33 @@
 # AgentOS Handoff Status
 
 ## Last completed task
-RECOVERY-007E-REBUILD-001-PREFLIGHT-REVISION — COMPLETE EVIDENCE MATRIX AND CONTRACT (Invalidated)
+INCIDENT-RECOVERY-007E-TRACKING-001 — CAPTURE SOURCE TRACKING STATE (Documentation closed, PM review PASS)
 
 ## Active Task
-INCIDENT-RECOVERY-007E-TRACKING-001 — CAPTURE SOURCE TRACKING STATE
+RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (NOT STARTED)
 
 ## Incident Resume Point
-Task is in FORENSIC CAPTURE ONLY.
+Task is in WAITING_REVIEW for documentation sync. 
 
 ## Status
-- **Active task**: INCIDENT-RECOVERY-007E-TRACKING-001
-- **Previous preflight**: INVALIDATED — SOURCE TRACKING STATE CONFLICT
+- **Incident reviewed head**: fb94d94e66c27470d665cb1fa4ca9620cfad0984 (immutable reviewed-head reference)
 - **RECOVERY-007 owner verification**: PAUSED
 - **RECOVERY-007E**: NOT IMPLEMENTED
+- **BUG-008**: ACTIVE — BLOCKING AI ANALYSIS
+- **BUG-009**: ACTIVE — BLOCKING AI ANALYSIS
+- **AI Settings demo**: DESIGN DIRECTION APPROVED, IMPLEMENTATION NOT STARTED
 
 ## Next Permitted Action
-Project Manager review of the tracking evidence.
+Begin RECOVERY-007E-SOURCE-BASELINE-001 to publish the exact existing approved/restored runtime source into a separate source review branch without modifying the dirty working tree, so later AI Settings implementation can be isolated and reviewed.
 
 ## Execution
-FORENSIC CAPTURE ONLY
+PASS — forensic capture completed
 
 ## Code review
-BLOCKED
+PASS
 
 ## Automated verification
-WAITING
+NOT APPLICABLE — evidence-only
 
 ## Owner manual app verification
 BLOCKED

@@ -20,16 +20,19 @@ WAITING
 - RECOVERY-006 project-manager review: PASS.
 - RECOVERY-006 baseline report:
   .ai/audits/pipeline1_baseline_runtime.md
-- Active task: INCIDENT-RECOVERY-007E-TRACKING-001
-- Previous preflight: INVALIDATED — SOURCE TRACKING STATE CONFLICT
+- Incident INCIDENT-RECOVERY-007E-TRACKING-001 review: PASS
+- Immutable reviewed evidence head: fb94d94e66c27470d665cb1fa4ca9620cfad0984
+- Active task: RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (NOT STARTED)
 - RECOVERY-007 owner verification: PAUSED
 - RECOVERY-007E: NOT IMPLEMENTED
-- Current PR head must be resolved directly from GitHub and must not be hard-coded in canonical files.
+- AI Settings demo: DESIGN DIRECTION APPROVED, IMPLEMENTATION NOT STARTED
+- BUG-008: ACTIVE — BLOCKING AI ANALYSIS
+- BUG-009: ACTIVE — BLOCKING AI ANALYSIS
 
 ## Verification gates
-- Execution: FORENSIC CAPTURE ONLY
-- Automated verification: WAITING
-- Code review: BLOCKED
+- Execution: PASS — forensic capture completed
+- Automated verification: NOT APPLICABLE — evidence-only
+- Code review: PASS
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
