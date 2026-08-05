@@ -22,29 +22,24 @@ WAITING
   .ai/audits/pipeline1_baseline_runtime.md
 - INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
 - RECOVERY-007E-SOURCE-BASELINE-001: COMPLETED
-  - Project Manager decision: PASS — SOURCE BASELINE ACCEPTED WITH KNOWN INHERITED DIFF-HYGIENE DEFECT
-  - Immutable reviewed PR head: 60b04fd21dc023e88fc00907e91d97c15f3de3ed
-  - Immutable source commit: 29d1d6a17ef7ed71041863ab1ca3911aa039f957
-  - Six baseline source files match the original dirty runtime source byte-for-byte.
-  - Original dirty worktree was not modified.
-  - Source commit was created using --no-verify because AGENTOS GATE conflicted with required source/docs commit separation. This process exception must not be repeated in future implementation tasks.
-  - AI Settings implementation was not part of the baseline task.
-  - PR #4 must not be merged.
-- Active task: RECOVERY-007E-AI-SETTINGS-001 — REBUILD PROVIDER KEYS AND OLLAMA MODEL DISCOVERY (NOT STARTED)
-- RECOVERY-007 owner verification: PAUSED
-- RECOVERY-007E implementation: NOT STARTED
-- BUG-008: ACTIVE — BLOCKING AI ANALYSIS
-- BUG-009: ACTIVE — BLOCKING AI ANALYSIS
-- AI Settings demo: APPROVED DESIGN DIRECTION
-- The implementation base commit is the latest GitHub head of review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline after documentation transition.
+- Active task: RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT (WAITING_REVIEW)
+- Project Manager review: NEEDS_REVISION — FINAL LINE AND RECONCILIATION ERRORS REMAIN
+- Verified facts:
+  - Six-file byte-for-byte publication remains verified.
+  - Its classification as a complete runtime source baseline is invalidated because imported dependencies were not included.
+  - AI Settings implementation remains NOT STARTED.
+  - BUG-008 and BUG-009 remain ACTIVE.
+  - RECOVERY-007 owner verification remains PAUSED.
+  - PR #4: DO NOT MERGE.
+  - PR #5: DO NOT MERGE.
 
-## Verification gates for RECOVERY-007E-AI-SETTINGS-001
-- Execution: NOT STARTED
-- Automated verification: WAITING
-- Code review: WAITING
+## Verification gates
+- Execution: BLOCKED — documentation correction only
+- Automated verification: NOT APPLICABLE — evidence-only
+- Code review: NEEDS_REVISION
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
 
 ## Current branch
-review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline
+review/RECOVERY-007E-SOURCE-BASELINE-002-missing-modules-evidence

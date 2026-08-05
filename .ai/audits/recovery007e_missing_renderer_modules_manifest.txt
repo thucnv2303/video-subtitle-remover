@@ -1,0 +1,326 @@
+===== IMPORT GRAPH =====
+[
+  {
+    "importer": "src/renderer/index.html",
+    "lines": "802",
+    "stmt": "import { triggerAutoAiRewrite, triggerAutoTts, _buildTimedSrt } from './js/pipelines/pipeline1-ai.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "./js/pipelines/pipeline1-ai.js",
+    "symbols": [
+      "triggerAutoAiRewrite",
+      "triggerAutoTts",
+      "_buildTimedSrt"
+    ],
+    "resolved": "src/renderer/js/pipelines/pipeline1-ai.js"
+  },
+  {
+    "importer": "src/renderer/index.html",
+    "lines": "808",
+    "stmt": "import { finalizeVideo } from './js/pipelines/pipeline3-finalize.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "./js/pipelines/pipeline3-finalize.js",
+    "symbols": [
+      "finalizeVideo"
+    ],
+    "resolved": "src/renderer/js/pipelines/pipeline3-finalize.js"
+  },
+  {
+    "importer": "src/renderer/index.html",
+    "lines": "812",
+    "stmt": "import { initSettings, loadSettingsValues, renderSavedVoices, updateVoiceDropdown, checkTTSStatus } from './js/components/settings.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "./js/components/settings.js",
+    "symbols": [
+      "initSettings",
+      "loadSettingsValues",
+      "renderSavedVoices",
+      "updateVoiceDropdown",
+      "checkTTSStatus"
+    ],
+    "resolved": "src/renderer/js/components/settings.js"
+  },
+  {
+    "importer": "src/renderer/index.html",
+    "lines": "820",
+    "stmt": "import { initPromptManager, renderPromptDropdown } from './js/components/prompt-manager.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "./js/components/prompt-manager.js",
+    "symbols": [
+      "initPromptManager",
+      "renderPromptDropdown"
+    ],
+    "resolved": "src/renderer/js/components/prompt-manager.js"
+  },
+  {
+    "importer": "src/renderer/js/components/settings.js",
+    "lines": "1",
+    "stmt": "import { state, saveState } from '../store.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "../store.js",
+    "symbols": [
+      "state",
+      "saveState"
+    ],
+    "resolved": "src/renderer/js/store.js"
+  },
+  {
+    "importer": "src/renderer/js/components/settings.js",
+    "lines": "2",
+    "stmt": "import { addLog, showToast } from '../utils/logger.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "../utils/logger.js",
+    "symbols": [
+      "addLog",
+      "showToast"
+    ],
+    "resolved": "src/renderer/js/utils/logger.js"
+  },
+  {
+    "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
+    "lines": "1",
+    "stmt": "import { $, $$, el } from '../utils/dom.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "../utils/dom.js",
+    "symbols": [
+      "$",
+      "$$",
+      "el"
+    ],
+    "resolved": "src/renderer/js/utils/dom.js"
+  },
+  {
+    "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
+    "lines": "2",
+    "stmt": "import { state, saveState } from '../store.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "../store.js",
+    "symbols": [
+      "state",
+      "saveState"
+    ],
+    "resolved": "src/renderer/js/store.js"
+  },
+  {
+    "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
+    "lines": "3",
+    "stmt": "import { addLog, showToast } from '../utils/logger.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "../utils/logger.js",
+    "symbols": [
+      "addLog",
+      "showToast"
+    ],
+    "resolved": "src/renderer/js/utils/logger.js"
+  },
+  {
+    "importer": "src/renderer/js/components/prompt-manager.js",
+    "lines": "1",
+    "stmt": "import { showToast } from '../utils/logger.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "../utils/logger.js",
+    "symbols": [
+      "showToast"
+    ],
+    "resolved": "src/renderer/js/utils/logger.js"
+  }
+]
+===== FILE METADATA =====
+{
+  "src/renderer/index.html": {
+    "size": 48059,
+    "sha256": "15653AF95D50006040DD9A3571F359D1BBBAA24F839071CB4CDE684453105A2B",
+    "mtime": "2026-08-03T13:56:12.086358+00:00",
+    "status": "M ",
+    "stage": "100644 23db1343ebb9578dcbaf27826e97f1976d02b7e5 0\tsrc/renderer/index.html",
+    "ignore": "NOT IGNORED",
+    "imported_by": [],
+    "direct_imports": [
+      "src/renderer/js/pipelines/pipeline1-ai.js",
+      "src/renderer/js/pipelines/pipeline3-finalize.js",
+      "src/renderer/js/components/settings.js",
+      "src/renderer/js/components/prompt-manager.js"
+    ],
+    "exports": {},
+    "in_github": "YES"
+  },
+  "src/renderer/js/app.js": {
+    "size": 67768,
+    "sha256": "95BAE3351D9437C5B1F8ADE173200996738F6C4785A1DBBE6F6C8563614D0ED4",
+    "mtime": "2026-08-04T13:29:47.125870+00:00",
+    "status": "M ",
+    "stage": "100644 7876e583cbe42a4895ecd9c643caca6ea2471af5 0\tsrc/renderer/js/app.js",
+    "ignore": "NOT IGNORED",
+    "imported_by": [],
+    "direct_imports": [],
+    "exports": {},
+    "in_github": "YES"
+  },
+  "src/renderer/js/api.js": {
+    "size": 9477,
+    "sha256": "485CEC25E950A61B3858D0B06AF1488402BAA066AC94CD3269903AC25AA39664",
+    "mtime": "2026-08-04T09:57:11.463670+00:00",
+    "status": "M ",
+    "stage": "100644 4b03585eebfd32902efa4e7a42d9672f6791862e 0\tsrc/renderer/js/api.js",
+    "ignore": "NOT IGNORED",
+    "imported_by": [],
+    "direct_imports": [],
+    "exports": {},
+    "in_github": "YES"
+  },
+  "src/renderer/js/components/settings.js": {
+    "size": 15377,
+    "sha256": "40D845884D896A58A4D9D89EF7A755D53DC8373361D5604F645C7BDCD9DCC130",
+    "mtime": "2026-08-03T09:08:46.619546+00:00",
+    "status": "??",
+    "stage": "NOT TRACKED",
+    "ignore": "NOT IGNORED",
+    "imported_by": [
+      "src/renderer/index.html"
+    ],
+    "direct_imports": [
+      "src/renderer/js/store.js",
+      "src/renderer/js/utils/logger.js"
+    ],
+    "exports": {
+      "initSettings": "12",
+      "loadSettingsValues": "23",
+      "getSavedVoices": "83",
+      "renderSavedVoices": "92",
+      "updateVoiceDropdown": "129",
+      "checkTTSStatus": "161"
+    },
+    "in_github": "YES"
+  },
+  "src/renderer/js/pipelines/pipeline2-remove.js": {
+    "size": 5811,
+    "sha256": "0B83DD7748FE800EAFF9E53D49485D5BC0F8776DA5A13747E49C3B7C8AD44850",
+    "mtime": "2026-08-03T03:28:09.832046+00:00",
+    "status": "??",
+    "stage": "NOT TRACKED",
+    "ignore": "NOT IGNORED",
+    "imported_by": [],
+    "direct_imports": [
+      "src/renderer/js/utils/dom.js",
+      "src/renderer/js/store.js",
+      "src/renderer/js/utils/logger.js"
+    ],
+    "exports": {
+      "runNextPass": "5",
+      "pollProgress": "100",
+      "handleWSMessage": "137"
+    },
+    "in_github": "YES"
+  },
+  "src/renderer/js/pipelines/pipeline1-ai.js": {
+    "size": 10277,
+    "sha256": "B2A111BEDADFBA9EE0E08F295779E27F83DD6C7FCCAB2A64FB1D75A03C294C05",
+    "mtime": "2026-08-03T09:05:51.595127+00:00",
+    "status": "??",
+    "stage": "NOT TRACKED",
+    "ignore": "NOT IGNORED",
+    "imported_by": [
+      "src/renderer/index.html"
+    ],
+    "direct_imports": [],
+    "exports": {
+      "triggerAutoAiRewrite": "19",
+      "triggerAutoTts": "109",
+      "_buildTimedSrt": "191",
+      "_msToSrtTime": "236"
+    },
+    "in_github": "NO"
+  },
+  "src/renderer/js/pipelines/pipeline3-finalize.js": {
+    "size": 12610,
+    "sha256": "B22B80B1975921B3ACF4D5858C0ECD5279767D72EE5C976D74DD8F79015712EB",
+    "mtime": "2026-08-03T09:07:05.110467+00:00",
+    "status": "??",
+    "stage": "NOT TRACKED",
+    "ignore": "NOT IGNORED",
+    "imported_by": [
+      "src/renderer/index.html"
+    ],
+    "direct_imports": [],
+    "exports": {
+      "finalizeVideo": "26"
+    },
+    "in_github": "NO"
+  },
+  "src/renderer/js/components/prompt-manager.js": {
+    "size": 5806,
+    "sha256": "E4DDF9D2703BA793D372554C80AAEBBA5012BB1AE21861C404F1CA4882579589",
+    "mtime": "2026-08-03T09:10:08.661981+00:00",
+    "status": "??",
+    "stage": "NOT TRACKED",
+    "ignore": "NOT IGNORED",
+    "imported_by": [
+      "src/renderer/index.html"
+    ],
+    "direct_imports": [
+      "src/renderer/js/utils/logger.js"
+    ],
+    "exports": {
+      "renderPromptDropdown": "27",
+      "initPromptManager": "42"
+    },
+    "in_github": "NO"
+  },
+  "src/renderer/js/store.js": {
+    "size": 793,
+    "sha256": "128AC86B9FE0BA4D21A47C677C9E580458394CC7459EC37F68DA9F1D370EEB2E",
+    "mtime": "2026-08-03T03:59:08.633539+00:00",
+    "status": "??",
+    "stage": "NOT TRACKED",
+    "ignore": "NOT IGNORED",
+    "imported_by": [
+      "src/renderer/js/components/settings.js",
+      "src/renderer/js/pipelines/pipeline2-remove.js"
+    ],
+    "direct_imports": [],
+    "exports": {
+      "state": "1",
+      "loadState": "24",
+      "saveState": "31"
+    },
+    "in_github": "NO"
+  },
+  "src/renderer/js/utils/logger.js": {
+    "size": 4456,
+    "sha256": "48EC726A3ECD4FBC297DC52549CF4E7A473414626D93D4FE97E12C680823D2A5",
+    "mtime": "2026-08-03T09:09:42.288155+00:00",
+    "status": "??",
+    "stage": "NOT TRACKED",
+    "ignore": "NOT IGNORED",
+    "imported_by": [
+      "src/renderer/js/components/settings.js",
+      "src/renderer/js/pipelines/pipeline2-remove.js",
+      "src/renderer/js/components/prompt-manager.js"
+    ],
+    "direct_imports": [],
+    "exports": {
+      "setActiveLogTab": "13",
+      "getLogCategory": "15",
+      "addLog": "41",
+      "showToast": "94"
+    },
+    "in_github": "NO"
+  },
+  "src/renderer/js/utils/dom.js": {
+    "size": 4186,
+    "sha256": "82964ACE02A114592CDA01D8E3E72D14449BF62801ACBF79FA1E1BBCC96DD05E",
+    "mtime": "2026-08-03T02:36:55.822081+00:00",
+    "status": "??",
+    "stage": "NOT TRACKED",
+    "ignore": "NOT IGNORED",
+    "imported_by": [
+      "src/renderer/js/pipelines/pipeline2-remove.js"
+    ],
+    "direct_imports": [],
+    "exports": {
+      "$": "1",
+      "$$": "2",
+      "el": "4"
+    },
+    "in_github": "NO"
+  }
+}
