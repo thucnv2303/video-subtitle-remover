@@ -1,28 +1,27 @@
 # AgentOS Handoff Status
 
 ## Last completed task
-INCIDENT-RECOVERY-007E-TRACKING-001 — CAPTURE SOURCE TRACKING STATE (COMPLETED)
-- Project Manager evidence review: PASS
-- Immutable reviewed evidence head: fb94d94e66c27470d665cb1fa4ca9620cfad0984
-- Incident execution: PASS — forensic capture completed
-- Incident automated verification: NOT APPLICABLE — evidence-only
-- Incident code review: PASS
+RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (COMPLETED)
+- **Project Manager decision**: PASS — SOURCE BASELINE ACCEPTED WITH KNOWN INHERITED DIFF-HYGIENE DEFECT
 
 ## Active Task
-RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (NOT STARTED)
+RECOVERY-007E-AI-SETTINGS-001 — REBUILD PROVIDER KEYS AND OLLAMA MODEL DISCOVERY (NOT STARTED)
 
 ## Incident Resume Point
-Task is in WAITING_REVIEW for documentation sync of the source baseline transition.
+Task is in WAITING_REVIEW for project manager to approve the documentation transition before starting the new feature execution.
 
 ## Status
+- **Immutable baseline PR head**: 60b04fd21dc023e88fc00907e91d97c15f3de3ed
+- **Immutable source commit**: 29d1d6a17ef7ed71041863ab1ca3911aa039f957
 - **RECOVERY-007 owner verification**: PAUSED
-- **RECOVERY-007E**: NOT IMPLEMENTED
+- **RECOVERY-007E implementation**: NOT STARTED
 - **BUG-008**: ACTIVE — BLOCKING AI ANALYSIS
 - **BUG-009**: ACTIVE — BLOCKING AI ANALYSIS
-- **AI Settings demo**: DESIGN DIRECTION APPROVED, IMPLEMENTATION NOT STARTED
+- **AI Settings demo**: APPROVED DESIGN DIRECTION
+- **Implementation Base**: `review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline` (Latest GitHub head after transition commit)
 
 ## Next Permitted Action
-Start RECOVERY-007E-SOURCE-BASELINE-001 execution (NOT STARTED) to publish the exact existing approved/restored runtime source without altering the dirty working tree.
+Project manager to review the documentation transition, after which RECOVERY-007E-AI-SETTINGS-001 implementation can begin.
 
 ## Execution
 NOT STARTED

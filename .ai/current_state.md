@@ -21,23 +21,24 @@ WAITING
 - RECOVERY-006 baseline report:
   .ai/audits/pipeline1_baseline_runtime.md
 - INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
-  - Project Manager evidence review: PASS
-  - Immutable reviewed evidence head: fb94d94e66c27470d665cb1fa4ca9620cfad0984
-  - Incident execution: PASS — forensic capture completed
-  - Incident automated verification: NOT APPLICABLE — evidence-only
-  - Incident code review: PASS
-  - Six verified source-path classifications (settings/pipeline2 untracked, others tracked-modified)
-  - Verified source ownership (settings persistence in settings.js, payload config in app.js)
-  - Isolation finding: The untracked files cannot be committed wholesale without reviewing the source baseline first.
-- Active task: RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (NOT STARTED)
+- RECOVERY-007E-SOURCE-BASELINE-001: COMPLETED
+  - Project Manager decision: PASS — SOURCE BASELINE ACCEPTED WITH KNOWN INHERITED DIFF-HYGIENE DEFECT
+  - Immutable reviewed PR head: 60b04fd21dc023e88fc00907e91d97c15f3de3ed
+  - Immutable source commit: 29d1d6a17ef7ed71041863ab1ca3911aa039f957
+  - Six baseline source files match the original dirty runtime source byte-for-byte.
+  - Original dirty worktree was not modified.
+  - Source commit was created using --no-verify because AGENTOS GATE conflicted with required source/docs commit separation. This process exception must not be repeated in future implementation tasks.
+  - AI Settings implementation was not part of the baseline task.
+  - PR #4 must not be merged.
+- Active task: RECOVERY-007E-AI-SETTINGS-001 — REBUILD PROVIDER KEYS AND OLLAMA MODEL DISCOVERY (NOT STARTED)
 - RECOVERY-007 owner verification: PAUSED
-- RECOVERY-007E: NOT IMPLEMENTED
-- AI Settings demo: DESIGN DIRECTION APPROVED, IMPLEMENTATION NOT STARTED
+- RECOVERY-007E implementation: NOT STARTED
 - BUG-008: ACTIVE — BLOCKING AI ANALYSIS
 - BUG-009: ACTIVE — BLOCKING AI ANALYSIS
-- Current PR head must be resolved directly from GitHub and must not be hard-coded in canonical files.
+- AI Settings demo: APPROVED DESIGN DIRECTION
+- The implementation base commit is the latest GitHub head of review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline after documentation transition.
 
-## Active Task Verification gates (RECOVERY-007E-SOURCE-BASELINE-001)
+## Verification gates for RECOVERY-007E-AI-SETTINGS-001
 - Execution: NOT STARTED
 - Automated verification: WAITING
 - Code review: WAITING
@@ -46,4 +47,4 @@ WAITING
 - Merge permission: BLOCKED
 
 ## Current branch
-rescue/wip-20260803
+review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline

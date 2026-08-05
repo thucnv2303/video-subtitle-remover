@@ -37,6 +37,156 @@
 
       <!-- ===== HOME PAGE ===== -->
       <section id="page-home" class="page active">
+
+        <div class="pipeline-container">
+          <div class="pipeline-bar-v2">
+            <div class="step-chevron active" data-step="1">
+              <div class="step-content">
+                 <div class="step-title">1. Video Analysis</div>
+                 <div class="step-sub">Analyzing</div>
+              </div>
+            </div>
+            <div class="step-chevron" data-step="2">
+              <div class="step-content">
+                 <div class="step-title">2. Remove Subtitles</div>
+              </div>
+            </div>
+            <div class="step-chevron" data-step="3">
+              <div class="step-content">
+                 <div class="step-title">3. Finalize</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="pipeline-content-area">
+            
+            <!-- STEP 1 -->
+            <div id="step-1-content" class="pipeline-pane active">
+              <div class="toolkit-layout-3col">
+                <!-- COL 1: Settings -->
+                <div class="toolkit-sidebar" style="width: 280px; flex-shrink: 0;">
+                   <div class="toolkit-header">
+                      <h3>Cài đặt (Pipeline 1)</h3>
+                      <span class="icon-gear">⚙️</span>
+                   </div>
+                   
+                   <div class="tk-group">
+                      <label>AI Model Selection</label>
+                      <select id="step1-ai-model" class="tk-input">
+                         <option>Ollama (Llama 3.2 Vision)</option>
+                         <option>Google Gemini</option>
+                      </select>
+                   </div>
+                   
+                   <div class="tk-group">
+                      <label>Prompt Management</label>
+                      <div class="tk-prompt-box">
+                         <div class="tk-prompt-list">
+                            <div class="tk-prompt-item active">1. Phân tích & Viết lại</div>
+                            <div class="tk-prompt-item">2. Dịch sang Tiếng Anh</div>
+                         </div>
+                         <button class="tk-btn" id="step1-btn-add-prompt">➕ Add Prompt</button>
+                         <button class="tk-btn" id="step1-btn-edit-prompt">✏️ Edit selected prompt</button>
+                         <button class="tk-btn tk-btn-danger" id="step1-btn-del-prompt">🗑 Delete</button>
+                      </div>
+                   </div>
+                   
+                   <div class="tk-group">
+                      <label>Voice Settings</label>
+                      <select id="step1-tts-voice" class="tk-input">
+                         <option>Không lồng tiếng</option>
+                         <option>Hoài My (Nữ, Miền Nam)</option>
+                         <option>Nam Minh (Nam, Miền Bắc)</option>
+                      </select>
+                   </div>
+                   
+                   <div class="tk-group">
+                      <label>Speed (1.0x)</label>
+                      <input type="range" class="tk-slider" min="0" max="100" value="50">
+                   </div>
+                   
+                   <div class="tk-group" style="margin-top: 20px;">
+                      <button class="tk-btn tk-btn-primary" id="btn-upload-step1" style="width: 100%; padding: 12px; font-weight: bold; margin-bottom: 8px;">+ Thêm Video</button>
+                      <div style="display:flex; gap: 8px; width: 100%;">
+                        <button class="tk-btn tk-btn-primary" id="btn-start-all" style="flex: 1; padding: 12px; font-weight: bold; background: #10b981;">▶ Bắt đầu chạy</button>
+                        <button class="tk-btn" id="btn-stop-all" style="display:none; flex: 1; padding: 12px; font-weight: bold; background: #ef4444; color: white; border: none;">⏹ Dừng</button>
+                      </div>
+                   </div>
+                </div>
+                
+                <!-- COL 2: Job Queue -->
+                <div class="toolkit-main" style="width: 280px; flex-shrink: 0; border-right: 1px solid var(--border);">
+                   <div class="toolkit-header">
+                      <h3>Job Queue <span id="job-count">(0)</span></h3>
+                   </div>
+                   <div id="step1-job-list" class="tk-job-list" style="height: calc(100% - 40px); overflow-y: auto;">
+                      <div class="job-empty" style="text-align:center; color:#71717a; margin-top:50px;">Chưa có video nào. Bấm "+ Thêm Video".</div>
+                   </div>
+                </div>
+
+                <!-- COL 3: Job Detail -->
+                <div class="toolkit-job-detail" style="flex: 1; display: flex; flex-direction: column; background: var(--bg); padding: 12px; gap: 12px; overflow: hidden;">
+                   
+                   <!-- Header Details -->
+                   <div style="display:flex; align-items:center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                     <h3 id="step1-detail-title" style="margin:0;">Vui lòng chọn 1 Job</h3>
+                     <span class="status-chip" id="step1-detail-status">Chờ xử lý</span>
+                   </div>
+
+                   <!-- Workspace: AI (Left) / TTS (Right) -->
+                   <div style="display:flex; flex: 1; gap: 12px; min-height: 0;">
+                      
+                      <!-- Left: Transcript / AI Rewrite -->
+                      <div style="flex: 1; display: flex; flex-direction: column; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); padding: 12px;">
+                         <h4 style="margin-top:0; color:var(--accent);">📝 Nội dung (SRT / Tóm tắt)</h4>
+                         <textarea id="step1-detail-text" class="form-input" style="flex:1; resize:none; font-family:monospace; margin-bottom: 8px;" placeholder="Nội dung bóc băng hoặc AI viết lại sẽ hiển thị ở đây..."></textarea>
+                         <div style="display:flex; gap: 8px;">
+                            <button class="btn btn-sm btn-ghost" id="step1-btn-extract">🎙 Trích xuất lại</button>
+                            <button class="btn btn-sm btn-ghost" id="step1-btn-rewrite">✨ AI Viết lại</button>
+                            <button class="btn btn-sm btn-accent" style="flex:1" id="step1-btn-save-text">💾 Cập nhật Text</button>
+                         </div>
+                      </div>
+
+                      <!-- Right: Voice / TTS -->
+                      <div style="flex: 1; display: flex; flex-direction: column; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); padding: 12px;">
+                         <h4 style="margin-top:0; color:var(--accent);">🎤 Âm thanh Lồng tiếng</h4>
+                         
+                         <div style="flex:1; display:flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-radius: 6px; margin-bottom: 8px; border: 1px dashed var(--border);">
+                           <audio id="step1-detail-audio" controls style="width: 90%; display:none;"></audio>
+                           <div id="step1-audio-empty" style="color: var(--text-muted); font-size: 0.9rem;">Chưa có audio lồng tiếng</div>
+                         </div>
+                         
+                         <div style="display:flex; gap: 8px; flex-wrap:wrap;">
+                            <button class="btn btn-sm btn-ghost" id="step1-btn-gen-tts" style="flex:1;">🔊 Tạo TTS</button>
+                            <button class="btn btn-sm btn-ghost" id="step1-btn-import-audio" style="flex:1;">📁 Upload Audio</button>
+                         </div>
+                      </div>
+
+                   </div>
+
+                   <!-- Log Console (Shrunk) -->
+                   <div class="tk-log-console" style="height: 120px; border-radius: 6px; display:flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border);">
+                      <div class="tk-log-header" style="padding: 6px 12px;">
+                         <span style="font-size: 0.85rem; font-weight: bold;">Console Log</span>
+                         <div>
+                            <button class="tk-btn tk-btn-sm" id="step1-btn-copy-log">Copy</button>
+                            <button class="tk-btn tk-btn-sm" id="step1-btn-clear-log">Xóa</button>
+                         </div>
+                      </div>
+                      <div class="tk-log-body" id="step1-log-output" style="flex:1; overflow-y: auto; padding: 6px 12px; font-size: 0.8rem;">
+                         <!-- logs go here -->
+                      </div>
+                   </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div id="step-2-content" class="pipeline-pane" style="display: none;">
+              <!-- INJECT OLD 3-COL CONTENT HERE, BUT STRIPPED -->
+              <div class="three-col" id="step2-three-col">
+                
         <!-- 3-Column Layout -->
         <div class="three-col">
 
@@ -97,7 +247,7 @@
             <div class="ctrl-divider"></div>
 
             <!-- Job Cards Container -->
-            <div class="job-cards-container">
+            <div class="job-cards-container" style="display:none;">
               
               <!-- SRT Extraction -->
               <div class="job-card" id="card-srt">
@@ -106,6 +256,25 @@
                   <button class="btn-expand">▼</button>
                 </div>
                 <div class="job-card-body" id="body-srt">
+                  <div class="form-group" style="margin-bottom: 8px;">
+                    <label class="chk-label"><input type="checkbox" id="chk-asr-fallback"><span>Bóc băng âm thanh gốc (Whisper)</span></label>
+                  </div>
+                  <!-- ASR options panel — shown/hidden by chk-asr-fallback (Bug #4 fix) -->
+                  <div id="asr-options" style="display:none; margin-bottom:8px; padding:8px; background:rgba(124,58,237,0.07); border-radius:6px; border:1px solid rgba(124,58,237,0.2);">
+                    <div class="form-group" style="margin-bottom:6px">
+                      <label class="form-label">Ngôn ngữ ASR (Whisper)</label>
+                      <select id="asr-language" class="dropdown form-input">
+                        <option value="auto">Tự động phát hiện (Auto)</option>
+                        <option value="zh">Tiếng Trung</option>
+                        <option value="vi">Tiếng Việt</option>
+                        <option value="en">Tiếng Anh</option>
+                      </select>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span class="form-label" style="margin:0; white-space:nowrap">Trạng thái:</span>
+                      <span class="status-chip" id="asr-status-chip" style="font-size:0.75rem;">⏳ Đang kiểm tra...</span>
+                    </div>
+                  </div>
                   <textarea class="form-input" id="srt-content" rows="3" readonly placeholder="Nội dung SRT..."></textarea>
                 </div>
               </div>
@@ -125,7 +294,12 @@
                     <select id="ai-prompt-select" class="dropdown form-input"></select>
                   </div>
                   <textarea class="form-input" id="ai-content" rows="4" placeholder="Nội dung AI..."></textarea>
-                  <button class="btn btn-xs btn-accent btn-block" style="margin-top:8px" id="btn-ai-apply">💾 Áp dụng phụ đề</button>
+                  <!-- Action buttons for AI card (Bug #4 fix) -->
+                  <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <button class="btn btn-xs btn-ghost" id="btn-ai-import" title="Nhập file SRT từ máy tính">📂 Nhập SRT</button>
+                    <button class="btn btn-xs btn-ghost" id="btn-retry-ai" title="Gửi SRT gốc lên AI để viết lại">🔄 Viết lại AI</button>
+                    <button class="btn btn-xs btn-accent" style="flex:1" id="btn-ai-apply">💾 Áp dụng phụ đề</button>
+                  </div>
                 </div>
               </div>
 
@@ -145,6 +319,12 @@
                   <button class="btn btn-xs btn-ghost btn-block" id="job-btn-preview-voice" style="margin-top:4px">▶ Nghe thử giọng</button>
                   <audio id="job-tts-preview-audio" style="display:none"></audio>
                   <div class="voice-segments-list" id="voice-segments" style="max-height:80px"></div>
+                  <!-- Action buttons for Voice card (Bug #4 fix) -->
+                  <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <button class="btn btn-xs btn-ghost" id="btn-voice-import" title="Nhập file audio đã tạo sẵn">📂 Nhập Audio</button>
+                    <button class="btn btn-xs btn-ghost" id="btn-retry-tts" title="Tạo lại lồng tiếng từ phụ đề hiện tại">🔄 Tạo lại TTS</button>
+                    <button class="btn btn-xs btn-accent" style="flex:1" id="btn-voice-apply">🔊 Ghép voice vào video</button>
+                  </div>
                 </div>
               </div>
 
@@ -195,7 +375,45 @@
                   </div>
                   
                   <textarea class="form-input" id="voicesub-content" rows="2" placeholder="Nội dung phụ đề..."></textarea>
-                  <button class="btn btn-xs btn-accent btn-block" style="margin-top:8px" id="btn-voicesub-apply">📝 Gán sub vào video</button>
+                  <!-- Action buttons for VoiceSub card (Bug #4 fix) -->
+                  <div style="display:flex; gap:6px; margin-top:8px;">
+                    <button class="btn btn-xs btn-ghost" id="btn-voicesub-import" title="Nhập file SRT từ máy tính">📂 Nhập SRT</button>
+                    <button class="btn btn-xs btn-accent" style="flex:1" id="btn-voicesub-apply">📝 Gán sub vào video</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ctrl-divider"></div>
+
+            <!-- Phân tích Video -->
+            <div class="job-card" id="card-analysis" style="border: 1px solid var(--accent); background: rgba(124, 58, 237, 0.05);">
+              <div class="job-card-header">
+                <label class="chk-label" style="color: var(--accent); font-weight: bold;"><span>🧠 Phân tích & Tóm tắt Video</span></label>
+                <button class="btn-expand">▼</button>
+              </div>
+              <div class="job-card-body" id="body-analysis" style="display: none;">
+                <div class="form-group" style="margin-bottom:8px">
+                  <label class="form-label">Câu hỏi cho AI</label>
+                  <select id="analysis-prompt-select" class="dropdown form-input">
+                    <option value="Hãy phân tích video dựa vào nội dung cuộc trò chuyện/lời nói sau: 1. Video nói về vấn đề gì? 2. Người nói đang thể hiện phong thái/cảm xúc như thế nào? 3. Cách họ giới thiệu vấn đề trong video ra sao?">Phân tích toàn diện (Nội dung, Người nói, Mở đầu)</option>
+                    <option value="Hãy tóm tắt ngắn gọn những ý chính được đề cập trong nội dung sau.">Tóm tắt ngắn gọn</option>
+                    <option value="Hãy đánh giá phong cách nói chuyện và cảm xúc của người nói dựa vào nội dung sau.">Đánh giá phong cách người nói</option>
+                  </select>
+                </div>
+                
+                <button class="btn btn-sm btn-accent btn-block" style="margin-bottom:12px; font-weight:bold" id="btn-analyze-video">
+                  🔍 Bắt đầu Bóc băng & Phân tích
+                </button>
+                
+                <div class="form-group" style="margin-bottom:8px">
+                  <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Nội dung bóc băng (Transcript)</label>
+                  <textarea class="form-input" id="analysis-transcript" rows="3" readonly placeholder="Lời nói trong video sẽ hiển thị ở đây..." style="font-size: 0.85rem; font-family: monospace;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label" style="font-size: 0.8rem; opacity: 0.8; color: var(--accent);">Kết quả Phân tích từ AI</label>
+                  <textarea class="form-input" id="analysis-result" rows="5" readonly placeholder="Kết quả AI phân tích sẽ hiển thị ở đây..." style="font-size: 0.9rem; line-height: 1.4;"></textarea>
                 </div>
               </div>
             </div>
@@ -295,7 +513,15 @@
                   <button class="btn btn-sm btn-ghost" id="btn-clear-log">🗑 Xóa</button>
                 </div>
               </div>
+              
+              <div class="log-tabs">
+                <button class="log-tab active" data-log-tab="all">Tất cả</button>
+                <button class="log-tab" data-log-tab="feature">Tính năng (Sub/AI/TTS)</button>
+                <button class="log-tab" data-log-tab="inpaint">Xóa Sub</button>
+                <button class="log-tab" data-log-tab="system">Hệ thống</button>
+              </div>
               <div class="log-content" id="log-output"></div>
+
             </div>
           </div>
 
@@ -313,7 +539,82 @@
           </div>
 
         </div>
-      </section>
+      
+              </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div id="step-3-content" class="pipeline-pane" style="display: none;">
+              <div class="two-col" style="height: 100%; display: flex; flex-direction: row; gap: 16px;">
+                <div class="col-left" style="width: 300px; background: var(--surface); padding: 16px; border-radius: 8px; display: flex; flex-direction: column;">
+                  <div class="col-header" style="margin-bottom: 16px;"><h3>✅ Video Đã Xử Lý</h3></div>
+                  <div class="step3-jobs" id="step3-job-list" style="flex: 1; overflow-y: auto;">
+                     <div class="job-empty" style="text-align: center; color: var(--text-muted); margin-top: 40px;">Chưa có video hoàn thành.</div>
+                  </div>
+                </div>
+                <div class="col-resize-handle" id="resize-step3" style="width: 4px; cursor: col-resize; background: transparent;"></div>
+                <div class="col-right" style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                  <div class="step3-preview-area" style="flex: 1; background: var(--surface); padding: 16px; border-radius: 8px; display: flex; flex-direction: column;">
+                    <div class="pane-label" style="font-weight: bold; margin-bottom: 8px;">XEM TRƯỚC (FINAL)</div>
+                    <div class="canvas-wrap" style="flex: 1; background: #000; position: relative; border-radius: 6px; overflow: hidden;">
+                      <video id="step3-video-preview" style="width:100%; height:100%; object-fit:contain;"></video>
+                      <div id="step3-subtitle-overlay" class="draggable-sub" style="position:absolute; bottom:15%; width:100%; text-align:center; font-size: 32px; color: white; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; font-family: sans-serif; cursor: move; pointer-events: auto;">Kéo thả để di chuyển phụ đề</div>
+                    </div>
+                    <div class="pane-controls" style="display: flex; justify-content: center; margin-top: 12px;">
+                      <button class="btn-icon" style="background: var(--bg); border: none; color: var(--text); padding: 8px 16px; border-radius: 4px; cursor: pointer;">▶ Play / Pause</button>
+                    </div>
+                  </div>
+                  <div class="step3-style-area" style="height: 250px; background: var(--surface); padding: 16px; border-radius: 8px;">
+                    <h3 style="margin-top: 0;">🎨 Cài đặt Subtitle (CapCut Style)</h3>
+                    <div style="display:flex; gap:16px; margin-top:16px;">
+                      <div class="form-group" style="flex:1">
+                        <label class="form-label">Font chữ</label>
+                        <select class="dropdown form-input" id="step3-font"><option>Montserrat</option><option>Arial</option><option>Roboto</option></select>
+                      </div>
+                      <div class="form-group" style="flex:1">
+                        <label class="form-label">Cỡ chữ (px)</label>
+                        <input type="number" class="form-input" id="step3-size" value="60">
+                      </div>
+                      <div class="form-group" style="flex:1">
+                        <label class="form-label">Màu chữ (Primary)</label>
+                        <input type="color" class="form-input" id="step3-color" value="#ffffff" style="height: 38px; padding: 2px;">
+                      </div>
+                      <div class="form-group" style="flex:1">
+                        <label class="form-label">Màu viền (Outline)</label>
+                        <input type="color" class="form-input" id="step3-outline-color" value="#000000" style="height: 38px; padding: 2px;">
+                      </div>
+                    
+                      <div class="form-group" style="flex:1">
+                        <label class="form-label">Background</label>
+                        <input type="color" class="form-input" id="step3-bg-color" value="#000000" style="height: 38px; padding: 2px;">
+                      </div>
+                      <div class="form-group" style="flex:1">
+                        <label class="form-label">Style</label>
+                        <div style="display:flex; gap: 8px;">
+                           <button class="btn btn-ghost" id="step3-btn-bold" style="flex:1; font-weight:bold;">B</button>
+                           <button class="btn btn-ghost" id="step3-btn-italic" style="flex:1; font-style:italic;">I</button>
+                        </div>
+                      </div>
+                      <div class="form-group" style="flex:1">
+                        <label class="form-label">Căn lề</label>
+                        <select class="dropdown form-input" id="step3-align">
+                           <option value="2">Giữa (Bottom)</option>
+                           <option value="1">Trái (Bottom)</option>
+                           <option value="3">Phải (Bottom)</option>
+                           <option value="8">Giữa (Top)</option>
+                        </select>
+                      </div>
+    </div>
+                    <button class="btn btn-accent btn-block" style="margin-top: 24px; padding: 12px; font-size: 1rem;" id="btn-export-final">💾 Xuất Video (Burn Sub)</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+    
+</section>
 
       <!-- ===== SETTINGS PAGE ===== -->
       <section id="page-settings" class="page">
@@ -355,6 +656,12 @@
               <select id="tts-voice" class="dropdown form-input">
                 <option value="none">Không lồng tiếng</option>
                 <option value="default">Giọng mặc định (OmniVoice)</option>
+                <option value="vi-VN-HoaiMyNeural">Hoài My (Nữ, Miền Nam)</option>
+                <option value="vi-VN-NamMinhNeural">Nam Minh (Nam, Miền Bắc)</option>
+                <option value="zh-CN-XiaoxiaoNeural">Xiaoxiao (Nữ, Tiếng Trung)</option>
+                <option value="zh-CN-YunxiNeural">Yunxi (Nam, Tiếng Trung)</option>
+                <option value="en-US-JennyNeural">Jenny (Nữ, Tiếng Anh)</option>
+                <option value="en-US-GuyNeural">Guy (Nam, Tiếng Anh)</option>
               </select>
             </div>
 
@@ -372,6 +679,13 @@
             <div class="form-group">
               <label class="form-label"><span>Âm lượng gốc (Nhạc nền)</span><span id="vol-label" class="vol-val">10%</span></label>
               <input type="range" id="tts-bg-volume" min="0" max="100" value="10">
+            </div>
+            
+            <div class="form-group" style="margin-top: 10px;">
+              <label class="chk-label" title="Sử dụng AI để tách nhạc nền, xóa hoàn toàn giọng nói gốc của video. Sẽ tốn thêm thời gian xử lý.">
+                <input type="checkbox" id="tts-remove-vocal">
+                <span>Xóa giọng gốc (Chỉ giữ nhạc nền - AI UVR)</span>
+              </label>
             </div>
 
             <div class="form-divider"></div>
@@ -475,7 +789,42 @@
     </div>
   </div>
   
+  <!-- Non-module scripts (loaded first, expose window.api) -->
   <script src="js/api.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/pipeline.js"></script>
+
+  <!--
+    ES6 Module bridge: load các module và expose hàm lên window.*
+    để app.js (non-module IIFE) có thể gọi được.
+  -->
+  <script type="module">
+    // Pipeline 1: AI Rewrite + TTS chain
+    import { triggerAutoAiRewrite, triggerAutoTts, _buildTimedSrt } from './js/pipelines/pipeline1-ai.js';
+    window.triggerAutoAiRewrite = triggerAutoAiRewrite;
+    window.triggerAutoTts       = triggerAutoTts;
+    window._buildTimedSrt       = _buildTimedSrt;
+
+    // Pipeline 3: Finalize
+    import { finalizeVideo } from './js/pipelines/pipeline3-finalize.js';
+    window.finalizeVideo = finalizeVideo;
+
+    // Settings
+    import { initSettings, loadSettingsValues, renderSavedVoices, updateVoiceDropdown, checkTTSStatus } from './js/components/settings.js';
+    window.initSettings       = initSettings;
+    window.loadSettingsValues = loadSettingsValues;
+    window.renderSavedVoices  = renderSavedVoices;
+    window.updateVoiceDropdown = updateVoiceDropdown;
+    window.checkTTSStatus     = checkTTSStatus;
+
+    // Prompt Manager
+    import { initPromptManager, renderPromptDropdown } from './js/components/prompt-manager.js';
+    window.initPromptManager    = initPromptManager;
+    window.renderPromptDropdown = renderPromptDropdown;
+  </script>
+
+  <!-- Main app (non-module, runs after modules above are registered) -->
+  <script src="js/app.js" defer></script>
 </body>
 </html>
+
+
