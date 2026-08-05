@@ -196,12 +196,40 @@ function bindCommonEvents() {
 
 let refAudioPath = null;
 function bindVoiceClone() {
-  $('btn-upload-ref-audio')?.addEventListener('click', async () => { const result = await window.electronAPI?.openFile?.([{ name: 'Audio', extensions: ['wav', 'mp3', 'flac', 'ogg', 'm4a', 'aac', 'wma', 'opus'] }]); const path = result && !result.canceled && result.filePaths?.[0]; if (path) { refAudioPath = path; if ($('ref-audio-name')) $('ref-audio-name').textContent = path.split(/[\\/]/).pop(); if ($('btn-clone-voice')) $('btn-clone-voice').disabled = false; } });
+  $('btn-upload-ref-audio')?.addEventListener('click', async () => {
+    const result = await window.electronAPI?.openFile?.([{ name: 'Audio', extensions: ['wav', 'mp3', 'flac', 'ogg', 'm4a', 'aac', 'wma', 'opus'] }]);
+    const path = result && !result.canceled && result.filePaths?.[0];
+    if (!path) return;
+    refAudioPath = path;
+    if ($('ref-audio-name')) $('ref-audio-name').textContent = path.split(/[\\/]/).pop();
+    if ($('ref-audio-preview')) { $('ref-audio-preview').src = `file:///${path.replace(/\\/g, '/')}`; $('ref-audio-preview').style.display = ''; }
+    if ($('btn-clone-voice')) $('btn-clone-voice').disabled = false;
+  });
   $('btn-clone-voice')?.addEventListener('click', async event => {
-    const name = value('clone-voice-name').trim(); if (!name || !refAudioPath) return toast('Nhập tên và chọn audio mẫu!', 'warn');
-    event.target.disabled = true;
-    try { const result = await window.api.generateTTS('Xin chào, đây là giọng được clone bởi OmniVoice.', refAudioPath, value('tts-language') || 'vi'); if (result.status !== 'ok') throw new Error(result.error || 'Unknown'); const voices = getSavedVoices(); voices.push({ name, audioPath: refAudioPath, audioFile: refAudioPath.split(/[\\/]/).pop(), samplePath: result.audio_path, date: new Date().toLocaleDateString('vi-VN') }); saveVoices(voices); renderSavedVoices(); refAudioPath = null; toast('Clone giọng thành công!', 'success'); }
-    catch (error) { toast(error.message, 'error'); } finally { event.target.disabled = false; }
+    const name = value('clone-voice-name').trim();
+    if (!name || !refAudioPath) return toast('Nhập tên và chọn audio mẫu!', 'warn');
+    const button = event.target;
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Đang tạo mẫu...';
+    try {
+      const result = await window.api.generateTTS('Xin chào, đây là giọng được clone bởi OmniVoice.', refAudioPath, value('tts-language') || 'vi');
+      if (result.status !== 'ok' || !result.audio_path) throw new Error(result.error || 'Unknown');
+      const voices = getSavedVoices();
+      voices.push({ name, audioPath: refAudioPath, audioFile: refAudioPath.split(/[\\/]/).pop(), samplePath: result.audio_path, date: new Date().toLocaleDateString('vi-VN') });
+      saveVoices(voices);
+      renderSavedVoices();
+      const selected = `clone:${voices.length - 1}`;
+      localStorage.setItem('tts_voice', selected);
+      if ($('tts-voice')) $('tts-voice').value = selected;
+      if ($('tts-test-audio')) { $('tts-test-audio').src = `file:///${result.audio_path.replace(/\\/g, '/')}`; $('tts-test-audio').style.display = ''; await $('tts-test-audio').play().catch(() => {}); }
+      if ($('clone-voice-name')) $('clone-voice-name').value = '';
+      if ($('ref-audio-name')) $('ref-audio-name').textContent = 'Chưa chọn file';
+      if ($('ref-audio-preview')) { $('ref-audio-preview').removeAttribute('src'); $('ref-audio-preview').style.display = 'none'; }
+      refAudioPath = null;
+      toast('Clone giọng thành công!', 'success');
+    } catch (error) { addLog(`[TTS] Clone thất bại: ${error.message}`, 'error'); toast(error.message, 'error'); }
+    finally { button.disabled = false; button.textContent = originalText; }
   });
 }
 
