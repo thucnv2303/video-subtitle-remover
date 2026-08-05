@@ -2,36 +2,31 @@
 
 ## Last completed task
 INCIDENT-RECOVERY-007E-TRACKING-001 — CAPTURE SOURCE TRACKING STATE (COMPLETED)
-- Project Manager evidence review: PASS
-- Immutable reviewed evidence head: fb94d94e66c27470d665cb1fa4ca9620cfad0984
-- Incident execution: PASS — forensic capture completed
-- Incident automated verification: NOT APPLICABLE — evidence-only
-- Incident code review: PASS
 
 ## Active Task
-RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (NOT STARTED)
+RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (WAITING_REVIEW)
 
 ## Incident Resume Point
-Task is in WAITING_REVIEW for documentation sync of the source baseline transition.
+Task is in WAITING_REVIEW for project manager to approve the source baseline.
 
 ## Status
-- **RECOVERY-007 owner verification**: PAUSED
-- **RECOVERY-007E**: NOT IMPLEMENTED
+- **RECOVERY-007 owner verification**: remains PAUSED
+- **RECOVERY-007E**: remains NOT IMPLEMENTED
 - **BUG-008**: ACTIVE — BLOCKING AI ANALYSIS
 - **BUG-009**: ACTIVE — BLOCKING AI ANALYSIS
 - **AI Settings demo**: DESIGN DIRECTION APPROVED, IMPLEMENTATION NOT STARTED
 
 ## Next Permitted Action
-Start RECOVERY-007E-SOURCE-BASELINE-001 execution (NOT STARTED) to publish the exact existing approved/restored runtime source without altering the dirty working tree.
+Project manager to review the source baseline PR.
 
 ## Execution
-NOT STARTED
+PASS — byte-for-byte baseline published
 
 ## Code review
 WAITING
 
 ## Automated verification
-WAITING
+PASS — hash, syntax and diff checks
 
 ## Owner manual app verification
 BLOCKED
