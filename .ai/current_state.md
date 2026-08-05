@@ -23,7 +23,11 @@ WAITING
 - Active task: INCIDENT-RECOVERY-007E-002
 - Targeted restoration execution and static checks: PASS
 - Reference PR #1 evidence head: 7f84cca120a7cf08ba473181b1a70525990c04a0
-- Reference PR #2 current head: 1a940da5e7c2bda6fe980f9b54df8e3f9d5cc8d5
+- PR #2 review branch: review/INCIDENT-RECOVERY-007E-002-targeted-restoration
+- Restoration evidence commit: bc447d515b05a1e13eb1b20aee3fbe422f1edf7b
+- Initial state synchronization commit: 1a940da5e7c2bda6fe980f9b54df8e3f9d5cc8d5
+- First canonical correction commit: 55dde57ee0e63b2f9dafaf8df7da938e5ca50afa
+- Current PR head must be resolved directly from GitHub and must not be hard-coded in canonical files.
 - RECOVERY-007 ASR: preserved, owner verification NOT STARTED.
 - RECOVERY-007E: invalid implementation reverted and remains NOT IMPLEMENTED.
 - Documentation synchronization: WAITING_REVIEW
