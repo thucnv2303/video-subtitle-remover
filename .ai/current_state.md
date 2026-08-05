@@ -20,22 +20,26 @@ WAITING
 - RECOVERY-006 project-manager review: PASS.
 - RECOVERY-006 baseline report:
   .ai/audits/pipeline1_baseline_runtime.md
-- Active task: RECOVERY-007-OWNER-VERIFY-001
+- Active task: RECOVERY-007E-REBUILD-001-PREFLIGHT
+- RECOVERY-007 owner verification: PAUSED — owner observed BUG-008/BUG-009 before completing the workflow.
 - INCIDENT-RECOVERY-007E-002 review: PASS
-- Incident reviewed head: 7fba3964a5b175e0fed43312fb8a0485eedc7c61 (immutable reviewed-head reference)
-- Incident documentation closure commit: 64363b8678a54ac049db6e0eb863613a7bb56a79
-- RECOVERY-007 ASR candidate remains preserved
-- Invalid RECOVERY-007E implementation was reverted
-- RECOVERY-007E remains NOT IMPLEMENTED
-- Current PR head must be resolved directly from GitHub and must not be hard-coded
+- Verified review head: 7fba3964a5b175e0fed43312fb8a0485eedc7c61 (immutable reviewed-head reference)
+- Targeted restoration: PASS
+- Hash verification: PASS
+- Static syntax verification: PASS
+- RECOVERY-007 ASR: preserved
+- Invalid RECOVERY-007E implementation: reverted
+- RECOVERY-007E: NOT IMPLEMENTED — PREFLIGHT ONLY
+- No application source committed in PR #2
+- Current PR head must be resolved directly from GitHub and must not be hard-coded in canonical files.
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
 
 ## Verification gates
-- Execution: NOT STARTED
-- Automated verification: PASS — existing static RECOVERY-007/restoration checks
-- Code review: PASS — existing reviewed candidate
-- Owner manual app verification: DO NOT START — awaiting Project Manager review of this preparation correction
+- Execution: PREFLIGHT IN PROGRESS
+- Automated verification: WAITING
+- Code review: WAITING
+- Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
 

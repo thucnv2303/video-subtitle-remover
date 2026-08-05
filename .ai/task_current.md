@@ -1,27 +1,27 @@
 # Current Task
 
 ## Task ID
-RECOVERY-007-OWNER-VERIFY-001
+RECOVERY-007E-REBUILD-001-PREFLIGHT
 
 ## Name
-RECOVERY-007 Owner Manual App Verification
+LOCATE AI SETTINGS SOURCE AND DEFINE SAFE REBUILD
 
 ## Purpose
-Verify the already code-reviewed RECOVERY-007 Pipeline 1 ASR candidate in the owner’s real application environment.
+Perform a read-only local preflight to locate AI settings source and define a safe rebuild for the multi-provider API-key table and Ollama model scanner.
 
 ## Verified Facts
+- **RECOVERY-007 owner verification**: PAUSED — owner observed BUG-008/BUG-009 before completing the workflow.
+- **BUG-008**: ACTIVE — BLOCKING AI ANALYSIS
+- **BUG-009**: ACTIVE — BLOCKING AI ANALYSIS
+- **RECOVERY-007E**: NOT IMPLEMENTED — PREFLIGHT ONLY
 - **INCIDENT-RECOVERY-007E-002 review**: PASS
 - **Incident reviewed head**: 7fba3964a5b175e0fed43312fb8a0485eedc7c61
-- **Incident documentation closure commit**: 64363b8678a54ac049db6e0eb863613a7bb56a79
-- **RECOVERY-007 ASR candidate**: remains preserved
-- **Invalid RECOVERY-007E implementation**: was reverted
-- **RECOVERY-007E**: remains NOT IMPLEMENTED
 - **Current PR head must be resolved directly from GitHub and must not be hard-coded**
 
 ## Verification gates
-- Execution: NOT STARTED
-- Automated verification: PASS — existing static RECOVERY-007/restoration checks
-- Code review: PASS — existing reviewed candidate
-- Owner manual app verification: DO NOT START — awaiting Project Manager review of this preparation commit
+- Execution: PREFLIGHT IN PROGRESS
+- Automated verification: WAITING
+- Code review: WAITING
+- Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
