@@ -20,12 +20,14 @@ WAITING
 - RECOVERY-006 project-manager review: PASS.
 - RECOVERY-006 baseline report:
   .ai/audits/pipeline1_baseline_runtime.md
-- RECOVERY-007 implementation: RECOVERY-007 ASR remains preserved but owner verification is NOT STARTED. Invalid RECOVERY-007E implementation has been reverted. RECOVERY-007E is NOT IMPLEMENTED and must be recreated in a later task.
-- Automated verification: limited to static recovery checks
-- Code review: WAITING
-- Owner manual app verification: DO NOT START
+- Active task: INCIDENT-RECOVERY-007E-002
+- Targeted restoration execution and static checks: PASS
+- Reference PR #1 evidence head: 7f84cca120a7cf08ba473181b1a70525990c04a0
+- Reference PR #2 current head: 1a940da5e7c2bda6fe980f9b54df8e3f9d5cc8d5
+- RECOVERY-007 ASR: preserved, owner verification NOT STARTED.
+- RECOVERY-007E: invalid implementation reverted and remains NOT IMPLEMENTED.
+- Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
-- Reference evidence PR #1 (HEAD: 7f84cca120a7cf08ba473181b1a70525990c04a0)
 
 ## Current branch
 rescue/wip-20260803

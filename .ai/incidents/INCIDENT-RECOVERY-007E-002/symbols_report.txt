@@ -35,7 +35,7 @@ api\server.py:1035:def api_extract_srt(req: ExtractSrtReq):
 
 --- /api/ai/models absent (server.py and app.js) ---
 
---- hard-coded fetch localhost:8765 absent (app.js, settings.js, pipeline2-remove.js) ---
+--- RECOVERY-007E direct fetch to /api/ai/models is absent. ---
 
 src\renderer\js\components\settings.js:165:    const r      = await fetch('http://localhost:8765/api/tts/status');
 
