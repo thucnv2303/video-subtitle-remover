@@ -1,44 +1,45 @@
 # AgentOS Handoff Status
 
 ## Last completed task
-RECOVERY-006 — Pipeline 1 Baseline Characterization.
+INCIDENT-RECOVERY-007E-002 — TARGETED RESTORATION OF INVALID RECOVERY-007E CHANGES
 
 ## Result
-PASS
+WAITING
 
 ## Baseline report
 .ai/audits/pipeline1_baseline_runtime.md
 
-## Baseline checkpoint
-Current HEAD before the RECOVERY-006 documentation checkpoint:
-5b87037
+## Preflight report
+.ai/audits/recovery007_preflight.md
 
-Resolve the final checkpoint commit from Git history after it is created.
-
-## Files intended for the RECOVERY-006 documentation commit
-- .ai/audits/pipeline1_baseline_runtime.md
-- .ai/bugs.md
+## Files intended for the RECOVERY-007 commit
+- api/server.py
+- src/renderer/js/api.js
+- src/renderer/js/app.js
+- src/renderer/index.html
+- src/renderer/js/components/settings.js
+- src/renderer/js/pipelines/pipeline2-remove.js
+- patch scripts
+- .ai/audits/recovery007_preflight.md
 - .ai/current_state.md
 - .ai/task_current.md
 - .ai/handoff.md
 
 ## Automated verification
-NOT RUN — baseline was manually executed.
+limited to static recovery checks
 
 ## Code review
-NOT APPLICABLE — no source was modified.
+WAITING
 
 ## Owner manual app verification
-PASS — owner executed the baseline procedure.
+DO NOT START
 
 ## Feature result
-FAIL/BLOCKED — the current Pipeline 1 path did not complete.
+WAITING
 
 ## Merge permission
 BLOCKED
 
-## Next task
-RECOVERY-007 — Dedicated Pipeline 1 Text Extraction Path.
-
 ## Next task status
-NOT STARTED — RECOVERY-006 documentation checkpoint must be committed first.
+WAITING
+

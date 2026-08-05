@@ -1,17 +1,16 @@
 # Current Task
 
 ## Task ID
-RECOVERY-007
+INCIDENT-RECOVERY-007E-002
 
 ## Name
-Dedicated Pipeline 1 Text Extraction Path
+TARGETED RESTORATION OF INVALID RECOVERY-007E CHANGES
 
 ## Goal
-Make Step 1 extract OCR/ASR text and return SRT to the frontend without
-executing Pipeline 2 subtitle removal, inpainting or video rendering.
+Restore only the verified invalid RECOVERY-007E changes and the six deleted pre-existing scripts. Preserve RECOVERY-007 ASR and every unrelated dirty-tree change.
 
 ## Status
-NOT STARTED — RECOVERY-006 documentation checkpoint must be committed first.
+WAITING
 
 ## Single objective
 
@@ -73,7 +72,8 @@ Any additional source file requires project-manager approval before editing.
 
 ## Verification gates
 
-- Automated verification: WAITING.
+- Automated verification: limited to static recovery checks.
 - Code review: WAITING.
-- Owner manual app verification: WAITING.
+- Owner manual app verification: DO NOT START.
 - Merge permission: BLOCKED.
+

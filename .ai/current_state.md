@@ -20,14 +20,13 @@ WAITING
 - RECOVERY-006 project-manager review: PASS.
 - RECOVERY-006 baseline report:
   .ai/audits/pipeline1_baseline_runtime.md
-- Automated verification: NOT RUN — manual runtime baseline.
-- Owner manual app verification: PASS.
-- Feature result: FAIL/BLOCKED.
-- Existing uncommitted source changes remain preserved.
-- No source files changed by RECOVERY-006.
-- Pipeline 2 remains OWNER CONFIRMED working.
-- RECOVERY-007 approved as next task but NOT STARTED.
-- Merge permission: BLOCKED.
+- RECOVERY-007 implementation: RECOVERY-007 ASR remains preserved but owner verification is NOT STARTED. Invalid RECOVERY-007E implementation has been reverted. RECOVERY-007E is NOT IMPLEMENTED and must be recreated in a later task.
+- Automated verification: limited to static recovery checks
+- Code review: WAITING
+- Owner manual app verification: DO NOT START
+- Merge permission: BLOCKED
+- Reference evidence PR #1 (HEAD: 7f84cca120a7cf08ba473181b1a70525990c04a0)
 
 ## Current branch
 rescue/wip-20260803
+
