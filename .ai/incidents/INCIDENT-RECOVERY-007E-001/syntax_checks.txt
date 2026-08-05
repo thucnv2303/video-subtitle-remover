@@ -1,0 +1,15 @@
+
+Checking: src/renderer/js/app.js
+
+---
+Checking: src/renderer/js/api.js
+
+---
+Checking: src/renderer/js/components/settings.js
+
+---
+Checking: src/renderer/js/pipelines/pipeline2-remove.js
+
+---
+Checking: api/server.py
+PASS

@@ -1,0 +1,43 @@
+diff --git "a/E:\\Project AI\\_recovery\\RECOVERY-007E-before-20260804-212457\\index.html" b/src/renderer/index.html
+index d5b9515..a25a2f9 100644
+--- "a/E:\\Project AI\\_recovery\\RECOVERY-007E-before-20260804-212457\\index.html"	
++++ b/src/renderer/index.html
+@@ -632,13 +632,32 @@
+                 <option value="ollama">Local (Ollama)</option>
+               </select>
+             </div>
+-            <div class="form-group">
+-              <label class="form-label">API Key / Tên Model (Ollama)</label>
+-              <input type="password" id="ai-api-key" class="form-input" placeholder="Nhập API Key hoặc tên model (VD: gemma4:12b)...">
++            
++            <div id="cloud-ai-panel">
++                <div class="form-group">
++                  <label class="form-label">API Key</label>
++                  <input type="password" id="ai-api-key" class="form-input" placeholder="Nhập API Key...">
++                </div>
++                <div class="form-group">
++                  <label class="form-label">Tên Model (Tuỳ chọn)</label>
++                  <input type="text" id="ai-cloud-model" class="form-input" placeholder="Để trống để dùng mặc định">
++                </div>
+             </div>
+-            <div class="form-group">
+-              <label class="form-label">Endpoint URL (Ollama)</label>
+-              <input type="text" id="ai-endpoint" class="form-input" placeholder="VD: http://localhost:11434/api/chat">
++
++            <div id="local-ai-panel" style="display: none;">
++                <div class="form-group">
++                  <label class="form-label">Endpoint URL</label>
++                  <input type="text" id="ai-endpoint" class="form-input" placeholder="VD: http://localhost:11434/api/chat">
++                </div>
++                <div class="form-group">
++                  <label class="form-label">Tên Model</label>
++                  <div style="display:flex; gap:8px;">
++                      <select id="ai-ollama-model" class="dropdown form-input" style="flex:1;">
++                          <option value="">Chưa quét model</option>
++                      </select>
++                      <button id="btn-scan-models" class="btn btn-secondary">Quét</button>
++                  </div>
++                </div>
+             </div>
+             <div class="form-divider"></div>
+ 

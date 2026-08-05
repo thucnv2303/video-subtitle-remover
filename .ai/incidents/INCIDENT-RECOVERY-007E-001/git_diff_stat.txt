@@ -1,0 +1,14 @@
+ .ai/current_state.md         |   14 +-
+ .ai/handoff.md               |   33 +-
+ .ai/task_current.md          |    7 +-
+ api/server.py                | 1999 +++++++++++++++++++++++++++++++++-
+ api/tts_engine.py            |   55 +-
+ package-lock.json            |  336 +++++-
+ package.json                 |    1 +
+ src/main/main.js             |    4 +
+ src/main/preload.js          |    1 +
+ src/renderer/index.html      |  390 ++++++-
+ src/renderer/js/api.js       |  132 ++-
+ src/renderer/js/app.js       | 2473 ++++++++++++++++++------------------------
+ src/renderer/styles/main.css |  633 ++++++++++-
+ 13 files changed, 4567 insertions(+), 1511 deletions(-)

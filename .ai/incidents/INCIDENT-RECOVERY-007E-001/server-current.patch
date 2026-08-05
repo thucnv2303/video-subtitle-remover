@@ -1,0 +1,266 @@
+diff --git "a/E:\\Project AI\\_recovery\\RECOVERY-007E-before-20260804-212457\\server.py" b/api/server.py
+index 26fb0d0..d9ddb5e 100644
+--- "a/E:\\Project AI\\_recovery\\RECOVERY-007E-before-20260804-212457\\server.py"	
++++ b/api/server.py
+@@ -830,143 +830,76 @@ def api_analyze_video(req: AnalyzeVideoReq):
+         last_error = 'Vui lòng cấu hình API Key cho AI (Gemini/Ollama) trong phần Cài đặt.'
+         result_text = ''
+         
+-        for key_or_model in api_keys:
+-            if not key_or_model: continue
++        if provider == 'ollama':
++            if not model_name:
++                return {"status": "error", "error": "Chưa chọn model Ollama."}
++            base = endpoint.strip() if endpoint else "http://localhost:11434"
++            if base.endswith("/"): base = base[:-1]
++            if base.endswith("/api/tags"): base = base[:-9]
++            elif base.endswith("/api/chat"): base = base[:-9]
++            url = f"{base}/api/chat"
+             try:
+-                if provider == 'gemini':
+-                    gm = model_name or 'gemini-2.5-flash'
+-                    url = f'https://generativelanguage.googleapis.com/v1beta/models/{gm}:generateContent?key={key_or_model}'
+-                    data = json.dumps({'contents': [{'parts': [{'text': prompt + '\n\n' + transcript}]}]}).encode('utf-8')
+-                    request = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+-                    res = json.loads(urllib.request.urlopen(request, timeout=60).read().decode('utf-8'))
+-                    result_text = res['candidates'][0]['content']['parts'][0]['text']
+-                elif provider == 'deepseek':
+-                    dm = model_name or 'deepseek-chat'
+-                    url = 'https://api.deepseek.com/chat/completions'
+-                    data = json.dumps({'model': dm, 'messages': messages}).encode('utf-8')
+-                    request = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
+-                    res = json.loads(urllib.request.urlopen(request, timeout=60).read().decode('utf-8'))
+-                    result_text = res['choices'][0]['message']['content']
+-                elif provider == 'ollama':
+-                    url = endpoint or 'http://localhost:11434/api/chat'
+-                    data = json.dumps({'model': key_or_model, 'messages': messages, 'stream': False}).encode('utf-8')
+-                    request = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+-                    res = json.loads(urllib.request.urlopen(request, timeout=120).read().decode('utf-8'))
+-                    result_text = res['message']['content']
+-                elif provider == 'openai':
+-                    oa_model = model or "gpt-4o-mini"
+-                    url = "https://api.openai.com/v1/chat/completions"
+-                    data = json.dumps({"model": oa_model, "messages": messages}).encode('utf-8')
+-                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
+-                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+-                    result_text = res_data['choices'][0]['message']['content']
+-                elif provider == 'anthropic':
+-                    ant_model = model or "claude-3-haiku-20240307"
+-                    url = "https://api.anthropic.com/v1/messages"
+-                    sys_prompt = next((m["content"] for m in messages if m["role"] == "system"), "")
+-                    user_msgs = [{"role": m["role"], "content": m["content"]} for m in messages if m["role"] != "system"]
+-                    data = json.dumps({
+-                        "model": ant_model,
+-                        "max_tokens": 4096,
+-                        "messages": user_msgs,
+-                        "system": sys_prompt
+-                    }).encode('utf-8')
+-                    req_http = urllib.request.Request(url, data=data, headers={
+-                        'Content-Type': 'application/json', 
+-                        'x-api-key': key_or_model,
+-                        'anthropic-version': '2023-06-01'
+-                    })
+-                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+-                    result_text = res_data['content'][0]['text']
+-
+-                elif provider == 'openai':
+-                    oa_model = model or "gpt-4o-mini"
+-                    url = "https://api.openai.com/v1/chat/completions"
+-                    data = json.dumps({"model": oa_model, "messages": messages}).encode('utf-8')
+-                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
+-                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+-                    result_text = res_data['choices'][0]['message']['content']
+-                elif provider == 'anthropic':
+-                    ant_model = model or "claude-3-haiku-20240307"
+-                    url = "https://api.anthropic.com/v1/messages"
+-                    sys_prompt = next((m["content"] for m in messages if m["role"] == "system"), "")
+-                    user_msgs = [{"role": m["role"], "content": m["content"]} for m in messages if m["role"] != "system"]
+-                    data = json.dumps({
+-                        "model": ant_model,
+-                        "max_tokens": 4096,
+-                        "messages": user_msgs,
+-                        "system": sys_prompt
+-                    }).encode('utf-8')
+-                    req_http = urllib.request.Request(url, data=data, headers={
+-                        'Content-Type': 'application/json', 
+-                        'x-api-key': key_or_model,
+-                        'anthropic-version': '2023-06-01'
+-                    })
+-                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+-                    result_text = res_data['content'][0]['text']
+-
+-                elif provider == 'openai':
+-                    oa_model = model or "gpt-4o-mini"
+-                    url = "https://api.openai.com/v1/chat/completions"
+-                    data = json.dumps({"model": oa_model, "messages": messages}).encode('utf-8')
+-                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
+-                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+-                    result_text = res_data['choices'][0]['message']['content']
+-                elif provider == 'anthropic':
+-                    ant_model = model or "claude-3-haiku-20240307"
+-                    url = "https://api.anthropic.com/v1/messages"
+-                    sys_prompt = next((m["content"] for m in messages if m["role"] == "system"), "")
+-                    user_msgs = [{"role": m["role"], "content": m["content"]} for m in messages if m["role"] != "system"]
+-                    data = json.dumps({
+-                        "model": ant_model,
+-                        "max_tokens": 4096,
+-                        "messages": user_msgs,
+-                        "system": sys_prompt
+-                    }).encode('utf-8')
+-                    req_http = urllib.request.Request(url, data=data, headers={
+-                        'Content-Type': 'application/json', 
+-                        'x-api-key': key_or_model,
+-                        'anthropic-version': '2023-06-01'
+-                    })
+-                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+-                    result_text = res_data['content'][0]['text']
+-
+-                elif provider == 'openai':
+-                    oa_model = model or "gpt-4o-mini"
+-                    url = "https://api.openai.com/v1/chat/completions"
+-                    data = json.dumps({"model": oa_model, "messages": messages}).encode('utf-8')
+-                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
+-                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+-                    result_text = res_data['choices'][0]['message']['content']
+-                elif provider == 'anthropic':
+-                    ant_model = model or "claude-3-haiku-20240307"
+-                    url = "https://api.anthropic.com/v1/messages"
+-                    sys_prompt = next((m["content"] for m in messages if m["role"] == "system"), "")
+-                    user_msgs = [{"role": m["role"], "content": m["content"]} for m in messages if m["role"] != "system"]
+-                    data = json.dumps({
+-                        "model": ant_model,
+-                        "max_tokens": 4096,
+-                        "messages": user_msgs,
+-                        "system": sys_prompt
+-                    }).encode('utf-8')
+-                    req_http = urllib.request.Request(url, data=data, headers={
+-                        'Content-Type': 'application/json', 
+-                        'x-api-key': key_or_model,
+-                        'anthropic-version': '2023-06-01'
+-                    })
+-                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+-                    result_text = res_data['content'][0]['text']
+-
+-                    
++                import urllib.request, json
++                data = json.dumps({"model": model_name, "messages": messages, "stream": False}).encode('utf-8')
++                req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
++                res_data = json.loads(urllib.request.urlopen(req_http, timeout=120).read().decode('utf-8'))
++                result_text = res_data['message']['content']
+                 success = True
+-                break
+-            except urllib.error.HTTPError as e:
+-                body = e.read().decode('utf-8')
+-                last_error = f'HTTP {e.code}: {body}'
+-                continue
+             except Exception as e:
+                 last_error = str(e)
+-                continue
++        else:
++            for key_or_model in api_keys:
++                if not key_or_model: continue
++                try:
++                    if provider == 'gemini':
++                        gm = model_name or 'gemini-2.5-flash'
++                        url = f'https://generativelanguage.googleapis.com/v1beta/models/{gm}:generateContent?key={key_or_model}'
++                        data = json.dumps({'contents': [{'parts': [{'text': prompt + '\n\n' + transcript}]}]}).encode('utf-8')
++                        request = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
++                        res = json.loads(urllib.request.urlopen(request, timeout=60).read().decode('utf-8'))
++                        result_text = res['candidates'][0]['content']['parts'][0]['text']
++                    elif provider == 'deepseek':
++                        dm = model_name or 'deepseek-chat'
++                        url = 'https://api.deepseek.com/chat/completions'
++                        data = json.dumps({'model': dm, 'messages': messages}).encode('utf-8')
++                        request = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
++                        res = json.loads(urllib.request.urlopen(request, timeout=60).read().decode('utf-8'))
++                        result_text = res['choices'][0]['message']['content']
++                    elif provider == 'openai':
++                        oa_model = model_name or "gpt-4o-mini"
++                        url = "https://api.openai.com/v1/chat/completions"
++                        data = json.dumps({"model": oa_model, "messages": messages}).encode('utf-8')
++                        req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
++                        res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
++                        result_text = res_data['choices'][0]['message']['content']
++                    elif provider == 'anthropic':
++                        ant_model = model_name or "claude-3-haiku-20240307"
++                        url = "https://api.anthropic.com/v1/messages"
++                        sys_prompt = next((m["content"] for m in messages if m["role"] == "system"), "")
++                        user_msgs = [{"role": m["role"], "content": m["content"]} for m in messages if m["role"] != "system"]
++                        data = json.dumps({
++                            "model": ant_model,
++                            "max_tokens": 4096,
++                            "messages": user_msgs,
++                            "system": sys_prompt
++                        }).encode('utf-8')
++                        req_http = urllib.request.Request(url, data=data, headers={
++                            'Content-Type': 'application/json', 
++                            'x-api-key': key_or_model,
++                            'anthropic-version': '2023-06-01'
++                        })
++                        res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
++                        result_text = res_data['content'][0]['text']
++
++                    success = True
++                    break
++                except urllib.error.HTTPError as e:
++                    body = e.read().decode('utf-8')
++                    last_error = f'HTTP {e.code}: {body}'
++                    continue
++                except Exception as e:
++                    last_error = str(e)
++                    continue
+                 
+         if not success:
+             return {"status": "error", "error": f"LLM Error: {last_error}", "transcript": transcript}
+@@ -1100,6 +1033,51 @@ def api_extract_srt(req: ExtractSrtReq):
+                 pass
+ 
+ 
++class AIModelsReq(BaseModel):
++    provider: str
++    endpoint: str = ""
++
++@app.post("/api/ai/models")
++def api_ai_models(req: AIModelsReq):
++    if req.provider != "ollama":
++        return {"status": "error", "provider": req.provider, "error": f"Provider {req.provider} not supported for model discovery."}
++    
++    import urllib.request, urllib.error, json
++    
++    base = req.endpoint.strip() if req.endpoint else "http://localhost:11434"
++    if base.endswith("/"): base = base[:-1]
++    if base.endswith("/api/tags"): base = base[:-9]
++    elif base.endswith("/api/chat"): base = base[:-9]
++        
++    tags_url = f"{base}/api/tags"
++    chat_url = f"{base}/api/chat"
++    
++    try:
++        req_obj = urllib.request.Request(tags_url, headers={"User-Agent": "Mozilla/5.0"})
++        with urllib.request.urlopen(req_obj, timeout=5) as response:
++            data = json.loads(response.read().decode())
++            
++        models = []
++        for m in data.get("models", []):
++            if "name" in m:
++                models.append(m["name"])
++            elif "model" in m:
++                models.append(m["model"])
++                
++        return {
++            "status": "ok",
++            "provider": "ollama",
++            "models": models,
++            "base_endpoint": base,
++            "chat_endpoint": chat_url
++        }
++    except Exception as e:
++        return {
++            "status": "error",
++            "provider": "ollama",
++            "error": f"Lỗi kết nối Ollama: {str(e)}"
++        }
++
+ class AIRewriteReq(BaseModel):
+     srt_content: str
+     ai_config: dict

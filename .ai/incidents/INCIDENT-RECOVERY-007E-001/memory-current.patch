@@ -1,0 +1,113 @@
+diff --git a/.ai/current_state.md b/.ai/current_state.md
+index 76a1b20..a5f38dd 100644
+--- a/.ai/current_state.md
++++ b/.ai/current_state.md
+@@ -20,14 +20,12 @@ WAITING
+ - RECOVERY-006 project-manager review: PASS.
+ - RECOVERY-006 baseline report:
+   .ai/audits/pipeline1_baseline_runtime.md
+-- Automated verification: NOT RUN — manual runtime baseline.
+-- Owner manual app verification: PASS.
+-- Feature result: FAIL/BLOCKED.
+-- Existing uncommitted source changes remain preserved.
+-- No source files changed by RECOVERY-006.
+-- Pipeline 2 remains OWNER CONFIRMED working.
+-- RECOVERY-007 approved as next task but NOT STARTED.
+-- Merge permission: BLOCKED.
++- RECOVERY-007 implementation: COMPLETED — WAITING_REVIEW
++- Automated verification: PARTIAL — syntax and static integration checks only
++- Code review: WAITING
++- Owner manual app verification: NOT STARTED
++- Merge permission: BLOCKED
+ 
+ ## Current branch
+ rescue/wip-20260803
++
+diff --git a/.ai/handoff.md b/.ai/handoff.md
+index 510e9d1..8bd0587 100644
+--- a/.ai/handoff.md
++++ b/.ai/handoff.md
+@@ -1,44 +1,41 @@
+ # AgentOS Handoff Status
+ 
+ ## Last completed task
+-RECOVERY-006 — Pipeline 1 Baseline Characterization.
++RECOVERY-007 — Dedicated Pipeline 1 Text Extraction Path (ASR-only)
+ 
+ ## Result
+-PASS
++WAITING_REVIEW
+ 
+ ## Baseline report
+ .ai/audits/pipeline1_baseline_runtime.md
+ 
+-## Baseline checkpoint
+-Current HEAD before the RECOVERY-006 documentation checkpoint:
+-5b87037
++## Preflight report
++.ai/audits/recovery007_preflight.md
+ 
+-Resolve the final checkpoint commit from Git history after it is created.
+-
+-## Files intended for the RECOVERY-006 documentation commit
+-- .ai/audits/pipeline1_baseline_runtime.md
+-- .ai/bugs.md
++## Files intended for the RECOVERY-007 commit
++- api/server.py
++- src/renderer/js/api.js
++- src/renderer/js/app.js
++- .ai/audits/recovery007_preflight.md
+ - .ai/current_state.md
+ - .ai/task_current.md
+ - .ai/handoff.md
+ 
+ ## Automated verification
+-NOT RUN — baseline was manually executed.
++PARTIAL — syntax and static integration checks only.
+ 
+ ## Code review
+-NOT APPLICABLE — no source was modified.
++WAITING
+ 
+ ## Owner manual app verification
+-PASS — owner executed the baseline procedure.
++NOT STARTED
+ 
+ ## Feature result
+-FAIL/BLOCKED — the current Pipeline 1 path did not complete.
++WAITING
+ 
+ ## Merge permission
+ BLOCKED
+ 
+-## Next task
+-RECOVERY-007 — Dedicated Pipeline 1 Text Extraction Path.
+-
+ ## Next task status
+-NOT STARTED — RECOVERY-006 documentation checkpoint must be committed first.
++WAITING_REVIEW for RECOVERY-007
++
+diff --git a/.ai/task_current.md b/.ai/task_current.md
+index e04a6f0..bf13f25 100644
+--- a/.ai/task_current.md
++++ b/.ai/task_current.md
+@@ -11,7 +11,7 @@ Make Step 1 extract OCR/ASR text and return SRT to the frontend without
+ executing Pipeline 2 subtitle removal, inpainting or video rendering.
+ 
+ ## Status
+-NOT STARTED — RECOVERY-006 documentation checkpoint must be committed first.
++COMPLETED — WAITING_REVIEW (RECOVERY-007E finished)
+ 
+ ## Single objective
+ 
+@@ -73,7 +73,8 @@ Any additional source file requires project-manager approval before editing.
+ 
+ ## Verification gates
+ 
+-- Automated verification: WAITING.
++- Automated verification: PARTIAL.
+ - Code review: WAITING.
+-- Owner manual app verification: WAITING.
++- Owner manual app verification: NOT STARTED.
+ - Merge permission: BLOCKED.
++

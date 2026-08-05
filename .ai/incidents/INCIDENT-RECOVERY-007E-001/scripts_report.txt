@@ -1,0 +1,29 @@
+
+Script: fix_main3.py
+- Exists in current: True (Hash: D241A8FF633523AD30FD5481D88296586140D236D84C87657821E037BB34B63C)
+- Exists in trusted: True (Hash: D241A8FF633523AD30FD5481D88296586140D236D84C87657821E037BB34B63C)
+
+Script: patch_app.py
+- Exists in current: False (Hash: N/A)
+- Exists in trusted: True (Hash: 3E4B6AE7D2AD2C91F2D0CAE3893377DE73E1F233E5302F295755259B709A5368)
+
+Script: patch_app_ui.py
+- Exists in current: False (Hash: N/A)
+- Exists in trusted: True (Hash: 796D227AB60D4FA0CDCD6F88FCDA2F9A415F4A9D5B62393151BC122DA6C2F524)
+
+Script: patch_index_log.py
+- Exists in current: False (Hash: N/A)
+- Exists in trusted: True (Hash: 31FB503236E1CAB9B14A483413DDA0FE61FA5ADA8BCBCE5EA3E4A43FA051879A)
+
+Script: patch_main.py
+- Exists in current: False (Hash: N/A)
+- Exists in trusted: True (Hash: 10774B163BD7FA55F479E37A360801E81A810551E8F689CB9F61A758368FFFDB)
+
+Script: patch_main_pos.py
+- Exists in current: False (Hash: N/A)
+- Exists in trusted: True (Hash: B197574453A544BA8B23415BBCFF3B462E779421600B48D7301936BB705E1352)
+
+Script: patch_server.py
+- Exists in current: False (Hash: N/A)
+- Exists in trusted: True (Hash: 24846BD602AB0F47BC68CC483C2C4CA1822B9C322CE1FDC6E7CEB8B154DBE01B)
+

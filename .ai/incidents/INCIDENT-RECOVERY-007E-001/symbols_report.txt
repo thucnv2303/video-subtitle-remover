@@ -1,0 +1,981 @@
+=== SERVER ===
+count of class AIModelsReq: 1
+count of POST /api/ai/models: 1
+full api_ai_models function:
+@app.post("/api/ai/models")
+def api_ai_models(req: AIModelsReq):
+    if req.provider != "ollama":
+        return {"status": "error", "provider": req.provider, "error": f"Provider {req.provider} not supported for model discovery."}
+    
+    import urllib.request, urllib.error, json
+    
+    base = req.endpoint.strip() if req.endpoint else "http://localhost:11434"
+    if base.endswith("/"): base = base[:-1]
+    if base.endswith("/api/tags"): base = base[:-9]
+    elif base.endswith("/api/chat"): base = base[:-9]
+        
+    tags_url = f"{base}/api/tags"
+    chat_url = f"{base}/api/chat"
+    
+    try:
+        req_obj = urllib.request.Request(tags_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req_obj, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            
+        models = []
+        for m in data.get("models", []):
+            if "name" in m:
+                models.append(m["name"])
+            elif "model" in m:
+                models.append(m["model"])
+                
+        return {
+            "status": "ok",
+            "provider": "ollama",
+            "models": models,
+            "base_endpoint": base,
+            "chat_endpoint": chat_url
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "provider": "ollama",
+            "error": f"Lỗi kết nối Ollama: {str(e)}"
+        }
+
+
+Ollama branch inside api_ai_rewrite:
+if provider == 'ollama':
+                    url = endpoint or "http://localhost:11434/api/chat"
+                    data = json.dumps({"model": key_or_model, "messages": messages, "stream": False}).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=120).read().decode('utf-8'))
+                    result_text = res_data['message']['content']
+                elif provider == 'openai':
+                    oa_model = model or "gpt-4o-mini"
+                    url = "https://api.openai.com/v1/chat/completions"
+                    data = json.dumps({"model": oa_model, "messages": messages}).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+                    result_text = res_data['choices'][0]['message']['content']
+                elif provider == 'anthropic':
+                    ant_model = model or "claude-3-haiku-20240307"
+                    url = "https://api.anthropic.com/v1/messages"
+                    sys_prompt = next((m["content"] for m in messages if m["role"] == "system"), "")
+                    user_msgs = [{"role": m["role"], "content": m["content"]} for m in messages if m["role"] != "system"]
+                    data = json.dumps({
+                        "model": ant_model,
+                        "max_tokens": 4096,
+                        "messages": user_msgs,
+                        "system": sys_prompt
+                    }).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={
+                        'Content-Type': 'application/json', 
+                        'x-api-key': key_or_model,
+                        'anthropic-version': '2023-06-01'
+                    })
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+                    result_text = res_data['content'][0]['text']
+
+                elif provider == 'openai':
+                    oa_model = model or "gpt-4o-mini"
+                    url = "https://api.openai.com/v1/chat/completions"
+                    data = json.dumps({"model": oa_model, "messages": messages}).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+                    result_text = res_data['choices'][0]['message']['content']
+                elif provider == 'anthropic':
+                    ant_model = model or "claude-3-haiku-20240307"
+                    url = "https://api.anthropic.com/v1/messages"
+                    sys_prompt = next((m["content"] for m in messages if m["role"] == "system"), "")
+                    user_msgs = [{"role": m["role"], "content": m["content"]} for m in messages if m["role"] != "system"]
+                    data = json.dumps({
+                        "model": ant_model,
+                        "max_tokens": 4096,
+                        "messages": user_msgs,
+                        "system": sys_prompt
+                    }).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={
+                        'Content-Type': 'application/json', 
+                        'x-api-key': key_or_model,
+                        'anthropic-version': '2023-06-01'
+                    })
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+                    result_text = res_data['content'][0]['text']
+
+                elif provider == 'openai':
+                    oa_model = model or "gpt-4o-mini"
+                    url = "https://api.openai.com/v1/chat/completions"
+                    data = json.dumps({"model": oa_model, "messages": messages}).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+                    result_text = res_data['choices'][0]['message']['content']
+                elif provider == 'anthropic':
+                    ant_model = model or "claude-3-haiku-20240307"
+                    url = "https://api.anthropic.com/v1/messages"
+                    sys_prompt = next((m["content"] for m in messages if m["role"] == "system"), "")
+                    user_msgs = [{"role": m["role"], "content": m["content"]} for m in messages if m["role"] != "system"]
+                    data = json.dumps({
+                        "model": ant_model,
+                        "max_tokens": 4096,
+                        "messages": user_msgs,
+                        "system": sys_prompt
+                    }).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={
+                        'Content-Type': 'application/json', 
+                        'x-api-key': key_or_model,
+                        'anthropic-version': '2023-06-01'
+                    })
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+                    result_text = res_data['content'][0]['text']
+
+                elif provider == 'openai':
+                    oa_model = model or "gpt-4o-mini"
+                    url = "https://api.openai.com/v1/chat/completions"
+                    data = json.dumps({"model": oa_model, "messages": messages}).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+                    result_text = res_data['choices'][0]['message']['content']
+                elif provider == 'anthropic':
+                    ant_model = model or "claude-3-haiku-20240307"
+                    url = "https://api.anthropic.com/v1/messages"
+                    sys_prompt = next((m["content"] for m in messages if m["role"] == "system"), "")
+                    user_msgs = [{"role": m["role"], "content": m["content"]} for m in messages if m["role"] != "system"]
+                    data = json.dumps({
+                        "model": ant_model,
+                        "max_tokens": 4096,
+                        "messages": user_msgs,
+                        "system": sys_prompt
+                    }).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={
+                        'Content-Type': 'application/json', 
+                        'x-api-key': key_or_model,
+                        'anthropic-version': '2023-06-01'
+                    })
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+                    result_text = res_data['content'][0]['text']
+
+
+                # Strip markdown code fences if AI wrapped the output
+                if result_text.strip().startswith('```'):
+                    lines = result_text.strip().split('\n')
+                    if lines[0].startswith('```'):
+                        lines = lines[1:]
+                    if lines and lines[-1].startswith('```'):
+                        lines = lines[:-1]
+                    result_text = '\n'.join(lines)
+
+                success = True
+                break
+            except urllib.error.HTTPError as e:
+                last_error = f"HTTP {e.code}: {e.read().decode('utf-8', errors='replace')}"
+                continue
+            except Exception as exc:
+                last_error = str(exc)
+                continue
+
+        os.remove(temp_srt)
+
+        if success:
+            return {"status": "ok", "result": result_text}
+        
+Ollama branch inside api_analyze_video:
+if provider == 'ollama':
+            if not model_name:
+                return {"status": "error", "error": "Chưa chọn model Ollama."}
+            base = endpoint.strip() if endpoint else "http://localhost:11434"
+            if base.endswith("/"): base = base[:-1]
+            if base.endswith("/api/tags"): base = base[:-9]
+            elif base.endswith("/api/chat"): base = base[:-9]
+            url = f"{base}/api/chat"
+            try:
+                import urllib.request, json
+                data = json.dumps({"model": model_name, "messages": messages, "stream": False}).encode('utf-8')
+                req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+                res_data = json.loads(urllib.request.urlopen(req_http, timeout=120).read().decode('utf-8'))
+                result_text = res_data['message']['content']
+                success = True
+            except Exception as e:
+                last_error = str(e)
+        
+whether api_ai_rewrite uses ai_config['model']: False
+whether api_ai_rewrite requires an API key for Ollama: False
+
+=== FRONTEND ===
+all IDs in the AI settings HTML block:
+ - ai-provider
+ - cloud-ai-panel
+ - ai-api-key
+ - ai-cloud-model
+ - local-ai-panel
+ - ai-endpoint
+ - ai-ollama-model
+ - btn-scan-models
+all event listeners for the scan button:
+     const btn = document.getElementById('btn-scan-models');
+                 addLog(`Quét model thất bại: ${data.error}`, 'error');
+             btn.textContent = 'Quét';
+whether renderer calls APIClient or direct fetch:
+fetch() found: True
+every localStorage key beginning with ai_:
+ - ai_api_key
+ - ai_endpoint
+ - ai_model
+ - ai_prompt
+ - ai_provider
+every active aiConfig construction:
+const aiConfig = {
+      provider:  localStorage.getItem('ai_provider')  || 'gemini',
+      api_key:   localStorage.getItem('ai_api_key')   || '',
+      endpoint:  localStorage.getItem('ai_endpoint')  || '',
+      prompt:    localStorage.getItem('ai_prompt')    || '',
+      model:     localStorage.getItem('ai_model')     || '',
+    };
+
+const aiConfig = {
+      provider: localStorage.getItem('ai_provider') || 'gemini',
+      api_key: localStorage.getItem('ai_api_key') || '',
+      endpoint: localStorage.getItem('ai_endpoint') || '',
+      prompt: localStorage.getItem('ai_prompt') || '',
+      model: localStorage.getItem('ai_model') || ''
+    };
+
+every modified symbol in pipeline2-remove.js:
+(See git diff patches for exact differences, but aiConfig is built here)
+
+=== RECOVERY-007 ===
+processPipeline1Queue ASR block:
+async function processPipeline1Queue() {
+    if (state.pipeline1JobId) return; // đang có job chạy
+    const nextJob = state.jobs.find(j => j.status === 'queued' && j.pipeline === 1);
+    if (!nextJob) return;
+
+    state.pipeline1JobId = nextJob.id;
+    nextJob.status   = 'processing';
+    nextJob.progress = 0;
+    nextJob._p1Cancelled = false;
+    renderJobList();
+    addLog(`[AI] 🚀 Bắt đầu Pipeline 1: ${nextJob.fileName}`, 'success');
+
+    try {
+      // Bước 1: Trích xuất văn bản từ âm thanh (ASR)
+      addLog('[AI] 🎤 Bước 1/3 — Đang trích xuất văn bản từ âm thanh (ASR)...', 'info');
+
+      const asrRes = await api.extractTextP1(
+        nextJob.id,
+        nextJob.filePath,
+        nextJob.asrLanguage || 'zh'
+      );
+
+      if (nextJob._p1Cancelled) {
+        _finishP1Job(nextJob, 'idle');
+        return;
+      }
+
+      if (asrRes.status !== 'ok' || asrRes.job_id !== nextJob.id) {
+        throw new Error('Job ID mismatch or response parsing failed.');
+      }
+
+      if (!asrRes.srt_content || asrRes.srt_content.trim() === '') {
+        throw new Error('Không phát hiện được văn bản trong video.');
+      }
+
+      nextJob.srtContent = asrRes.srt_content;
+      if (!nextJob.aiContent) {
+        nextJob.aiContent = _srtToDisplayText(asrRes.srt_content);
+      }
+
+      const srtEl = document.getElementById('srt-content');
+      if (srtEl && state.activeJobId === nextJob.id) {
+        srtEl.value = asrRes.srt_content;
+      }
+
+      const srtEl2 = document.getElementById('step1-detail-text');
+      if (srtEl2 && state.activeJobId === nextJob.id) {
+        srtEl2.value = asrRes.srt_content;
+      }
+
+      const lineCount = (asrRes.srt_content.match(/-->/g) || []).length;
+      addLog(`[AI] ✅ ASR hoàn tất — ${lineCount} dòng phụ đề.`, 'success');
+
+      nextJob.progress = 33;
+      renderJobList(); // cập nhật card với srtContent mới
+
+      // Bước 2: AI Rewrite (nếu bật và có SRT)
+      if (nextJob.aiRewrite && nextJob.srtContent) {
+        addLog('[AI] 🤖 Bước 2/3 — AI đang viết lại phụ đề...', 'info');
+        if (typeof window.triggerAutoAiRewrite === 'function') {
+          await window.triggerAutoAiRewrite(nextJob, nextJob.srtContent);
+          // Sau khi AI xong, đảm bảo aiContent hiển thị text sạch trong card
+          if (nextJob.aiContent && nextJob.aiContent.includes('-->')) {
+            nextJob.aiContent = _srtToDisplayText(nextJob.aiContent);
+          }
+        } else {
+          addLog('[AI] ⚠️ Module pipeline1-ai chưa load.', 'warning');
+        }
+        if (nextJob._p1Cancelled) { _finishP1Job(nextJob, 'idle'); return; }
+      } else if (!nextJob.aiRewrite) {
+        addLog('[AI] ℹ️ Bước 2/3 — Bỏ qua AI rewrite (chưa bật).', 'info');
+      }
+
+      nextJob.progress = 66;
+      renderJobList();
+
+      // Bước 3: TTS (nếu bật và chưa được chain từ AI rewrite)
+      // triggerAutoAiRewrite đã chain TTS rồi nếu aiRewrite=true
+      // Nên chỉ gọi TTS riêng khi aiRewrite=false
+      if (nextJob.ttsGenerate && !nextJob.aiRewrite) {
+        addLog('[TTS] 🎤 Bước 3/3 — Tạo âm thanh lồng tiếng...', 'info');
+        const srtForTts = nextJob.srtContent || '';
+        if (srtForTts && typeof window.triggerAutoTts === 'function') {
+          await window.triggerAutoTts(nextJob, srtForTts);
+        } else if (!srtForTts) {
+          addLog('[TTS] ⚠️ Không có SRT để tạo TTS.', 'warning');
+        }
+        if (nextJob._p1Cancelled) { _finishP1Job(nextJob, 'idle'); return; }
+      } else if (nextJob.ttsGenerate && nextJob.aiRewrite) {
+        addLog('[TTS] ℹ️ Bước 3/3 — TTS đã được chain từ AI rewrite.', 'info');
+      } else {
+        addLog('[TTS] ℹ️ Bước 3/3 — Bỏ qua TTS (chưa bật).', 'info');
+      }
+
+      nextJob.progress = 100;
+      _finishP1Job(nextJob, 'finished');
+      addLog(`[AI] 🎉 Pipeline 1 hoàn tất: ${nextJob.fileName}`, 'success');
+      showToast(`"${nextJob.fileName}" — AI & TTS hoàn tất!`, 'success', 5000);
+
+    } catch (e) {
+      addLog('[AI] ❌ Lỗi Pipeline 1: ' + e.message, 'error');
+      _finishP1Job(nextJob, 'error');
+    }
+  }
+
+  function _finishP1Job(job, status) {
+    job.status = status;
+    state.pipeline1JobId = null;
+    // Dọn dẹp processingJobId nếu OCR job vừa kết thúc
+    if (state.processingJobId === job.id) state.processingJobId = null;
+    if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
+    renderJobList();
+    // Tiếp tục job pipeline 1 tiếp theo nếu có
+    if (status === 'finished') processPipeline1Queue();
+  }
+
+  /**
+   * Chờ backend hoàn thành OCR job (skip_inpaint=true) và lấy SRT.
+   * Backend gửi srt_content qua WebSocket (handleWSMessage sẽ set job.srtContent).
+   * @returns {Promise<string|null>} SRT content hoặc null nếu timeout/lỗi
+   */
+  async function _waitForOcrSrt(job, timeoutSecs = 120) {
+    // Đăng ký polling
+    state.processingJobId = job.id; // để handleWSMessage nhận đúng job
+    state.pollTimer = setInterval(async () => { /* handled below */ }, 99999);
+
+    return new Promise((resolve) => {
+      let elapsed = 0;
+      const interval = setInterval(async () => {
+        elapsed += 2;
+
+        // WS đã set srtContent (qua handleWSMessage → d.srt_content)
+        if (job.srtContent) {
+          clearInterval(interval);
+          resolve(job.srtContent);
+          return;
+        }
+
+        // Poll /api/status để cập nhật progress và detect finish
+        try {
+          const st = await api.getStatus();
+          const backendJob = st.current_job_id && st.jobs ? st.jobs[st.current_job_id] : null;
+          if (backendJob) {
+            const pct = backendJob.progress || 0;
+            job.progress = Math.min(Math.round(pct * 0.33), 33);
+            renderJobList();
+            if (backendJob.status === 'finished' || pct >= 100) {
+              clearInterval(interval);
+              resolve(job.srtContent || null);
+              return;
+            }
+          }
+        } catch (e) { /* ignore */ }
+
+        if (job._p1Cancelled) { clearInterval(interval); resolve(null); return; }
+        if (elapsed >= timeoutSecs) {
+          clearInterval(interval);
+          addLog('[AI] ⏱ Timeout chờ OCR.', 'warning');
+          resolve(job.srtContent || null);
+        }
+      }, 2000);
+    });
+  }
+
+  // Fallback _buildTimedSrt (dùng khi pipeline1-ai.js chưa load)
+  function _buildTimedSrt(newText, originalSrt) {
+    if (newText && newText.includes('-->')) return newText;
+    if (!originalSrt || !originalSrt.includes('-->')) return newText || '';
+    const slots = [];
+    for (const block of originalSrt.trim().split(/\n\n+/)) {
+      const m = block.match(/(\d{2}:\d{2}:\d{2}[,\.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,\.]\d{3})/);
+      if (m) slots.push({ start: m[1].replace('.', ','), end: m[2].replace('.', ',') });
+    }
+    const lines = (newText || '').split('\n').map(l => l.trim()).filter(l => l && !/^\d+$/.test(l) && !l.includes('-->'));
+    if (!slots.length || !lines.length) return newText || '';
+    let result = '';
+    slots.forEach((s, i) => {
+      const idx = Math.min(Math.floor(i * lines.length / slots.length), lines.length - 1);
+      result += `${i+1}\n${s.start} --> ${s.end}\n${lines[idx]}\n\n`;
+    });
+    return result;
+  }
+
+  // ─── Video Preview ────────────────────────────────────────────────────────
+  async function loadOrigFrame(frameNum, videoPath) {
+    try {
+      const blob = await api.getFrame(frameNum, videoPath);
+      const url  = URL.createObjectURL(blob);
+      const img  = new Image();
+      img.onload = () => {
+        if (!el.canvasOrig) return;
+        el.canvasOrig.width = img.width; el.canvasOrig.height = img.height;
+        ctxOrig.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        state.currentFrameOrig = frameNum;
+        if (el.frameInfoOrig && state.videoInfo) el.frameInfoOrig.textContent = `${frameNum}/${state.videoInfo.total_frames-1}`;
+        if (el.timelineOrig) el.timelineOrig.value = frameNum;
+        renderRegionOverlays();
+      };
+      img.src = url;
+    } catch (e) { /* ignore frame load errors during seek */ }
+  }
+
+  async function loadResultFrame(frameNum, outputPath) {
+    try {
+      const blob = await api.getOutputFrame(frameNum, outputPath);
+      const url  = URL.createObjectURL(blob);
+      const img  = new Image();
+      img.onload = () => {
+        if (!el.canvasResult) return;
+        el.canvasResult.width = img.width; el.canvasResult.height = img.height;
+        ctxResult.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        el.resultPlaceholder?.classList.add('hidden');
+        state.currentFrameResult = frameNum;
+        if (el.frameInfoResult && state.videoInfo) el.frameInfoResult.textContent = `${frameNum}/${state.videoInfo.total_frames-1}`;
+        if (el.timelineResult) el.timelineResult.value = frameNum;
+      };
+      img.src = url;
+    } catch (e) { /* ignore */ }
+  }
+
+  function loadSyncedFrame(frameNum) {
+    const job = getActiveJob();
+    loadOrigFrame(frameNum, job?.filePath);
+    if (job?.status === 'finished' && job.outputPath) loadResultFrame(frameNum, job.outputPath);
+  }
+
+  async function loadVideo(job) {
+    try {
+      if (!state.isBackendReady) { setTimeout(() => loadVideo(job), 2000); return; }
+      addLog(`Đang tải preview: ${job.fileName}...`, 'info');
+      const info = await api.videoInfo(job.filePath);
+      if (!info?.width) { addLog('Lỗi: Dữ liệu video không hợp lệ', 'error'); return; }
+      state.videoInfo = info;
+      if (el.metaName) el.metaName.textContent = job.fileName;
+      if (el.metaRes)  el.metaRes.textContent  = `${info.width}×${info.height}`;
+      if (el.metaFps)  el.metaFps.textContent  = `${info.fps.toFixed(1)} fps`;
+      if (el.metaDur)  el.metaDur.textContent  = fmtTime(info.duration);
+      if (el.timelineOrig) { el.timelineOrig.max = info.total_frames - 1; el.timelineOrig.disabled = false; }
+      el.btnPlayOrig?.removeAttribute('disabled'); el.btnPrevOrig?.removeAttribute('disabled'); el.btnNextOrig?.removeAttribute('disabled');
+      el.dropZone?.classList.add('hidden');
+      el.timelineResult.max = info.total_frames - 1; el.timelineResult.value = 0;
+      if (el.frameInfoResult) el.frameInfoResult.textContent = `0/${info.total_frames-1}`;
+      el.resultPlaceholder?.classList.remove('hidden');
+      ctxResult?.clearRect(0, 0, el.canvasResult.width, el.canvasResult.height);
+      await loadOrigFrame(0, job.filePath);
+      const hasResult = job.status === 'finished' && job.outputPath;
+      el.timelineResult.disabled   = !hasResult; el.btnPlayResult.disabled   = !hasResult;
+      el.btnPrevResult.disabled    = !hasResult; el.btnNextResult.disabled    = !hasResult;
+      if (hasResult) loadResultFrame(0, job.outputPath);
+    } catch (e) { addLog('Lỗi tải video: ' + e.message, 'error'); }
+  }
+
+  function fmtTime(s) {
+    if (!s || isNaN(s)) return '00:00';
+    const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+    return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  }
+
+  // Timeline controls
+  el.timelineOrig?.addEventListener('input', () => {
+    const job = getActiveJob(); if (!job) return;
+    loadOrigFrame(parseInt(el.timelineOrig.value), job.filePath);
+  });
+  el.timelineResult?.addEventListener('input', () => {
+    const job = getActiveJob(); if (!job || !job.outputPath) return;
+    loadResultFrame(parseInt(el.timelineResult.value), job.outputPath);
+  });
+  el.btnPrevOrig?.addEventListener('click',  () => { const f = Math.max(0, state.currentFrameOrig-1); const j=getActiveJob(); if(j) loadOrigFrame(f, j.filePath); });
+  el.btnNextOrig?.addEventListener('click',  () => { const j=getActiveJob(); if(j&&state.videoInfo) loadOrigFrame(Math.min(state.currentFrameOrig+1, state.videoInfo.total_frames-1), j.filePath); });
+  el.btnPrevResult?.addEventListener('click',() => { const j=getActiveJob(); if(j?.outputPath) loadResultFrame(Math.max(0, state.currentFrameResult-1), j.outputPath); });
+  el.btnNextResult?.addEventListener('click',() => { const j=getActiveJob(); if(j?.outputPath&&state.videoInfo) loadResultFrame(Math.min(state.currentFrameResult+1, state.videoInfo.total_frames-1), j.outputPath); });
+
+  el.btnPlayOrig?.addEventListener('click', () => {
+    if (state.playIntervalOrig) { clearInterval(state.playIntervalOrig); state.playIntervalOrig = null; el.btnPlayOrig.textContent = '▶'; return; }
+    el.btnPlayOrig.textContent = '⏸';
+    state.playIntervalOrig = setInterval(() => {
+      const j = getActiveJob(); if (!j || !state.videoInfo) return;
+      const next = (state.currentFrameOrig + 1) % state.videoInfo.total_frames;
+      loadOrigFrame(next, j.filePath);
+    }, 100);
+  });
+  el.btnPlayResult?.addEventListener('click', () => {
+    if (state.playIntervalResult) { clearInterval(state.playIntervalResult); state.playIntervalResult = null; el.btnPlayResult.textContent = '▶'; return; }
+    el.btnPlayResult.textContent = '⏸';
+    state.playIntervalResult = setInterval(() => {
+      const j = getActiveJob(); if (!j?.outputPath || !state.videoInfo) return;
+      const next = (state.currentFrameResult + 1) % state.videoInfo.total_frames;
+      loadResultFrame(next, j.outputPath);
+    }, 100);
+  });
+
+  // ─── Region Drawing ───────────────────────────────────────────────────────
+  function renderRegionsList() {
+    const job = getActiveJob();
+    if (!el.regionsList) return;
+    if (!job || !job.regions.length) {
+      el.regionsList.innerHTML = '<div class="region-empty">Bấm "+ Vẽ vùng" rồi kéo chuột trên video</div>';
+      return;
+    }
+    el.regionsList.innerHTML = '';
+    job.regions.forEach((r, i) => {
+      const item = document.createElement('div');
+      item.className = 'region-item';
+      item.innerHTML = `<span class="region-dot" style="background:${REGION_COLORS[i%REGION_COLORS.length]}"></span>
+        <span class="region-label">Vùng #${r.label} (${r.startFrame}-${r.endFrame})</span>
+        <button class="btn-region-del" data-idx="${i}">✕</button>`;
+      item.querySelector('.btn-region-del').addEventListener('click', () => {
+        job.regions.splice(i, 1);
+        renderRegionsList(); renderRegionOverlays();
+      });
+      el.regionsList.appendChild(item);
+    });
+  }
+
+  function renderRegionOverlays() {
+    if (!el.subtitleOverlay) return;
+    el.subtitleOverlay.innerHTML = '';
+    const job = getActiveJob();
+    if (!job || !state.videoInfo || !el.canvasOrig) return;
+    const cw = el.canvasOrig.clientWidth || el.canvasOrig.width;
+    const ch = el.canvasOrig.clientHeight || el.canvasOrig.height;
+    const scaleX = cw / (state.videoInfo.width || 1);
+    const scaleY = ch / (state.videoInfo.height || 1);
+    job.regions.forEach((r, i) => {
+      const div = document.createElement('div');
+      div.className = 'region-overlay';
+      div.style.cssText = `position:absolute;border:2px solid ${REGION_COLORS[i%REGION_COLORS.length]};pointer-events:none;
+        left:${r.xmin*scaleX}px;top:${r.ymin*scaleY}px;
+        width:${(r.xmax-r.xmin)*scaleX}px;height:${(r.ymax-r.ymin)*scaleY}px;`;
+      el.subtitleOverlay.appendChild(div);
+    });
+  }
+
+  el.btnDrawRegion?.addEventListener('click', () => {
+    state.isDrawing = !state.isDrawing;
+    el.btnDrawRegion.classList.toggle('active', state.isDrawing);
+    if (el.canvasOrig) el.canvasOrig.style.cursor = state.isDrawing ? 'crosshair' : 'default';
+  });
+
+  el.modeAuto?.addEventListener('click',   () => { const j=getActiveJob(); if(j){ j.subtitleMode='auto';   loadControlsFromJob(j); } });
+  el.modeManual?.addEventListener('click', () => { const j=getActiveJob(); if(j){ j.subtitleMode='manual'; loadControlsFromJob(j); } });
+
+  const canvasInner = document.getElementById('canvas-inner-orig');
+  if (canvasInner) {
+    canvasInner.addEventListener('mousedown', (e) => {
+      if (!state.isDrawing) return;
+      const rect = canvasInner.getBoundingClientRect();
+      state.isSelecting    = true;
+      state.selectionStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    });
+    canvasInner.addEventListener('mousemove', (e) => {
+      if (!state.isSelecting || !state.selectionStart) return;
+      const rect   = canvasInner.getBoundingClientRect();
+      const x2     = e.clientX - rect.left, y2 = e.clientY - rect.top;
+      let preview  = document.getElementById('region-preview');
+      if (!preview) { preview = document.createElement('div'); preview.id = 'region-preview'; preview.style.cssText = 'position:absolute;border:2px dashed #7c3aed;pointer-events:none;z-index:10'; canvasInner.appendChild(preview); }
+      const x = Math.min(state.selectionStart.x, x2), y = Math.min(state.selectionStart.y, y2);
+      preview.style.cssText += `;left:${x}px;top:${y}px;width:${Math.abs(x2-state.selectionStart.x)}px;height:${Math.abs(y2-state.selectionStart.y)}px`;
+    });
+    canvasInner.addEventListener('mouseup', (e) => {
+      if (!state.isSelecting || !state.selectionStart || !state.videoInfo) return;
+      document.getElementById('region-preview')?.remove();
+      state.isSelecting = false;
+      const rect   = canvasInner.getBoundingClientRect();
+      const x2     = e.clientX - rect.left, y2 = e.clientY - rect.top;
+      const scaleX = state.videoInfo.width  / canvasInner.clientWidth;
+      const scaleY = state.videoInfo.height / canvasInner.clientHeight;
+      const xmin   = Math.round(Math.min(state.selectionStart.x, x2) * scaleX);
+      const xmax   = Math.round(Math.max(state.selectionStart.x, x2) * scaleX);
+      const ymin   = Math.round(Math.min(state.selectionStart.y, y2) * scaleY);
+      const ymax   = Math.round(Math.max(state.selectionStart.y, y2) * scaleY);
+      if (xmax - xmin < 10 || ymax - ymin < 5) return; // too small
+      const job = getActiveJob();
+      if (!job) return;
+      job.regions.push({ xmin, xmax, ymin, ymax, startFrame: 0, endFrame: state.videoInfo.total_frames-1, label: job.regions.length+1 });
+      state.isDrawing = false;
+      el.btnDrawRegion?.classList.remove('active');
+      if (el.canvasOrig) el.canvasOrig.style.cursor = 'default';
+      renderRegionsList(); renderRegionOverlays();
+    });
+  }
+
+  // ─── Voice Segments render ────────────────────────────────────────────────
+  function renderVoiceSegments(segments) {
+    const container = document.getElementById('voice-segments');
+    if (!container) return;
+    if (!segments || segments.length === 0) { container.innerHTML = ''; return; }
+    container.innerHTML = segments.map((s, i) => `
+      <div class="voice-seg" style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="font-size:11px;color:var(--text-muted)">Seg ${i+1}</span>
+        ${s.audio_path ? `<audio controls style="flex:1;height:24px" src="file://${s.audio_path.replace(/\\/g,'/')}"></audio>` : `<span style="font-size:11px">${s.text||''}</span>`}
+      </div>`).join('');
+  }
+  window.renderVoiceSegments = renderVoiceSegments;
+
+  // ─── Output Dir Button ────────────────────────────────────────────────────
+  el.btnOutputDir?.addEventListener('click', async () => {
+    if (!window.electronAPI?.openDirectory) return;
+    const result = await window.electronAPI.openDirectory();
+    if (!result?.canceled && result?.filePaths?.[0]) {
+      state.outputDir = result.filePaths[0];
+      localStorage.setItem('output_dir', state.outputDir);
+      const display = document.getElementById('output-dir-text');
+      if (display) display.textContent = state.outputDir;
+      addLog(`Thư mục đầu ra: ${state.outputDir}`, 'info');
+    }
+  });
+
+  // ─── Column Resize ────────────────────────────────────────────────────────
+  function initResize(handle, leftSel, rightSel) {
+    if (!handle) return;
+    let dragging = false, startX, startLeft, startRight;
+    handle.addEventListener('mousedown', (e) => {
+      dragging = true; startX = e.clientX;
+      const lEl = document.querySelector(leftSel), rEl = document.querySelector(rightSel);
+      startLeft = lEl?.offsetWidth || 0; startRight = rEl?.offsetWidth || 0;
+      document.body.style.cursor = 'col-resize';
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const lEl = document.querySelector(leftSel), rEl = document.querySelector(rightSel);
+      if (lEl) lEl.style.width = Math.max(160, startLeft + dx) + 'px';
+      if (rEl) rEl.style.flex  = 'none', rEl.style.width = Math.max(160, startRight - dx) + 'px';
+    });
+    document.addEventListener('mouseup', () => { dragging = false; document.body.style.cursor = ''; });
+  }
+  initResize(el.resizeHandle1, '.col-controls', '.col-preview');
+  initResize(el.resizeHandle2, '.col-preview',  '.col-jobs');
+
+  // ─── CheckBox expand/collapse for job cards ───────────────────────────────
+  ['chk-extract-srt','chk-ai-rewrite','chk-tts-generate','chk-voice-sub'].forEach(id => {
+    const chk = document.getElementById(id);
+    if (!chk) return;
+    chk.addEventListener('change', () => {
+      saveControlsToJob();
+      const job = getActiveJob();
+      if (!job) return;
+      $('#card-srt')?.classList.toggle('active',      job.extractSrt);
+      $('#card-ai')?.classList.toggle('active',       job.aiRewrite);
+      $('#card-voice')?.classList.toggle('active',    job.ttsGenerate);
+      $('#card-voicesub')?.classList.toggle('active', job.voiceSub);
+    });
+  });
+
+  // ASR fallback toggle
+  document.getElementById('chk-asr-fallback')?.addEventListener('change', (e) => {
+    const asrOpts = document.getElementById('asr-options');
+    if (asrOpts) asrOpts.style.display = e.target.checked ? '' : 'none';
+    saveControlsToJob();
+  });
+
+  // ─── Settings (delegated to settings module via window.*) ────────────────
+  function loadSettingsValues() {
+    if (typeof window.loadSettingsValues === 'function') window.loadSettingsValues();
+  }
+
+  // ─── Python backend log forwarding ───────────────────────────────────────
+  if (window.electronAPI?.onPythonLog) {
+    window.electronAPI.onPythonLog((msg) => {
+      msg.split('\n').filter(l => l.trim()).forEach(line => addLog('[Py] ' + line, 'info'));
+    });
+  }
+  if (window.electronAPI?.onPythonError) {
+    window.electronAPI.onPythonError((msg) => {
+      msg.split('\n').filter(l => l.trim()).forEach(line => addLog('[Err] ' + line, 'error'));
+    });
+  }
+
+  // ─── Init ─────────────────────────────────────────────────────────────────
+  connectToBackend();
+
+  // Khởi tạo các module ES6 sau khi DOM sẵn sàng
+  // (các module được load qua <script type="module"> trong index.html
+  //  và tự gọi window.initXxx = ... rồi app.js gọi lại đây)
+  setTimeout(() => {
+    if (typeof window.initPromptManager === 'function') window.initPromptManager();
+    else console.warn('[App] initPromptManager chưa được load — kiểm tra script tag trong index.html');
+
+    if (typeof window.initSettings === 'function') window.initSettings();
+    else console.warn('[App] initSettings chưa được load');
+
+    if (typeof window.renderSavedVoices === 'function') window.renderSavedVoices();
+
+    // Sync voice dropdown với voices đã lưu (nếu settings module chưa ready)
+    const voices = (() => { try { return JSON.parse(localStorage.getItem('tts_voices') || '[]'); } catch { return []; } })();
+    const ttsVoiceSel = document.getElementById('tts-voice');
+    if (ttsVoiceSel && voices.length > 0) {
+      voices.forEach((v, i) => {
+        if (![...ttsVoiceSel.options].some(o => o.value === `clone:${i}`)) {
+          const opt = document.createElement('option');
+          opt.value = `clone:${i}`; opt.textContent = `🎤 ${v.name}`;
+          ttsVoiceSel.appendChild(opt);
+        }
+      });
+      const saved = localStorage.getItem('tts_voice') || 'none';
+      if ([...ttsVoiceSel.options].some(o => o.value === saved)) ttsVoiceSel.value = saved;
+    }
+
+    setTimeout(() => {
+      if (typeof window.checkTTSStatus === 'function') window.checkTTSStatus();
+    }, 3000);
+
+    updateStartButton();
+    addLog('App khởi động thành công.', 'info');
+  }, 100);
+
+})(); // end IIFE
+
+  window.renderJobDetail1 = function() {
+    const titleEl = document.getElementById('step1-detail-title');
+    const statusEl = document.getElementById('step1-detail-status');
+    const textEl = document.getElementById('step1-detail-text');
+    const audioEl = document.getElementById('step1-detail-audio');
+    const audioEmptyEl = document.getElementById('step1-audio-empty');
+    
+    if (!state.pipeline1SelectedJobId) {
+      if (titleEl) titleEl.textContent = 'Vui lòng chọn 1 Job';
+      if (statusEl) statusEl.textContent = 'Trống';
+      if (textEl) textEl.value = '';
+      if (audioEl) { audioEl.style.display = 'none'; audioEl.src = ''; }
+      if (audioEmptyEl) audioEmptyEl.style.display = 'block';
+      return;
+    }
+    
+    const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+    if (!job) return;
+    
+    if (titleEl) titleEl.textContent = job.fileName;
+    if (statusEl) statusEl.textContent = job.status.toUpperCase();
+    
+    if (textEl) textEl.value = job.aiContent || job.srtContent || '';
+    
+    if (job.ttsAudioPath) {
+      if (audioEl) {
+        audioEl.style.display = 'block';
+        audioEl.src = 'file://' + job.ttsAudioPath.replace(/\\/g, '/');
+      }
+      if (audioEmptyEl) audioEmptyEl.style.display = 'none';
+    } else {
+      if (audioEl) { audioEl.style.display = 'none'; audioEl.src = ''; }
+      if (audioEmptyEl) audioEmptyEl.style.display = 'block';
+    }
+  }
+
+  document.getElementById('step1-btn-save-text')?.addEventListener('click', () => {
+    if (!state.pipeline1SelectedJobId) return;
+    const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+    if (!job) return;
+    const textEl = document.getElementById('step1-detail-text');
+    if (textEl) {
+      if (job.aiContent !== undefined) {
+        job.aiContent = textEl.value;
+      } else {
+        job.srtContent = textEl.value;
+      }
+      addLog('Đã lưu nội dung cập nhật cho ' + job.fileName, 'info');
+    }
+  });
+api.extractTextP1:
+extractTextP1(jobId, videoPath, language) {
+    const r = await fetch(`${this.base}
+ExtractTextP1Req:
+class ExtractTextP1Req(BaseModel):
+    job_id: str
+    video_path: str
+    extraction_mode: str = "asr"
+    language: str = "zh"
+
+@app.post("/api/p1/extract-text")
+def api_p1_extract_text(req: ExtractTextP1Req):
+    """
+    Dedicated Pipeline 1 extraction route (ASR only).
+    """
+    if req.extraction_mode != "asr":
+        return {
+            "job_id": req.job_id,
+            "status": "error",
+            "error": "Only 'asr' extraction_mode is supported in this phase.",
+            "warnings": []
+        }
+    
+    # Use existing ASR helper
+    existing_req = ExtractSrtReq(
+        video_path=req.video_path,
+        asr_fallback=True,
+        asr_language=req.language
+    )
+    
+    result = api_extract_srt(existing_req)
+    
+    if result.get("status") == "error":
+        return {
+            "job_id": req.job_id,
+            "status": "error",
+            "error": result.get("error", "Unknown error during ASR extraction"),
+            "warnings": []
+        }
+        
+    return {
+        "job_id": req.job_id,
+        "status": "ok",
+        "extraction_mode_requested": req.extraction_mode,
+        "extraction_mode_used": "asr",
+        "srt_content": result.get("srt_content", ""),
+        "plain_text": "", # Omitted for now, can be parsed from SRT later if needed
+        "warnings": []
+    }
+
+# ─── AI Rewrite Endpoint ────────────
+
+api_p1_extract_text:
+def api_p1_extract_text(req: ExtractTextP1Req):
+    """
+    Dedicated Pipeline 1 extraction route (ASR only).
+    """
+    if req.extraction_mode != "asr":
+        return {
+            "job_id": req.job_id,
+            "status": "error",
+            "error": "Only 'asr' extraction_mode is supported in this phase.",
+            "warnings": []
+        }
+    
+    # Use existing ASR helper
+    existing_req = ExtractSrtReq(
+        video_path=req.video_path,
+        asr_fallback=True,
+        asr_language=req.language
+    )
+    
+    result = api_extract_srt(existing_req)
+    
+    if result.get("status") == "error":
+        return {
+            "job_id": req.job_id,
+            "status": "error",
+            "error": result.get("error", "Unknown error during ASR extraction"),
+            "warnings": []
+        }
+        
+    return {
+        "job_id": req.job_id,
+        "status": "ok",
+        "extraction_mode_requested": req.extraction_mode,
+        "extraction_mode_used": "asr",
+        "srt_content": result.get("srt_content", ""),
+        "plain_text": "", # Omitted for now, can be parsed from SRT later if needed
+        "warnings": []
+    }
+
+# ─── AI Rewrite Endpoint ────────────
+class ExtractSrtReq(BaseModel):
+    video_path: str
+    asr_fallback: bool = True   # dùng Whisper ASR (đây là mode chính cho Pipeline 1)
+    asr_language: str = "vi"
+
+
+api_extract_srt:
+def api_extract_srt(req: ExtractSrtReq):
+    """
+    Trích xuất SRT từ video bằng Whisper ASR.
+    Dùng cho Pipeline 1 (AI Analysis) — không cần inpaint.
+    Trả về SRT hợp lệ với timestamps.
+    """
+    import os, tempfile, subprocess, datetime
+    temp_audio = None
+    try:
+        if not os.path.exists(req.video_path):
+            return {"status": "error", "error": "Video file not found"}
+
+        # Trích xuất audio
+        fd, temp_audio = tempfile.mkstemp(suffix=".wav")
+        os.close(fd)
+        cmd = [
+            'ffmpeg', '-y', '-i', req.video_path,
+            '-vn', '-acodec', 'pcm_s16le', '-ar', '16000', '-ac', '1',
+            temp_audio
+        ]
+        result = subprocess.run(cmd, capture_output=True, timeout=120)
+        if result.returncode != 0 or not os.path.exists(temp_audio) or os.path.getsize(temp_audio) == 0:
+            return {"status": "error", "error": "Không thể trích xuất audio từ video"}
+
+        # Chạy Whisper ASR
+        try:
+            from faster_whisper import WhisperModel
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            model = WhisperModel('large-v3-turbo', device=device,
+                                 compute_type='float16' if device == 'cuda' else 'int8')
+            lang = None if req.asr_language == 'auto' else req.asr_language
+            segments, info = model.transcribe(temp_audio, beam_size=5, vad_filter=True, language=lang)
+        except Exception as e:
+            return {"status": "error", "error": f"Whisper ASR lỗi: {e}"}
+
+        def _fmt(seconds: float) -> str:
+            td = datetime.timedelta(seconds=seconds)
+            total_s = int(td.total_seconds())
+            ms = int((td.total_seconds() - total_s) * 1000)
+            h, m, s = total_s // 3600, (total_s % 3600) // 60, total_s % 60
+            return f'{h:02d}:{m:02d}:{s:02d},{ms:03d}'
+
+        srt_lines = []
+        line_count = 0
+        for i, seg in enumerate(segments, 1):
+            if seg.text.strip():
+                srt_lines.append(f"{i}\n{_fmt(seg.start)} --> {_fmt(seg.end)}\n{seg.text.strip()}\n")
+                line_count += 1
+
+        if not srt_lines:
+            return {"status": "ok", "srt_content": "", "line_count": 0,
+                    "message": "Không phát hiện giọng nói trong video"}
+
+        srt_content = "\n".join(srt_lines)
+        return {"status": "ok", "srt_content": srt_content, "line_count": line_count,
+                "detected_language": info.language if hasattr(info, 'language') else req.asr_language}
+
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+    finally:
+        if temp_audio is not None and os.path.exists(temp_audio):
+            try:
+                os.remove(temp_audio)
+            except OSError:
+                pass
+
+
+class AIModelsReq(BaseModel):
+    provider: str
+    endpoint: str = ""
+
+
