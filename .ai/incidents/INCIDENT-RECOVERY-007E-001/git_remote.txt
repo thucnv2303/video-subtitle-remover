@@ -1,0 +1,2 @@
+origin	https://github.com/thucnv2303/video-subtitle-remover.git (fetch)
+origin	https://github.com/thucnv2303/video-subtitle-remover.git (push)

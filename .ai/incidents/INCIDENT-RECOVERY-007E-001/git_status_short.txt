@@ -1,0 +1,26 @@
+ M .ai/current_state.md
+ M .ai/handoff.md
+ M .ai/task_current.md
+ M api/server.py
+ M api/tts_engine.py
+ M package-lock.json
+ M package.json
+ M src/main/main.js
+ M src/main/preload.js
+ M src/renderer/index.html
+ M src/renderer/js/api.js
+ M src/renderer/js/app.js
+ M src/renderer/styles/main.css
+?? .ai/audits/ai_settings_model_recovery_preflight.md
+?? .ai/audits/recovery007E_review.md
+?? .ai/audits/recovery007_preflight.md
+?? fix_main3.py
+?? scratch/
+?? src/renderer/js/app.backup.js
+?? src/renderer/js/components/
+?? src/renderer/js/pipeline.js
+?? src/renderer/js/pipelines/
+?? src/renderer/js/store.js
+?? src/renderer/js/utils/
+?? test_ocr_check.srt
+?? test_ocr_check_tts.mp3

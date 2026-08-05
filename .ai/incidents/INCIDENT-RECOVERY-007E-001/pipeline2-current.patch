@@ -1,0 +1,14 @@
+diff --git "a/E:\\Project AI\\_recovery\\Video-sub-remove-20260803-212834\\src\\renderer\\js\\pipelines\\pipeline2-remove.js" "b/src/renderer/js\\pipelines\\pipeline2-remove.js"
+index 4e5b141..f19499c 100644
+--- "a/E:\\Project AI\\_recovery\\Video-sub-remove-20260803-212834\\src\\renderer\\js\\pipelines\\pipeline2-remove.js"	
++++ "b/src/renderer/js\\pipelines\\pipeline2-remove.js"
+@@ -7,7 +7,8 @@ export async function runNextPass(job) {
+       provider: localStorage.getItem('ai_provider') || 'gemini',
+       api_key: localStorage.getItem('ai_api_key') || '',
+       endpoint: localStorage.getItem('ai_endpoint') || '',
+-      prompt: localStorage.getItem('ai_prompt') || ''
++      prompt: localStorage.getItem('ai_prompt') || '',
++      model: localStorage.getItem('ai_model') || ''
+     };
+ 
+     let subtitleAreas = [];

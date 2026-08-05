@@ -1,0 +1,12 @@
+diff --git "a/E:\\Project AI\\_recovery\\RECOVERY-007E-before-20260804-212457\\app.js" b/src/renderer/js/app.js
+index fc39838..7cb9cce 100644
+--- "a/E:\\Project AI\\_recovery\\RECOVERY-007E-before-20260804-212457\\app.js"	
++++ b/src/renderer/js/app.js
+@@ -622,6 +622,7 @@
+       api_key:   localStorage.getItem('ai_api_key')   || '',
+       endpoint:  localStorage.getItem('ai_endpoint')  || '',
+       prompt:    localStorage.getItem('ai_prompt')    || '',
++      model:     localStorage.getItem('ai_model')     || '',
+     };
+ 
+     let subtitleAreas = [], frameRange = null, inputPath = job.filePath;
