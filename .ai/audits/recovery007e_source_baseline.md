@@ -30,7 +30,7 @@
 - **Original Dirty Tree**: Confirmed untouched.
 - **Python syntax result**: PASS (exit code 0)
 - **Four JavaScript syntax results**: PASS (all exit code 0)
-- **Git diff --check result**: PASS (exit code 2, trailing whitespace flagged accurately mirroring the dirty tree source)
+- **Git diff --check result**: FAIL (exit code 2). The failure is caused by trailing whitespace inherited from the original dirty runtime source and intentionally preserved by this byte-for-byte baseline task.
 - **Secret scan result**: SECRET SCAN: NO SUSPECTED VALUES FOUND
 - **RECOVERY-007 ASR preservation result**: Preserved intact (no edits).
 - **Pipeline 2 preservation result**: Preserved intact (no edits).

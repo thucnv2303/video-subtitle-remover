@@ -31,7 +31,7 @@
 - `node --check src/renderer/js/api.js` exit code: 0
 - `node --check src/renderer/js/components/settings.js` exit code: 0
 - `node --check src/renderer/js/pipelines/pipeline2-remove.js` exit code: 0
-- `git diff --check` exit code: 2 (Flagged trailing whitespace matching original dirty files, confirming byte-for-byte fidelity)
+- `git diff --check` exit code: 2 (FAIL - Flagged trailing whitespace matching original dirty files, intentionally preserved to confirm byte-for-byte fidelity)
 
 ## PHASE 4: PRESERVATION CHECKS
 - `api_p1_extract_text` is present.

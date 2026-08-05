@@ -23,6 +23,7 @@ WAITING
 - INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
 - Active task: RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (WAITING_REVIEW)
 - Project Manager review: NEEDS_REVISION — verification record incomplete
+- Overall baseline decision: PASS WITH KNOWN INHERITED DIFF-HYGIENE DEFECT
 - Verified facts:
   - Exact six-file runtime baseline published.
   - Source commit remains unchanged: 29d1d6a17ef7ed71041863ab1ca3911aa039f957
@@ -38,7 +39,7 @@ WAITING
 
 ## Verification gates
 - Execution: PASS — byte-for-byte baseline published
-- Automated verification: PASS — full hash and command evidence published
+- Automated verification: PASS WITH KNOWN DEFECT — hash/syntax PASS, inherited diff hygiene FAIL
 - Code review: WAITING
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW

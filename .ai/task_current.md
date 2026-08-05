@@ -14,6 +14,7 @@ Publish the exact existing approved/restored runtime source as a reviewable sour
 
 ## Verified Facts
 - **Project Manager review**: NEEDS_REVISION — verification record incomplete
+- **Overall baseline decision**: PASS WITH KNOWN INHERITED DIFF-HYGIENE DEFECT
 - **Source commit remains unchanged**: 29d1d6a17ef7ed71041863ab1ca3911aa039f957
 - **exact six-file runtime baseline published**: Yes
 - **source and destination hashes match exactly**: Yes
@@ -28,7 +29,7 @@ Publish the exact existing approved/restored runtime source as a reviewable sour
 
 ## Verification gates
 - Execution: PASS — byte-for-byte baseline published
-- Automated verification: PASS — full hash and command evidence published
+- Automated verification: PASS WITH KNOWN DEFECT — hash/syntax PASS, inherited diff hygiene FAIL
 - Code review: WAITING
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
