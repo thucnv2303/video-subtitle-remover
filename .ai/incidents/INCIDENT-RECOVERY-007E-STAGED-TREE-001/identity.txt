@@ -1,0 +1,23 @@
+Branch: rescue/wip-20260803
+HEAD: d67a427f1c90a2e98da560977736ead80637db3a
+
+Worktree List:
+worktree E:/Project AI/Video-sub-remove
+HEAD d67a427f1c90a2e98da560977736ead80637db3a
+branch refs/heads/rescue/wip-20260803
+
+worktree E:/Project AI/_review/INCIDENT-RECOVERY-007E-002
+HEAD 7f84cca120a7cf08ba473181b1a70525990c04a0
+branch refs/heads/review/INCIDENT-RECOVERY-007E-001-evidence
+
+worktree E:/Project AI/Video-sub-remove-missing-modules-evidence
+HEAD 679a835de542470f56af38712923f153be4e7700
+branch refs/heads/review/RECOVERY-007E-SOURCE-BASELINE-002-missing-modules-evidence
+
+worktree E:/Project AI/Video-sub-remove-source-baseline
+HEAD 8d32226e780e8899a443cf4c480dbe95b45d0559
+branch refs/heads/review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline
+
+worktree E:/Project AI/Video-sub-remove-worktree
+HEAD 2100d2bab683a43825a3e37537ed1976fe8583c4
+branch refs/heads/review/INCIDENT-RECOVERY-007E-TRACKING-001-evidence

@@ -1,0 +1,46 @@
+Index Path: E:\Project AI\Video-sub-remove\.git\index
+Index Size: 4868 bytes
+Index LastWriteTime: 08/05/2026 10:26:10
+Index SHA256: C352DAE87364CCD090253E97B99FDB57D2A273F7D902E81ACA07EE63F0CBBF06
+
+Diff Cached Name Only:
+
+
+Diff Cached Raw:
+
+
+Diff Cached Summary:
+
+
+Reflog (Last 30):
+Note: Reflog normally cannot identify who staged a file; we do not infer an actor without evidence.
+d67a427 HEAD@{2026-08-04 14:44:34 +0700}: commit: docs: record Pipeline 1 runtime baseline
+5b87037 HEAD@{2026-08-04 13:38:16 +0700}: commit: docs: add Pipeline 1 audit and baseline plan
+1808076 HEAD@{2026-08-04 10:13:27 +0700}: commit: docs: finalize three-pipeline architecture and recovery plan
+71184d2 HEAD@{2026-08-03 21:43:52 +0700}: commit: chore: enforce AgentOS memory updates before code commits
+626d9d2 HEAD@{2026-08-03 21:41:59 +0700}: commit: docs: install AgentOS project memory protocol
+94f969f HEAD@{2026-08-03 21:28:53 +0700}: checkout: moving from main to rescue/wip-20260803
+94f969f HEAD@{2026-07-30 14:30:21 +0700}: commit: fix: Comprehensively fix all mojibake in app.js, add payload debug log, fix api.js duplicate generateTTS, add edge-tts fallback
+2094e12 HEAD@{2026-07-30 13:51:08 +0700}: commit: fix: Restore clean app.js + safe pipeline patches (TTS voice, SRT write, voice dropdown)
+c033dc9 HEAD@{2026-07-30 13:46:03 +0700}: commit: fix: Repair full pipeline - TTS voice from Job Card, SRT write before burn, Voice dropdown, per-region mask mode
+fc39bb1 HEAD@{2026-07-30 13:44:10 +0700}: reset: moving to HEAD
+fc39bb1 HEAD@{2026-07-30 11:18:33 +0700}: commit: refactor: Redesign Control Panel into interactive Job Cards with Prompt Management and Subtitle Styling UI
+13304be HEAD@{2026-07-30 10:49:45 +0700}: commit: feat: Auto-select cloned voice in dropdown after creation and add visual progress percentage to TTS generation
+f8b58ae HEAD@{2026-07-30 10:32:05 +0700}: commit: fix: Invoke app.js IIFE wrapper to execute frontend logic
+5fd41da HEAD@{2026-07-30 10:27:13 +0700}: commit: fix: Sidebar & controls z-index layering and button pointer-events fix for reliable click handling
+2e1f12a HEAD@{2026-07-30 10:24:28 +0700}: commit: fix: Disable auto-opening detached DevTools window to prevent OS focus stealing
+d13ccab HEAD@{2026-07-30 10:21:58 +0700}: commit: fix: Robust file selection with HTML input fallback to prevent dialog selection blocks
+5ad590a HEAD@{2026-07-30 10:18:09 +0700}: commit: fix: Call connectToBackend() on app startup to connect WebSocket and enable controls
+6d21e1e HEAD@{2026-07-30 10:10:00 +0700}: commit: fix: Unbind parent window modal lock from dialog.showOpenDialog to prevent UI freeze
+0b3a2b4 HEAD@{2026-07-30 10:04:31 +0700}: commit: fix: Single Instance Lock & Chromium cache switches to prevent Access is Denied (0x5) freeze
+7750924 HEAD@{2026-07-30 09:56:38 +0700}: commit: fix: auto-open DevTools in dev mode for debugging
+1ca0df0 HEAD@{2026-07-30 08:59:29 +0700}: commit: fix: Clone voice now calls TTS API to validate before saving
+21d3d9e HEAD@{2026-07-30 08:50:06 +0700}: commit: fix: TTS status check - retry logic, re-check on Settings open
+7e2bb50 HEAD@{2026-07-30 08:45:29 +0700}: commit: fix: TTS import path - use tts_engine instead of api.tts_engine
+08d9537 HEAD@{2026-07-30 08:41:19 +0700}: commit: fix: File dialog now shows audio/SRT filters correctly
+0adf25d HEAD@{2026-07-30 08:31:28 +0700}: commit: feat: Add 'Gán phụ đề từ Voice' checkbox + panel
+b3ccda4 HEAD@{2026-07-30 08:27:27 +0700}: commit: feat: Major UI upgrade - resizable columns, content panels, TTS pipeline
+5d25a81 HEAD@{2026-07-30 07:37:24 +0700}: commit: feat: Full TTS UI with voice clone management
+9f6b8b0 HEAD@{2026-07-30 07:34:56 +0700}: Branch: renamed refs/heads/master to refs/heads/main
+9f6b8b0 HEAD@{2026-07-30 07:26:00 +0700}: commit: feat: Tight mask mode for better text removal + OmniVoice TTS integration
+f5a03c4 HEAD@{2026-07-29 19:25:49 +0700}: commit (initial): feat: Multi-region subtitle detection with timelines, per-job processing queue, synced dual-preview
