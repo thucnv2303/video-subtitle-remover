@@ -1,0 +1,11 @@
+api/server.py
+patch_main_pos.py
+src/renderer/js/pipelines/pipeline2-remove.js
+src/renderer/js/app.js
+patch_app.py
+src/renderer/index.html
+src/renderer/js/components/settings.js
+patch_main.py
+patch_app_ui.py
+patch_index_log.py
+patch_server.py

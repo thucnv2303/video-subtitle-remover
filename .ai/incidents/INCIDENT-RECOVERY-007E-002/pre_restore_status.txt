@@ -1,0 +1,63 @@
+On branch rescue/wip-20260803
+Your branch is up to date with 'origin/rescue/wip-20260803'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .ai/current_state.md
+	modified:   .ai/handoff.md
+	modified:   .ai/task_current.md
+	modified:   api/server.py
+	modified:   api/tts_engine.py
+	modified:   package-lock.json
+	modified:   package.json
+	modified:   src/main/main.js
+	modified:   src/main/preload.js
+	modified:   src/renderer/index.html
+	modified:   src/renderer/js/api.js
+	modified:   src/renderer/js/app.js
+	modified:   src/renderer/styles/main.css
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.ai/audits/ai_settings_model_recovery_preflight.md
+	.ai/audits/recovery007E_review.md
+	.ai/audits/recovery007_preflight.md
+	fix_main3.py
+	scratch/
+	src/renderer/js/app.backup.js
+	src/renderer/js/components/
+	src/renderer/js/pipeline.js
+	src/renderer/js/pipelines/
+	src/renderer/js/store.js
+	src/renderer/js/utils/
+	test_ocr_check.srt
+	test_ocr_check_tts.mp3
+
+no changes added to commit (use "git add" and/or "git commit -a")
+ M .ai/current_state.md
+ M .ai/handoff.md
+ M .ai/task_current.md
+ M api/server.py
+ M api/tts_engine.py
+ M package-lock.json
+ M package.json
+ M src/main/main.js
+ M src/main/preload.js
+ M src/renderer/index.html
+ M src/renderer/js/api.js
+ M src/renderer/js/app.js
+ M src/renderer/styles/main.css
+?? .ai/audits/ai_settings_model_recovery_preflight.md
+?? .ai/audits/recovery007E_review.md
+?? .ai/audits/recovery007_preflight.md
+?? fix_main3.py
+?? scratch/
+?? src/renderer/js/app.backup.js
+?? src/renderer/js/components/
+?? src/renderer/js/pipeline.js
+?? src/renderer/js/pipelines/
+?? src/renderer/js/store.js
+?? src/renderer/js/utils/
+?? test_ocr_check.srt
+?? test_ocr_check_tts.mp3

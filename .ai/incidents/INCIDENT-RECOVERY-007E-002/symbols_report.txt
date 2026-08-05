@@ -1,0 +1,43 @@
+--- processPipeline1Queue calls api.extractTextP1 ---
+
+src\renderer\js\app.js:826:      const asrRes = await api.extractTextP1(
+
+
+--- api_p1_extract_text remains present (api/server.py) ---
+
+api\server.py:989:def api_p1_extract_text(req: ExtractTextP1Req):
+
+
+--- api_extract_srt remains present (api/server.py) ---
+
+api\server.py:1008:    result = api_extract_srt(existing_req)
+api\server.py:1035:def api_extract_srt(req: ExtractSrtReq):
+
+
+--- No Pipeline 2 call in Pipeline 1 ASR block (app.js) ---
+
+  src\renderer\js\app.js:10: *   - Kết nối backend, WebSocket
+  src\renderer\js\app.js:11: *   - Quản lý job queue & state
+> src\renderer\js\app.js:12: *   - Pipeline 2: inpaint (xóa sub)
+  src\renderer\js\app.js:13: *   - Điều phối pipeline 1 (AI+TTS) và pipeline 3 (Finalize)
+  src\renderer\js\app.js:14: *   - Video preview (canvas, timeline)
+  src\renderer\js\app.js:588:  }
+  src\renderer\js\app.js:589:
+> src\renderer\js\app.js:590:  // ─── Pipeline 2: Process Job (Inpaint) ───────────────────────────────────
+  src\renderer\js\app.js:591:  async function processNextJob() {
+  src\renderer\js\app.js:592:    if (state.processingJobId) return;
+  src\renderer\js\app.js:806:   * Chạy các job có pipeline=1 (AI Analysis + TTS).
+  src\renderer\js\app.js:807:   * KHÔNG gọi inpaint backend. Chỉ: OCR/ASR từ video gốc → AI rewrite → TTS.
+> src\renderer\js\app.js:808:   * Sau khi xong, job.status = 'finished', sẵn sàng cho Pipeline 2 thủ công.
+  src\renderer\js\app.js:809:   */
+  src\renderer\js\app.js:810:  async function processPipeline1Queue() {
+
+
+--- /api/ai/models absent (server.py and app.js) ---
+
+--- hard-coded fetch localhost:8765 absent (app.js, settings.js, pipeline2-remove.js) ---
+
+src\renderer\js\components\settings.js:165:    const r      = await fetch('http://localhost:8765/api/tts/status');
+
+
+--- pipeline2-remove.js has no ai_model addition ---

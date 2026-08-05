@@ -1,0 +1,8 @@
+--- python -m py_compile api/server.py ---
+Exit code: 0
+--- node --check src/renderer/js/app.js ---
+Exit code: 0
+--- node --check src/renderer/js/components/settings.js ---
+Exit code: 0
+--- node --check src/renderer/js/pipelines/pipeline2-remove.js ---
+Exit code: 0

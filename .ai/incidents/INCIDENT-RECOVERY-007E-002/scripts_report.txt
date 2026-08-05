@@ -1,0 +1,11 @@
+Scripts restored successfully:
+
+Name
+----
+patch_app_ui.py
+patch_app.py
+patch_index_log.py
+patch_main_pos.py
+patch_main.py
+patch_server.py
+
