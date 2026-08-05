@@ -9,5 +9,12 @@
 | BUG-005 | Pipeline 1 start action executed the Pipeline 2 inpainting/rendering path and generated an OCR temporary MP4 instead of completing the expected P1 text extraction flow. | Runtime baseline | NOT YET VERIFIED | CANDIDATE FIX REVIEWED — OWNER TEST PENDING | RUNTIME VERIFIED |
 | BUG-006 | Frontend timed out waiting for OCR/SRT because the expected WebSocket SRT result was not observed during the test. | Runtime baseline | NOT YET VERIFIED | CANDIDATE FIX REVIEWED — OWNER TEST PENDING | RUNTIME VERIFIED |
 | BUG-007 | Manual Pipeline 1 recovery controls for AI rewrite, TTS, re-extraction and replacement-audio upload produced no action during owner testing. | Runtime baseline | NOT YET VERIFIED | OPEN | RUNTIME VERIFIED |
-| BUG-008 | AI settings has ambiguous combined API key/model field and no model scan/select UX | Owner screenshot | NOT YET VERIFIED | ACTIVE — BLOCKING AI ANALYSIS | OWNER OBSERVED |
-| BUG-009 | Ollama rewrite contract treats model like API key entry | Code inspection | Ollama model is treated as an API-key entry in the rewrite contract | ACTIVE — BLOCKING AI ANALYSIS | CODE OBSERVED |
+| BUG-008 | AI settings has ambiguous combined API key/model field and no model scan/select UX | Owner screenshot | Combined key/model UI and shared legacy storage | CANDIDATE FIX IN DRAFT PR #8 — OWNER TEST PENDING | OWNER OBSERVED |
+| BUG-009 | Ollama rewrite contract treats model like API key entry | Code inspection | Ollama model was inserted into the API-key array | CANDIDATE FIX IN DRAFT PR #8 — OWNER TEST PENDING | CODE OBSERVED |
+
+## RECOVERY-007E-AI-SETTINGS-001 candidate resolution
+- Cloud API keys and models are separate values.
+- Ollama stores endpoint/model only and removes legacy Ollama key entries.
+- Ollama model discovery reads `/api/tags`; rewrite sends `model` to `/api/chat`.
+- Pipeline 2 transport is sanitized to remove AI configuration.
+- Status remains candidate fix until GitHub code review and owner runtime verification pass.
