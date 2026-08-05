@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-WAITING
+WAITING_REVIEW
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 và P2).
@@ -12,34 +12,35 @@ WAITING
 - Hard-subtitle removal (Pipeline 2) currently works.
 
 ## Documentation & Task State
-- RECOVERY-004 complete at commit 1808076.
-- RECOVERY-005 PASS.
-- RECOVERY-005 audit report:
-  .ai/audits/pipeline1_readonly_audit.md
-- RECOVERY-006 execution: COMPLETED.
-- RECOVERY-006 project-manager review: PASS.
-- RECOVERY-006 baseline report:
-  .ai/audits/pipeline1_baseline_runtime.md
-- INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
-- RECOVERY-007E-SOURCE-BASELINE-001: COMPLETED
-- RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT: INVALIDATED/PENDING RESUMPTION AFTER INCIDENT CLOSURE
-- Active task: INCIDENT-RECOVERY-007E-STAGED-TREE-001
-- Project Manager review: NEEDS_REVISION — CORE INDEX FINDING CONFIRMED; FINAL DOCUMENTATION CORRECTION REQUIRED
-- AI Settings implementation NOT STARTED
-- BUG-008 ACTIVE
-- BUG-009 ACTIVE
-- RECOVERY-007 owner verification PAUSED
-- PR #4 DO NOT MERGE
-- PR #5 DO NOT MERGE
-- PR #6 DO NOT MERGE
+- INCIDENT-RECOVERY-007E-STAGED-TREE-001: COMPLETED
+- Incident decision: PASS — NO STAGED CONTENT; PRIOR CONFLICT CAUSED BY STATUS-SERIALIZER FORMATTING DEFECT
+- Active task: RECOVERY-007E-SOURCE-BASELINE-002 — PUBLISH RENDERER MODULE CLOSURE
+- Source publication facts:
+  - Six exact module paths published byte-for-byte:
+    - src/renderer/js/pipelines/pipeline1-ai.js (B2A111BEDADFBA9EE0E08F295779E27F83DD6C7FCCAB2A64FB1D75A03C294C05)
+    - src/renderer/js/pipelines/pipeline3-finalize.js (B22B80B1975921B3ACF4D5858C0ECD5279767D72EE5C976D74DD8F79015712EB)
+    - src/renderer/js/components/prompt-manager.js (E4DDF9D2703BA793D372554C80AAEBBA5012BB1AE21861C404F1CA4882579589)
+    - src/renderer/js/store.js (128AC86B9FE0BA4D21A47C677C9E580458394CC7459EC37F68DA9F1D370EEB2E)
+    - src/renderer/js/utils/logger.js (48EC726A3ECD4FBC297DC52549CF4E7A473414626D93D4FE97E12C680823D2A5)
+    - src/renderer/js/utils/dom.js (82964ACE02A114592CDA01D8E3E72D14449BF62801ACBF79FA1E1BBCC96DD05E)
+  - Source commit SHA: e6949a7f47affc4cd6149db20a11aee28da55008
+  - Syntax-test results: PASS
+  - Import-target verification result: PASS
+  - Named-import reconciliation: 23/23 PASS
+  - Secret-scan result: NO SUSPECTED VALUES FOUND
+  - No source content was edited.
+- AI Settings implementation remains NOT STARTED
+- BUG-008 and BUG-009 remain ACTIVE
+- RECOVERY-007 owner verification remains PAUSED
+- PR #4, #5 and #6 DO NOT MERGE
 
 ## Verification gates
-- Execution: PASS — read-only index-state capture published
-- Automated verification: NOT APPLICABLE — evidence-only
+- Execution: PASS — six modules published byte-for-byte
+- Automated verification: PASS WITH KNOWN INHERITED DIFF-HYGIENE DEFECT (src/renderer/js/store.js:34: new blank line at EOF)
 - Code review: WAITING
-- Owner manual app verification: BLOCKED
+- Owner manual app verification: NOT REQUIRED FOR SOURCE PUBLICATION
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
 
 ## Current branch
-review/INCIDENT-RECOVERY-007E-STAGED-TREE-001-evidence
+review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
