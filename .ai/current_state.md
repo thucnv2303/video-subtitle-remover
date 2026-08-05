@@ -23,7 +23,7 @@ WAITING
 - INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
 - RECOVERY-007E-SOURCE-BASELINE-001: COMPLETED
 - Active task: RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT (WAITING_REVIEW)
-- Project Manager review: NEEDS_REVISION — EVIDENCE GENERATOR OUTPUT INTERNALLY INCONSISTENT
+- Project Manager review: NEEDS_REVISION — FINAL LINE AND RECONCILIATION ERRORS REMAIN
 - Verified facts:
   - Six-file byte-for-byte publication remains verified.
   - Its classification as a complete runtime source baseline is invalidated because imported dependencies were not included.
@@ -34,7 +34,7 @@ WAITING
   - PR #5: DO NOT MERGE.
 
 ## Verification gates
-- Execution: BLOCKED — targeted evidence correction only
+- Execution: BLOCKED — documentation correction only
 - Automated verification: NOT APPLICABLE — evidence-only
 - Code review: NEEDS_REVISION
 - Owner manual app verification: BLOCKED

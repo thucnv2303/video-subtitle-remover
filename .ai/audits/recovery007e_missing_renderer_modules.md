@@ -1,7 +1,7 @@
 # RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT Evidence Revision
 
 ## Objective
-Replace inferred scanner conclusions with direct, repository-line-numbered import/export evidence and an internally reconciled dependency graph.
+Correct the remaining documentation errors in the dependency closure evidence.
 
 ## Phase 1 — Original Worktree Identity
 - **Branch**: `rescue/wip-20260803`
@@ -12,31 +12,31 @@ Replace inferred scanner conclusions with direct, repository-line-numbered impor
 
 | Importer | Imported Symbol | Target Module | Import Line | Exact Export Line | Result |
 |---|---|---|---|---|---|
-| index.html | triggerAutoAiRewrite | pipeline1-ai.js | 13 | 19 | PASS |
-| index.html | triggerAutoTts | pipeline1-ai.js | 13 | 109 | PASS |
-| index.html | _buildTimedSrt | pipeline1-ai.js | 13 | 191 | PASS |
-| index.html | finalizeVideo | pipeline3-finalize.js | 14 | 26 | PASS |
-| index.html | initSettings | settings.js | 15 | 12 | PASS |
-| index.html | loadSettingsValues | settings.js | 15 | 23 | PASS |
-| index.html | renderSavedVoices | settings.js | 15 | 92 | PASS |
-| index.html | updateVoiceDropdown | settings.js | 15 | 129 | PASS |
-| index.html | checkTTSStatus | settings.js | 15 | 161 | PASS |
-| index.html | initPromptManager | prompt-manager.js | 17 | 42 | PASS |
-| index.html | renderPromptDropdown | prompt-manager.js | 17 | 27 | PASS |
+| index.html | triggerAutoAiRewrite | pipeline1-ai.js | 802 | 19 | PASS |
+| index.html | triggerAutoTts | pipeline1-ai.js | 802 | 109 | PASS |
+| index.html | _buildTimedSrt | pipeline1-ai.js | 802 | 191 | PASS |
+| index.html | finalizeVideo | pipeline3-finalize.js | 808 | 26 | PASS |
+| index.html | initSettings | settings.js | 812 | 12 | PASS |
+| index.html | loadSettingsValues | settings.js | 812 | 23 | PASS |
+| index.html | renderSavedVoices | settings.js | 812 | 92 | PASS |
+| index.html | updateVoiceDropdown | settings.js | 812 | 129 | PASS |
+| index.html | checkTTSStatus | settings.js | 812 | 161 | PASS |
+| index.html | initPromptManager | prompt-manager.js | 820 | 42 | PASS |
+| index.html | renderPromptDropdown | prompt-manager.js | 820 | 27 | PASS |
 | settings.js | state | store.js | 1 | 1 | PASS |
 | settings.js | saveState | store.js | 1 | 31 | PASS |
 | settings.js | addLog | logger.js | 2 | 41 | PASS |
 | settings.js | showToast | logger.js | 2 | 94 | PASS |
 | prompt-manager.js | showToast | logger.js | 1 | 94 | PASS |
 | pipeline2-remove.js | $ | dom.js | 1 | 1 | PASS |
-| pipeline2-remove.js | el | dom.js | 1 | 4 | PASS |
 | pipeline2-remove.js | $$ | dom.js | 1 | 2 | PASS |
+| pipeline2-remove.js | el | dom.js | 1 | 4 | PASS |
 | pipeline2-remove.js | state | store.js | 2 | 1 | PASS |
+| pipeline2-remove.js | saveState | store.js | 2 | 31 | PASS |
 | pipeline2-remove.js | addLog | logger.js | 3 | 41 | PASS |
 | pipeline2-remove.js | showToast | logger.js | 3 | 94 | PASS |
-| pipeline2-remove.js | setActiveLogTab | UNKNOWN | N/A | N/A | MISSING (Import not found) |
 
-BLOCKED — IMPORT/EXPORT CONTRACT BROKEN
+Note: `logger.js` exports `setActiveLogTab`, but `pipeline2-remove.js` does not import it.
 
 ## Phase 4 — Precise Counts
 - **exact row count**: 10
@@ -52,6 +52,32 @@ BLOCKED — IMPORT/EXPORT CONTRACT BROKEN
 - **entry-root count**: 5 (`index.html`, `app.js`, `api.js`, `settings.js`, `pipeline2-remove.js`)
 - **total unique closure files**: 11 (5 entries + 6 missing)
 
+## File Responsibilities
+
+| File | Responsibility |
+|---|---|
+| index.html | renderer document and module bridge |
+| app.js | non-module app orchestration |
+| api.js | frontend backend client |
+| settings.js | AI/TTS settings persistence and UI behavior |
+| pipeline2-remove.js | Pipeline 2 removal orchestration |
+| pipeline1-ai.js | Pipeline 1 AI rewrite and TTS chain |
+| pipeline3-finalize.js | Pipeline 3 final render orchestration |
+| prompt-manager.js | prompt persistence and selection |
+| store.js | shared renderer state |
+| logger.js | renderer logging and toast helpers |
+| dom.js | shared DOM selectors/cache |
+
+*(Note: These responsibilities are a descriptive accounting, they do not claim to prove runtime correctness.)*
+
 ## Phase 6 — SAFE PUBLICATION DECISION
-**Decision:** BLOCKED — IMPORT/EXPORT CONTRACT BROKEN
-Do not authorize source publication.
+
+**Named-import reconciliation:** PASS — 23/23 actual imported symbols resolve to exports.
+**Dependency closure publication decision:** SAFE TO PUBLISH BYTE-FOR-BYTE
+*(This decision authorizes only a later source-baseline publication task. It does not authorize AI Settings implementation.)*
+
+## Commit History Disclosure
+Complete revision sequence since `6df5698a0d93b2bf3b9d3391ff726bcfda299d08`:
+- 84b43cdf4a2b77e862854cb95046b74b8ce5fcf4
+- 87468ccdf25ad89d06155242c737c75eaff94c53
+- (The current commit SHA will be appended here upon execution)

@@ -2,7 +2,7 @@
 [
   {
     "importer": "src/renderer/index.html",
-    "lines": "13",
+    "lines": "802",
     "stmt": "import { triggerAutoAiRewrite, triggerAutoTts, _buildTimedSrt } from './js/pipelines/pipeline1-ai.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/pipelines/pipeline1-ai.js",
@@ -15,7 +15,7 @@
   },
   {
     "importer": "src/renderer/index.html",
-    "lines": "14",
+    "lines": "808",
     "stmt": "import { finalizeVideo } from './js/pipelines/pipeline3-finalize.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/pipelines/pipeline3-finalize.js",
@@ -26,7 +26,7 @@
   },
   {
     "importer": "src/renderer/index.html",
-    "lines": "15-16",
+    "lines": "812",
     "stmt": "import { initSettings, loadSettingsValues, renderSavedVoices, updateVoiceDropdown, checkTTSStatus } from './js/components/settings.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/components/settings.js",
@@ -41,7 +41,7 @@
   },
   {
     "importer": "src/renderer/index.html",
-    "lines": "17",
+    "lines": "820",
     "stmt": "import { initPromptManager, renderPromptDropdown } from './js/components/prompt-manager.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/components/prompt-manager.js",
