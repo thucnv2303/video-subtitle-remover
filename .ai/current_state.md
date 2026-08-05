@@ -22,21 +22,23 @@ WAITING
   .ai/audits/pipeline1_baseline_runtime.md
 - INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
 - Active task: RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (WAITING_REVIEW)
+- Project Manager review: NEEDS_REVISION — verification record incomplete
 - Verified facts:
   - Exact six-file runtime baseline published.
-  - Source and destination hashes match.
+  - Source commit remains unchanged: 29d1d6a17ef7ed71041863ab1ca3911aa039f957
+  - Source and destination hashes match exactly.
   - Original dirty worktree untouched.
   - settings.js is now reviewable on the baseline branch.
   - pipeline2-remove.js is now reviewable on the baseline branch.
-  - No functional changes.
-  - No AI Settings implementation.
+  - No byte changes were made relative to the six files in the original dirty runtime source. The baseline PR intentionally introduces the existing runtime-source delta relative to its GitHub stack base. This is source publication, not new AI Settings implementation.
+  - No AI Settings implementation (NOT STARTED).
   - RECOVERY-007 owner verification remains PAUSED.
   - RECOVERY-007E remains NOT IMPLEMENTED.
   - BUG-008 and BUG-009 remain ACTIVE.
 
 ## Verification gates
 - Execution: PASS — byte-for-byte baseline published
-- Automated verification: PASS — hash, syntax and diff checks
+- Automated verification: PASS — full hash and command evidence published
 - Code review: WAITING
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW

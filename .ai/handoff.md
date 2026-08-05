@@ -7,17 +7,19 @@ INCIDENT-RECOVERY-007E-TRACKING-001 — CAPTURE SOURCE TRACKING STATE (COMPLETED
 RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (WAITING_REVIEW)
 
 ## Incident Resume Point
-Task is in WAITING_REVIEW for project manager to approve the source baseline.
+Task is in WAITING_REVIEW for project manager to approve the completed verification record for the source baseline.
 
 ## Status
+- **Project Manager review**: NEEDS_REVISION — verification record incomplete (corrected via RECOVERY-007E-SOURCE-BASELINE-001-EVIDENCE-FIX)
+- **Source commit remains unchanged**: 29d1d6a17ef7ed71041863ab1ca3911aa039f957
 - **RECOVERY-007 owner verification**: remains PAUSED
 - **RECOVERY-007E**: remains NOT IMPLEMENTED
 - **BUG-008**: ACTIVE — BLOCKING AI ANALYSIS
 - **BUG-009**: ACTIVE — BLOCKING AI ANALYSIS
-- **AI Settings demo**: DESIGN DIRECTION APPROVED, IMPLEMENTATION NOT STARTED
+- **AI Settings implementation**: NOT STARTED
 
 ## Next Permitted Action
-Project manager to review the source baseline PR.
+Project manager to review the corrected source baseline PR evidence.
 
 ## Execution
 PASS — byte-for-byte baseline published
@@ -26,7 +28,7 @@ PASS — byte-for-byte baseline published
 WAITING
 
 ## Automated verification
-PASS — hash, syntax and diff checks
+PASS — full hash and command evidence published
 
 ## Owner manual app verification
 BLOCKED
