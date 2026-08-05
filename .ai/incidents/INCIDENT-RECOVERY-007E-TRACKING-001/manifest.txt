@@ -1,0 +1,10 @@
+identity.txt
+status_paths.txt
+tracking_records.txt
+tree_presence.txt
+ignore_status.txt
+diff_name_status.txt
+hashes_and_sizes.txt
+symbol_ownership.txt
+incident_report.md
+manifest.txt

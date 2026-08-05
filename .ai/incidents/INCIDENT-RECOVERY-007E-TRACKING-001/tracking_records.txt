@@ -1,0 +1,4 @@
+100644 5ada627ff132f575b2eaab24b282e12856d614f9 0	api/server.py
+100644 23db1343ebb9578dcbaf27826e97f1976d02b7e5 0	src/renderer/index.html
+100644 4b03585eebfd32902efa4e7a42d9672f6791862e 0	src/renderer/js/api.js
+100644 7876e583cbe42a4895ecd9c643caca6ea2471af5 0	src/renderer/js/app.js

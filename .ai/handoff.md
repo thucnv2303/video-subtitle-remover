@@ -1,32 +1,34 @@
 # AgentOS Handoff Status
 
 ## Last completed task
-RECOVERY-007-OWNER-VERIFY-001-DOCFIX — CORRECT BUG LEDGER AND CANONICAL GATES (Documentation closed)
+INCIDENT-RECOVERY-007E-TRACKING-001 — CAPTURE SOURCE TRACKING STATE (COMPLETED)
+- Project Manager evidence review: PASS
+- Immutable reviewed evidence head: fb94d94e66c27470d665cb1fa4ca9620cfad0984
+- Incident execution: PASS — forensic capture completed
+- Incident automated verification: NOT APPLICABLE — evidence-only
+- Incident code review: PASS
 
 ## Active Task
-RECOVERY-007E-REBUILD-001-PREFLIGHT — LOCATE AI SETTINGS SOURCE AND DEFINE SAFE REBUILD
+RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (NOT STARTED)
 
 ## Incident Resume Point
-Task is in PREFLIGHT REVISION REQUIRED. Project Manager to re-review the corrected preflight report in Draft PR #2.
+Task is in WAITING_REVIEW for documentation sync of the source baseline transition.
 
 ## Status
-- **RECOVERY-007 owner verification**: PAUSED — owner observed BUG-008/BUG-009 before completing the workflow.
+- **RECOVERY-007 owner verification**: PAUSED
+- **RECOVERY-007E**: NOT IMPLEMENTED
 - **BUG-008**: ACTIVE — BLOCKING AI ANALYSIS
 - **BUG-009**: ACTIVE — BLOCKING AI ANALYSIS
-- **RECOVERY-007E**: NOT IMPLEMENTED — PREFLIGHT ONLY
-- **INCIDENT-RECOVERY-007E-002 review**: PASS
-- **Incident reviewed head**: 7fba3964a5b175e0fed43312fb8a0485eedc7c61 (immutable reviewed-head reference)
-- **RECOVERY-007E-REBUILD-001-PREFLIGHT review**: NEEDS_REVISION
-- Current PR head: resolve directly from GitHub; intentionally not hard-coded.
+- **AI Settings demo**: DESIGN DIRECTION APPROVED, IMPLEMENTATION NOT STARTED
 
 ## Next Permitted Action
-Project Manager review of the corrected preflight report `.ai/audits/recovery007e_rebuild_preflight.md` published in PR #2.
+Start RECOVERY-007E-SOURCE-BASELINE-001 execution (NOT STARTED) to publish the exact existing approved/restored runtime source without altering the dirty working tree.
 
 ## Execution
-PREFLIGHT REVISION REQUIRED
+NOT STARTED
 
 ## Code review
-NEEDS_REVISION
+WAITING
 
 ## Automated verification
 WAITING

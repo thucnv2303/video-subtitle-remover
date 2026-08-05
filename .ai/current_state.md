@@ -20,26 +20,27 @@ WAITING
 - RECOVERY-006 project-manager review: PASS.
 - RECOVERY-006 baseline report:
   .ai/audits/pipeline1_baseline_runtime.md
-- Active task: RECOVERY-007E-REBUILD-001-PREFLIGHT
-- RECOVERY-007 owner verification: PAUSED — owner observed BUG-008/BUG-009 before completing the workflow.
-- INCIDENT-RECOVERY-007E-002 review: PASS
-- Verified review head: 7fba3964a5b175e0fed43312fb8a0485eedc7c61 (immutable reviewed-head reference)
-- Targeted restoration: PASS
-- Hash verification: PASS
-- Static syntax verification: PASS
-- RECOVERY-007 ASR: preserved
-- Invalid RECOVERY-007E implementation: reverted
-- RECOVERY-007E: NOT IMPLEMENTED — PREFLIGHT ONLY
-- No application source committed in PR #2
+- INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
+  - Project Manager evidence review: PASS
+  - Immutable reviewed evidence head: fb94d94e66c27470d665cb1fa4ca9620cfad0984
+  - Incident execution: PASS — forensic capture completed
+  - Incident automated verification: NOT APPLICABLE — evidence-only
+  - Incident code review: PASS
+  - Six verified source-path classifications (settings/pipeline2 untracked, others tracked-modified)
+  - Verified source ownership (settings persistence in settings.js, payload config in app.js)
+  - Isolation finding: The untracked files cannot be committed wholesale without reviewing the source baseline first.
+- Active task: RECOVERY-007E-SOURCE-BASELINE-001 — PUBLISH REVIEWABLE SOURCE BASELINE (NOT STARTED)
+- RECOVERY-007 owner verification: PAUSED
+- RECOVERY-007E: NOT IMPLEMENTED
+- AI Settings demo: DESIGN DIRECTION APPROVED, IMPLEMENTATION NOT STARTED
+- BUG-008: ACTIVE — BLOCKING AI ANALYSIS
+- BUG-009: ACTIVE — BLOCKING AI ANALYSIS
 - Current PR head must be resolved directly from GitHub and must not be hard-coded in canonical files.
-- RECOVERY-007E-REBUILD-001-PREFLIGHT review: NEEDS_REVISION
-- Documentation synchronization: WAITING_REVIEW
-- Merge permission: BLOCKED
 
-## Verification gates
-- Execution: PREFLIGHT REVISION REQUIRED
+## Active Task Verification gates (RECOVERY-007E-SOURCE-BASELINE-001)
+- Execution: NOT STARTED
 - Automated verification: WAITING
-- Code review: NEEDS_REVISION
+- Code review: WAITING
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
 - Merge permission: BLOCKED
