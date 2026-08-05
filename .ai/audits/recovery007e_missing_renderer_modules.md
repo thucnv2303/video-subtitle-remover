@@ -34,10 +34,12 @@ Replace inferred scanner conclusions with direct, repository-line-numbered impor
 | pipeline2-remove.js | state | store.js | 2 | 1 | PASS |
 | pipeline2-remove.js | addLog | logger.js | 3 | 41 | PASS |
 | pipeline2-remove.js | showToast | logger.js | 3 | 94 | PASS |
-| pipeline2-remove.js | setActiveLogTab | logger.js | 3 | 13 | PASS |
+| pipeline2-remove.js | setActiveLogTab | UNKNOWN | N/A | N/A | MISSING (Import not found) |
+
+BLOCKED — IMPORT/EXPORT CONTRACT BROKEN
 
 ## Phase 4 — Precise Counts
-- **exact row count**: 10 rows (edges) in the import graph
+- **exact row count**: 10
 - **count by import kind**: 
   - STATIC_FROM: 10
   - SIDE_EFFECT: 0
@@ -50,14 +52,6 @@ Replace inferred scanner conclusions with direct, repository-line-numbered impor
 - **entry-root count**: 5 (`index.html`, `app.js`, `api.js`, `settings.js`, `pipeline2-remove.js`)
 - **total unique closure files**: 11 (5 entries + 6 missing)
 
-## Phase 7 — SAFE PUBLICATION DECISION
-- Every import edge is recorded with actual whole-file line numbers.
-- Every named import resolves to an exported symbol.
-- Counts match the graph.
-- All import/export forms were directly checked.
-- Responsibilities and importing files are recorded.
-- No local module is missing.
-- SECRET SCAN: NO SUSPECTED VALUES FOUND
-
-**Decision:** SAFE TO PUBLISH
-The exact publication file set is: `src/renderer/js/pipelines/pipeline1-ai.js`, `src/renderer/js/pipelines/pipeline3-finalize.js`, `src/renderer/js/components/prompt-manager.js`, `src/renderer/js/store.js`, `src/renderer/js/utils/logger.js`, `src/renderer/js/utils/dom.js`.
+## Phase 6 — SAFE PUBLICATION DECISION
+**Decision:** BLOCKED — IMPORT/EXPORT CONTRACT BROKEN
+Do not authorize source publication.

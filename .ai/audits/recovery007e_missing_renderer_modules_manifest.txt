@@ -2,82 +2,125 @@
 [
   {
     "importer": "src/renderer/index.html",
-    "line": 13,
+    "lines": "13",
     "stmt": "import { triggerAutoAiRewrite, triggerAutoTts, _buildTimedSrt } from './js/pipelines/pipeline1-ai.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/pipelines/pipeline1-ai.js",
+    "symbols": [
+      "triggerAutoAiRewrite",
+      "triggerAutoTts",
+      "_buildTimedSrt"
+    ],
     "resolved": "src/renderer/js/pipelines/pipeline1-ai.js"
   },
   {
     "importer": "src/renderer/index.html",
-    "line": 14,
+    "lines": "14",
     "stmt": "import { finalizeVideo } from './js/pipelines/pipeline3-finalize.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/pipelines/pipeline3-finalize.js",
+    "symbols": [
+      "finalizeVideo"
+    ],
     "resolved": "src/renderer/js/pipelines/pipeline3-finalize.js"
   },
   {
     "importer": "src/renderer/index.html",
-    "line": 15,
-    "stmt": "import { initSettings, loadSettingsValues, renderSavedVoices, updateVoiceDropdown, checkTTSStatus } from",
+    "lines": "15-16",
+    "stmt": "import { initSettings, loadSettingsValues, renderSavedVoices, updateVoiceDropdown, checkTTSStatus } from './js/components/settings.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/components/settings.js",
+    "symbols": [
+      "initSettings",
+      "loadSettingsValues",
+      "renderSavedVoices",
+      "updateVoiceDropdown",
+      "checkTTSStatus"
+    ],
     "resolved": "src/renderer/js/components/settings.js"
   },
   {
     "importer": "src/renderer/index.html",
-    "line": 17,
+    "lines": "17",
     "stmt": "import { initPromptManager, renderPromptDropdown } from './js/components/prompt-manager.js';",
     "kind": "STATIC_FROM",
     "specifier": "./js/components/prompt-manager.js",
+    "symbols": [
+      "initPromptManager",
+      "renderPromptDropdown"
+    ],
     "resolved": "src/renderer/js/components/prompt-manager.js"
   },
   {
     "importer": "src/renderer/js/components/settings.js",
-    "line": 1,
+    "lines": "1",
     "stmt": "import { state, saveState } from '../store.js';",
     "kind": "STATIC_FROM",
     "specifier": "../store.js",
+    "symbols": [
+      "state",
+      "saveState"
+    ],
     "resolved": "src/renderer/js/store.js"
   },
   {
     "importer": "src/renderer/js/components/settings.js",
-    "line": 2,
+    "lines": "2",
     "stmt": "import { addLog, showToast } from '../utils/logger.js';",
     "kind": "STATIC_FROM",
     "specifier": "../utils/logger.js",
-    "resolved": "src/renderer/js/utils/logger.js"
-  },
-  {
-    "importer": "src/renderer/js/components/prompt-manager.js",
-    "line": 1,
-    "stmt": "import { showToast } from '../utils/logger.js';",
-    "kind": "STATIC_FROM",
-    "specifier": "../utils/logger.js",
+    "symbols": [
+      "addLog",
+      "showToast"
+    ],
     "resolved": "src/renderer/js/utils/logger.js"
   },
   {
     "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
-    "line": 1,
-    "stmt": "import { $, el, $$ } from '../utils/dom.js';",
+    "lines": "1",
+    "stmt": "import { $, $$, el } from '../utils/dom.js';",
     "kind": "STATIC_FROM",
     "specifier": "../utils/dom.js",
+    "symbols": [
+      "$",
+      "$$",
+      "el"
+    ],
     "resolved": "src/renderer/js/utils/dom.js"
   },
   {
     "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
-    "line": 2,
+    "lines": "2",
     "stmt": "import { state, saveState } from '../store.js';",
     "kind": "STATIC_FROM",
     "specifier": "../store.js",
+    "symbols": [
+      "state",
+      "saveState"
+    ],
     "resolved": "src/renderer/js/store.js"
   },
   {
     "importer": "src/renderer/js/pipelines/pipeline2-remove.js",
-    "line": 3,
-    "stmt": "import { addLog, showToast, setActiveLogTab } from '../utils/logger.js';",
+    "lines": "3",
+    "stmt": "import { addLog, showToast } from '../utils/logger.js';",
     "kind": "STATIC_FROM",
     "specifier": "../utils/logger.js",
+    "symbols": [
+      "addLog",
+      "showToast"
+    ],
+    "resolved": "src/renderer/js/utils/logger.js"
+  },
+  {
+    "importer": "src/renderer/js/components/prompt-manager.js",
+    "lines": "1",
+    "stmt": "import { showToast } from '../utils/logger.js';",
+    "kind": "STATIC_FROM",
+    "specifier": "../utils/logger.js",
+    "symbols": [
+      "showToast"
+    ],
     "resolved": "src/renderer/js/utils/logger.js"
   }
 ]
@@ -139,12 +182,12 @@
       "src/renderer/js/utils/logger.js"
     ],
     "exports": {
-      "initSettings": 12,
-      "loadSettingsValues": 23,
-      "getSavedVoices": 83,
-      "renderSavedVoices": 92,
-      "updateVoiceDropdown": 129,
-      "checkTTSStatus": 161
+      "initSettings": "12",
+      "loadSettingsValues": "23",
+      "getSavedVoices": "83",
+      "renderSavedVoices": "92",
+      "updateVoiceDropdown": "129",
+      "checkTTSStatus": "161"
     },
     "in_github": "YES"
   },
@@ -162,9 +205,9 @@
       "src/renderer/js/utils/logger.js"
     ],
     "exports": {
-      "runNextPass": 5,
-      "pollProgress": 100,
-      "handleWSMessage": 137
+      "runNextPass": "5",
+      "pollProgress": "100",
+      "handleWSMessage": "137"
     },
     "in_github": "YES"
   },
@@ -180,10 +223,10 @@
     ],
     "direct_imports": [],
     "exports": {
-      "triggerAutoAiRewrite": 19,
-      "triggerAutoTts": 109,
-      "_buildTimedSrt": 191,
-      "_msToSrtTime": 236
+      "triggerAutoAiRewrite": "19",
+      "triggerAutoTts": "109",
+      "_buildTimedSrt": "191",
+      "_msToSrtTime": "236"
     },
     "in_github": "NO"
   },
@@ -199,7 +242,7 @@
     ],
     "direct_imports": [],
     "exports": {
-      "finalizeVideo": 26
+      "finalizeVideo": "26"
     },
     "in_github": "NO"
   },
@@ -217,8 +260,8 @@
       "src/renderer/js/utils/logger.js"
     ],
     "exports": {
-      "renderPromptDropdown": 27,
-      "initPromptManager": 42
+      "renderPromptDropdown": "27",
+      "initPromptManager": "42"
     },
     "in_github": "NO"
   },
@@ -235,9 +278,9 @@
     ],
     "direct_imports": [],
     "exports": {
-      "state": 1,
-      "loadState": 24,
-      "saveState": 31
+      "state": "1",
+      "loadState": "24",
+      "saveState": "31"
     },
     "in_github": "NO"
   },
@@ -255,10 +298,10 @@
     ],
     "direct_imports": [],
     "exports": {
-      "setActiveLogTab": 13,
-      "getLogCategory": 15,
-      "addLog": 41,
-      "showToast": 94
+      "setActiveLogTab": "13",
+      "getLogCategory": "15",
+      "addLog": "41",
+      "showToast": "94"
     },
     "in_github": "NO"
   },
@@ -274,9 +317,9 @@
     ],
     "direct_imports": [],
     "exports": {
-      "$": 1,
-      "$$": 2,
-      "el": 4
+      "$": "1",
+      "$$": "2",
+      "el": "4"
     },
     "in_github": "NO"
   }
