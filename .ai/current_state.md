@@ -57,20 +57,20 @@ CANDIDATE_FIX
   - UI: refreshProviderStatus and delete handler handle structured results
   - Electron launch: Page loaded successfully, Window is now visible, Python backend started
   - Node verify: 26/27 PASS (1 test-script error, not production), Windows second-save: 12/12 PASS
-- CRASH-RECOVERY-CLOSEOUT-COLLISION-FIX-012: PENDING — COMMITTED
+- FIX012-EVIDENCE-CLOSEOUT-013: e3db5fcb74ec45ed48b949a42d6786adc151ccaa — COMMITTED
   - State machine: most-specific first (E,A,D,B,C,normal)
-  - Case E now reachable and confirmed by TC9 (65/65 PASS)
+  - Case E now reachable and confirmed by TC9 (36/36 PASS)
   - windowsSafeRestoreFromBak: moves corrupt to .corrupt before rename
   - Post-write validation rollback: preserves invalid file as .corrupt, restores bak
   - tryUnlink: reports non-ENOENT failures (EPERM confirmed in TC12)
   - NODE_ENV=test guard: exports _credStore for production testability
-  - Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CRASH-RECOVERY-CLOSEOUT-COLLISION-FIX-012/
+  - Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX012-EVIDENCE-CLOSEOUT-013/
   - Electron launch (no --no-sandbox): Page loaded, Window visible, Python 8765
   - Deterministic paths: ai_keys.json, ai_keys.json.tmp, ai_keys.json.bak (no PID)
   - recoverKeyStore(): 5 cases A-E; auto-restore from bak across process restarts
   - saveEncryptedKeys(): fsync + post-write validation + explicit error types
   - validateStoreContent(): pure helper returning {ok,data/error}
-  - Matrix test: 40/40 PASS
+  - Matrix test: 36/36 PASS
   - Electron launch (no --no-sandbox): Page loaded, Window visible, Python 8765
 - BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - PR #8: DO NOT MERGE
@@ -78,9 +78,9 @@ CANDIDATE_FIX
 ## Verification gates
 - Execution: PASS (static checks pass)
 - Automated verification: PASS
-- Code review: WAITING
+- Code review: SOURCE REVIEW PASS
 - Owner manual app verification: NOT STARTED
-- Documentation synchronization: WAITING_PM_REVIEW
+- Documentation synchronization: PASS
 - Merge permission: BLOCKED
 
 ## Current branch

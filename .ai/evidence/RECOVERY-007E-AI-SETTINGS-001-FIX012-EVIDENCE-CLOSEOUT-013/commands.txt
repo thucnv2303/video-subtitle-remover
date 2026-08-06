@@ -1,0 +1,23 @@
+TESTED_SHA: ea9443def40b3a8195cf2567148f4fb1b0d8f593
+Branch/Head: refs/heads/review/RECOVERY-007E-AI-SETTINGS-001-ai-settings detached
+Windows: Microsoft Windows NT 10.0.26200.0
+Node: v24.18.0
+Electron:  v43.3.0
+
+[PRE-TEST STATUS]
+
+[END PRE-TEST STATUS]
+
+> node --check src/main/main.js
+Exit Code: 0
+> node --check tests/test_credential_recovery.js
+Exit Code: 0
+> $env:NODE_ENV='test'; node tests/test_credential_recovery.js
+Exit Code: 0
+> git diff --check
+warning: in the working copy of '.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CLOSEOUT-COLLISION-FIX-012/commands.txt', LF will be replaced by CRLF the next time Git touches it
+Exit Code: 0
+
+[POST-TEST STATUS]
+ M .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CLOSEOUT-COLLISION-FIX-012/commands.txt
+[END POST-TEST STATUS]

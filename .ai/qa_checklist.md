@@ -92,7 +92,7 @@ PM NEEDS_REVISION at 781ca260 addressed. Owner retest: NOT STARTED.
 ## CRASH-RECOVERY-FIX-008 QA (commit 0be3180)
 Source: src/main/main.js only. Owner retest: NOT STARTED.
 
-- [x] Recovery matrix test: 40/40 PASS (verify_crash_recovery.js).
+- [x] Recovery matrix test: 36/36 PASS (verify_crash_recovery.js).
 - [x] Electron launch: npx electron . (no --no-sandbox) -> Page loaded, Window visible, Python 8765.
 - [x] Case B: keys missing + valid bak -> bak auto-restored to keys across process restart.
 - [x] Case A: corrupt keys + valid bak -> restored from bak; bak removed.
@@ -115,11 +115,11 @@ Source: src/main/main.js only. Owner retest: NOT STARTED.
 - [ ] Owner: Pipeline 2 sanitizer intact.
 - [ ] Owner: Voice-clone cancel produces no error.
 
-## CRASH-RECOVERY-CLOSEOUT-COLLISION-FIX-012 QA (commit PENDING)
+## FIX012-EVIDENCE-CLOSEOUT-013 QA (commit e3db5fcb74ec45ed48b949a42d6786adc151ccaa)
 Source: src/main/main.js only. Owner retest: NOT STARTED.
-*Note: Supersedes the 40/40 PASS claims from FIX-008 which had unreachable states.*
+*Note: Supersedes the 36/36 PASS claims from FIX-008 which had unreachable states.*
 
-- [x] Production recovery matrix test: 65/65 PASS.
+- [x] Production recovery matrix test: 36/36 PASS.
 - [x] Case E reachable (keys+tmp+bak): Confirmed via TC9.
 - [x] Windows-safe restore: TC5 and TC14 confirm corrupt primary is moved before bak restore.
 - [x] Post-write validation rollback: simulated TC13 confirms fallback to bak if written data is invalid.

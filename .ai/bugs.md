@@ -6,8 +6,8 @@
 | BUG-002 | Pipeline 3 UI chua wire button btn-export-final vao finalizeVideo | Code inspection | Chua implement xong | BLOCKED (P1 Priority) | CODE OBSERVED |
 | BUG-003 | Step 3 video preview chua load video khi job finished | Code inspection | Chua implement | BLOCKED (P1 Priority) | CODE OBSERVED |
 | BUG-004 | Global SubtitleRemover monkey-patching and shared-state concurrency risk | Audit RECOVERY-005 | Backend legacy design | ARCHITECTURAL RISK | CODE OBSERVED - NOT RUNTIME VERIFIED |
-| BUG-005 | Pipeline 1 start action executed Pipeline 2 inpainting path and generated OCR tmp MP4 | Runtime baseline | NOT YET VERIFIED | CANDIDATE FIX REVIEWED - OWNER TEST PENDING | RUNTIME VERIFIED |
-| BUG-006 | Frontend timed out waiting for OCR/SRT | Runtime baseline | NOT YET VERIFIED | CANDIDATE FIX REVIEWED - OWNER TEST PENDING | RUNTIME VERIFIED |
+| BUG-005 | Pipeline 1 start action executed Pipeline 2 inpainting path and generated OCR tmp MP4 | Runtime baseline | NOT YET VERIFIED | CANDIDATE FIX REVIEWED - OWNER TEST e3db5fcb74ec45ed48b949a42d6786adc151ccaa | RUNTIME VERIFIED |
+| BUG-006 | Frontend timed out waiting for OCR/SRT | Runtime baseline | NOT YET VERIFIED | CANDIDATE FIX REVIEWED - OWNER TEST e3db5fcb74ec45ed48b949a42d6786adc151ccaa | RUNTIME VERIFIED |
 | BUG-007 | Manual Pipeline 1 recovery controls produced no action during owner testing | Runtime baseline | NOT YET VERIFIED | OPEN | RUNTIME VERIFIED |
 | BUG-008 | AI settings ambiguous combined API key/model field and no model scan/select UX | Owner screenshot at abf0ee2 | Combined key/model UI and shared legacy storage | CANDIDATE FIX IN DRAFT PR #8 - OWNER RETEST NOT STARTED | OWNER OBSERVED |
 | BUG-009 | Ollama rewrite contract treated model like API key entry | Code inspection | Ollama model inserted into API-key array | CANDIDATE FIX IN DRAFT PR #8 - OWNER RETEST NOT STARTED | CODE OBSERVED |
@@ -106,7 +106,7 @@ BUG-029: loadEncryptedKeys did not run recovery before loading; no cross-restart
 - Fixed: recoverKeyStore() called at the start of both loadEncryptedKeys and saveEncryptedKeys.
   recoverKeyStore handles 5 deterministic cases (A-E) and restores from .bak automatically.
 
-## CRASH-RECOVERY-CLOSEOUT-COLLISION-FIX-012 at head 9900523 — fixed in PENDING
+## CRASH-RECOVERY-FIX012-EVIDENCE-CLOSEOUT-013 at head 9900523 — fixed in e3db5fcb74ec45ed48b949a42d6786adc151ccaa
 
 BUG-030: State machine overlap made Case E unreachable
 - Root cause: Case A (keys + bak) was evaluated before Case E (keys + tmp + bak), so Case E could never run.

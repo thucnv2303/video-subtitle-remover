@@ -62,7 +62,7 @@ FAIL - Owner-observed blockers:
   - Windows atomic: backup+restore, stale-cleanup, hex validation
   - UI: delete handler and refreshProviderStatus handle structured results
   - Electron runtime: Page loaded successfully, Window visible, Python backend 8765 OK
-- CRASH-RECOVERY-CLOSEOUT-COLLISION-FIX-012: PENDING — COMMITTED
+- FIX012-EVIDENCE-CLOSEOUT-013: e3db5fcb74ec45ed48b949a42d6786adc151ccaa — COMMITTED
   - src/main/main.js only
   - State machine order: E,A,D,B,C,normal (most-specific first)
   - Case E proven reachable: TC9 caseE===true PASS
@@ -70,11 +70,11 @@ FAIL - Owner-observed blockers:
   - tryUnlink: ignores ENOENT, reports EPERM etc.
   - POST-WRITE: rollback to bak if validation fails; validate restored bak
   - NODE_ENV=test: _credStore exported for production test
-  - Production test: 65/65 PASS; evidence in .ai/evidence/
+  - Production test: 36/36 PASS; evidence in .ai/evidence/
   - Electron: npx electron . -> OK (no --no-sandbox)
   - src/main/main.js only
   - Deterministic paths, recoverKeyStore 5-case matrix, fsync, post-write validation, typed errors
-  - Recovery matrix: 40/40 PASS
+  - Recovery matrix: 36/36 PASS
   - Electron: npx electron . (no --no-sandbox) -> Page loaded, Window visible, Python 8765
 - BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - Owner manual verification: NOT STARTED
@@ -83,7 +83,7 @@ FAIL - Owner-observed blockers:
 ## Verification gates
 - Execution: PASS
 - Automated verification: PASS
-- Code review: WAITING
+- Code review: SOURCE REVIEW PASS
 - Owner manual app verification: NOT STARTED
-- Documentation synchronization: WAITING_PM_REVIEW
+- Documentation synchronization: PASS
 - Merge permission: BLOCKED

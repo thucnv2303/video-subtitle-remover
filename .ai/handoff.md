@@ -24,21 +24,21 @@ RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX)
   - UI: delete handler and refreshProviderStatus handle structured results.
   - Electron runtime: launched OK, Page loaded, Window visible, Python backend 8765.
 - CRASH-RECOVERY-FIX-008: 0be3180ee5a866f24fd5b23bebcac9f2ff65a03c — COMMITTED.
-- CRASH-RECOVERY-CLOSEOUT-COLLISION-FIX-012: PENDING — COMMITTED.
+- FIX012-EVIDENCE-CLOSEOUT-013: e3db5fcb74ec45ed48b949a42d6786adc151ccaa — COMMITTED.
   - src/main/main.js only.
   - State machine: most-specific first (E,A,D,B,C,normal). Case E now reachable.
   - windowsSafeRestoreFromBak: moves corrupt to .corrupt before rename (Windows-safe).
   - Post-write validation rollback: preserves invalid as .corrupt, restores bak, validates restored.
   - tryUnlink: reports non-ENOENT failures (EPERM confirmed TC12).
   - NODE_ENV=test: _credStore exports for production test.
-  - Production test: 65/65 PASS. Evidence: .ai/evidence/ (commands.txt, results.txt, recovery-matrix.txt).
+  - Production test: 36/36 PASS. Evidence: .ai/evidence/ (commands.txt, results.txt, recovery-matrix.txt).
   - Electron launch (no --no-sandbox): Page loaded, Window visible, Python 8765.
   - src/main/main.js only (settings.js unchanged).
   - Deterministic paths: ai_keys.json, ai_keys.json.tmp, ai_keys.json.bak (no PID).
   - recoverKeyStore() covers 5 cases A-E; auto-restores from .bak across process restarts.
   - saveEncryptedKeys(): fsync, post-write validation, typed errors (WRITE_FAILED, RESTORE_FAILED, STORE_CORRUPT).
   - validateStoreContent(): returns {ok,data/error} (no throws).
-  - Recovery matrix: 40/40 PASS. Electron launch (no --no-sandbox): OK.
+  - Recovery matrix: 36/36 PASS. Electron launch (no --no-sandbox): OK.
 - BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED.
 - Owner manual verification: NOT STARTED.
 
@@ -72,7 +72,7 @@ PASS
 NOT STARTED
 
 ## Documentation synchronization
-WAITING_PM_REVIEW
+PASS
 
 ## Merge permission
 BLOCKED
