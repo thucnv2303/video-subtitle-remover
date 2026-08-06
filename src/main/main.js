@@ -391,7 +391,14 @@ function windowsSafeRestoreFromBak(keysPath, bakPath, paths) {
     fs.renameSync(bakPath, keysPath);
   } catch (err) {
     if (keysPresent) {
-      try { fs.renameSync(paths.corruptPrimaryPath, keysPath); } catch {}
+      try {
+        fs.renameSync(paths.corruptPrimaryPath, keysPath);
+      } catch (rErr) {
+        throw Object.assign(
+          new Error('[RESTORE_FAILED] Không thể khôi phục từ bản sao lưu và lỗi hoàn tác tệp hỏng gốc: ' + rErr.message),
+          { code: 'RESTORE_FAILED' }
+        );
+      }
     }
     throw Object.assign(
       new Error('[RESTORE_FAILED] Không thể khôi phục từ bản sao lưu: ' + err.message),
@@ -407,10 +414,26 @@ function windowsSafeRestoreFromBak(keysPath, bakPath, paths) {
         { code: 'RESTORE_FAILED' }
       );
     }
-    try { fs.renameSync(keysPath, paths.corruptRestoredPath); } catch {}
-    if (keysPresent) { try { fs.renameSync(paths.corruptPrimaryPath, keysPath); } catch {} }
+    try {
+      fs.renameSync(keysPath, paths.corruptRestoredPath);
+    } catch (moveErr) {
+      throw Object.assign(
+        new Error('[RESTORE_FAILED] Tệp khôi phục không hợp lệ và không thể chuyển sang pháp y: ' + moveErr.message),
+        { code: 'RESTORE_FAILED' }
+      );
+    }
+    if (keysPresent) {
+      try {
+        fs.renameSync(paths.corruptPrimaryPath, keysPath);
+      } catch (rErr) {
+        throw Object.assign(
+          new Error('[RESTORE_FAILED] Khôi phục không hợp lệ, đã chuyển pháp y, nhưng lỗi hoàn tác tệp hỏng gốc: ' + rErr.message),
+          { code: 'RESTORE_FAILED' }
+        );
+      }
+    }
     throw Object.assign(
-      new Error('[RESTORE_FAILED] Khôi phục thành công nhưng tệp đã khôi phục không hợp lệ.'),
+      new Error('[RESTORE_FAILED] Khôi phục thành công nhưng tệp đã khôi phục không hợp lệ (đã hoàn tác).'),
       { code: 'RESTORE_FAILED' }
     );
   }
@@ -601,7 +624,11 @@ function saveEncryptedKeys(data) {
     fs.closeSync(fd);
     fd = undefined;
   } catch (err) {
-    if (fd !== undefined) { try { fs.closeSync(fd); } catch {} }
+    if (fd !== undefined) {
+      try { fs.closeSync(fd); } catch (cErr) {
+        err.message += ' (lỗi đóng tệp: ' + cErr.message + ')';
+      }
+    }
     tryUnlink(tmpPath);
     throw Object.assign(
       new Error('[WRITE_FAILED] Không thể ghi tệp tạm: ' + err.message),
@@ -636,11 +663,11 @@ function saveEncryptedKeys(data) {
     fs.renameSync(tmpPath, keysPath);
   } catch (err) {
     if (keysExists) {
-      let restoreErr;
-      try { fs.renameSync(bakPath, keysPath); } catch (re) { restoreErr = re; }
-      if (restoreErr) {
+      try {
+        fs.renameSync(bakPath, keysPath);
+      } catch (re) {
         throw Object.assign(
-          new Error('[RESTORE_FAILED] Ghi thất bại và khôi phục cũng thất bại: ' + restoreErr.message),
+          new Error('[RESTORE_FAILED] Ghi thất bại và khôi phục cũng thất bại: ' + re.message),
           { code: 'RESTORE_FAILED' }
         );
       }
