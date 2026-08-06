@@ -1,0 +1,58 @@
+--- src/renderer/js/app.js ---
+ * r�i expose hàm của chúng lên window.* Ä‘á»ƒ app.js cÃ³ thá»ƒ gá»i.
+    // Nếu không có --> thì �ây là plain text r�i
+    if (msg.includes('viết lại') || msg.includes('l�ng tiếng') || msg.includes('âm thanh tts')) return 'feature';
+    if (el.logOutput) navigator.clipboard.writeText(el.logOutput.innerText).then(() => showToast('Đã sao chép!', 'success'));
+    if (s1) navigator.clipboard.writeText(s1.innerText).then(() => showToast('� ã sao chép!', 'success'));
+      addLog('Backend �ã sẵn sàng!', 'success');
+    addLog(`ÄÃ£ thÃªm: ${job.fileName}`, 'info');
+        list2.innerHTML = '<div class="job-empty">Chưa có video nào.<br>Hãy kéo thả hoặc bấm "Chá»n Video".</div>';
+        list1.innerHTML = '<div class="job-empty" style="text-align:center;color:#71717a;margin-top:50px;">Chưa có video nào. Bấm "+ ThÃªm Video" �Ồ bắt �ầu.</div>';
+            ? `<button class="btn-stop-job" data-id="${job.id}" style="background:#ef4444;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">â¹ Dá»«ng (${job._elapsedTimeString || '00:00'})</button>`
+              ? `<button class="btn-stop-job" data-id="${job.id}" style="background:#ef4444;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">â¹ Há»§y</button>`
+              : `<button class="btn-process-job" data-id="${job.id}" style="background:#10b981;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">â–¶ Cháº¡y</button>`;
+                <button class="btn-delete-job" data-id="${job.id}" style="background:rgba(239,68,68,.8);color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">âœ–</button>
+            <div class="job-detail"><span class="status-tag status-finished">âœ… HoÃ n táº¥t</span></div>`;
+    addLog(`Job "${job.fileName}" Ä‘Ã£ thÃªm vÃ o hÃ ng Ä‘á»£i.`, 'info');
+      addLog(`ÄÃ£ há»§y job "${job.fileName}".`, 'warning');
+      addLog(`ÄÃ£ gá»¡ "${job.fileName}" khá»i hÃ ng Ä‘á»£i.`, 'warning');
+    addLog(`âœ… Báº¯t Ä‘áº§u xá»­ lÃ½: ${nextJob.fileName}`, 'success');
+      if (el.btnCancel) el.btnCancel.textContent = `â± ${t}  â¬› Há»§y xá»­ lÃ½`;
+      addLog('[ASR] �S& SRT �ã �ược trích xuất.', 'success');
+    addLog(`âœ… XÃ³a sub hoÃ n táº¥t: ${job.fileName}`, 'success');
+    showToast(`"${job.fileName}" Ä‘Ã£ xá»­ lÃ½ xong!`, 'success', 5000);
+   * KH�NG gọi inpaint backend. Ch�0: OCR/ASR tá»« video gá»‘c â†’ AI rewrite â†’ TTS.
+    addLog(`[AI] ðŸš€ Báº¯t Ä‘áº§u Pipeline 1: ${nextJob.fileName}`, 'success');
+      // Bư�:c 1: Trích xuất vĒn bản từ âm thanh (ASR)
+      addLog('[AI] �x}� Bư�:c 1/3 â€” Äang trÃ­ch xuáº¥t vÄƒn báº£n tá»« Ã¢m thanh (ASR)...', 'info');
+      addLog(`[AI] âœ… ASR hoÃ n táº¥t â€” ${lineCount} dÃ²ng phá»¥ Ä‘á».`, 'success');
+        addLog('[AI] �x� Bư�:c 2/3 â€” AI Ä‘ang viáº¿t láº¡i phá»¥ Ä‘á»...', 'info');
+        addLog('[AI] ��️ Bư�:c 2/3 â€” Bá» qua AI rewrite (chÆ°a báº­t).', 'info');
+      // triggerAutoAiRewrite �ã chain TTS r�i nếu aiRewrite=true
+        addLog('[TTS] �x}� Bư�:c 3/3 â€” Táº¡o Ã¢m thanh lá»“ng tiáº¿ng...', 'info');
+        addLog('[TTS] ��️ Bư�:c 3/3 â€” TTS Ä‘Ã£ Ä‘Æ°á»£c chain tá»« AI rewrite.', 'info');
+        addLog('[TTS] ��️ Bư�:c 3/3 â€” Bá» qua TTS (chÆ°a báº­t).', 'info');
+      addLog(`[AI] ðŸŽ‰ Pipeline 1 hoÃ n táº¥t: ${nextJob.fileName}`, 'success');
+      showToast(`"${nextJob.fileName}" â€” AI & TTS hoÃ n táº¥t!`, 'success', 5000);
+        // WS �ã set srtContent (qua handleWSMessage �  d.srt_content)
+      addLog(`Äang táº£i preview: ${job.fileName}...`, 'info');
+      if (el.metaRes)  el.metaRes.textContent  = `${info.width}Ã—${info.height}`;
+      el.regionsList.innerHTML = '<div class="region-empty">Bấm "+ Váº½ vÃ¹ng" r�i kéo chu�"t trên video</div>';
+        <span class="region-label">VÃ¹ng #${r.label} (${r.startFrame}-${r.endFrame})</span>
+        <button class="btn-region-del" data-idx="${i}">âœ•</button>`;
+      addLog(`ThÆ° má»¥c Ä‘áº§u ra: ${state.outputDir}`, 'info');
+  //  và tự gọi window.initXxx = ... r�i app.js gọi lại �ây)
+    // Sync voice dropdown v�:i voices �ã lưu (nếu settings module chưa ready)
+      addLog('Đã lưu n�"i dung cập nhật cho ' + job.fileName, 'info');
+--- src/renderer/index.html ---
+                         <h4 style="margin-top:0; color:var(--accent);">🎤 Âm thanh Lồng tiếng</h4>
+                    <label class="form-label">Chọn giọng (đã lưu trong Cài đặt)</label>
+                    <button class="btn btn-xs btn-ghost" id="btn-voice-import" title="Nhập file audio đã tạo sẵn">📂 Nhập Audio</button>
+                    <option value="Hãy tóm tắt ngắn gọn những ý chính được đề cập trong nội dung sau.">Tóm tắt ngắn gọn</option>
+                    <option value="Hãy đánh giá phong cách nói chuyện và cảm xúc của người nói dựa vào nội dung sau.">Đánh giá phong cách người nói</option>
+              <div class="job-empty">Chưa có video nào.<br>Hãy kéo thả hoặc bấm "Chọn Video".</div>
+                  <div class="col-header" style="margin-bottom: 16px;"><h3>✅ Video Đã Xử Lý</h3></div>
+              <label class="form-label"><span>Âm lượng gốc (Nhạc nền)</span><span id="vol-label" class="vol-val">10%</span></label>
+            <h3>📋 Giọng đã lưu</h3>
+--- tests/test_pipeline1_runtime.js ---
+    assert(!appJs.includes('ChÆ°a chá» n'), 'Mojibake scan passes');
