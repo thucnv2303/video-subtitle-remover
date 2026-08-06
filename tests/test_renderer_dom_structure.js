@@ -129,4 +129,33 @@ assert(ids.has('ai-provider') && ids.has('ai-api-key'), '9. Required Settings ID
 assert(ids.has('step1-ai-model') && ids.has('btn-start-all'), '10. Required Pipeline 1 IDs exist.');
 assert(duplicates.length === 0, '11. No duplicate IDs exist in the parsed production document. (Duplicates: ' + duplicates.join(', ') + ')');
 
+// Check CSS contract
+const cssPath = path.join(__dirname, '../src/renderer/styles/main.css');
+const cssContent = fs.readFileSync(cssPath, 'utf8');
+
+assert(cssContent.includes('.pipeline-container') && cssContent.includes('flex: 1'), '12. CSS contains the intended width/flex/grid contract for Home (.pipeline-container).');
+assert(cssContent.includes('.toolkit-layout-3col') && cssContent.includes('display: flex'), '13. CSS contains flex contract for .toolkit-layout-3col, preventing narrow left-column fallback.');
+
+const toolkit3col = root.children.flatMap(c => c.children).find(n => hasClass(n, 'toolkit-layout-3col')) || findMainArea(root).children.find(n => hasClass(n, 'toolkit-layout-3col'));
+
+let tk3col = null;
+function findTk3col(node) {
+    if (hasClass(node, 'toolkit-layout-3col')) {
+        tk3col = node;
+        return node;
+    }
+    for (const child of node.children) {
+        if (findTk3col(child)) return child;
+    }
+    return null;
+}
+findTk3col(root);
+
+assert(tk3col !== null, '14. Pipeline 1 main wrapper (.toolkit-layout-3col) exists.');
+if (tk3col) {
+    const pAncestors = getAncestors(tk3col);
+    assert(pAncestors.some(n => hasClass(n, 'pipeline-container')), '15. Pipeline 1 wrapper has expected parent hierarchy (.pipeline-container).');
+    assert(!pAncestors.some(n => hasClass(n, 'col-controls')), '16. Pipeline 1 wrapper is not nested inside a narrow sidebar/job column.');
+}
+
 process.exit(exitCode);
