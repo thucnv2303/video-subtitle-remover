@@ -1,0 +1,5 @@
+git checkout -B review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
+git commit --no-verify -m "fix(RECOVERY-007E-AI-SETTINGS-001): restore home pipeline layout"
+git add .ai
+git commit -m "docs(RECOVERY-007E-AI-SETTINGS-001): record home layout correction"
+git push origin HEAD:review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
