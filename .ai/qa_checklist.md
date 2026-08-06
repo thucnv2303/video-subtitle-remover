@@ -127,4 +127,14 @@ Source: src/main/main.js only. Owner retest: NOT STARTED.
 - [x] Electron launch: npx electron . (no --no-sandbox) -> Page loaded, Window visible, Python 8765.
 - [ ] Owner: UI tests remain identical to FIX-008.
 
-- [x] UI DOM Structure (test_renderer_dom_structure.js) verified.
+- [x] UI DOM Structure (test_renderer_dom_structure.js) verified.## UI Regression Fix (018)
+- Owner test at 09eb0a8d: PARTIAL FAIL.
+- Settings: PASS.
+- Home/Pipeline 1: FAIL before FIX018.
+- Verified root cause: Layout classes (.pipeline-container, .toolkit-layout-3col, etc.) completely lacked flex definitions in main.css, causing Pipeline 1 to render as stacked blocks and shrinking the width to a narrow 280px left strip constraint.
+- Exact source SHA: a282117c1180481d674ab878b0d7beb85d9494cf
+- Exact test count: 16 PASS / 0 FAIL (DOM tests).
+- Anti runtime observation: PASS (Electron opened, Home uses intended full width, Pipeline 1 is not compressed, Settings remains visible).
+- PM review: WAITING.
+- Owner retest: NOT STARTED.
+- Merge: BLOCKED.

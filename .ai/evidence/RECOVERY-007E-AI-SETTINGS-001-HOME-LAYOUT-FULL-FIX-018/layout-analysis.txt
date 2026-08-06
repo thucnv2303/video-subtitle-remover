@@ -1,0 +1,1 @@
+Identified that .pipeline-container, .pipeline-content-area, and .toolkit-layout-3col lacked flex layout CSS in main.css, causing elements to render as blocks and shrinking Pipeline 1 to the narrow 280px left strip constraint.

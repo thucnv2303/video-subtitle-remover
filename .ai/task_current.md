@@ -101,4 +101,14 @@ FAIL - Owner-observed blockers:
 - Anti runtime observation status: PASS (Electron opened, UI loaded successfully, port 8765 active).
 - PM review: WAITING.
 - Owner retest: NOT STARTED.
+- Merge: BLOCKED.## UI Regression Fix (018)
+- Owner test at 09eb0a8d: PARTIAL FAIL.
+- Settings: PASS.
+- Home/Pipeline 1: FAIL before FIX018.
+- Verified root cause: Layout classes (.pipeline-container, .toolkit-layout-3col, etc.) completely lacked flex definitions in main.css, causing Pipeline 1 to render as stacked blocks and shrinking the width to a narrow 280px left strip constraint.
+- Exact source SHA: a282117c1180481d674ab878b0d7beb85d9494cf
+- Exact test count: 16 PASS / 0 FAIL (DOM tests).
+- Anti runtime observation: PASS (Electron opened, Home uses intended full width, Pipeline 1 is not compressed, Settings remains visible).
+- PM review: WAITING.
+- Owner retest: NOT STARTED.
 - Merge: BLOCKED.
