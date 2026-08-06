@@ -1,8 +1,13 @@
-REFS BEFORE:
-- review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure: 3159ad4
-- review/RECOVERY-007E-AI-SETTINGS-001-ai-settings: 09eb0a8da11bad135ad8f1b379c99edb6a345746
+BEFORE INCIDENT:
+- base branch:
+  7e18c04cf2483403010f237356dfb7f369dae1a8
+- feature head immediately before FIX018:
+  09eb0a8da11bad135ad8f1b379c99edb6a345746
 
-REFS CURRENT:
-- review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure: 73f8ed7bd425b805dfba4182bf89345f62fca953
-- review/RECOVERY-007E-AI-SETTINGS-001-ai-settings: 09eb0a8da11bad135ad8f1b379c99edb6a345746
-- rescue/wip-20260803: d67a427f1c90a2e98da560977736ead80637db3a
+AFTER INCIDENT:
+- damaged base:
+  73f8ed7bd425b805dfba4182bf89345f62fca953
+- unchanged feature head:
+  09eb0a8da11bad135ad8f1b379c99edb6a345746
+- recovery:
+  d67a427f1c90a2e98da560977736ead80637db3a
