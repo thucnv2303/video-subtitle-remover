@@ -29,3 +29,9 @@ Pipeline 1 is the current technical priority.
 
 ## D-010
 Owner manual verification blocks merge for source-code tasks.
+
+## INCIDENT-RECOVERY-007E: Small-Fix Governance Directive
+- Never blindly reuse or apply a patch broader than what is strictly required to fix the user-reported issue.
+- Small cosmetic fixes bundled with layout fixes must be stripped unless explicitly verified as required for layout.
+- Always write precise test assertions that do not allow false positives through loose substring matching.
+- Commits must isolate source/tests from documentation/evidence to avoid dirty diffs and hook circumventions.

@@ -1,0 +1,1 @@
+All tests PASS. jsdom correctly updates DOM.

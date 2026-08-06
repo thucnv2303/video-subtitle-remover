@@ -1,0 +1,11 @@
+node --check tests/test_renderer_dom_structure.js
+Exit Code: 0
+
+node tests/test_renderer_dom_structure.js
+Exit Code: 0
+
+git diff --check
+Exit Code: 0
+
+npm start
+Exit Code: 0 (killed intentionally)

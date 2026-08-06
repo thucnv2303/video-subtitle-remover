@@ -1,30 +1,36 @@
 /**
- * app.js — Main entry point (non-module script, loaded via <script src="...">)
+ * app.js � Main entry point (non-module script, loaded via <script src="...">)
  *
- * Vì index.html load file này dưới dạng script thường (không type="module"),
+ * Vì index.html load file này dư�:i dạng script thường (không type="module"),
  * các module ES6 khác (pipeline1-ai, pipeline3-finalize, settings, prompt-manager...)
- * được load riêng qua <script type="module"> tag trong index.html,
- * rồi expose hàm của chúng lên window.* để app.js có thể gọi.
+ * �ược load riêng qua <script type="module"> tag trong index.html,
+ * r�i expose hàm của chúng lên window.* Ä‘á»ƒ app.js cÃ³ thá»ƒ gá»i.
  *
- * Trách nhiệm của app.js:
- *   - Kết nối backend, WebSocket
+ * Trách nhi�!m của app.js:
+ *   - Kết n�i backend, WebSocket
  *   - Quản lý job queue & state
  *   - Pipeline 2: inpaint (xóa sub)
- *   - Điều phối pipeline 1 (AI+TTS) và pipeline 3 (Finalize)
+ *   - Điều ph�i pipeline 1 (AI+TTS) và pipeline 3 (Finalize)
  *   - Video preview (canvas, timeline)
  *   - UI: navigation, drag-drop, region drawing, progress
  */
 (function () {
   'use strict';
 
-  // ─── Constants ───────────────────────────────────────────────────────────
+  // ������ Constants ����������������������������������������������������������������������������������������������������������������������
   const REGION_COLORS = ['#7c3aed', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#ef4444'];
 
-  // ─── State ───────────────────────────────────────────────────────────────
-  const state = {
-    jobs: [],
-    activeJobId: null, pipeline1SelectedJobId: null,
-    outputDir: localStorage.getItem('output_dir') || null,
+  // ������ State ������������������������������������������������������������������������������������������������������������������������������
+  const state = window._appState;
+  if (!state) {
+    throw new Error('Shared application state was not initialized before app.js');
+  }
+
+  Object.assign(state, {
+    jobs: Array.isArray(state.jobs) ? state.jobs : [],
+    activeJobId: state.activeJobId ?? null,
+    pipeline1SelectedJobId: state.pipeline1SelectedJobId ?? null,
+    outputDir: state.settings?.outputDir || localStorage.getItem('output_dir') || state.outputDir || null,
     isBackendReady: false,
     isDrawing: false,
     isSelecting: false,
@@ -40,29 +46,26 @@
     activeLogTab: 'all',
     processingStartTime: null,
     processingTimerInterval: null,
-    pipeline1JobId: null,  // job đang chạy Pipeline 1 (AI+TTS)
-  };
+    pipeline1JobId: state.pipeline1JobId ?? null
+  });
 
-  // Expose state globally so modules (pipeline3-finalize, etc.) can read it
-  window._appState = state;
-
-  // ─── SRT Display Helper ───────────────────────────────────────────────────
+  // ������ SRT Display Helper ������������������������������������������������������������������������������������������������������
   /**
-   * Chuyển SRT thô thành text thuần để hiển thị trong job card.
-   * Bỏ số thứ tự dòng và timestamps, chỉ giữ nội dung.
+   * ChuyỒn SRT thô thành text thuần �Ồ hiỒn th�9 trong job card.
+   * Bỏ s� thứ tự dòng và timestamps, ch�0 giữ n�"i dung.
    */
   function _srtToDisplayText(srtOrText) {
-    if (!srtOrText) return 'Chưa có dữ liệu';
-    // Nếu không có --> thì đây là plain text rồi
-    if (!srtOrText.includes('-->')) return srtOrText.trim() || 'Chưa có dữ liệu';
-    // Parse SRT: bỏ dòng số thứ tự và dòng timestamp
+    if (!srtOrText) return 'Chưa có dữ li�!u';
+    // Nếu không có --> thì �ây là plain text r�i
+    if (!srtOrText.includes('-->')) return srtOrText.trim() || 'Chưa có dữ li�!u';
+    // Parse SRT: bỏ dòng s� thứ tự và dòng timestamp
     const lines = srtOrText.split('\n')
       .map(l => l.trim())
       .filter(l => l && !/^\d+$/.test(l) && !/\d{2}:\d{2}:\d{2}[,\.]\d{3}\s*-->/.test(l));
-    return lines.join(' ') || 'Chưa có dữ liệu';
+    return lines.join(' ') || 'Chưa có dữ li�!u';
   }
 
-  // ─── Job Factory ─────────────────────────────────────────────────────────
+  // ������ Job Factory ������������������������������������������������������������������������������������������������������������������
   function createJob(filePath) {
     const fileName = filePath.split(/[\\/]/).pop();
     const baseName = fileName.replace(/\.[^.]+$/, '');
@@ -84,7 +87,7 @@
     };
   }
 
-  // ─── DOM Refs ─────────────────────────────────────────────────────────────
+  // ������ DOM Refs ��������������������������������������������������������������������������������������������������������������������������
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => document.querySelectorAll(s);
 
@@ -133,9 +136,9 @@
   const ctxOrig   = el.canvasOrig?.getContext('2d');
   const ctxResult = el.canvasResult?.getContext('2d');
 
-  // ─── Logger (global) ─────────────────────────────────────────────────────
+  // ������ Logger (global) ����������������������������������������������������������������������������������������������������������
   /**
-   * window.addLog — gọi được từ mọi module (pipeline1, pipeline3, settings...)
+   * window.addLog � gọi �ược từ mọi module (pipeline1, pipeline3, settings...)
    * Ghi vào #log-output (Step 2) và #step1-log-output (Step 1 console).
    */
   function addLog(message, type = 'info') {
@@ -171,13 +174,13 @@
     const msg = message.toLowerCase();
     if (/^\[(asr|ai|tts|voice|voicesub|finalize)\]/i.test(message)) return 'feature';
     if (msg.includes('trích xuất') && msg.includes('srt')) return 'feature';
-    if (msg.includes('viết lại') || msg.includes('lồng tiếng') || msg.includes('âm thanh tts')) return 'feature';
+    if (msg.includes('viết lại') || msg.includes('l�ng tiếng') || msg.includes('âm thanh tts')) return 'feature';
     if (/^\[py\]/i.test(message) || /^\[err\]/i.test(message) || /^\[inpaint\]/i.test(message)) return 'inpaint';
     if (msg.includes('xử lý') && (msg.includes('frame') || msg.includes('pass'))) return 'inpaint';
     return 'system';
   }
 
-  // ─── Toast (global) ──────────────────────────────────────────────────────
+  // ������ Toast (global) ������������������������������������������������������������������������������������������������������������
   function showToast(msg, type = 'info', dur = 3000) {
     const c = document.getElementById('toast-container');
     if (!c) return;
@@ -189,7 +192,7 @@
   }
   window.showToast = showToast;
 
-  // ─── Log tab filters ─────────────────────────────────────────────────────
+  // ������ Log tab filters ����������������������������������������������������������������������������������������������������������
   $$('.log-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       $$('.log-tab').forEach(t => t.classList.remove('active'));
@@ -223,13 +226,49 @@
 
   document.getElementById('step1-btn-copy-log')?.addEventListener('click', () => {
     const s1 = document.getElementById('step1-log-output');
-    if (s1) navigator.clipboard.writeText(s1.innerText).then(() => showToast('Đã sao chép!', 'success'));
+    if (s1) navigator.clipboard.writeText(s1.innerText).then(() => showToast('� ã sao chép!', 'success'));
   });
 
   window.addEventListener('error', (e) => addLog(`[UI Error] ${e.message}`, 'error'));
-  window.addEventListener('unhandledrejection', (e) => addLog(`[UI Async Error] ${e.reason?.message || e.reason}`, 'error'));
+  window.addEventListener('unhandledrejection', (e) => {
+    addLog(`[UI Async Error] ${e.reason?.message || e.reason}`, 'error');
+    console.log(`[UI Async Error Stack]`, e.reason?.stack || 'no stack');
+  });
 
-  // ─── Navigation ──────────────────────────────────────────────────────────
+  window.addEventListener('aiModelChanged', (e) => {
+    const provider = localStorage.getItem('ai_provider') || 'gemini';
+    const savedModel = localStorage.getItem(provider === 'ollama' ? 'ai_model_ollama' : `ai_model_${provider}`) || '';
+    if (el.aiModel2) {
+      el.aiModel2.innerHTML = '';
+      const sourceSelect = provider === 'ollama' ? document.getElementById('ai-ollama-model-select') : document.getElementById('ai-cloud-model');
+      if (sourceSelect && sourceSelect.options.length > 0) {
+        Array.from(sourceSelect.options).forEach(opt => el.aiModel2.append(new Option(opt.text, opt.value)));
+      } else {
+        el.aiModel2.append(new Option('Chưa chọn', ''));
+      }
+      const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+      if (job && job.p1AiModel !== undefined) {
+         el.aiModel2.value = job.p1AiModel;
+      } else if (savedModel) {
+         el.aiModel2.value = savedModel;
+      }
+    }
+  });
+
+  document.getElementById('step1-ai-model')?.addEventListener('change', (e) => {
+    const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+    if (job) job.p1AiModel = e.target.value;
+  });
+  document.getElementById('step1-tts-voice')?.addEventListener('change', (e) => {
+    const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+    if (job) job.p1TtsVoice = e.target.value;
+  });
+  document.getElementById('step1-tts-speed')?.addEventListener('change', (e) => {
+    const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+    if (job) job.p1TtsSpeed = e.target.value;
+  });
+
+  // ������ Navigation ��������������������������������������������������������������������������������������������������������������������
   el.navItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
@@ -246,22 +285,22 @@
     });
   });
 
-  // ─── Backend Connection ──────────────────────────────────────────────────
+  // ������ Backend Connection ����������������������������������������������������������������������������������������������������
   async function connectToBackend() {
-    addLog('Đang kết nối đến Python backend...', 'info');
+    addLog('Đang kết n�i �ến Python backend...', 'info');
     setStatus('connecting');
     const ready = await api.waitForBackend(60, 1000);
     if (ready) {
       state.isBackendReady = true;
       setStatus('online');
-      addLog('Backend đã sẵn sàng!', 'success');
+      addLog('Backend �ã sẵn sàng!', 'success');
       api.connectWebSocket();
       api.onWebSocketMessage(handleWSMessage);
       loadGpuInfo();
       updateStartButton();
     } else {
       setStatus('offline');
-      addLog('Không thể kết nối backend. Kiểm tra Python server.', 'error');
+      addLog('Không thỒ kết n�i backend. KiỒm tra Python server.', 'error');
     }
   }
 
@@ -286,12 +325,12 @@
         addLog(`GPU: ${name} (VRAM: ${info.vram_total || '?'})`, 'success');
       } else {
         dot?.classList.add('offline');
-        addLog('Không phát hiện GPU — dùng CPU.', 'warning');
+        addLog('Không phát hi�!n GPU � dùng CPU.', 'warning');
       }
-    } catch (e) { addLog('Lỗi kiểm tra GPU: ' + e.message, 'error'); }
+    } catch (e) { addLog('L�i kiỒm tra GPU: ' + e.message, 'error'); }
   }
 
-  // ─── File Selection ──────────────────────────────────────────────────────
+  // ������ File Selection ������������������������������������������������������������������������������������������������������������
   el.btnOpenFile?.addEventListener('click', selectFile);
   document.getElementById('btn-upload-step1')?.addEventListener('click', selectFile);
 
@@ -305,7 +344,7 @@
             selectJob(state.jobs[state.jobs.length - 1].id);
           return;
         }
-      } catch (e) { addLog('Lỗi dialog file: ' + e.message, 'error'); }
+      } catch (e) { addLog('L�i dialog file: ' + e.message, 'error'); }
     }
     // Fallback HTML input
     let inp = $('#hidden-file-input');
@@ -340,10 +379,10 @@
     state.jobs.push(job);
     renderJobList();
     updateStartButton();
-    addLog(`Đã thêm: ${job.fileName}`, 'info');
+    addLog(`ÄÃ£ thÃªm: ${job.fileName}`, 'info');
   }
 
-  // ─── Job Selection ───────────────────────────────────────────────────────
+  // ������ Job Selection ��������������������������������������������������������������������������������������������������������������
   function selectJob(jobId) {
     saveControlsToJob();
     const job = state.jobs.find(j => j.id === jobId);
@@ -404,15 +443,15 @@
     updateStartButton();
   }
 
-  // ─── Render Job List ──────────────────────────────────────────────────────
+  // ������ Render Job List ������������������������������������������������������������������������������������������������������������
   function renderJobList() {
-    const statusLabel = { idle: '⏳ Chờ', queued: '⏳ Đang chờ', processing: '🔄 Xử lý', finished: '✅ Hoàn tất', error: '❌ Lỗi' };
+    const statusLabel = { idle: '⏳ Chờ', queued: '⏳ Đang chờ', processing: '�x Xử lý', finished: '�S& Hoàn tất', error: '�R L�i' };
 
     // Step 2 job list (right column)
     const list2 = document.getElementById('job-list');
     if (list2) {
       if (state.jobs.length === 0) {
-        list2.innerHTML = '<div class="job-empty">Chưa có video nào.<br>Hãy kéo thả hoặc bấm "Chọn Video".</div>';
+        list2.innerHTML = '<div class="job-empty">Chưa có video nào.<br>Hãy kéo thả hoặc bấm "Chá»n Video".</div>';
       } else {
         list2.innerHTML = '';
         state.jobs.forEach(job => {
@@ -424,7 +463,7 @@
             <div class="job-detail">
               <span class="status-tag status-${job.status}">${statusLabel[job.status] || job.status}</span>
               <span>${job.progress}%</span>
-              ${job.status === 'finished' && fp ? `<button class="btn btn-xs btn-ghost open-fp" style="margin-left:8px;padding:2px 6px">📂 Mở</button>` : ''}
+              ${job.status === 'finished' && fp ? `<button class="btn btn-xs btn-ghost open-fp" style="margin-left:8px;padding:2px 6px">ðŸ“‚ Má»Ÿ</button>` : ''}
             </div>
             <div class="job-progress-bar"><div class="job-progress-fill" style="width:${job.progress}%"></div></div>`;
           card.querySelector('.open-fp')?.addEventListener('click', (e) => {
@@ -442,7 +481,7 @@
     if (jobCount) jobCount.textContent = `(${state.jobs.length} Items)`;
     if (list1) {
       if (state.jobs.length === 0) {
-        list1.innerHTML = '<div class="job-empty" style="text-align:center;color:#71717a;margin-top:50px;">Chưa có video nào. Bấm "+ Thêm Video" để bắt đầu.</div>';
+        list1.innerHTML = '<div class="job-empty" style="text-align:center;color:#71717a;margin-top:50px;">Chưa có video nào. Bấm "+ ThÃªm Video" �Ồ bắt �ầu.</div>';
       } else {
         list1.innerHTML = '';
         state.jobs.forEach((job, idx) => {
@@ -451,20 +490,20 @@
           if (state.pipeline1SelectedJobId === job.id) card.classList.add('active');
           const stClass = { finished: 'completed', error: 'failed' }[job.status] || 'processing';
           const actionBtn = job.status === 'processing'
-            ? `<button class="btn-stop-job" data-id="${job.id}" style="background:#ef4444;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">⏹ Dừng (${job._elapsedTimeString || '00:00'})</button>`
+            ? `<button class="btn-stop-job" data-id="${job.id}" style="background:#ef4444;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">â¹ Dá»«ng (${job._elapsedTimeString || '00:00'})</button>`
             : job.status === 'queued'
-              ? `<button class="btn-stop-job" data-id="${job.id}" style="background:#ef4444;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">⏹ Hủy</button>`
-              : `<button class="btn-process-job" data-id="${job.id}" style="background:#10b981;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">▶ Chạy</button>`;
+              ? `<button class="btn-stop-job" data-id="${job.id}" style="background:#ef4444;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">â¹ Há»§y</button>`
+              : `<button class="btn-process-job" data-id="${job.id}" style="background:#10b981;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">â–¶ Cháº¡y</button>`;
           card.innerHTML = `
             <div class="tk-job-card-header ${stClass}">
               <span>Job #${idx+1}: ${job.fileName}</span>
               <div style="display:flex;gap:6px;align-items:center">
                 <span style="background:rgba(255,255,255,.2);padding:2px 8px;border-radius:4px;font-size:11px">${job.status.toUpperCase()}</span>
                 ${actionBtn}
-                <button class="btn-delete-job" data-id="${job.id}" style="background:rgba(239,68,68,.8);color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">✖</button>
+                <button class="btn-delete-job" data-id="${job.id}" style="background:rgba(239,68,68,.8);color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">âœ–</button>
               </div>
             </div>`;
-            
+
           card.addEventListener('click', async (e) => {
             if (e.target.classList.contains('btn-delete-job')) {
               state.jobs = state.jobs.filter(j => j.id !== job.id);
@@ -480,11 +519,11 @@
                 processPipeline1Queue();
               }
             } else if (e.target.classList.contains('btn-stop-job')) {
-              if (job.status === 'processing') { addLog(`Dừng Job "${job.fileName}"...`, 'warning'); await window.electronAPI?.cancelProcess(); }
+              if (job.status === 'processing') { addLog(`Dá»«ng Job "${job.fileName}"...`, 'warning'); await window.electronAPI?.cancelProcess(); }
               job.status = 'idle'; job._elapsedTimeString = '';
               if (state.processingJobId === job.id) state.processingJobId = null;
               renderJobList(); updateStartButton();
-            } else { 
+            } else {
               state.pipeline1SelectedJobId = job.id;
               renderJobList();
               renderJobDetail1();
@@ -507,7 +546,7 @@
           const card = document.createElement('div');
           card.className = `job-card${job.id === state.activeJobId ? ' active' : ''}`;
           card.innerHTML = `<div class="job-name">${job.fileName}</div>
-            <div class="job-detail"><span class="status-tag status-finished">✅ Hoàn tất</span></div>`;
+            <div class="job-detail"><span class="status-tag status-finished">âœ… HoÃ n táº¥t</span></div>`;
           card.addEventListener('click', () => selectJob(job.id));
           list3.appendChild(card);
         });
@@ -516,13 +555,13 @@
   }
   window.renderJobList = renderJobList;
 
-  // ─── Start / Cancel buttons ──────────────────────────────────────────────
+  // ������ Start / Cancel buttons ��������������������������������������������������������������������������������������������
   el.btnStart?.addEventListener('click', () => {
     const job = getActiveJob();
     if (!job || job.status !== 'idle' || !state.isBackendReady) return;
     saveControlsToJob();
     job.status = 'queued';
-    addLog(`Job "${job.fileName}" đã thêm vào hàng đợi.`, 'info');
+    addLog(`Job "${job.fileName}" Ä‘Ã£ thÃªm vÃ o hÃ ng Ä‘á»£i.`, 'info');
     renderJobList(); updateStartButton();
     processNextJob();
   });
@@ -535,19 +574,19 @@
       job.status = 'idle'; job.progress = 0;
       state.processingJobId = null;
       if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
-      addLog(`Đã hủy job "${job.fileName}".`, 'warning');
+      addLog(`ÄÃ£ há»§y job "${job.fileName}".`, 'warning');
     } else if (job.status === 'queued') {
       job.status = 'idle';
-      addLog(`Đã gỡ "${job.fileName}" khỏi hàng đợi.`, 'warning');
+      addLog(`ÄÃ£ gá»¡ "${job.fileName}" khá»i hÃ ng Ä‘á»£i.`, 'warning');
     }
     renderJobList(); updateStartButton();
     el.progressSection?.classList.add('hidden');
   });
 
   document.getElementById('btn-start-all')?.addEventListener('click', () => {
-    // btn-start-all ở Step 1 → chạy Pipeline 1 (AI Analysis + TTS), KHÔNG inpaint
+    // btn-start-all �x Step 1 �  chạy Pipeline 1 (AI Analysis + TTS), KH�NG inpaint
     state.jobs.filter(j => j.status === 'idle').forEach(j => {
-      j.pipeline = 1; // đánh dấu chạy pipeline 1
+      j.pipeline = 1; // �ánh dấu chạy pipeline 1
       j.status   = 'queued';
     });
     renderJobList(); updateStartButton();
@@ -560,7 +599,7 @@
       const pj = state.jobs.find(j => j.id === state.processingJobId);
       if (pj) { try { await api.cancelProcess(); } catch (e) { /* ignore */ } }
     }
-    // Dừng cả pipeline 1 jobs đang chạy
+    // Dừng cả pipeline 1 jobs �ang chạy
     if (state.pipeline1JobId) {
       const p1j = state.jobs.find(j => j.id === state.pipeline1JobId);
       if (p1j) { p1j.status = 'idle'; p1j._p1Cancelled = true; }
@@ -587,7 +626,7 @@
     if (text && el.progressEta) el.progressEta.textContent = text;
   }
 
-  // ─── Pipeline 2: Process Job (Inpaint) ───────────────────────────────────
+  // ������ Pipeline 2: Process Job (Inpaint) ����������������������������������������������������������������������
   async function processNextJob() {
     if (state.processingJobId) return;
     const nextJob = state.jobs.find(j => j.status === 'queued');
@@ -596,7 +635,7 @@
     nextJob.status = 'processing'; nextJob.progress = 0;
     state.processingJobId = nextJob.id; state.processingPassIndex = 0;
     renderJobList();
-    addLog(`✅ Bắt đầu xử lý: ${nextJob.fileName}`, 'success');
+    addLog(`âœ… Báº¯t Ä‘áº§u xá»­ lÃ½: ${nextJob.fileName}`, 'success');
     if (state.activeJobId === nextJob.id) { el.progressSection?.classList.remove('hidden'); updateStartButton(); }
 
     state.processingStartTime = Date.now();
@@ -609,7 +648,7 @@
         ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
         : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
       if (nextJob._elapsedTimeString !== t) { nextJob._elapsedTimeString = t; renderJobList(); }
-      if (el.btnCancel) el.btnCancel.textContent = `⏱ ${t}  ⬛ Hủy xử lý`;
+      if (el.btnCancel) el.btnCancel.textContent = `â± ${t}  â¬› Há»§y xá»­ lÃ½`;
     }, 1000);
 
     await runNextPass(nextJob);
@@ -619,7 +658,6 @@
   async function runNextPass(job) {
     const aiConfig = {
       provider:  localStorage.getItem('ai_provider')  || 'gemini',
-      api_key:   localStorage.getItem('ai_api_key')   || '',
       endpoint:  localStorage.getItem('ai_endpoint')  || '',
       prompt:    localStorage.getItem('ai_prompt')    || '',
     };
@@ -657,7 +695,7 @@
           subtitle_areas: subtitleAreas, inpaint_mode: job.algorithm,
           mask_mode: job.maskMode || 'box', extract_srt: job.extractSrt,
           asr_fallback: job.asrFallback || false, asr_language: job.asrLanguage || 'vi',
-          // ai_rewrite và tts_voice luôn false/none — xử lý ở frontend pipeline 1
+          // ai_rewrite và tts_voice luôn false/none � xử lý �x frontend pipeline 1
           ai_rewrite: false, ai_config: aiConfig, tts_voice: 'none',
         }]);
         state.pollTimer = setInterval(pollProgress, 2000);
@@ -666,12 +704,12 @@
   }
 
   function _jobError(job, msg) {
-    addLog('Lỗi: ' + msg, 'error');
+    addLog('L�i: ' + msg, 'error');
     job.status = 'error'; state.processingJobId = null;
     renderJobList(); processNextJob();
   }
 
-  // ─── Progress polling & WebSocket ────────────────────────────────────────
+  // ������ Progress polling & WebSocket ��������������������������������������������������������������������������������
   async function pollProgress() {
     if (!state.processingJobId) return;
     const job = state.jobs.find(j => j.id === state.processingJobId);
@@ -698,7 +736,7 @@
     if (msg.type !== 'progress' || !msg.data) return;
     const d   = msg.data;
     const pct = d.progress || 0;
-    // Tìm job đang chạy — ưu tiên pipeline1JobId (OCR job), sau đó processingJobId (inpaint job)
+    // Tìm job �ang chạy � ưu tiên pipeline1JobId (OCR job), sau �ó processingJobId (inpaint job)
     const job = state.jobs.find(j => j.id === state.pipeline1JobId)
              || state.jobs.find(j => j.id === state.processingJobId);
     if (!job) return;
@@ -709,14 +747,14 @@
     }
     renderJobList();
 
-    // Nếu là inpaint job (không phải pipeline1), mới gọi onJobFinished
+    // Nếu là inpaint job (không phải pipeline1), m�:i gọi onJobFinished
     if (!state.pipeline1JobId && (d.is_finished || pct >= 100)) onJobFinished(job);
 
     // Handle srt_content từ backend WS (OCR kết quả)
     if (d.srt_content && !job.srtContent) {
       job.srtContent = d.srt_content;
       if (el.srtContent) el.srtContent.value = d.srt_content;
-      addLog('[ASR] ✅ SRT đã được trích xuất.', 'success');
+      addLog('[ASR] �S& SRT �ã �ược trích xuất.', 'success');
     }
   }
 
@@ -724,7 +762,7 @@
     if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
     if (state.processingTimerInterval) { clearInterval(state.processingTimerInterval); state.processingTimerInterval = null; }
     state.processingStartTime = null;
-    if (el.btnCancel) el.btnCancel.textContent = '⬛ Hủy xử lý';
+    if (el.btnCancel) el.btnCancel.textContent = '�: Hủy xử lý';
 
     // Multi-pass check
     if (job.subtitleMode === 'manual' && job.regions.length > 0) {
@@ -740,7 +778,7 @@
     job.progress = 100;
     state.processingJobId    = null;
     state.processingPassIndex = 0;
-    addLog(`✅ Xóa sub hoàn tất: ${job.fileName}`, 'success');
+    addLog(`âœ… XÃ³a sub hoÃ n táº¥t: ${job.fileName}`, 'success');
 
     if (state.activeJobId === job.id) {
       setProgress(100, 'Xóa sub hoàn tất!');
@@ -752,14 +790,14 @@
       }
     }
 
-    // ── Pipeline 1: AI Rewrite → TTS (nếu user bật) ──────────────────────
+    // ���� Pipeline 1: AI Rewrite �  TTS (nếu user bật) ��������������������������������������������
     const srtText = job.srtContent || el.srtContent?.value?.trim();
     if (srtText) {
       const needAi  = job.aiRewrite   && !job._aiTriggered;
       const needTts = job.ttsGenerate && !job._ttsTriggered && !needAi;
 
       if (needAi || needTts) {
-        job.status = 'processing';  // giữ trạng thái cho đến khi pipeline 1 xong
+        job.status = 'processing';  // giữ trạng thái cho �ến khi pipeline 1 xong
         renderJobList();
 
         if (needAi) {
@@ -768,7 +806,7 @@
           if (typeof window.triggerAutoAiRewrite === 'function') {
             window.triggerAutoAiRewrite(job, srtText).then(() => _afterPipeline1(job));
           } else {
-            addLog('[AI] ⚠️ Module pipeline1-ai chưa được load.', 'warning');
+            addLog('[AI] �a�️ Module pipeline1-ai chưa �ược load.', 'warning');
             _afterPipeline1(job);
           }
         } else {
@@ -777,7 +815,7 @@
           if (typeof window.triggerAutoTts === 'function') {
             window.triggerAutoTts(job, srtForTts).then(() => _afterPipeline1(job));
           } else {
-            addLog('[TTS] ⚠️ Module pipeline1-ai chưa được load.', 'warning');
+            addLog('[TTS] �a�️ Module pipeline1-ai chưa �ược load.', 'warning');
             _afterPipeline1(job);
           }
         }
@@ -795,20 +833,20 @@
   function _finalizeJobOrNext(job) {
     job.status   = 'finished';
     job.progress = 100;
-    showToast(`"${job.fileName}" đã xử lý xong!`, 'success', 5000);
+    showToast(`"${job.fileName}" Ä‘Ã£ xá»­ lÃ½ xong!`, 'success', 5000);
     renderJobList();
     if (state.activeJobId === job.id) { setProgress(100, 'Hoàn tất!'); updateStartButton(); }
     processNextJob();
   }
 
-  // ─── Pipeline 1 Queue Runner ──────────────────────────────────────────────
+  // ������ Pipeline 1 Queue Runner ��������������������������������������������������������������������������������������������
   /**
    * Chạy các job có pipeline=1 (AI Analysis + TTS).
-   * KHÔNG gọi inpaint backend. Chỉ: OCR/ASR từ video gốc → AI rewrite → TTS.
+   * KH�NG gọi inpaint backend. Ch�0: OCR/ASR tá»« video gá»‘c â†’ AI rewrite â†’ TTS.
    * Sau khi xong, job.status = 'finished', sẵn sàng cho Pipeline 2 thủ công.
    */
   async function processPipeline1Queue() {
-    if (state.pipeline1JobId) return; // đang có job chạy
+    if (state.pipeline1JobId) return; // �ang có job chạy
     const nextJob = state.jobs.find(j => j.status === 'queued' && j.pipeline === 1);
     if (!nextJob) return;
 
@@ -817,11 +855,11 @@
     nextJob.progress = 0;
     nextJob._p1Cancelled = false;
     renderJobList();
-    addLog(`[AI] 🚀 Bắt đầu Pipeline 1: ${nextJob.fileName}`, 'success');
+    addLog(`[AI] ðŸš€ Báº¯t Ä‘áº§u Pipeline 1: ${nextJob.fileName}`, 'success');
 
     try {
-      // Bước 1: Trích xuất văn bản từ âm thanh (ASR)
-      addLog('[AI] 🎤 Bước 1/3 — Đang trích xuất văn bản từ âm thanh (ASR)...', 'info');
+      // Bư�:c 1: Trích xuất vĒn bản từ âm thanh (ASR)
+      addLog('[AI] �x}� Bư�:c 1/3 â€” Äang trÃ­ch xuáº¥t vÄƒn báº£n tá»« Ã¢m thanh (ASR)...', 'info');
 
       const asrRes = await api.extractTextP1(
         nextJob.id,
@@ -839,7 +877,7 @@
       }
 
       if (!asrRes.srt_content || asrRes.srt_content.trim() === '') {
-        throw new Error('Không phát hiện được văn bản trong video.');
+        throw new Error('Không phát hi�!n �ược vĒn bản trong video.');
       }
 
       nextJob.srtContent = asrRes.srt_content;
@@ -858,56 +896,56 @@
       }
 
       const lineCount = (asrRes.srt_content.match(/-->/g) || []).length;
-      addLog(`[AI] ✅ ASR hoàn tất — ${lineCount} dòng phụ đề.`, 'success');
+      addLog(`[AI] âœ… ASR hoÃ n táº¥t â€” ${lineCount} dÃ²ng phá»¥ Ä‘á».`, 'success');
 
       nextJob.progress = 33;
-      renderJobList(); // cập nhật card với srtContent mới
+      renderJobList(); // cập nhật card v�:i srtContent m�:i
 
-      // Bước 2: AI Rewrite (nếu bật và có SRT)
+      // Bư�:c 2: AI Rewrite (nếu bật và có SRT)
       if (nextJob.aiRewrite && nextJob.srtContent) {
-        addLog('[AI] 🤖 Bước 2/3 — AI đang viết lại phụ đề...', 'info');
+        addLog('[AI] �x� Bư�:c 2/3 â€” AI Ä‘ang viáº¿t láº¡i phá»¥ Ä‘á»...', 'info');
         if (typeof window.triggerAutoAiRewrite === 'function') {
           await window.triggerAutoAiRewrite(nextJob, nextJob.srtContent);
-          // Sau khi AI xong, đảm bảo aiContent hiển thị text sạch trong card
+          // Sau khi AI xong, �ảm bảo aiContent hiỒn th�9 text sạch trong card
           if (nextJob.aiContent && nextJob.aiContent.includes('-->')) {
             nextJob.aiContent = _srtToDisplayText(nextJob.aiContent);
           }
         } else {
-          addLog('[AI] ⚠️ Module pipeline1-ai chưa load.', 'warning');
+          addLog('[AI] �a�️ Module pipeline1-ai chưa load.', 'warning');
         }
         if (nextJob._p1Cancelled) { _finishP1Job(nextJob, 'idle'); return; }
       } else if (!nextJob.aiRewrite) {
-        addLog('[AI] ℹ️ Bước 2/3 — Bỏ qua AI rewrite (chưa bật).', 'info');
+        addLog('[AI] ��️ Bư�:c 2/3 â€” Bá» qua AI rewrite (chÆ°a báº­t).', 'info');
       }
 
       nextJob.progress = 66;
       renderJobList();
 
-      // Bước 3: TTS (nếu bật và chưa được chain từ AI rewrite)
-      // triggerAutoAiRewrite đã chain TTS rồi nếu aiRewrite=true
-      // Nên chỉ gọi TTS riêng khi aiRewrite=false
+      // Bư�:c 3: TTS (nếu bật và chưa �ược chain từ AI rewrite)
+      // triggerAutoAiRewrite �ã chain TTS r�i nếu aiRewrite=true
+      // Nên ch�0 gọi TTS riêng khi aiRewrite=false
       if (nextJob.ttsGenerate && !nextJob.aiRewrite) {
-        addLog('[TTS] 🎤 Bước 3/3 — Tạo âm thanh lồng tiếng...', 'info');
+        addLog('[TTS] �x}� Bư�:c 3/3 â€” Táº¡o Ã¢m thanh lá»“ng tiáº¿ng...', 'info');
         const srtForTts = nextJob.srtContent || '';
         if (srtForTts && typeof window.triggerAutoTts === 'function') {
           await window.triggerAutoTts(nextJob, srtForTts);
         } else if (!srtForTts) {
-          addLog('[TTS] ⚠️ Không có SRT để tạo TTS.', 'warning');
+          addLog('[TTS] �a�️ Không có SRT �Ồ tạo TTS.', 'warning');
         }
         if (nextJob._p1Cancelled) { _finishP1Job(nextJob, 'idle'); return; }
       } else if (nextJob.ttsGenerate && nextJob.aiRewrite) {
-        addLog('[TTS] ℹ️ Bước 3/3 — TTS đã được chain từ AI rewrite.', 'info');
+        addLog('[TTS] ��️ Bư�:c 3/3 â€” TTS Ä‘Ã£ Ä‘Æ°á»£c chain tá»« AI rewrite.', 'info');
       } else {
-        addLog('[TTS] ℹ️ Bước 3/3 — Bỏ qua TTS (chưa bật).', 'info');
+        addLog('[TTS] ��️ Bư�:c 3/3 â€” Bá» qua TTS (chÆ°a báº­t).', 'info');
       }
 
       nextJob.progress = 100;
       _finishP1Job(nextJob, 'finished');
-      addLog(`[AI] 🎉 Pipeline 1 hoàn tất: ${nextJob.fileName}`, 'success');
-      showToast(`"${nextJob.fileName}" — AI & TTS hoàn tất!`, 'success', 5000);
+      addLog(`[AI] ðŸŽ‰ Pipeline 1 hoÃ n táº¥t: ${nextJob.fileName}`, 'success');
+      showToast(`"${nextJob.fileName}" â€” AI & TTS hoÃ n táº¥t!`, 'success', 5000);
 
     } catch (e) {
-      addLog('[AI] ❌ Lỗi Pipeline 1: ' + e.message, 'error');
+      addLog('[AI] �R L�i Pipeline 1: ' + e.message, 'error');
       _finishP1Job(nextJob, 'error');
     }
   }
@@ -926,11 +964,11 @@
   /**
    * Chờ backend hoàn thành OCR job (skip_inpaint=true) và lấy SRT.
    * Backend gửi srt_content qua WebSocket (handleWSMessage sẽ set job.srtContent).
-   * @returns {Promise<string|null>} SRT content hoặc null nếu timeout/lỗi
+   * @returns {Promise<string|null>} SRT content hoặc null nếu timeout/lá»—i
    */
   async function _waitForOcrSrt(job, timeoutSecs = 120) {
-    // Đăng ký polling
-    state.processingJobId = job.id; // để handleWSMessage nhận đúng job
+    // ĐĒng ký polling
+    state.processingJobId = job.id; // �Ồ handleWSMessage nhận �úng job
     state.pollTimer = setInterval(async () => { /* handled below */ }, 99999);
 
     return new Promise((resolve) => {
@@ -938,14 +976,14 @@
       const interval = setInterval(async () => {
         elapsed += 2;
 
-        // WS đã set srtContent (qua handleWSMessage → d.srt_content)
+        // WS �ã set srtContent (qua handleWSMessage �  d.srt_content)
         if (job.srtContent) {
           clearInterval(interval);
           resolve(job.srtContent);
           return;
         }
 
-        // Poll /api/status để cập nhật progress và detect finish
+        // Poll /api/status �Ồ cập nhật progress và detect finish
         try {
           const st = await api.getStatus();
           const backendJob = st.current_job_id && st.jobs ? st.jobs[st.current_job_id] : null;
@@ -990,7 +1028,7 @@
     return result;
   }
 
-  // ─── Video Preview ────────────────────────────────────────────────────────
+  // ������ Video Preview ����������������������������������������������������������������������������������������������������������������
   async function loadOrigFrame(frameNum, videoPath) {
     try {
       const blob = await api.getFrame(frameNum, videoPath);
@@ -1038,12 +1076,12 @@
   async function loadVideo(job) {
     try {
       if (!state.isBackendReady) { setTimeout(() => loadVideo(job), 2000); return; }
-      addLog(`Đang tải preview: ${job.fileName}...`, 'info');
+      addLog(`Äang táº£i preview: ${job.fileName}...`, 'info');
       const info = await api.videoInfo(job.filePath);
-      if (!info?.width) { addLog('Lỗi: Dữ liệu video không hợp lệ', 'error'); return; }
+      if (!info?.width) { addLog('L�i: Dữ li�!u video không hợp l�!', 'error'); return; }
       state.videoInfo = info;
       if (el.metaName) el.metaName.textContent = job.fileName;
-      if (el.metaRes)  el.metaRes.textContent  = `${info.width}×${info.height}`;
+      if (el.metaRes)  el.metaRes.textContent  = `${info.width}Ã—${info.height}`;
       if (el.metaFps)  el.metaFps.textContent  = `${info.fps.toFixed(1)} fps`;
       if (el.metaDur)  el.metaDur.textContent  = fmtTime(info.duration);
       if (el.timelineOrig) { el.timelineOrig.max = info.total_frames - 1; el.timelineOrig.disabled = false; }
@@ -1058,7 +1096,7 @@
       el.timelineResult.disabled   = !hasResult; el.btnPlayResult.disabled   = !hasResult;
       el.btnPrevResult.disabled    = !hasResult; el.btnNextResult.disabled    = !hasResult;
       if (hasResult) loadResultFrame(0, job.outputPath);
-    } catch (e) { addLog('Lỗi tải video: ' + e.message, 'error'); }
+    } catch (e) { addLog('L�i tải video: ' + e.message, 'error'); }
   }
 
   function fmtTime(s) {
@@ -1082,7 +1120,7 @@
   el.btnNextResult?.addEventListener('click',() => { const j=getActiveJob(); if(j?.outputPath&&state.videoInfo) loadResultFrame(Math.min(state.currentFrameResult+1, state.videoInfo.total_frames-1), j.outputPath); });
 
   el.btnPlayOrig?.addEventListener('click', () => {
-    if (state.playIntervalOrig) { clearInterval(state.playIntervalOrig); state.playIntervalOrig = null; el.btnPlayOrig.textContent = '▶'; return; }
+    if (state.playIntervalOrig) { clearInterval(state.playIntervalOrig); state.playIntervalOrig = null; el.btnPlayOrig.textContent = '��'; return; }
     el.btnPlayOrig.textContent = '⏸';
     state.playIntervalOrig = setInterval(() => {
       const j = getActiveJob(); if (!j || !state.videoInfo) return;
@@ -1091,7 +1129,7 @@
     }, 100);
   });
   el.btnPlayResult?.addEventListener('click', () => {
-    if (state.playIntervalResult) { clearInterval(state.playIntervalResult); state.playIntervalResult = null; el.btnPlayResult.textContent = '▶'; return; }
+    if (state.playIntervalResult) { clearInterval(state.playIntervalResult); state.playIntervalResult = null; el.btnPlayResult.textContent = '��'; return; }
     el.btnPlayResult.textContent = '⏸';
     state.playIntervalResult = setInterval(() => {
       const j = getActiveJob(); if (!j?.outputPath || !state.videoInfo) return;
@@ -1100,12 +1138,12 @@
     }, 100);
   });
 
-  // ─── Region Drawing ───────────────────────────────────────────────────────
+  // ������ Region Drawing ��������������������������������������������������������������������������������������������������������������
   function renderRegionsList() {
     const job = getActiveJob();
     if (!el.regionsList) return;
     if (!job || !job.regions.length) {
-      el.regionsList.innerHTML = '<div class="region-empty">Bấm "+ Vẽ vùng" rồi kéo chuột trên video</div>';
+      el.regionsList.innerHTML = '<div class="region-empty">Bấm "+ Váº½ vÃ¹ng" r�i kéo chu�"t trên video</div>';
       return;
     }
     el.regionsList.innerHTML = '';
@@ -1113,8 +1151,8 @@
       const item = document.createElement('div');
       item.className = 'region-item';
       item.innerHTML = `<span class="region-dot" style="background:${REGION_COLORS[i%REGION_COLORS.length]}"></span>
-        <span class="region-label">Vùng #${r.label} (${r.startFrame}-${r.endFrame})</span>
-        <button class="btn-region-del" data-idx="${i}">✕</button>`;
+        <span class="region-label">VÃ¹ng #${r.label} (${r.startFrame}-${r.endFrame})</span>
+        <button class="btn-region-del" data-idx="${i}">âœ•</button>`;
       item.querySelector('.btn-region-del').addEventListener('click', () => {
         job.regions.splice(i, 1);
         renderRegionsList(); renderRegionOverlays();
@@ -1191,7 +1229,7 @@
     });
   }
 
-  // ─── Voice Segments render ────────────────────────────────────────────────
+  // ������ Voice Segments render ������������������������������������������������������������������������������������������������
   function renderVoiceSegments(segments) {
     const container = document.getElementById('voice-segments');
     if (!container) return;
@@ -1204,7 +1242,7 @@
   }
   window.renderVoiceSegments = renderVoiceSegments;
 
-  // ─── Output Dir Button ────────────────────────────────────────────────────
+  // ������ Output Dir Button ��������������������������������������������������������������������������������������������������������
   el.btnOutputDir?.addEventListener('click', async () => {
     if (!window.electronAPI?.openDirectory) return;
     const result = await window.electronAPI.openDirectory();
@@ -1213,11 +1251,11 @@
       localStorage.setItem('output_dir', state.outputDir);
       const display = document.getElementById('output-dir-text');
       if (display) display.textContent = state.outputDir;
-      addLog(`Thư mục đầu ra: ${state.outputDir}`, 'info');
+      addLog(`ThÆ° má»¥c Ä‘áº§u ra: ${state.outputDir}`, 'info');
     }
   });
 
-  // ─── Column Resize ────────────────────────────────────────────────────────
+  // ������ Column Resize ����������������������������������������������������������������������������������������������������������������
   function initResize(handle, leftSel, rightSel) {
     if (!handle) return;
     let dragging = false, startX, startLeft, startRight;
@@ -1239,7 +1277,7 @@
   initResize(el.resizeHandle1, '.col-controls', '.col-preview');
   initResize(el.resizeHandle2, '.col-preview',  '.col-jobs');
 
-  // ─── CheckBox expand/collapse for job cards ───────────────────────────────
+  // ������ CheckBox expand/collapse for job cards ��������������������������������������������������������������
   ['chk-extract-srt','chk-ai-rewrite','chk-tts-generate','chk-voice-sub'].forEach(id => {
     const chk = document.getElementById(id);
     if (!chk) return;
@@ -1261,12 +1299,12 @@
     saveControlsToJob();
   });
 
-  // ─── Settings (delegated to settings module via window.*) ────────────────
+  // ������ Settings (delegated to settings module via window.*) ��������������������������������
   function loadSettingsValues() {
     if (typeof window.loadSettingsValues === 'function') window.loadSettingsValues();
   }
 
-  // ─── Python backend log forwarding ───────────────────────────────────────
+  // ������ Python backend log forwarding ������������������������������������������������������������������������������
   if (window.electronAPI?.onPythonLog) {
     window.electronAPI.onPythonLog((msg) => {
       msg.split('\n').filter(l => l.trim()).forEach(line => addLog('[Py] ' + line, 'info'));
@@ -1278,29 +1316,29 @@
     });
   }
 
-  // ─── Init ─────────────────────────────────────────────────────────────────
+  // ������ Init ����������������������������������������������������������������������������������������������������������������������������������
   connectToBackend();
 
-  // Khởi tạo các module ES6 sau khi DOM sẵn sàng
-  // (các module được load qua <script type="module"> trong index.html
-  //  và tự gọi window.initXxx = ... rồi app.js gọi lại đây)
+  // Kh�xi tạo các module ES6 sau khi DOM sẵn sàng
+  // (các module �ược load qua <script type="module"> trong index.html
+  //  và tự gọi window.initXxx = ... r�i app.js gọi lại �ây)
   setTimeout(() => {
     if (typeof window.initPromptManager === 'function') window.initPromptManager();
-    else console.warn('[App] initPromptManager chưa được load — kiểm tra script tag trong index.html');
+    else console.warn('[App] initPromptManager chưa �ược load � kiỒm tra script tag trong index.html');
 
     if (typeof window.initSettings === 'function') window.initSettings();
-    else console.warn('[App] initSettings chưa được load');
+    else console.warn('[App] initSettings chưa �ược load');
 
     if (typeof window.renderSavedVoices === 'function') window.renderSavedVoices();
 
-    // Sync voice dropdown với voices đã lưu (nếu settings module chưa ready)
+    // Sync voice dropdown v�:i voices �ã lưu (nếu settings module chưa ready)
     const voices = (() => { try { return JSON.parse(localStorage.getItem('tts_voices') || '[]'); } catch { return []; } })();
     const ttsVoiceSel = document.getElementById('tts-voice');
     if (ttsVoiceSel && voices.length > 0) {
       voices.forEach((v, i) => {
         if (![...ttsVoiceSel.options].some(o => o.value === `clone:${i}`)) {
           const opt = document.createElement('option');
-          opt.value = `clone:${i}`; opt.textContent = `🎤 ${v.name}`;
+          opt.value = `clone:${i}`; opt.textContent = `ðŸŽ¤ ${v.name}`;
           ttsVoiceSel.appendChild(opt);
         }
       });
@@ -1313,35 +1351,34 @@
     }, 3000);
 
     updateStartButton();
-    addLog('App khởi động thành công.', 'info');
+    addLog('App kh�xi ��"ng thành công.', 'info');
   }, 100);
 
-})(); // end IIFE
 
-  window.renderJobDetail1 = function() {
+window.renderJobDetail1 = function() {
     const titleEl = document.getElementById('step1-detail-title');
     const statusEl = document.getElementById('step1-detail-status');
     const textEl = document.getElementById('step1-detail-text');
     const audioEl = document.getElementById('step1-detail-audio');
     const audioEmptyEl = document.getElementById('step1-audio-empty');
-    
+
     if (!state.pipeline1SelectedJobId) {
       if (titleEl) titleEl.textContent = 'Vui lòng chọn 1 Job';
-      if (statusEl) statusEl.textContent = 'Trống';
+      if (statusEl) statusEl.textContent = 'Tr�ng';
       if (textEl) textEl.value = '';
       if (audioEl) { audioEl.style.display = 'none'; audioEl.src = ''; }
       if (audioEmptyEl) audioEmptyEl.style.display = 'block';
       return;
     }
-    
+
     const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
     if (!job) return;
-    
+
     if (titleEl) titleEl.textContent = job.fileName;
     if (statusEl) statusEl.textContent = job.status.toUpperCase();
-    
+
     if (textEl) textEl.value = job.aiContent || job.srtContent || '';
-    
+
     if (job.ttsAudioPath) {
       if (audioEl) {
         audioEl.style.display = 'block';
@@ -1351,6 +1388,18 @@
     } else {
       if (audioEl) { audioEl.style.display = 'none'; audioEl.src = ''; }
       if (audioEmptyEl) audioEmptyEl.style.display = 'block';
+    }
+
+    if (el.aiModel2 && job.p1AiModel !== undefined) {
+      el.aiModel2.value = job.p1AiModel;
+    }
+    const ttsVoice = document.getElementById('step1-tts-voice');
+    if (ttsVoice && job.p1TtsVoice !== undefined) {
+      ttsVoice.value = job.p1TtsVoice;
+    }
+    const ttsSpeed = document.getElementById('step1-tts-speed');
+    if (ttsSpeed && job.p1TtsSpeed !== undefined) {
+      ttsSpeed.value = job.p1TtsSpeed;
     }
   }
 
@@ -1365,6 +1414,9 @@
       } else {
         job.srtContent = textEl.value;
       }
-      addLog('Đã lưu nội dung cập nhật cho ' + job.fileName, 'info');
+      addLog('Đã lưu n�"i dung cập nhật cho ' + job.fileName, 'info');
     }
   });
+
+})();
+

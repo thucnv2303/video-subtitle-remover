@@ -1,0 +1,12 @@
+RESULTS - CRASH-RECOVERY-CORRECTION-009
+Platform: Windows 10 Pro  Node: v24.18.0
+PASS: 65   FAIL: 0
+Exit: 0
+
+Case E branch confirmed (TC9): YES
+Windows-safe restore confirmed (TC5,TC14): YES
+Cleanup failure reported (TC12): YES
+No credential content in errors (TC13): YES
+
+FAILED:
+  (none)

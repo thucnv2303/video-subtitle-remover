@@ -1,50 +1,19 @@
-# AgentOS Handoff Status
+# Handoff
 
-## Last completed task
-RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED — PASS WITH GIT-NORMALIZED LF
+## RECOVERY-007E-PIPELINE1-JOB-MODEL-VOICE-RUNTIME-FIX-024
+The application has been repaired to securely handle Pipeline 1 per-job state.
+pp.js and pipeline1-ai.js now read job-specific properties (p1AiModel, p1TtsVoice, p1TtsSpeed).
+Models are dynamically listed inside the UI on the iModelChanged event instead of collapsing to a single option.
+Mojibake in the renderer UI label has been fixed.
+The unhandledrejection trace has been enriched with stack traces and state is not defined crashes mitigated by protecting against uninitialized job data.
+	k-job-card has been introduced into main.css.
+15 runtime assertions execute natively using node against the source strings and successfully PASS.
 
-## Active Task
-RECOVERY-007E-AI-SETTINGS-001 (NOT STARTED)
+Pending tasks:
+1. Owner to run application in production environment to manually verify state is not defined is gone and job model selection is operational.
+2. PM to review PR.
 
-## Status
-- **Project Manager Decision**: PASS — SOURCE CONTENT ACCEPTED; LINE-ENDING NORMALIZATION RECORDED
-- **Source publication facts**:
-  - Published as Git-normalized LF text, content-equivalent to the approved local snapshots.
-  - Source commit remains unchanged: e6949a7f47affc4cd6149db20a11aee28da55008
-  - Five differences are CRLF → LF normalization only.
-  - Converting the five GitHub LF blobs back to CRLF reproduces every approved local SHA256.
-  - pipeline3-finalize.js already matched without conversion.
-  - No JavaScript token or runtime logic changed.
-  - Independent node --check: 6/6 PASS.
-  - Import-target verification: PASS.
-  - Named-import reconciliation: 23/23 PASS.
-- **Tracking**:
-  - AI Settings implementation NOT STARTED
-  - BUG-008 ACTIVE
-  - BUG-009 ACTIVE
-  - RECOVERY-007 owner verification PAUSED
-  - PR #4 DO NOT MERGE
-  - PR #5 DO NOT MERGE
-  - PR #6 DO NOT MERGE
-  - PR #7 DO NOT MERGE
-
-## Next Permitted Action
-Project manager to review the finalized baseline and authorize implementation of AI Settings.
-
-## Execution
-NOT STARTED
-
-## Code review
-WAITING
-
-## Automated verification
-WAITING
-
-## Owner manual app verification
-BLOCKED
-
-## Documentation synchronization
-WAITING_REVIEW
-
-## Merge permission
-BLOCKED
+## [026] SHARED STATE CORRECTION
+- Root cause: pp.js and store.js maintained independent state instances. pp.js missing IIFE closing. Mojibake from text encoding corruption.
+- Solution: Unify pp.js and store.js using window._appState. Fixed SyntaxError. Stripped pipeline.js from index.html. Repaired encoding corruption.
+- Status: CANDIDATE FIX, awaiting PM review.

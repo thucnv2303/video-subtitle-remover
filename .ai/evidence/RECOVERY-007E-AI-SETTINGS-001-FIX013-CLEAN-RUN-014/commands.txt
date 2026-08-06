@@ -1,0 +1,24 @@
+TESTED_SHA: d2fcb5def5c132cc69e59d001b35e812ab4f3662
+Source Commit: e3db5fcb74ec45ed48b949a42d6786adc151ccaa
+Branch/Head: refs/heads/review/RECOVERY-007E-AI-SETTINGS-001-ai-settings detached
+Windows: Microsoft Windows NT 10.0.26200.0
+Node: v24.18.0
+Electron:  v43.3.0
+
+[PRE-TEST STATUS]
+
+[END PRE-TEST STATUS]
+
+> node --check src/main/main.js
+Exit Code: 0
+> node --check tests/test_credential_recovery.js
+Exit Code: 0
+> $env:NODE_ENV='test'; node tests/test_credential_recovery.js
+Exit Code: 0
+> git diff --check
+
+Exit Code: 0
+
+[POST-TEST STATUS]
+
+[END POST-TEST STATUS]

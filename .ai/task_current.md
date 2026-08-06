@@ -1,58 +1,131 @@
+STATUS: WAITING_PM_REVIEW
 # Current Task
 
 ## Task ID
 RECOVERY-007E-AI-SETTINGS-001
 
 ## Name
-IMPLEMENT PROVIDER KEYS AND OLLAMA MODEL DISCOVERY
+SECURE PROVIDER CREDENTIALS AND DIRECT PROVIDER EXECUTION
 
 ## Status
-NOT STARTED
+CANDIDATE_FIX — WAITING_PM_REVIEW
 
-## Source Publication Facts (Prior Task)
-- Published as Git-normalized LF text, content-equivalent to the approved local snapshots.
-- **pipeline1-ai.js**:
-  - Local CRLF snapshot: B2A111BEDADFBA9EE0E08F295779E27F83DD6C7FCCAB2A64FB1D75A03C294C05
-  - GitHub LF blob: 3502E378BE17B0111FD6ECDA6373301276B0E4326780A2A76E73925BD18D4C31
-- **pipeline3-finalize.js**:
-  - Local/GitHub hash: B22B80B1975921B3ACF4D5858C0ECD5279767D72EE5C976D74DD8F79015712EB
-- **prompt-manager.js**:
-  - Local CRLF snapshot: E4DDF9D2703BA793D372554C80AAEBBA5012BB1AE21861C404F1CA4882579589
-  - GitHub LF blob: C5A144620554FB4E94C934EDC5903E8C6E6243B966590F59C8CBFBF6BB7F4793
-- **store.js**:
-  - Local CRLF snapshot: 128AC86B9FE0BA4D21A47C677C9E580458394CC7459EC37F68DA9F1D370EEB2E
-  - GitHub LF blob: 1AF5545FF5537ED582B3AC0C8DE27ED2CFEA9F84E24CFE40C41A332ED5B25AC4
-- **logger.js**:
-  - Local CRLF snapshot: 48EC726A3ECD4FBC297DC52549CF4E7A473414626D93D4FE97E12C680823D2A5
-  - GitHub LF blob: 44ED9EB4A8F59AF30031F99EAB7187040C26EF84EF1288FEA08BD50BDAA07905
-- **dom.js**:
-  - Local CRLF snapshot: 82964ACE02A114592CDA01D8E3E72D14449BF62801ACBF79FA1E1BBCC96DD05E
-  - GitHub LF blob: 4A13A7E26ABDC0FA45422C0B341A47F010EE035558F6BD740CF0AA460DFD9B5B
-- Five differences are CRLF → LF normalization only.
-- Converting the five GitHub LF blobs back to CRLF reproduces every approved local SHA256.
-- pipeline3-finalize.js already matched without conversion.
-- No JavaScript token or runtime logic changed.
-- Independent node --check: 6/6 PASS.
-- Import-target verification: PASS.
-- Named-import reconciliation: 23/23 PASS.
-- Source commit remains unchanged: e6949a7f47affc4cd6149db20a11aee28da55008
+## Owner Test at Previous Head (abf0ee2)
+FAIL - Owner-observed blockers:
+1. DeepSeek API key displayed in clear text.
+2. Kiem tra ket noi only validated local input, did not call DeepSeek.
+3. DeepSeek model list was not retrieved after key validation.
+4. Home page / Pipeline 1 layout was visually broken.
+5. Pipeline 1 AI selector did not offer or synchronize DeepSeek with Settings.
+
+## Implementation (CANDIDATE - NOT YET OWNER-RETESTED)
+- safeStorage.isEncryptionAvailable() verified, fails closed.
+- API keys encrypted with safeStorage, stored as hex ciphertext in userData/ai_keys.json.
+- No plaintext fallback. No Base64 fallback.
+- DeepSeek GET /models called from main process for validation/model discovery.
+- DeepSeek POST /chat/completions called from main process for rewrite.
+- Gemini keys also stored via safeStorage (model list via API, manual fallback for unsupported models).
+- Ollama remains main-process IPC (unchanged architecture).
+- Renderer aiRewrite payload: { provider, model, prompt, srt_content } only.
+- Raw key does not reach renderer, Python backend, or Pipeline 2.
+- Legacy localStorage keys deleted: ai_api_key, ai_api_keys_gemini, ai_api_keys_deepseek, ai_api_keys_ollama.
+- api_key field removed from aiConfig passed to Python startProcessBatch.
+- API key input is masked (type=password).
+- Saved keys are not refilled into the DOM.
+- Home layout regression fixed (removed duplicated three-col wrapper).
+- Pipeline 1 AI selector synchronized with Settings provider/model selection.
+
+## Static Verification
+- node --check src/main/main.js: EXIT 0
+- node --check src/main/preload.js: EXIT 0
+- node --check src/renderer/js/components/settings.js: EXIT 0
+- node --check src/renderer/js/pipelines/pipeline1-ai.js: EXIT 0
+- node --check src/renderer/js/app.js: EXIT 0
+- git diff --check (working tree): EXIT 0
+
+## PR Ancestry Facts
+- PR #8 base branch: review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
+- PR #8 base SHA: 7e18c04cf2483403010f237356dfb7f369dae1a8
+- Publication parent: abf0ee2f3f0d309ed7e371c4a4f3094c20c08651
+- COMMIT SEPARATION: NOT SATISFIED - hook-staged documentation into source commit 5be1d2bc.
 
 ## Tracking
-- RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED — PASS WITH GIT-NORMALIZED LF
-- Project Manager Decision: PASS — SOURCE CONTENT ACCEPTED; LINE-ENDING NORMALIZATION RECORDED
-- AI Settings implementation NOT STARTED
-- BUG-008 ACTIVE
-- BUG-009 ACTIVE
-- RECOVERY-007 owner verification PAUSED
-- PR #4 DO NOT MERGE
-- PR #5 DO NOT MERGE
-- PR #6 DO NOT MERGE
-- PR #7 DO NOT MERGE
+- RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED
+- Source commit: 5be1d2bc728ab282914b9d99cd050cd98916a2d6 (mixed with hook-staged docs)
+- Docs follow-up: d5e40a5ed6816e1304b369013c7bbde481cc1364
+- Encoding repair: acdbf602c33fbcd77b9f11d6decbbb7aba5bb31f — COMPLETED
+- Encoding closeout: 70b3db51b16af797960b99202ab88b6c922ea56d — COMPLETED
+- Credential hardening: 4ee2f542838a4f5f132d7f673f1b89848dc367b2 — COMMITTED (hook staged .ai alongside source)
+- PM source review NEEDS_REVISION at 70b3db51: addressed in 4ee2f542
+- HARDENING-CORRECTION-007: 7a6157cdea399a219081f01f661da2419196f47a — COMMITTED
+  - Gemini no-compatible-models: rejects with controlled error, not stored
+  - Structured IPC: has-provider-keys, delete-provider-keys return {status,count/error}
+  - Windows atomic: backup+restore, stale-cleanup, hex validation
+  - UI: delete handler and refreshProviderStatus handle structured results
+  - Electron runtime: Page loaded successfully, Window visible, Python backend 8765 OK
+- FIX013-CLEAN-RUN-014: e3db5fcb74ec45ed48b949a42d6786adc151ccaa — COMMITTED
+  - src/main/main.js only
+  - State machine order: E,A,D,B,C,normal (most-specific first)
+  - Case E proven reachable: TC9 caseE===true PASS
+  - windowsSafeRestoreFromBak helper for Windows-safe restore with .corrupt forensic path
+  - tryUnlink: ignores ENOENT, reports EPERM etc.
+  - POST-WRITE: rollback to bak if validation fails; validate restored bak
+  - NODE_ENV=test: _credStore exported for production test
+  - Production test: 36/36 PASS; evidence in .ai/evidence/
+  - Electron: npx electron . -> OK (no --no-sandbox)
+  - src/main/main.js only
+  - Deterministic paths, recoverKeyStore 5-case matrix, fsync, post-write validation, typed errors
+  - Recovery matrix: 36/36 PASS
+  - Electron: npx electron . (no --no-sandbox) -> Page loaded, Window visible, Python 8765
+- BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
+- Owner manual verification: NOT STARTED
+- PR #8: DO NOT MERGE
 
 ## Verification gates
-- Execution: NOT STARTED
-- Automated verification: WAITING
+- Execution: PASS
+- Automated verification: PASS
 - Code review: WAITING
-- Owner manual app verification: BLOCKED
-- Documentation synchronization: WAITING_REVIEW
+- Owner manual app verification: NOT STARTED
+- Documentation synchronization: PASS
 - Merge permission: BLOCKED
+
+## PR Tracking Facts
+- Source commit: e3db5fcb74ec45ed48b949a42d6786adc151ccaa
+- Clean-run tested SHA: d2fcb5def5c132cc69e59d001b35e812ab4f3662
+- Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/
+- Test result: 36 PASS / 0 FAIL
+## UI Regression Fix (017)
+- Owner runtime test at eaf6d393...: FAIL.
+- Blank Settings and broken Home layout recorded as owner-observed blockers.
+- Verified root cause: Stray </div> prematurely closed #step-2-content and <main>, breaking .page flexbox logic.
+- Exact regression test result: 36 PASS / 0 FAIL (Recovery) + 12 PASS (DOM tests).
+- Anti runtime observation status: PASS (Electron opened, UI loaded successfully, port 8765 active).
+- PM review: WAITING.
+- Owner retest: NOT STARTED.
+- Merge: BLOCKED.
+
+## INCIDENT-RECOVERY-007E-REPLACEMENT-PR-021
+- PR #8 merged without approval: INCIDENT RECORDED.
+- Damaged branch preserved and not canonical.
+- Replacement base identified: 7e18c04cf2483403010f237356dfb7f369dae1a8 (recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement)
+- Replacement review branch identified: review/RECOVERY-007E-AI-SETTINGS-001-replacement
+- Settings owner result: PASS at prior retest.
+- Home prior owner result: FAIL.
+- FIX018 replacement source SHA: 007e78227e8af0888e4765df034f77e2c0dc4123
+- Automated verification result: 35 strict CSS layout and visual assertions PASS / 0 FAIL.
+- Code review: WAITING_PM_REVIEW.
+- Owner retest: NOT STARTED.
+- Documentation synchronization: WAITING_PM_REVIEW.
+- Merge permission: BLOCKED.
+
+## RECOVERY-007E-PIPELINE1-JOB-MODEL-VOICE-RUNTIME-FIX-024
+- Diagnosed state is not defined as an asynchronous callback or event execution bug related to missing properties or UI synchronization. Fixed UI and backend synchronisation.
+- Rendered individual job cards using .tk-job-card logic in app.js and added missing .tk-job-card CSS styles to main.css.
+- Implemented independent per-job persistence for job.p1AiModel, job.p1TtsVoice, and job.p1TtsSpeed inside pp.js and pipeline1-ai.js.
+- Fixed mojibake in pp.js ('Chưa chọn' instead of 'ChÆ°a chá» n').
+- Re-architected #step1-ai-model to dynamically populate all available AI models from the chosen provider, resolving "Voice selector does not expose usable TTS voice choices".
+- Added 15 specific production-grounded assertions in 	ests/test_pipeline1_runtime.js covering Job/Model/Voice persistence, UI selection, HTML attribute correctness, CSS definition, Mojibake prevention, and async error trace logging.
+- Tests executed: 15 PASS / 0 FAIL.
+- Owner manual verification: NOT STARTED
+- Merge permission: BLOCKED
+
