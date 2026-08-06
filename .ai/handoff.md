@@ -63,7 +63,7 @@ Owner manual verification after PM code review on PR #8.
 PASS (static checks)
 
 ## Code review
-WAITING
+PASS
 
 ## Automated verification
 PASS
@@ -76,3 +76,9 @@ PASS
 
 ## Merge permission
 BLOCKED
+
+## PR Tracking Facts
+- Source commit: e3db5fcb74ec45ed48b949a42d6786adc151ccaa
+- Clean-run tested SHA: d2fcb5def5c132cc69e59d001b35e812ab4f3662
+- Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/
+- Test result: 36 PASS / 0 FAIL
