@@ -266,11 +266,11 @@ console.log("PASS: " + PASS + "  FAIL: " + FAIL);
 const failed = rows.filter(r => r.s === "FAIL");
 if (failed.length) { console.log("FAILED:"); failed.forEach(r => console.log("  - " + r.label + " " + r.detail)); }
 
-const evDir = path.join(__dirname, "..", ".ai", "evidence", "RECOVERY-007E-AI-SETTINGS-001-FIX010-CLOSEOUT-011");
+const evDir = path.resolve(__dirname, '..', '.ai', 'evidence', 'RECOVERY-007E-AI-SETTINGS-001-CLOSEOUT-COLLISION-FIX-012');
 fs.mkdirSync(evDir, { recursive: true });
 
 fs.writeFileSync(path.join(evDir, "commands.txt"), [
-  "TASK: RECOVERY-007E-AI-SETTINGS-001-FIX010-CLOSEOUT-011",
+  "TASK: RECOVERY-007E-AI-SETTINGS-001-CLOSEOUT-COLLISION-FIX-012",
   "Platform: Windows 10 Pro",
   "Node: " + process.version,
   "HEAD: (git rev-parse HEAD)",
@@ -290,7 +290,7 @@ fs.writeFileSync(path.join(evDir, "commands.txt"), [
 
 const matrix = evidence.map(e => "TC: "+e.tc+"\n  Input:  "+e.input+"\n  Branch: "+e.branch+"\n  After:  "+e.after+"\n  Error:  "+(e.err||"(none)")).join("\n\n");
 fs.writeFileSync(path.join(evDir, "recovery-matrix.txt"), [
-  "FORENSIC RECOVERY MATRIX - FIX010-CLOSEOUT-011",
+  "FORENSIC RECOVERY MATRIX - CLOSEOUT-COLLISION-FIX-012",
   "Platform: Windows 10 Pro  Node: " + process.version,
   "",
   matrix

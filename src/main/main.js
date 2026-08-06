@@ -369,14 +369,17 @@ function tryUnlink(filePath) {
 // windowsSafeRestoreFromBak — restore bakPath to keysPath without overwriting keysPath.
 // Returns { ok: true } or throws typed Error.
 function windowsSafeRestoreFromBak(keysPath, bakPath, paths) {
+  if (
+    fileExists(paths.corruptPrimaryPath) ||
+    fileExists(paths.corruptRestoredPath)
+  ) {
+    throw Object.assign(
+      new Error('[RECOVERY_REQUIRED] Tồn tại tệp pháp y; không thể tự động khôi phục an toàn.'),
+      { code: 'RECOVERY_REQUIRED' }
+    );
+  }
   const keysPresent = fileExists(keysPath);
   if (keysPresent) {
-    if (fileExists(paths.corruptPrimaryPath)) {
-      throw Object.assign(
-        new Error('[RECOVERY_REQUIRED] Tệp pháp y đã tồn tại (corrupt.primary); không thể tự động khôi phục.'),
-        { code: 'RECOVERY_REQUIRED' }
-      );
-    }
     try {
       fs.renameSync(keysPath, paths.corruptPrimaryPath);
     } catch (err) {
@@ -408,12 +411,6 @@ function windowsSafeRestoreFromBak(keysPath, bakPath, paths) {
 
   const vr = readFileContent(keysPath);
   if (!vr.ok || !validateStoreContent(vr.content).ok) {
-    if (fileExists(paths.corruptRestoredPath)) {
-      throw Object.assign(
-        new Error('[RESTORE_FAILED] Khôi phục thành công nhưng tệp khôi phục không hợp lệ, và tệp pháp y (restored) đã tồn tại.'),
-        { code: 'RESTORE_FAILED' }
-      );
-    }
     try {
       fs.renameSync(keysPath, paths.corruptRestoredPath);
     } catch (moveErr) {
@@ -611,8 +608,14 @@ function loadEncryptedKeys() {
 // saveEncryptedKeys
 // ---------------------------------------------------------------------------
 function saveEncryptedKeys(data) {
-  recoverKeyStore();
   const paths = getKeysPaths();
+  if (fileExists(paths.corruptNewPath)) {
+    throw Object.assign(
+      new Error('[RECOVERY_REQUIRED] Tồn tại tệp pháp y của lần ghi trước; không thể ghi an toàn.'),
+      { code: 'RECOVERY_REQUIRED' }
+    );
+  }
+  recoverKeyStore();
   const { keysPath, tmpPath, bakPath } = paths;
   const serialized = JSON.stringify(data);
 
@@ -686,12 +689,6 @@ function saveEncryptedKeys(data) {
   const vr = readFileContent(keysPath);
   const valid = vr.ok && validateStoreContent(vr.content).ok;
   if (!valid) {
-    if (fileExists(paths.corruptNewPath)) {
-      throw Object.assign(
-        new Error('[RESTORE_FAILED] Dữ liệu mới lỗi và tệp pháp y (corrupt.new) đã tồn tại. Cần can thiệp.'),
-        { code: 'RESTORE_FAILED' }
-      );
-    }
     try { fs.renameSync(keysPath, paths.corruptNewPath); } catch (err) {
       throw Object.assign(
         new Error('[RESTORE_FAILED] Không thể chuyển tệp mới lỗi sang pháp y: ' + err.message),
