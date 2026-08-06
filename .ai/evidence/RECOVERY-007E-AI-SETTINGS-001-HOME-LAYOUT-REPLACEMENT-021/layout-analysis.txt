@@ -1,0 +1,29 @@
+Selector Usage and Keep/Remove Table:
+
+| Selector | Production HTML Usage | Required for Layout | Pre-existing Equivalent | Decision |
+|---|---|---|---|---|
+| .pipeline-container | #page-home > div.pipeline-container | YES (flex container) | NO | KEEP |
+| .pipeline-content-area | Main content wrapper | YES (flex block) | NO | KEEP |
+| .pipeline-pane | Individual step panes | YES (layout hiding) | NO | KEEP |
+| .pipeline-pane.active | Visible step pane | YES (display flex) | NO | KEEP |
+| .toolkit-layout-3col | Multi-col layout for Step 1 | YES (flex layout) | NO | KEEP |
+| .pipeline-bar-v2 | Top pipeline navigation | YES (visual) | NO | RESTORED |
+| .step-chevron | Pipeline steps | YES (visual) | NO | RESTORED |
+| .step-chevron.active | Active step | YES (visual) | NO | RESTORED |
+| .step-title / .step-sub | Step text | YES (visual) | NO | RESTORED |
+| .tk-group | Label/input wrappers | YES (visual) | NO | RESTORED |
+| .tk-input | Inputs | YES (visual) | NO | RESTORED |
+| .tk-slider | Inputs | YES (visual) | NO | RESTORED |
+| .tk-btn | Buttons | YES (visual) | NO | RESTORED |
+| .tk-btn-primary | Buttons | YES (visual) | NO | RESTORED |
+| .tk-btn-danger | Buttons | YES (visual) | NO | RESTORED |
+| .tk-btn-sm | Buttons | YES (visual) | NO | RESTORED |
+| .tk-prompt-box | Prompt UI | YES (visual) | NO | RESTORED |
+| .tk-prompt-list | Prompt UI | YES (visual) | NO | RESTORED |
+| .tk-prompt-item | Prompt UI | YES (visual) | NO | RESTORED |
+| .tk-prompt-item.active | Prompt UI | YES (visual) | NO | RESTORED |
+| .tk-job-list | Job list | YES (visual) | NO | RESTORED |
+| .tk-log-console | Log console | YES (visual) | NO | RESTORED |
+| .tk-log-header | Log console | YES (visual) | NO | RESTORED |
+
+Conclusion: Restored 18 visual `.tk-` and `.step-` selectors because they are actually used in production HTML and are necessary to prevent browser-default or visibly broken controls in Pipeline 1. (Note: `.tk-input` and `.tk-slider` are separated in CSS for correct strict parsing).

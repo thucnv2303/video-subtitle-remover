@@ -1,0 +1,34 @@
+ M package-lock.json
+ M package.json
+ M src/renderer/index.html
+ M src/renderer/js/app.js
+?? .ai/evidence/RECOVERY-007E-PIPELINE1-RUNTIME-REPLACEMENT-029/local-status.txt
+?? apply_patches.js
+?? create_evidence.js
+?? debug_test.js
+?? fix_aimodel.js
+?? fix_mojibake.js
+?? fix_mojibake2.js
+?? gather_preflight.js
+?? patch_renderJob.js
+?? quick_scan.js
+?? scan_controls.js
+?? temp_dom.js
+?? test_electron.js
+?? test_electron_runtime.js
+?? tests/test_pipeline1_runtime.js
+
+---
+
+M	package-lock.json
+M	package.json
+M	src/renderer/index.html
+M	src/renderer/js/app.js
+
+---
+
+ package-lock.json       | 1790 +++++++++++++++++++++++------------------------
+ package.json            |   38 +-
+ src/renderer/index.html |    3 +-
+ src/renderer/js/app.js  |   60 +-
+ 4 files changed, 964 insertions(+), 927 deletions(-)

@@ -1,0 +1,9 @@
+AGENTOS GATE: COMMIT BI CHAN.
+Source code da duoc stage nhung cac file memory sau chua duoc cap nhat:
+- .ai/current_state.md
+- .ai/task_current.md
+- .ai/handoff.md
+
+Anti phai cap nhat ket qua vao .ai truoc khi commit.
+Sau do chay:
+git add .ai/current_state.md .ai/task_current.md .ai/handoff.md

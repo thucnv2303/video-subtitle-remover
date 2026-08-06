@@ -1,0 +1,4 @@
+1. Checked out replacement branch from d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd
+2. Patched app.js state, AI model dropdown, and TTS values using exact JS splice.
+3. Removed missing pipeline.js reference from index.html.
+4. Added test_pipeline1_runtime.js using Electron to evaluate UI state headlessly.

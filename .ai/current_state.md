@@ -1,67 +1,119 @@
 # Current State
 
 ## Status
-WAITING_REVIEW
+CANDIDATE_FIX — WAITING_PM_REVIEW
 
 ## Primary Input (OWNER CONFIRMED)
-- Chinese product-review videos (Original source cho P1 và P2).
+- Chinese product-review videos (Original source cho P1 va P2).
 
 ## Current Working Capabilities (OWNER CONFIRMED)
 - Voice cloning currently works.
 - TTS generation currently works.
 - Hard-subtitle removal (Pipeline 2) currently works.
 
-## Documentation & Task State
+## Documentation and Task State
 - INCIDENT-RECOVERY-007E-STAGED-TREE-001: COMPLETED
-- RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED — PASS WITH GIT-NORMALIZED LF
-- Project Manager Decision: PASS — SOURCE CONTENT ACCEPTED; LINE-ENDING NORMALIZATION RECORDED
+- RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
+- RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX — WAITING_PM_REVIEW - OWNER RETEST NOT STARTED
 
-## Source Publication Facts
-- Published as Git-normalized LF text, content-equivalent to the approved local snapshots.
-- **pipeline1-ai.js**:
-  - Local CRLF snapshot: B2A111BEDADFBA9EE0E08F295779E27F83DD6C7FCCAB2A64FB1D75A03C294C05
-  - GitHub LF blob: 3502E378BE17B0111FD6ECDA6373301276B0E4326780A2A76E73925BD18D4C31
-- **pipeline3-finalize.js**:
-  - Local/GitHub hash: B22B80B1975921B3ACF4D5858C0ECD5279767D72EE5C976D74DD8F79015712EB
-- **prompt-manager.js**:
-  - Local CRLF snapshot: E4DDF9D2703BA793D372554C80AAEBBA5012BB1AE21861C404F1CA4882579589
-  - GitHub LF blob: C5A144620554FB4E94C934EDC5903E8C6E6243B966590F59C8CBFBF6BB7F4793
-- **store.js**:
-  - Local CRLF snapshot: 128AC86B9FE0BA4D21A47C677C9E580458394CC7459EC37F68DA9F1D370EEB2E
-  - GitHub LF blob: 1AF5545FF5537ED582B3AC0C8DE27ED2CFEA9F84E24CFE40C41A332ED5B25AC4
-- **logger.js**:
-  - Local CRLF snapshot: 48EC726A3ECD4FBC297DC52549CF4E7A473414626D93D4FE97E12C680823D2A5
-  - GitHub LF blob: 44ED9EB4A8F59AF30031F99EAB7187040C26EF84EF1288FEA08BD50BDAA07905
-- **dom.js**:
-  - Local CRLF snapshot: 82964ACE02A114592CDA01D8E3E72D14449BF62801ACBF79FA1E1BBCC96DD05E
-  - GitHub LF blob: 4A13A7E26ABDC0FA45422C0B341A47F010EE035558F6BD740CF0AA460DFD9B5B
-- Five differences are CRLF → LF normalization only.
-- Converting the five GitHub LF blobs back to CRLF reproduces every approved local SHA256.
-- pipeline3-finalize.js already matched without conversion.
-- No JavaScript token or runtime logic changed.
-- Independent node --check: 6/6 PASS.
-- Import-target verification: PASS.
-- Named-import reconciliation: 23/23 PASS.
-- Source commit remains unchanged: e6949a7f47affc4cd6149db20a11aee28da55008
+## Security Incident
+- Owner test at abf0ee2 was FAIL.
+- DeepSeek API key visible in owner screenshot is COMPROMISED. Key must be rotated by owner.
+- The compromised key value is not stored, logged, or referenced in this implementation.
+
+## Credential Architecture (IMPLEMENTED - NOT YET OWNER-RETESTED)
+- Raw provider credentials (DeepSeek, Gemini) no longer stored in localStorage.
+- Encrypted using electron safeStorage (OS-level encryption).
+- safeStorage.isEncryptionAvailable() verified before any store/retrieve; fails closed if unavailable.
+- Ciphertext persisted only under app.getPath(userData)/ai_keys.json.
+- No plaintext fallback. No Base64-as-encryption fallback.
+- Raw key does not reach renderer after save.
+- Raw key does not reach Python backend.
+- Raw key does not reach Pipeline 2.
+- DeepSeek GET /models and POST /chat/completions called directly from Electron main process.
+- Renderer aiRewrite payload contains only: provider, model, prompt, srt_content.
+- Legacy localStorage keys deleted on settings mount (removeItem only, no migration):
+  ai_api_key, ai_api_keys_gemini, ai_api_keys_deepseek, ai_api_keys_ollama
+
+## PR Ancestry Facts
+- PR #8 base branch: review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
+- PR #8 base SHA: 7e18c04cf2483403010f237356dfb7f369dae1a8
+- Publication parent: abf0ee2f3f0d309ed7e371c4a4f3094c20c08651
+- COMMIT SEPARATION: NOT SATISFIED - hook-staged documentation into source commit 5be1d2bc.
 
 ## Tracking
 - Active task: RECOVERY-007E-AI-SETTINGS-001
-- AI Settings implementation NOT STARTED
-- BUG-008 ACTIVE
-- BUG-009 ACTIVE
-- RECOVERY-007 owner verification PAUSED
-- PR #4 DO NOT MERGE
-- PR #5 DO NOT MERGE
-- PR #6 DO NOT MERGE
-- PR #7 DO NOT MERGE
+- Source commit: 5be1d2bc728ab282914b9d99cd050cd98916a2d6 (mixed with hook-staged docs)
+- Docs follow-up: d5e40a5ed6816e1304b369013c7bbde481cc1364
+- Encoding repair: acdbf602c33fbcd77b9f11d6decbbb7aba5bb31f — COMPLETED
+- Encoding closeout: 70b3db51b16af797960b99202ab88b6c922ea56d — COMPLETED
+- Credential hardening: 4ee2f542838a4f5f132d7f673f1b89848dc367b2 — COMMITTED (hook staged .ai alongside source)
+- PM source review NEEDS_REVISION at 70b3db51: addressed in 4ee2f542
+- HARDENING-CORRECTION-007: 7a6157cdea399a219081f01f661da2419196f47a — COMMITTED
+  - B1: fetchGeminiModels rejects on no-compatible-models (not stored as usable)
+  - B2: ai:has-provider-keys returns {status,count/error}; ai:delete-provider-keys returns {status/error}
+  - B3: Windows-safe atomic write with backup+restore
+  - HEX: isValidCiphertext validates even-length hex with max length
+  - UI: refreshProviderStatus and delete handler handle structured results
+  - Electron launch: Page loaded successfully, Window is now visible, Python backend started
+  - Node verify: 26/27 PASS (1 test-script error, not production), Windows second-save: 12/12 PASS
+- FIX013-CLEAN-RUN-014: e3db5fcb74ec45ed48b949a42d6786adc151ccaa — COMMITTED
+  - State machine: most-specific first (E,A,D,B,C,normal)
+  - Case E now reachable and confirmed by TC9 (36/36 PASS)
+  - windowsSafeRestoreFromBak: moves corrupt to .corrupt before rename
+  - Post-write validation rollback: preserves invalid file as .corrupt, restores bak
+  - tryUnlink: reports non-ENOENT failures (EPERM confirmed in TC12)
+  - NODE_ENV=test guard: exports _credStore for production testability
+  - Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/
+  - Electron launch (no --no-sandbox): Page loaded, Window visible, Python 8765
+  - Deterministic paths: ai_keys.json, ai_keys.json.tmp, ai_keys.json.bak (no PID)
+  - recoverKeyStore(): 5 cases A-E; auto-restore from bak across process restarts
+  - saveEncryptedKeys(): fsync + post-write validation + explicit error types
+  - validateStoreContent(): pure helper returning {ok,data/error}
+  - Matrix test: 36/36 PASS
+  - Electron launch (no --no-sandbox): Page loaded, Window visible, Python 8765
+- BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
+- PR #8: DO NOT MERGE
 
 ## Verification gates
-- Execution: NOT STARTED
-- Automated verification: WAITING
+- Execution: PASS
+- Automated verification: PASS
 - Code review: WAITING
-- Owner manual app verification: BLOCKED
-- Documentation synchronization: WAITING_REVIEW
+- Owner manual app verification: NOT STARTED
+- Documentation synchronization: PASS
 - Merge permission: BLOCKED
 
 ## Current branch
-review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
+review/RECOVERY-007E-AI-SETTINGS-001-ai-settings
+
+## PR Tracking Facts
+- Source commit: e3db5fcb74ec45ed48b949a42d6786adc151ccaa
+- Clean-run tested SHA: d2fcb5def5c132cc69e59d001b35e812ab4f3662
+- Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/
+- Test result: 36 PASS / 0 FAIL
+## UI Regression Fix (017)
+- Owner runtime test at eaf6d393...: FAIL.
+- Blank Settings and broken Home layout recorded as owner-observed blockers.
+- Verified root cause: Stray </div> prematurely closed #step-2-content and <main>, breaking .page flexbox logic.
+- Exact regression test result: 36 PASS / 0 FAIL (Recovery) + 12 PASS (DOM tests).
+- Anti runtime observation status: PASS (Electron opened, UI loaded successfully, port 8765 active).
+- PM review: WAITING.
+- Owner retest: NOT STARTED.
+- Merge: BLOCKED.
+
+## INCIDENT-RECOVERY-007E-REPLACEMENT-PR-021
+- PR #8 merged without approval: INCIDENT RECORDED.
+- Damaged branch preserved and not canonical.
+- Replacement base identified: 7e18c04cf2483403010f237356dfb7f369dae1a8 (recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement)
+- Replacement review branch identified: review/RECOVERY-007E-AI-SETTINGS-001-replacement
+- Settings owner result: PASS at prior retest.
+- Home prior owner result: FAIL.
+- FIX018 replacement source SHA: 007e78227e8af0888e4765df034f77e2c0dc4123
+- Automated verification result: 35 strict CSS layout and visual assertions PASS / 0 FAIL.
+- Code review: WAITING_PM_REVIEW.
+- Owner retest: NOT STARTED.
+- Documentation synchronization: WAITING_PM_REVIEW.
+- Merge permission: BLOCKED.
+
+## RECOVERY-007E-PIPELINE1-RUNTIME-REPLACEMENT-029
+Source commit BLOCKED — HOOK POLICY CONFLICT. PR #10 invalidated. Replacement branch review/RECOVERY-007E-PIPELINE1-RUNTIME-replacement-029 created.

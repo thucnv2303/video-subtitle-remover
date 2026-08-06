@@ -1,0 +1,8 @@
+Command Executed for Success:
+> npx electron tests/test_pipeline1_runtime.js
+Exit Code: 0
+
+Proving failure behavior:
+> npx electron C:\Users\thucn\AppData\Local\Temp/test_failure.js
+1
+Exit Code for Failure: 1

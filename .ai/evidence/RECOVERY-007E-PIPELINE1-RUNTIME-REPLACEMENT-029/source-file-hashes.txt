@@ -1,0 +1,8 @@
+PARENT HASHES:
+100644 blob edf88c49dfa2a7570ed9f0d8669fe0ea8dfce742	src/renderer/index.html
+100644 blob cb79c0aa32699981e99ab907aa34d13d8144c65d	src/renderer/js/app.js
+
+WORKING TREE HASHES:
+d6fd0cb2f9d290323e5bd47a8fae7bbeb3e20bd5
+08cb054fd3ef30d93c9a4c44e40609c1d73eafe8
+892145e555564880cc5aef16ddd2068c36fa6391

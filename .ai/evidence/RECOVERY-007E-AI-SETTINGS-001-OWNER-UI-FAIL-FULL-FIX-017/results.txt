@@ -1,0 +1,12 @@
+DOM STRUCTURE REGRESSION TEST RESULTS:
+PASS: 1. #page-home exists.
+PASS: 2. #page-settings exists.
+PASS: 3. .main-area exists.
+PASS: 4. #page-home is contained within .main-area.
+PASS: 5. #page-settings is contained within .main-area.
+PASS: 6. #page-home and #page-settings are page-level sections under the intended application container.
+PASS: 7. #step-2-content is contained within #page-home.
+PASS: 8. Pipeline 2 markup does not contain #page-settings.
+PASS: 9. Required Settings IDs exist.
+PASS: 10. Required Pipeline 1 IDs exist.
+PASS: 11. No duplicate IDs exist in the parsed production document. (Duplicates: )

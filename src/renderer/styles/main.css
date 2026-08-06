@@ -1011,3 +1011,142 @@ input[type="range"]::-webkit-slider-thumb {
 #modal-prompt-list option {
   padding: 6px;
 }
+
+/* ───────── Pipeline 1 / Home Layout ───────── */
+.pipeline-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+}
+
+.pipeline-content-area {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.pipeline-pane {
+  display: none;
+  flex: 1;
+  overflow: hidden;
+}
+
+.pipeline-pane.active {
+  display: flex;
+}
+
+.toolkit-layout-3col {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ───────── Pipeline 1 / Visual Controls ───────── */
+.pipeline-bar-v2 {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.step-chevron {
+  flex: 1;
+  padding: 10px 16px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.step-chevron:last-child {
+  border-right: none;
+}
+.step-chevron:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+.step-chevron.active {
+  background: rgba(124, 58, 237, 0.15);
+  color: #fff;
+  border-bottom: 2px solid var(--accent);
+}
+.step-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+.step-sub {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.tk-group {
+  margin-bottom: 12px;
+}
+.tk-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.tk-input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  color: #fff;
+  font-size: 12px;
+}
+.tk-slider {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  color: #fff;
+  font-size: 12px;
+}
+.tk-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.tk-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 6px 12px; border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent; color: var(--text);
+  font-size: 11px; cursor: pointer; transition: all 0.2s;
+}
+.tk-btn:hover { background: var(--surface-hover); }
+.tk-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tk-btn-primary:hover { filter: brightness(1.15); }
+.tk-btn-danger { color: var(--red); border-color: rgba(239,68,68,0.3); }
+.tk-btn-danger:hover { background: rgba(239,68,68,0.1); }
+.tk-btn-sm { font-size: 10px; padding: 2px 6px; }
+
+.tk-prompt-box {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.tk-prompt-list {
+  background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px; max-height: 80px; overflow-y: auto;
+}
+.tk-prompt-item {
+  padding: 4px 8px; font-size: 11px; color: var(--text-dim);
+  border-radius: 4px; cursor: pointer;
+}
+.tk-prompt-item:hover { background: var(--surface-hover); color: var(--text); }
+.tk-prompt-item.active { background: rgba(124,58,237,0.2); color: #fff; }
+
+.tk-job-list { padding: 4px; }
+.tk-log-console { background: rgba(0,0,0,0.3); }
+.tk-log-header {
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);
+}

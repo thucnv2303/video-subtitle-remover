@@ -6,3 +6,9 @@
 4. **Cách ly file nguyên khối cũ (Avoid Monoliths)**: Không viết thêm code logic mới vào `app.js` trừ khi bắt buộc để tương thích. Mọi logic mới phải đưa vào các module tương ứng trong `src/renderer/js/`.
 5. **Quản lý trạng thái (State Management)**: Không tự ý tạo biến trạng thái toàn cục trong từng file. Đọc và ghi state qua module quản lý trạng thái tập trung (ví dụ: `store.js`).
 6. **ES6 Modules**: Sử dụng chuẩn import/export của ES6 để liên kết các file. Tránh làm ô nhiễm object `window` (global scope).
+
+## INCIDENT-RECOVERY-007E: Small-Fix Governance Directive
+- Never blindly reuse or apply a patch broader than what is strictly required to fix the user-reported issue.
+- Small cosmetic fixes bundled with layout fixes must be stripped unless explicitly verified as required for layout.
+- Always write precise test assertions that do not allow false positives through loose substring matching.
+- Commits must isolate source/tests from documentation/evidence to avoid dirty diffs and hook circumventions.
