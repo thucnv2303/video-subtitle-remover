@@ -88,3 +88,29 @@ PM NEEDS_REVISION at 781ca260 addressed. Owner retest: NOT STARTED.
 - [ ] Ollama scan/test functional (regression).
 - [ ] Pipeline 2 sanitizer intact (regression).
 - [ ] Voice-clone cancel produces no error (regression).
+
+## CRASH-RECOVERY-FIX-008 QA (commit 0be3180)
+Source: src/main/main.js only. Owner retest: NOT STARTED.
+
+- [x] Recovery matrix test: 40/40 PASS (verify_crash_recovery.js).
+- [x] Electron launch: npx electron . (no --no-sandbox) -> Page loaded, Window visible, Python 8765.
+- [x] Case B: keys missing + valid bak -> bak auto-restored to keys across process restart.
+- [x] Case A: corrupt keys + valid bak -> restored from bak; bak removed.
+- [x] Case A: valid keys + corrupt bak -> keys used; corrupt bak removed.
+- [x] Case B: keys missing + corrupt bak -> STORE_CORRUPT; bak preserved for forensics.
+- [x] Case D: keys valid + stale tmp -> stale tmp removed; keys preserved.
+- [x] Case C: keys missing + only tmp -> RECOVERY_REQUIRED; tmp preserved.
+- [x] Case E: all three, keys valid -> stale tmp and bak removed.
+- [x] First save (ENOENT): creates keys; no tmp or bak remain.
+- [x] Second save (Windows): keys updated; no tmp or bak remain.
+- [x] ENOENT + no artifacts: returns {} (clean install).
+- [x] Error messages do not contain raw ciphertext.
+- [ ] Owner: Settings renders Vietnamese text correctly.
+- [ ] Owner: Controlled error visible when store is corrupt (not 'Chưa có key').
+- [ ] Owner: Delete-key failure shows error toast, not success.
+- [ ] Owner: Gemini no-compatible-models shows correct Vietnamese error message.
+- [ ] Owner: Home layout correct.
+- [ ] Owner: Pipeline 1 DeepSeek selector present.
+- [ ] Owner: Ollama scan/test functional.
+- [ ] Owner: Pipeline 2 sanitizer intact.
+- [ ] Owner: Voice-clone cancel produces no error.

@@ -57,7 +57,7 @@ CANDIDATE_FIX
   - UI: refreshProviderStatus and delete handler handle structured results
   - Electron launch: Page loaded successfully, Window is now visible, Python backend started
   - Node verify: 26/27 PASS (1 test-script error, not production), Windows second-save: 12/12 PASS
-- CRASH-RECOVERY-FIX-008: PENDING COMMIT
+- CRASH-RECOVERY-FIX-008: 0be3180ee5a866f24fd5b23bebcac9f2ff65a03c — COMMITTED
   - Deterministic paths: ai_keys.json, ai_keys.json.tmp, ai_keys.json.bak (no PID)
   - recoverKeyStore(): 5 cases A-E; auto-restore from bak across process restarts
   - saveEncryptedKeys(): fsync + post-write validation + explicit error types

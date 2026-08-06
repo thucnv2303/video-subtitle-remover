@@ -172,3 +172,48 @@ refreshProviderStatus(provider):
 btn-delete-keys handler:
   Checks result.status === 'ok' before clearing input and showing toast.
   Shows error message and sets status 'offline' when result.status !== 'ok'.
+
+## CRASH-RECOVERY-FIX-008 (0be3180ee5a866f24fd5b23bebcac9f2ff65a03c)
+
+### Deterministic Artifact Paths
+Primary:  app.getPath('userData')/ai_keys.json
+Temp:     app.getPath('userData')/ai_keys.json.tmp
+Backup:   app.getPath('userData')/ai_keys.json.bak
+No PID in filenames. All paths recoverable across process restarts.
+
+### recoverKeyStore() — called before every load and save
+Handles 5 deterministic cases:
+A. keys + bak: validate keys; if valid, remove bak (and stale tmp). If invalid, restore from bak if valid. If both invalid: STORE_CORRUPT, preserve both.
+B. no keys + bak: validate bak; if valid, rename bak -> keys (auto-restore). If invalid: STORE_CORRUPT, preserve bak.
+C. no keys + tmp (no bak): RECOVERY_REQUIRED, preserve tmp for forensics.
+D. keys + tmp (no bak): validate keys; if valid, remove stale tmp. If keys invalid: STORE_CORRUPT, preserve tmp.
+E. keys + tmp + bak: validate keys; if valid, remove stale tmp and bak. If keys invalid, restore from bak. If all corrupt: STORE_CORRUPT.
+Normal: only keys, or nothing. Returns { recovered: true }.
+
+Error codes: STORE_CORRUPT, RECOVERY_REQUIRED, RESTORE_FAILED.
+None of these errors include raw file content or ciphertext values.
+
+### saveEncryptedKeys() — revised save flow
+1. recoverKeyStore() (throws if unrecoverable).
+2. openSync(tmpPath, 'w') + writeSync + fsyncSync + closeSync. On error: close fd, unlink tmp, WRITE_FAILED.
+3. If keysPath exists: renameSync(keysPath, bakPath). On error: unlink tmp, WRITE_FAILED.
+4. renameSync(tmpPath, keysPath). On failure: restore bakPath (renameSync bak -> keys).
+   If restore fails: RESTORE_FAILED (bak preserved, both errors reported).
+   If restore succeeds: WRITE_FAILED (bak preserved until next successful write).
+5. Read back keysPath and validateStoreContent(). If invalid: STORE_CORRUPT.
+6. unlinkSync(bakPath) ONLY after step 5 validation passes.
+
+### validateStoreContent(content)
+Pure function returning { ok: true, data } or { ok: false, error: string }.
+No throws, no logging.
+
+### loadEncryptedKeys() — revised
+1. recoverKeyStore() (throws if unrecoverable).
+2. readFileSync(keysPath). ENOENT -> {}.
+3. validateStoreContent(raw). If invalid -> STORE_CORRUPT.
+
+### Typed Error Codes
+WRITE_FAILED:       write or backup step failed.
+RESTORE_FAILED:     backup restoration failed; bak preserved.
+STORE_CORRUPT:      primary file and/or bak are invalid; neither deleted.
+RECOVERY_REQUIRED:  keys missing; only tmp present; manual intervention needed.

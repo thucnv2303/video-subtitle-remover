@@ -23,7 +23,7 @@ RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX)
   - HEX: isValidCiphertext (even-len, hex-only, max 8192).
   - UI: delete handler and refreshProviderStatus handle structured results.
   - Electron runtime: launched OK, Page loaded, Window visible, Python backend 8765.
-- CRASH-RECOVERY-FIX-008: PENDING COMMIT.
+- CRASH-RECOVERY-FIX-008: 0be3180ee5a866f24fd5b23bebcac9f2ff65a03c — COMMITTED.
   - src/main/main.js only (settings.js unchanged).
   - Deterministic paths: ai_keys.json, ai_keys.json.tmp, ai_keys.json.bak (no PID).
   - recoverKeyStore() covers 5 cases A-E; auto-restores from .bak across process restarts.

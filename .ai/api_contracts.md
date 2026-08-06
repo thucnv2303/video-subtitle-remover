@@ -100,6 +100,9 @@ No url field in payload.
 - Encrypt: safeStorage.encryptString(plaintext) -> Buffer -> hex string.
 - Decrypt: safeStorage.decryptString(Buffer.from(hex, hex)) -> plaintext.
 - Storage: app.getPath(userData)/ai_keys.json as JSON { provider: [hex, ...] }.
-- Parse errors return empty object (safe default).
-- Write errors propagate as IPC error response.
+- ENOENT with no recovery artifact returns empty store {}.
+- Invalid JSON, invalid shape or invalid ciphertext fails closed (throws, does not return {}).
+- Valid backup (ai_keys.json.bak) may be restored through deterministic crash recovery (recoverKeyStore).
+- Ambiguous recovery state (e.g. all three files corrupt, or keys missing with only tmp) returns a controlled error and preserves all artifacts.
+- Write errors propagate as IPC error response with typed error code (WRITE_FAILED, RESTORE_FAILED, STORE_CORRUPT).
 - Key values are never logged.

@@ -85,3 +85,23 @@ BUG-025: Hex ciphertext validation insufficient
 - Root cause: only checked typeof string and non-empty; did not validate hex characters, even length, or max length.
 - Fixed: isValidCiphertext() enforces: non-empty, even-length, hex-only chars [0-9a-f], max 8192 bytes.
 - loadEncryptedKeys uses isValidCiphertext for all entries.
+
+## CRASH-RECOVERY-FIX-008 at head 6d62a6a — fixed in 0be3180
+
+BUG-026: saveEncryptedKeys deleted bakPath on entry before confirming it was not the only valid copy
+- Root cause: stale cleanup ran unconditionally on bakPath regardless of whether it contained valid credentials.
+- Fixed: stale cleanup removed. bakPath is only deleted after post-write validation of newly written keysPath succeeds.
+
+BUG-027: Temp and backup filenames contained process.pid — cross-process recovery impossible
+- Root cause: ai_keys.json.tmp_PID and ai_keys.json.bak_PID are not detectable by a new Electron process after crash.
+- Fixed: deterministic paths ai_keys.json.tmp and ai_keys.json.bak — recoverable across restarts and PID changes.
+
+BUG-028: Backup restoration failure was swallowed in saveEncryptedKeys
+- Root cause: try { fs.renameSync(bakPath, keysPath); } catch {} — restore error silently ignored.
+- Fixed: restore error captured; if restore fails, RESTORE_FAILED error propagated; if restore succeeds, WRITE_FAILED propagated.
+  bak is never silently lost.
+
+BUG-029: loadEncryptedKeys did not run recovery before loading; no cross-restart crash recovery path
+- Root cause: loadEncryptedKeys called readFileSync directly without any artifact state check.
+- Fixed: recoverKeyStore() called at the start of both loadEncryptedKeys and saveEncryptedKeys.
+  recoverKeyStore handles 5 deterministic cases (A-E) and restores from .bak automatically.
