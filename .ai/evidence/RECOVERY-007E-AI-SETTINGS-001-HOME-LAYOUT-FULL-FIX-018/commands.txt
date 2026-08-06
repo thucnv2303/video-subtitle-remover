@@ -1,0 +1,2 @@
+node tests/test_renderer_dom_structure.js
+npx electron . --no-sandbox

@@ -1,45 +1,112 @@
 # Current State
 
 ## Status
-WAITING
+CANDIDATE_FIX — WAITING_PM_REVIEW
 
 ## Primary Input (OWNER CONFIRMED)
-- Chinese product-review videos (Original source cho P1 và P2).
+- Chinese product-review videos (Original source cho P1 va P2).
 
 ## Current Working Capabilities (OWNER CONFIRMED)
 - Voice cloning currently works.
 - TTS generation currently works.
 - Hard-subtitle removal (Pipeline 2) currently works.
 
-## Documentation & Task State
-- RECOVERY-004 complete at commit 1808076.
-- RECOVERY-005 PASS.
-- RECOVERY-005 audit report:
-  .ai/audits/pipeline1_readonly_audit.md
-- RECOVERY-006 execution: COMPLETED.
-- RECOVERY-006 project-manager review: PASS.
-- RECOVERY-006 baseline report:
-  .ai/audits/pipeline1_baseline_runtime.md
-- INCIDENT-RECOVERY-007E-TRACKING-001: COMPLETED
-- RECOVERY-007E-SOURCE-BASELINE-001: COMPLETED
-- RECOVERY-007E-SOURCE-BASELINE-002-PREFLIGHT: INVALIDATED/PENDING RESUMPTION AFTER INCIDENT CLOSURE
-- Active task: INCIDENT-RECOVERY-007E-STAGED-TREE-001
-- Project Manager review: NEEDS_REVISION — CORE INDEX FINDING CONFIRMED; FINAL DOCUMENTATION CORRECTION REQUIRED
-- AI Settings implementation NOT STARTED
-- BUG-008 ACTIVE
-- BUG-009 ACTIVE
-- RECOVERY-007 owner verification PAUSED
-- PR #4 DO NOT MERGE
-- PR #5 DO NOT MERGE
-- PR #6 DO NOT MERGE
+## Documentation and Task State
+- INCIDENT-RECOVERY-007E-STAGED-TREE-001: COMPLETED
+- RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
+- RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX — WAITING_PM_REVIEW - OWNER RETEST NOT STARTED
+
+## Security Incident
+- Owner test at abf0ee2 was FAIL.
+- DeepSeek API key visible in owner screenshot is COMPROMISED. Key must be rotated by owner.
+- The compromised key value is not stored, logged, or referenced in this implementation.
+
+## Credential Architecture (IMPLEMENTED - NOT YET OWNER-RETESTED)
+- Raw provider credentials (DeepSeek, Gemini) no longer stored in localStorage.
+- Encrypted using electron safeStorage (OS-level encryption).
+- safeStorage.isEncryptionAvailable() verified before any store/retrieve; fails closed if unavailable.
+- Ciphertext persisted only under app.getPath(userData)/ai_keys.json.
+- No plaintext fallback. No Base64-as-encryption fallback.
+- Raw key does not reach renderer after save.
+- Raw key does not reach Python backend.
+- Raw key does not reach Pipeline 2.
+- DeepSeek GET /models and POST /chat/completions called directly from Electron main process.
+- Renderer aiRewrite payload contains only: provider, model, prompt, srt_content.
+- Legacy localStorage keys deleted on settings mount (removeItem only, no migration):
+  ai_api_key, ai_api_keys_gemini, ai_api_keys_deepseek, ai_api_keys_ollama
+
+## PR Ancestry Facts
+- PR #8 base branch: review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
+- PR #8 base SHA: 7e18c04cf2483403010f237356dfb7f369dae1a8
+- Publication parent: abf0ee2f3f0d309ed7e371c4a4f3094c20c08651
+- COMMIT SEPARATION: NOT SATISFIED - hook-staged documentation into source commit 5be1d2bc.
+
+## Tracking
+- Active task: RECOVERY-007E-AI-SETTINGS-001
+- Source commit: 5be1d2bc728ab282914b9d99cd050cd98916a2d6 (mixed with hook-staged docs)
+- Docs follow-up: d5e40a5ed6816e1304b369013c7bbde481cc1364
+- Encoding repair: acdbf602c33fbcd77b9f11d6decbbb7aba5bb31f — COMPLETED
+- Encoding closeout: 70b3db51b16af797960b99202ab88b6c922ea56d — COMPLETED
+- Credential hardening: 4ee2f542838a4f5f132d7f673f1b89848dc367b2 — COMMITTED (hook staged .ai alongside source)
+- PM source review NEEDS_REVISION at 70b3db51: addressed in 4ee2f542
+- HARDENING-CORRECTION-007: 7a6157cdea399a219081f01f661da2419196f47a — COMMITTED
+  - B1: fetchGeminiModels rejects on no-compatible-models (not stored as usable)
+  - B2: ai:has-provider-keys returns {status,count/error}; ai:delete-provider-keys returns {status/error}
+  - B3: Windows-safe atomic write with backup+restore
+  - HEX: isValidCiphertext validates even-length hex with max length
+  - UI: refreshProviderStatus and delete handler handle structured results
+  - Electron launch: Page loaded successfully, Window is now visible, Python backend started
+  - Node verify: 26/27 PASS (1 test-script error, not production), Windows second-save: 12/12 PASS
+- FIX013-CLEAN-RUN-014: e3db5fcb74ec45ed48b949a42d6786adc151ccaa — COMMITTED
+  - State machine: most-specific first (E,A,D,B,C,normal)
+  - Case E now reachable and confirmed by TC9 (36/36 PASS)
+  - windowsSafeRestoreFromBak: moves corrupt to .corrupt before rename
+  - Post-write validation rollback: preserves invalid file as .corrupt, restores bak
+  - tryUnlink: reports non-ENOENT failures (EPERM confirmed in TC12)
+  - NODE_ENV=test guard: exports _credStore for production testability
+  - Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/
+  - Electron launch (no --no-sandbox): Page loaded, Window visible, Python 8765
+  - Deterministic paths: ai_keys.json, ai_keys.json.tmp, ai_keys.json.bak (no PID)
+  - recoverKeyStore(): 5 cases A-E; auto-restore from bak across process restarts
+  - saveEncryptedKeys(): fsync + post-write validation + explicit error types
+  - validateStoreContent(): pure helper returning {ok,data/error}
+  - Matrix test: 36/36 PASS
+  - Electron launch (no --no-sandbox): Page loaded, Window visible, Python 8765
+- BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
+- PR #8: DO NOT MERGE
 
 ## Verification gates
-- Execution: PASS — read-only index-state capture published
-- Automated verification: NOT APPLICABLE — evidence-only
+- Execution: PASS
+- Automated verification: PASS
 - Code review: WAITING
-- Owner manual app verification: BLOCKED
-- Documentation synchronization: WAITING_REVIEW
+- Owner manual app verification: NOT STARTED
+- Documentation synchronization: PASS
 - Merge permission: BLOCKED
 
 ## Current branch
-review/INCIDENT-RECOVERY-007E-STAGED-TREE-001-evidence
+review/RECOVERY-007E-AI-SETTINGS-001-ai-settings
+
+## PR Tracking Facts
+- Source commit: e3db5fcb74ec45ed48b949a42d6786adc151ccaa
+- Clean-run tested SHA: d2fcb5def5c132cc69e59d001b35e812ab4f3662
+- Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/
+- Test result: 36 PASS / 0 FAIL
+## UI Regression Fix (017)
+- Owner runtime test at eaf6d393...: FAIL.
+- Blank Settings and broken Home layout recorded as owner-observed blockers.
+- Verified root cause: Stray </div> prematurely closed #step-2-content and <main>, breaking .page flexbox logic.
+- Exact regression test result: 36 PASS / 0 FAIL (Recovery) + 12 PASS (DOM tests).
+- Anti runtime observation status: PASS (Electron opened, UI loaded successfully, port 8765 active).
+- PM review: WAITING.
+- Owner retest: NOT STARTED.
+- Merge: BLOCKED.## UI Regression Fix (018)
+- Owner test at 09eb0a8d: PARTIAL FAIL.
+- Settings: PASS.
+- Home/Pipeline 1: FAIL before FIX018.
+- Verified root cause: Layout classes (.pipeline-container, .toolkit-layout-3col, etc.) completely lacked flex definitions in main.css, causing Pipeline 1 to render as stacked blocks and shrinking the width to a narrow 280px left strip constraint.
+- Exact source SHA: a282117c1180481d674ab878b0d7beb85d9494cf
+- Exact test count: 16 PASS / 0 FAIL (DOM tests).
+- Anti runtime observation: PASS (Electron opened, Home uses intended full width, Pipeline 1 is not compressed, Settings remains visible).
+- PM review: WAITING.
+- Owner retest: NOT STARTED.
+- Merge: BLOCKED.

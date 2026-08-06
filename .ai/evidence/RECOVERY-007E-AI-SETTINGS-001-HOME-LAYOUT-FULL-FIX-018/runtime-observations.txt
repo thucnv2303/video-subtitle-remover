@@ -1,0 +1,9 @@
+Anti runtime observations:
+- Electron opens.
+- Home uses the intended width.
+- Pipeline 1 controls are not compressed.
+- Job Queue/content/audio areas render in intended positions.
+- Settings remains visible.
+- Home -> Settings -> Home works.
+- No immediate renderer exception.
+- Pipeline 2 and Pipeline 3 do not visibly regress.

@@ -1,4 +1,4 @@
-# Project Architecture
+﻿# Project Architecture
 
 ## 1. CURRENT IMPLEMENTATION — CODE OBSERVED
 
@@ -87,3 +87,135 @@ Kiến trúc chia thành 3 pipeline hoạt động hoàn toàn độc lập, gia
 ### Artifact Boundaries & Source Identity
 Artifacts P1 được lưu ở `jobs/<job_id>/p1/`.
 Mọi pipeline artifact phải chứa: `job_id`, `source_fingerprint`, `source duration`, `FPS/timebase`, và `artifact version`.
+
+## Credential Hardening (RECOVERY-007E-AI-SETTINGS-001-SOURCE-REVIEW-FIX-006, commit 4ee2f542)
+
+### Provider Allowlist
+ALLOWED_CLOUD_PROVIDERS = Set { 'deepseek', 'gemini' }.
+assertCloudProvider(provider) enforced before ALL credential access in:
+  ai:save-provider-keys, ai:has-provider-keys, ai:delete-provider-keys, ai:test-provider, ai:rewrite.
+Unknown providers return controlled error. Never written to ai_keys.json.
+Ollama uses its dedicated ollama:* IPC handlers exclusively.
+
+### Key Store (ai_keys.json)
+Shape: { deepseek?: string[], gemini?: string[] }.
+ENOENT -> returns empty store {}.
+Invalid JSON / wrong root type / unknown provider key / invalid array entry -> throws controlled error; does not return {} and does not overwrite.
+Writes are atomic: serialize -> writeFileSync(tmpPath) -> renameSync(tmpPath, keysPath). Cleanup exact tmp file on failure only.
+
+### Response Size Limits (2 MB)
+Applied to all provider HTTP responses:
+  DeepSeek GET /models, DeepSeek POST /chat/completions,
+  Gemini GET models?key=, Gemini POST :generateContent.
+req.destroy() called on exceed. Partial content not parsed.
+
+### Gemini Validation Contract
+HTTP success + valid models array + >=1 generateContent-capable model required for PASS.
+Invalid JSON -> error. Missing models array -> error.
+No compatible models -> { verified:true, noCompatibleModels:true, models:[] } (not a success state).
+No hardcoded fallback model list substituted on validation failure.
+
+### Key Sanitization
+Keys trimmed, deduplicated, empty-rejected before provider API call.
+Stored count capped at MAX_KEYS_PER_PROVIDER (10).
+
+### Source Encoding
+All source files written in UTF-8 without BOM.
+Vietnamese strings, emoji, box-drawing characters verified against parent commit abf0ee2.
+No mojibake patterns (ChÆ°a, KhÃ´ng, etc.) in any allowed source file.
+
+## HARDENING-CORRECTION-007 (7a6157cdea399a219081f01f661da2419196f47a)
+
+### Gemini Model Discovery — revised contract
+fetchGeminiModels returns a flat string[] of model IDs directly.
+Rejects with Error in all failure cases:
+  - HTTP non-200 -> error
+  - Invalid JSON -> error
+  - Missing models array -> error
+  - No generateContent-capable models -> 'API key được xác thực nhưng không có model generateContent tương thích.'
+No structured {verified,noCompatibleModels,models} return value.
+fetchGeminiModelsList wrapper removed.
+
+### Structured IPC Results (new contracts)
+ai:has-provider-keys:
+  Success: { status: 'ok', count: number } (count of isValidCiphertext entries)
+  Failure: { status: 'error', error: string }
+  Never returns plain number. Never silently returns 0 on corrupt store.
+
+ai:delete-provider-keys:
+  Success: { status: 'ok' }
+  Failure: { status: 'error', error: string }
+  Never returns boolean.
+
+### Windows-Safe Atomic Key Store Replacement (revised)
+saveEncryptedKeys steps:
+  0. Clean stale tmpPath and bakPath from prior interrupted saves (unlinkSync, ignore ENOENT).
+  1. writeFileSync(tmpPath, serialized, 'utf8')
+  2. If keysPath exists: renameSync(keysPath, bakPath), set hadExisting=true.
+     If ENOENT: continue (no backup needed).
+     Any other error: unlink tmpPath, throw.
+  3. renameSync(tmpPath, keysPath)
+     If fails: restore if hadExisting (renameSync bakPath -> keysPath), unlink tmpPath, throw.
+  4. If hadExisting: unlinkSync(bakPath).
+No wildcard cleanup. No delete before backup.
+
+### isValidCiphertext (revised)
+Enforces: non-empty string, even length, length <= MAX_HEX_CIPHERTEXT_LENGTH (8192), HEX_REGEX (/^[0-9a-f]+$/i).
+Used in loadEncryptedKeys and ai:has-provider-keys count.
+
+### UI Corrections (settings.js)
+refreshProviderStatus(provider):
+  Checks result.status === 'error' and shows error message as 'offline' status chip.
+  Does not show 'Chưa có key' when store cannot be read.
+  Uses result.count when result.status === 'ok'.
+
+btn-delete-keys handler:
+  Checks result.status === 'ok' before clearing input and showing toast.
+  Shows error message and sets status 'offline' when result.status !== 'ok'.
+
+## CRASH-RECOVERY-FIX013-CLEAN-RUN-014 (e3db5fcb74ec45ed48b949a42d6786adc151ccaa)
+
+### Deterministic Artifact Paths
+Primary:  app.getPath('userData')/ai_keys.json
+Temp:     app.getPath('userData')/ai_keys.json.tmp
+Backup:   app.getPath('userData')/ai_keys.json.bak
+Corrupt:  app.getPath('userData')/ai_keys.json.corrupt
+No PID in filenames. All paths recoverable across process restarts.
+
+### tryUnlink() and windowsSafeRestoreFromBak()
+- `tryUnlink()`: unlinks a file, ignores ENOENT, returns `{ok:false, code, error}` on other failures (e.g. EPERM).
+- `windowsSafeRestoreFromBak()`: restores bak to primary. On Windows, `renameSync(bak, keys)` fails if `keys` exists. This helper first moves `keys` to `.corrupt`, restores `bak`, validates the restored file, and then cleans up `.corrupt` on success. Throws `RESTORE_FAILED` on any error, reversing moves if possible.
+
+### recoverKeyStore() — explicit state machine
+Handles states in most-specific-first order. Returns { recovered: true, case*: true } on success, throws typed Error otherwise.
+1. Case E (keys + tmp + bak): if keys valid, remove tmp/bak. If corrupt, `windowsSafeRestoreFromBak()`. If all corrupt, throw `STORE_CORRUPT`.
+2. Case A (keys + bak): if keys valid, remove bak. If corrupt, `windowsSafeRestoreFromBak()`. If both corrupt, throw `STORE_CORRUPT`.
+3. Case D (keys + tmp): if keys valid, remove tmp. If corrupt, throw `STORE_CORRUPT`.
+4. Case B (no keys + bak): if bak valid, restore to keys and validate. If corrupt, throw `STORE_CORRUPT`.
+5. Case C (no keys + tmp): throw `RECOVERY_REQUIRED`.
+6. Normal: only keys, or nothing.
+
+### saveEncryptedKeys() — revised save flow with rollback
+1. recoverKeyStore() (throws if unrecoverable).
+2. openSync(tmpPath, 'w') + writeSync + fsyncSync + closeSync.
+3. If keysPath exists: renameSync(keysPath, bakPath).
+4. renameSync(tmpPath, keysPath).
+5. Post-write validation: read keysPath and validate.
+   If invalid: rename keysPath to corruptPath, restore bakPath to keysPath, validate restored keysPath.
+   Throws `WRITE_FAILED` if rollback succeeds, `RESTORE_FAILED` if rollback fails.
+6. tryUnlink(bakPath) ONLY after step 5 validation passes.
+
+### validateStoreContent(content)
+Pure function returning { ok: true, data } or { ok: false, error: string }.
+No throws, no logging.
+
+### loadEncryptedKeys()
+1. recoverKeyStore() (throws if unrecoverable).
+2. readFileSync(keysPath). ENOENT -> {}.
+3. validateStoreContent(raw). If invalid -> STORE_CORRUPT.
+
+### Typed Error Codes
+WRITE_FAILED:       write or backup step failed, or post-write validation failed and rollback succeeded.
+RESTORE_FAILED:     backup restoration failed, or post-write rollback failed.
+STORE_CORRUPT:      primary file and/or bak are invalid; or unlink failed on stale artifact.
+RECOVERY_REQUIRED:  keys missing; only tmp present; manual intervention needed.

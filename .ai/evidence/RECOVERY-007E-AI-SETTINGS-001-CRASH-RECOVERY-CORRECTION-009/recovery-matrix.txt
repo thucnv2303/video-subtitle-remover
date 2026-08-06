@@ -1,0 +1,94 @@
+RECOVERY MATRIX - CRASH-RECOVERY-CORRECTION-009
+Platform: Windows 10 Pro  Node: v24.18.0
+
+STATE MACHINE ORDER:
+1. keys+tmp+bak (Case E) - evaluated first
+2. keys+bak (Case A)
+3. keys+tmp (Case D)
+4. no keys+bak (Case B)
+5. no keys+tmp (Case C)
+6. normal
+
+TC: TC1
+  Input:  (empty)
+  Branch: normal
+  After:  keys
+  Error:  (none)
+
+TC: TC2
+  Input:  keys
+  Branch: normal
+  After:  keys
+  Error:  (none)
+
+TC: TC3
+  Input:  keys+tmp
+  Branch: caseD
+  After:  keys
+  Error:  (none)
+
+TC: TC4
+  Input:  bak
+  Branch: caseB
+  After:  keys
+  Error:  (none)
+
+TC: TC5
+  Input:  keys(corrupt)+bak
+  Branch: caseA
+  After:  keys
+  Error:  (none)
+
+TC: TC6
+  Input:  keys+bak(corrupt)
+  Branch: caseA
+  After:  keys
+  Error:  (none)
+
+TC: TC7
+  Input:  bak(corrupt)
+  Branch: caseB-corrupt
+  After:  bak
+  Error:  [STORE_CORRUPT] Bản sao lưu bị hỏng. Bảo tồn.
+
+TC: TC8
+  Input:  tmp
+  Branch: caseC
+  After:  tmp
+  Error:  [RECOVERY_REQUIRED] Kho khóa chính bị mất; chỉ có tệp tạm. Cần khôi phục thủ côn
+
+TC: TC9
+  Input:  keys+tmp+bak
+  Branch: caseE
+  After:  keys
+  Error:  (none)
+
+TC: TC10
+  Input:  keys(corrupt)+tmp+bak
+  Branch: caseE-restore
+  After:  keys
+  Error:  (none)
+
+TC: TC11
+  Input:  keys(corrupt)+tmp+bak(corrupt)
+  Branch: caseE-all-corrupt
+  After:  keys+tmp+bak
+  Error:  [STORE_CORRUPT] Trạng thái ba tệp: cả keys và bak đều hỏng. Bảo tồn tất cả.
+
+TC: TC12
+  Input:  dir-path
+  Branch: tryUnlink
+  After:  n/a
+  Error:  ok:false code:EPERM
+
+TC: TC13
+  Input:  keys(odd)+bak(odd)
+  Branch: STORE_CORRUPT
+  After:  keys+bak
+  Error:  [STORE_CORRUPT] Cả keys và bak đều hỏng. Bảo tồn cả hai.
+
+TC: TC14
+  Input:  keys(corrupt)+bak
+  Branch: windowsSafeRestore
+  After:  keys
+  Error:  (none)
