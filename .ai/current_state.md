@@ -45,7 +45,7 @@ CANDIDATE_FIX
 - Active task: RECOVERY-007E-AI-SETTINGS-001
 - Source commit: 5be1d2bc728ab282914b9d99cd050cd98916a2d6 (mixed with hook-staged docs)
 - Docs follow-up: d5e40a5ed6816e1304b369013c7bbde481cc1364
-- Encoding repair: PENDING
+- Encoding repair: acdbf602c33fbcd77b9f11d6decbbb7aba5bb31f — COMPLETED
 - BUG-008: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - PR #8: DO NOT MERGE
