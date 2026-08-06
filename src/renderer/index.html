@@ -81,7 +81,7 @@
                       <label>Prompt Management</label>
                       <div class="tk-prompt-box">
                          <div class="tk-prompt-list">
-                            <div class="tk-prompt-item active">1. Phân tích & Viết lại</div>
+                            <div class="tk-prompt-item active">1. Ph�n t�ch & Vi�t l�i</div>
                             <div class="tk-prompt-item">2. Dịch sang Tiếng Anh</div>
                          </div>
                          <button class="tk-btn" id="step1-btn-add-prompt">➕ Add Prompt</button>
@@ -138,7 +138,7 @@
                       <!-- Left: Transcript / AI Rewrite -->
                       <div style="flex: 1; display: flex; flex-direction: column; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); padding: 12px;">
                          <h4 style="margin-top:0; color:var(--accent);">📝 Nội dung (SRT / Tóm tắt)</h4>
-                         <textarea id="step1-detail-text" class="form-input" style="flex:1; resize:none; font-family:monospace; margin-bottom: 8px;" placeholder="Nội dung bóc băng hoặc AI viết lại sẽ hiển thị ở đây..."></textarea>
+                         <textarea id="step1-detail-text" class="form-input" style="flex:1; resize:none; font-family:monospace; margin-bottom: 8px;" placeholder="N�i dung b�c bng ho�c AI vi�t l�i s� hi�n th� � �y..."></textarea>
                          <div style="display:flex; gap: 8px;">
                             <button class="btn btn-sm btn-ghost" id="step1-btn-extract">🎙 Trích xuất lại</button>
                             <button class="btn btn-sm btn-ghost" id="step1-btn-rewrite">✨ AI Viết lại</button>
@@ -253,7 +253,7 @@
                 </div>
                 <div class="job-card-body" id="body-srt">
                   <div class="form-group" style="margin-bottom: 8px;">
-                    <label class="chk-label"><input type="checkbox" id="chk-asr-fallback"><span>Bóc băng âm thanh gốc (Whisper)</span></label>
+                    <label class="chk-label"><input type="checkbox" id="chk-asr-fallback"><span>B�c bng �m thanh g�c (Whisper)</span></label>
                   </div>
                   <!-- ASR options panel — shown/hidden by chk-asr-fallback (Bug #4 fix) -->
                   <div id="asr-options" style="display:none; margin-bottom:8px; padding:8px; background:rgba(124,58,237,0.07); border-radius:6px; border:1px solid rgba(124,58,237,0.2);">
@@ -382,34 +382,34 @@
 
             <div class="ctrl-divider"></div>
 
-            <!-- Phân tích Video -->
+            <!-- Ph�n t�ch Video -->
             <div class="job-card" id="card-analysis" style="border: 1px solid var(--accent); background: rgba(124, 58, 237, 0.05);">
               <div class="job-card-header">
-                <label class="chk-label" style="color: var(--accent); font-weight: bold;"><span>🧠 Phân tích & Tóm tắt Video</span></label>
+                <label class="chk-label" style="color: var(--accent); font-weight: bold;"><span>>� Ph�n t�ch & T�m t�t Video</span></label>
                 <button class="btn-expand">▼</button>
               </div>
               <div class="job-card-body" id="body-analysis" style="display: none;">
                 <div class="form-group" style="margin-bottom:8px">
-                  <label class="form-label">Câu hỏi cho AI</label>
+                  <label class="form-label">C�u h�i cho AI</label>
                   <select id="analysis-prompt-select" class="dropdown form-input">
-                    <option value="Hãy phân tích video dựa vào nội dung cuộc trò chuyện/lời nói sau: 1. Video nói về vấn đề gì? 2. Người nói đang thể hiện phong thái/cảm xúc như thế nào? 3. Cách họ giới thiệu vấn đề trong video ra sao?">Phân tích toàn diện (Nội dung, Người nói, Mở đầu)</option>
+                    <option value="H�y ph�n t�ch video d�a v�o n�i dung cu�c tr� chuy�n/l�i n�i sau: 1. Video n�i v� v�n � g�? 2. Ng��i n�i ang th� hi�n phong th�i/c�m x�c nh� th� n�o? 3. C�ch h� gi�i thi�u v�n � trong video ra sao?">Ph�n t�ch to�n di�n (N�i dung, Ng��i n�i, M� �u)</option>
                     <option value="Hãy tóm tắt ngắn gọn những ý chính được đề cập trong nội dung sau.">Tóm tắt ngắn gọn</option>
                     <option value="Hãy đánh giá phong cách nói chuyện và cảm xúc của người nói dựa vào nội dung sau.">Đánh giá phong cách người nói</option>
                   </select>
                 </div>
                 
                 <button class="btn btn-sm btn-accent btn-block" style="margin-bottom:12px; font-weight:bold" id="btn-analyze-video">
-                  🔍 Bắt đầu Bóc băng & Phân tích
+                  = B�t �u B�c bng & Ph�n t�ch
                 </button>
                 
                 <div class="form-group" style="margin-bottom:8px">
                   <label class="form-label" style="font-size: 0.8rem; opacity: 0.8;">Nội dung bóc băng (Transcript)</label>
-                  <textarea class="form-input" id="analysis-transcript" rows="3" readonly placeholder="Lời nói trong video sẽ hiển thị ở đây..." style="font-size: 0.85rem; font-family: monospace;"></textarea>
+                  <textarea class="form-input" id="analysis-transcript" rows="3" readonly placeholder="L�i n�i trong video s� hi�n th� � �y..." style="font-size: 0.85rem; font-family: monospace;"></textarea>
                 </div>
                 
                 <div class="form-group">
-                  <label class="form-label" style="font-size: 0.8rem; opacity: 0.8; color: var(--accent);">Kết quả Phân tích từ AI</label>
-                  <textarea class="form-input" id="analysis-result" rows="5" readonly placeholder="Kết quả AI phân tích sẽ hiển thị ở đây..." style="font-size: 0.9rem; line-height: 1.4;"></textarea>
+                  <label class="form-label" style="font-size: 0.8rem; opacity: 0.8; color: var(--accent);">K�t qu� Ph�n t�ch t� AI</label>
+                  <textarea class="form-input" id="analysis-result" rows="5" readonly placeholder="K�t qu� AI ph�n t�ch s� hi�n th� � �y..." style="font-size: 0.9rem; line-height: 1.4;"></textarea>
                 </div>
               </div>
             </div>
@@ -686,7 +686,7 @@
 
             <!-- Voice Clone Section -->
             <h3>🧬 Clone giọng mới</h3>
-            <p class="form-desc" style="margin-bottom:8px">Upload audio mẫu (3-15 giây) để clone giọng nói bất kỳ</p>
+            <p class="form-desc" style="margin-bottom:8px">Upload audio m�u (3-15 gi�y) � clone gi�ng n�i b�t k�</p>
 
             <div class="form-group">
               <label class="form-label">Tên giọng</label>
@@ -717,7 +717,7 @@
             <!-- Test TTS -->
             <h3>🔊 Thử giọng</h3>
             <div class="form-group">
-              <textarea id="tts-test-text" class="form-input" rows="2" placeholder="Nhập text để thử giọng...">Xin chào, đây là giọng đọc được tạo bởi OmniVoice.</textarea>
+              <textarea id="tts-test-text" class="form-input" rows="2" placeholder="Nh�p text � th� gi�ng...">Xin ch�o, �y l� gi�ng �c ��c t�o b�i OmniVoice.</textarea>
             </div>
             <div class="tts-test-row">
               <button id="btn-test-tts" class="btn btn-primary">▶ Thử phát</button>
@@ -785,8 +785,7 @@
   
   <!-- Non-module scripts (loaded first, expose window.api) -->
   <script src="js/api.js"></script>
-  <script src="js/pipeline.js"></script>
-
+  
   <!--
     ES6 Module bridge: load các module và expose hàm lên window.*
     để app.js (non-module IIFE) có thể gọi được.
@@ -820,5 +819,6 @@
   <script src="js/app.js" defer></script>
 </body>
 </html>
+
 
 
