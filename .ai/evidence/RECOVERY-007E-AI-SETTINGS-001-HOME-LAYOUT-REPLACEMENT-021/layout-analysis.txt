@@ -1,1 +1,21 @@
-Verified that all 135 lines of the FIX018 CSS patch are required. The Pipeline 1 UI heavily uses .tk- prefixed classes which did not exist previously in main.css. The implementation accurately restores Pipeline 1 layout to use flex properties without polluting or breaking Settings, Pipeline 2, or Pipeline 3. Strict CSS parsing assertions confirm exact layout contracts.
+Selector Usage and Keep/Remove Table:
+
+| Selector | Production HTML Usage | Required for Layout | Pre-existing Equivalent | Decision |
+|---|---|---|---|---|
+| .pipeline-container | #page-home > div.pipeline-container | YES (flex container) | NO | KEEP |
+| .pipeline-bar-v2 | Top pipeline navigation | NO (cosmetic) | NO | REMOVE |
+| .step-chevron | Pipeline steps | NO (cosmetic) | NO | REMOVE |
+| .step-chevron.active | Active step | NO (cosmetic) | NO | REMOVE |
+| .step-title / .step-sub | Step text | NO (cosmetic) | NO | REMOVE |
+| .pipeline-content-area | Main content wrapper | YES (flex block) | NO | KEEP |
+| .pipeline-pane | Individual step panes | YES (layout hiding) | NO | KEEP |
+| .pipeline-pane.active | Visible step pane | YES (display flex) | NO | KEEP |
+| .toolkit-layout-3col | Multi-col layout for Step 1 | YES (flex layout) | NO | KEEP |
+| .tk-group | Label/input wrappers | NO (cosmetic) | NO | REMOVE |
+| .tk-input / .tk-slider | Inputs | NO (cosmetic) | NO | REMOVE |
+| .tk-btn* | Buttons | NO (cosmetic) | NO | REMOVE |
+| .tk-prompt-* | Prompt UI | NO (cosmetic) | NO | REMOVE |
+| .tk-job-list | Job list | NO (cosmetic) | NO | REMOVE |
+| .tk-log-* | Log console | NO (cosmetic) | NO | REMOVE |
+
+Conclusion: All `.tk-` and `.step-` cosmetic selectors were removed from the patch. Only `.pipeline-container`, `.pipeline-content-area`, `.pipeline-pane`, and `.toolkit-layout-3col` were kept as they enforce the critical flex/width boundaries needed to fix the Home layout compression.

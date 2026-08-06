@@ -128,6 +128,7 @@ Source: src/main/main.js only. Owner retest: NOT STARTED.
 - [ ] Owner: UI tests remain identical to FIX-008.
 
 - [x] UI DOM Structure (test_renderer_dom_structure.js) verified.
+
 ## INCIDENT-RECOVERY-007E-REPLACEMENT-PR-021
 - PR #8 merged without approval: INCIDENT RECORDED.
 - Damaged branch preserved and not canonical.
@@ -135,7 +136,7 @@ Source: src/main/main.js only. Owner retest: NOT STARTED.
 - Replacement review branch identified: review/RECOVERY-007E-AI-SETTINGS-001-replacement
 - Settings owner result: PASS at prior retest.
 - Home prior owner result: FAIL.
-- FIX018 replacement source SHA: e466aa003513bfe32bede6fd85102b59a4461856
+- FIX018 replacement source SHA: b8166714502e9478ff77f8a5eebc3e96a0418366
 - Automated verification result: 16 strict CSS layout assertions PASS / 0 FAIL.
 - Code review: WAITING_PM_REVIEW.
 - Owner retest: NOT STARTED.

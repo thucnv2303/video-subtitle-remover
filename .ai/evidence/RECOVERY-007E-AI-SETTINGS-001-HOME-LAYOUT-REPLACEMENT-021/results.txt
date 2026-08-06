@@ -1,1 +1,17 @@
-16 strict CSS layout assertions: 16 PASS / 0 FAIL.
+PASS: .pipeline-container exists
+PASS: display:flex
+PASS: flex-direction:column
+PASS: flex:1
+PASS: width:100%
+PASS: .pipeline-content-area display:flex
+PASS: .pipeline-content-area flex:1
+PASS: .pipeline-pane.active display:flex
+PASS: .toolkit-layout-3col display:flex
+PASS: .toolkit-layout-3col flex:1
+PASS: #page-home inside .main-area
+PASS: #page-settings inside .main-area
+PASS: Home and Settings siblings
+PASS: toolkit wrapper under pipeline container
+PASS: toolkit wrapper not under narrow sidebar
+PASS: no duplicate IDs
+TOTAL: 16 PASS / 0 FAIL

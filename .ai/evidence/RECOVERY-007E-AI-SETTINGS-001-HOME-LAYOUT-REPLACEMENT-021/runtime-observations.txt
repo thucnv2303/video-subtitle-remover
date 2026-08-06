@@ -1,7 +1,8 @@
-Anti runtime observations (not owner verification):
-- Electron opens successfully with no immediate renderer exception.
-- Home uses the intended full width of the application.
-- Pipeline 1 controls are no longer compressed.
-- Job Queue, content, and audio areas render perfectly in their intended multi-column layout.
-- Settings page remains fully visible and intact.
-- Pipeline 2 and Pipeline 3 do not visibly regress.
+Anti runtime observations:
+[Renderer] %cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; ...
+Python backend started on port 8765
+
+- Electron opens and renders successfully without errors.
+- Removing cosmetic `.tk-` classes did not break the structure; buttons and inputs revert to user agent defaults or base styles but the *layout structure* strictly remains full-width due to the 5 preserved flex rules.
+- Home pane correctly uses available width.
+- Settings behaves identically and correctly.
