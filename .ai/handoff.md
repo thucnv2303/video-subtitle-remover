@@ -1,4 +1,4 @@
-﻿# AgentOS Handoff Status
+# AgentOS Handoff Status
 
 ## Last completed task
 RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
@@ -10,10 +10,17 @@ RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX)
 - Owner test at abf0ee2: FAIL (see blockers in task_current.md).
 - DeepSeek API key visible in owner screenshot is COMPROMISED. Owner must rotate key.
 - Corrected Architecture: safeStorage integrated (failing closed). Main process directly executes DeepSeek/Gemini requests. Python backend never receives raw credentials.
-- Source commit: 5be1d2bc728ab282914b9d99cd050cd98916a2d6.
-- Docs commit: PENDING publication.
-- BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST PENDING.
+- Source commit: 5be1d2bc728ab282914b9d99cd050cd98916a2d6 (mixed with hook-staged docs).
+- Docs follow-up: d5e40a5ed6816e1304b369013c7bbde481cc1364.
+- Encoding repair: PENDING.
+- BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED.
 - Owner manual verification: NOT STARTED.
+
+## PR Ancestry Facts
+- PR #8 base branch: review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
+- PR #8 base SHA: 7e18c04cf2483403010f237356dfb7f369dae1a8
+- Publication parent: abf0ee2f3f0d309ed7e371c4a4f3094c20c08651
+- COMMIT SEPARATION: NOT SATISFIED - hook-staged documentation into source commit 5be1d2bc.
 
 ## Key Architecture Facts
 - safeStorage.isEncryptionAvailable() verified; fails closed.
@@ -39,7 +46,7 @@ PASS
 NOT STARTED
 
 ## Documentation synchronization
-PASS
+WAITING_PM_REVIEW
 
 ## Merge permission
 BLOCKED

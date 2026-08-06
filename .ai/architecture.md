@@ -1,70 +1,70 @@
-﻿# Project Architecture
+# Project Architecture
 
-## 1. CURRENT IMPLEMENTATION â€” CODE OBSERVED
+## 1. CURRENT IMPLEMENTATION — CODE OBSERVED
 
-Dá»± Ã¡n tuÃ¢n theo kiáº¿n trÃºc ES6 Modules vá»›i bridge pattern Ä‘á»ƒ tÆ°Æ¡ng thÃ­ch script thÆ°á»ng.
-TUYá»†T Äá»I tuÃ¢n thá»§ khi tÃ¬m kiáº¿m hoáº·c thÃªm má»›i tÃ­nh nÄƒng.
+Dự án tuân theo kiến trúc ES6 Modules với bridge pattern để tương thích script thường.
+TUYỆT ĐỐI tuân thủ khi tìm kiếm hoặc thêm mới tính năng.
 
 ```text
 src/renderer/
-â”œâ”€â”€ index.html               (Giao diá»‡n chÃ­nh. Load api.js, pipeline.js dáº¡ng script thÆ°á»ng;
-â”‚                             load cÃ¡c ES6 module qua <script type="module"> bridge,
-â”‚                             expose hÃ m lÃªn window.*; load app.js defer)
-â”œâ”€â”€ styles/
-â”‚   â””â”€â”€ main.css             (File CSS chÃ­nh)
-â””â”€â”€ js/
-    â”œâ”€â”€ app.js               (Main entry point â€” IIFE non-module. Äiá»u phá»‘i toÃ n bá»™:
-    â”‚                         job queue, pipeline 2 inpaint, navigation, UI events.
-    â”‚                         Gá»i window.triggerAutoAiRewrite, window.finalizeVideo, v.v.)
-    â”œâ”€â”€ store.js             (Global state: state object, loadState, saveState)
-    â”œâ”€â”€ api.js               (APIClient: fetch/WebSocket vá»›i backend. Expose window.api)
-    â”œâ”€â”€ pipeline.js          (Step chevron navigation â€” 40 lines)
-    â”œâ”€â”€ utils/
-    â”‚   â”œâ”€â”€ logger.js        (addLog(msg, type), showToast(msg, type, dur), getLogCategory.
-    â”‚   â”‚                     Há»— trá»£ cáº£ 2 dáº¡ng gá»i: simple vÃ  legacy el-based)
-    â”‚   â”œâ”€â”€ formatters.js    (fmtTime, fmtTimeFull, formatFileSize, fmtPercent, msToSrtTime)
-    â”‚   â””â”€â”€ dom.js           (el object ~100 DOM refs, $ vÃ  $$ helpers)
-    â”œâ”€â”€ pipelines/
-    â”‚   â”œâ”€â”€ pipeline1-ai.js  â˜… PIPELINE 1: AI Analysis + TTS Chain
-    â”‚   â”‚                     triggerAutoAiRewrite(job, srtText) â†’ AI rewrite â†’ chain TTS
-    â”‚   â”‚                     triggerAutoTts(job, srtText) â†’ táº¡o TTS audio, lÆ°u vÃ o job
-    â”‚   â”‚                     Káº¾T QUáº¢: job.ttsAudioPath, job.ttsTimedSrt, job.karaokeAss
-    â”‚   â”‚                     KHÃ”NG ghÃ©p video â€” viá»‡c Ä‘Ã³ thuá»™c Pipeline 3
-    â”‚   â”œâ”€â”€ pipeline2-remove.js  (Legacy helpers â€” runNextPass, pollProgress, handleWSMessage
-    â”‚   â”‚                         â€” hiá»‡n tÃ­ch há»£p vÃ o app.js. File nÃ y giá»¯ láº¡i Ä‘á»ƒ tham kháº£o)
-    â”‚   â”œâ”€â”€ pipeline3-finalize.js  â˜… PIPELINE 3: Finalize Video
-    â”‚   â”‚                     finalizeVideo(job):
-    â”‚   â”‚                       BÆ°á»›c 1: Äiá»u chá»‰nh tempo video khá»›p TTS
-    â”‚   â”‚                       BÆ°á»›c 2: TÃ¡ch vocal gá»‘c (náº¿u báº­t tts-remove-vocal)
-    â”‚   â”‚                       BÆ°á»›c 3: GhÃ©p TTS audio vÃ o video Ä‘Ã£ xÃ³a sub â†’ _with_voice.mp4
-    â”‚   â”‚                       BÆ°á»›c 4: Burn subtitle (náº¿u job.voiceSub) â†’ _final.mp4
-    â”‚   â”‚                     INPUT: job.outputPath + job.ttsAudioPath (tá»« Pipeline 1)
-    â”‚   â”‚                     OUTPUT: job.finalOutputPath (_final.mp4)
-    â”‚   â””â”€â”€ pipeline3-sub.js (Re-export alias â†’ pipeline3-finalize.js)
-    â””â”€â”€ components/
-        â”œâ”€â”€ job-manager.js   (createJob, renderJobList, processNextJob, onJobFinished, loadVideo)
-        â”œâ”€â”€ prompt-manager.js(initPromptManager, renderPromptDropdown â€” quáº£n lÃ½ AI prompts)
-        â”œâ”€â”€ video-preview.js (fetchAndDrawLivePreview, startLivePreviewPolling)
-        â””â”€â”€ settings.js      (initSettings, loadSettingsValues, renderSavedVoices,
+├── index.html               (Giao diện chính. Load api.js, pipeline.js dạng script thường;
+│                             load các ES6 module qua <script type="module"> bridge,
+│                             expose hàm lên window.*; load app.js defer)
+├── styles/
+│   └── main.css             (File CSS chính)
+└── js/
+    ├── app.js               (Main entry point — IIFE non-module. Điều phối toàn bộ:
+    │                         job queue, pipeline 2 inpaint, navigation, UI events.
+    │                         Gọi window.triggerAutoAiRewrite, window.finalizeVideo, v.v.)
+    ├── store.js             (Global state: state object, loadState, saveState)
+    ├── api.js               (APIClient: fetch/WebSocket với backend. Expose window.api)
+    ├── pipeline.js          (Step chevron navigation — 40 lines)
+    ├── utils/
+    │   ├── logger.js        (addLog(msg, type), showToast(msg, type, dur), getLogCategory.
+    │   │                     Hỗ trợ cả 2 dạng gọi: simple và legacy el-based)
+    │   ├── formatters.js    (fmtTime, fmtTimeFull, formatFileSize, fmtPercent, msToSrtTime)
+    │   └── dom.js           (el object ~100 DOM refs, $ và $$ helpers)
+    ├── pipelines/
+    │   ├── pipeline1-ai.js  ★ PIPELINE 1: AI Analysis + TTS Chain
+    │   │                     triggerAutoAiRewrite(job, srtText) → AI rewrite → chain TTS
+    │   │                     triggerAutoTts(job, srtText) → tạo TTS audio, lưu vào job
+    │   │                     KẾT QUẢ: job.ttsAudioPath, job.ttsTimedSrt, job.karaokeAss
+    │   │                     KHÔNG ghép video — việc đó thuộc Pipeline 3
+    │   ├── pipeline2-remove.js  (Legacy helpers — runNextPass, pollProgress, handleWSMessage
+    │   │                         — hiện tích hợp vào app.js. File này giữ lại để tham khảo)
+    │   ├── pipeline3-finalize.js  ★ PIPELINE 3: Finalize Video
+    │   │                     finalizeVideo(job):
+    │   │                       Bước 1: Điều chỉnh tempo video khớp TTS
+    │   │                       Bước 2: Tách vocal gốc (nếu bật tts-remove-vocal)
+    │   │                       Bước 3: Ghép TTS audio vào video đã xóa sub → _with_voice.mp4
+    │   │                       Bước 4: Burn subtitle (nếu job.voiceSub) → _final.mp4
+    │   │                     INPUT: job.outputPath + job.ttsAudioPath (từ Pipeline 1)
+    │   │                     OUTPUT: job.finalOutputPath (_final.mp4)
+    │   └── pipeline3-sub.js (Re-export alias → pipeline3-finalize.js)
+    └── components/
+        ├── job-manager.js   (createJob, renderJobList, processNextJob, onJobFinished, loadVideo)
+        ├── prompt-manager.js(initPromptManager, renderPromptDropdown — quản lý AI prompts)
+        ├── video-preview.js (fetchAndDrawLivePreview, startLivePreviewPolling)
+        └── settings.js      (initSettings, loadSettingsValues, renderSavedVoices,
                                updateVoiceDropdown, checkTTSStatus, voice clone management)
 ```
 
-VÃ¬ `index.html` load `app.js` dáº¡ng `<script src="...">` (non-module), cÃ¡c ES6 module Ä‘Æ°á»£c bridge qua `<script type="module">` inline trong HTML Ä‘á»ƒ expose hÃ m lÃªn `window.*`. `app.js` gá»i cÃ¡c hÃ m module qua `window.*`. CÃ¡c module tá»± gá»i `window.addLog` vÃ  `window.showToast`.
+Vì `index.html` load `app.js` dạng `<script src="...">` (non-module), các ES6 module được bridge qua `<script type="module">` inline trong HTML để expose hàm lên `window.*`. `app.js` gọi các hàm module qua `window.*`. Các module tự gọi `window.addLog` và `window.showToast`.
 
-## 2. TARGET PRODUCT ARCHITECTURE â€” OWNER CONFIRMED / PROPOSED
+## 2. TARGET PRODUCT ARCHITECTURE — OWNER CONFIRMED / PROPOSED
 
-Kiáº¿n trÃºc chia thÃ nh 3 pipeline hoáº¡t Ä‘á»™ng hoÃ n toÃ n Ä‘á»™c láº­p, giao tiáº¿p qua Artifact Boundaries.
+Kiến trúc chia thành 3 pipeline hoạt động hoàn toàn độc lập, giao tiếp qua Artifact Boundaries.
 
 ### Pipeline 1: Analysis, Script and Voice
-- PhÃ¢n tÃ­ch ORIGINAL video.
-- Dá»‹ch vá»¥/chá»©c nÄƒng: detect scenes/keyframes, build multimodal timeline, extract insights, remix script (chia Ä‘oáº¡n cÃ³ cáº¥u trÃºc), há»— trá»£ script approval.
-- Output sinh ra: TTS/Voice cloned, SRT dá»±a trÃªn TTS timing.
-- CÃ¡c artifacts JSON: `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`.
-- **Strict Rule:** Tuyá»‡t Ä‘á»‘i khÃ´ng xÃ³a subtitle, khÃ´ng cáº¯t video, khÃ´ng rÃ¡p hay render video á»Ÿ Pipeline nÃ y.
+- Phân tích ORIGINAL video.
+- Dịch vụ/chức năng: detect scenes/keyframes, build multimodal timeline, extract insights, remix script (chia đoạn có cấu trúc), hỗ trợ script approval.
+- Output sinh ra: TTS/Voice cloned, SRT dựa trên TTS timing.
+- Các artifacts JSON: `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`.
+- **Strict Rule:** Tuyệt đối không xóa subtitle, không cắt video, không ráp hay render video ở Pipeline này.
 
 ### Pipeline 2: Subtitle Removal
-- Nháº­n input lÃ  ORIGINAL video.
-- Chá»‰ thá»±c hiá»‡n xÃ³a hard subtitles. Há»— trá»£ chá»n vÃ¹ng xÃ³a tá»± Ä‘á»™ng/thá»§ cÃ´ng.
+- Nhận input là ORIGINAL video.
+- Chỉ thực hiện xóa hard subtitles. Hỗ trợ chọn vùng xóa tự động/thủ công.
 - Output: `clean_video.mp4`.
 - **Timeline Contract:** Pipeline 2 `clean_video.mp4` must remain timeline-compatible with the original source within a defined and verified tolerance.
   - no trimming of beginning or end;
@@ -74,16 +74,16 @@ Kiáº¿n trÃºc chia thÃ nh 3 pipeline hoáº¡t Ä‘á»™ng hoÃ n toÃ
   - original scene timecodes remain valid or deterministically mappable.
 
   **Exact allowed tolerance for duration, FPS, frame count and timebase: NOT YET VERIFIED.**
-  GiÃ¡ trá»‹ tolerance nÃ y pháº£i Ä‘Æ°á»£c xÃ¡c Ä‘á»‹nh thÃ´ng qua audit vÃ  owner runtime testing trÆ°á»›c khi Pipeline 3 cÃ³ thá»ƒ phá»¥ thuá»™c vÃ o nÃ³ má»™t cÃ¡ch an toÃ n.
+  Giá trị tolerance này phải được xác định thông qua audit và owner runtime testing trước khi Pipeline 3 có thể phụ thuộc vào nó một cách an toàn.
 
 ### Pipeline 3: Video Remix and Finalize
-- Äá»c artifacts tá»« Pipeline 1 (approved script, TTS audio, SRT, scenes, edit plan).
-- Äá»c `clean_video.mp4` tá»« Pipeline 2 lÃ m nguá»“n video máº·c Ä‘á»‹nh.
-- Cáº¯t cáº£nh dÃ¹ng original source timecodes, sáº¯p xáº¿p láº¡i theo `edit_plan.json` (khi cáº§n).
-- Mix TTS vÃ  background audio, burn SRT má»›i.
+- Đọc artifacts từ Pipeline 1 (approved script, TTS audio, SRT, scenes, edit plan).
+- Đọc `clean_video.mp4` từ Pipeline 2 làm nguồn video mặc định.
+- Cắt cảnh dùng original source timecodes, sắp xếp lại theo `edit_plan.json` (khi cần).
+- Mix TTS và background audio, burn SRT mới.
 - Render final video.
-- **Strict Rule:** Tuyá»‡t Ä‘á»‘i khÃ´ng Ä‘Æ°á»£c sá»­a Ä‘á»•i (modify) outputs cá»§a Pipeline 1 vÃ  Pipeline 2. Báº¯t buá»™c BLOCK operation náº¿u artifacts tá»« P1 vÃ  P2 khÃ´ng Ä‘áº¿n tá»« cÃ¹ng má»™t source video.
+- **Strict Rule:** Tuyệt đối không được sửa đổi (modify) outputs của Pipeline 1 và Pipeline 2. Bắt buộc BLOCK operation nếu artifacts từ P1 và P2 không đến từ cùng một source video.
 
 ### Artifact Boundaries & Source Identity
-Artifacts P1 Ä‘Æ°á»£c lÆ°u á»Ÿ `jobs/<job_id>/p1/`.
-Má»i pipeline artifact pháº£i chá»©a: `job_id`, `source_fingerprint`, `source duration`, `FPS/timebase`, vÃ  `artifact version`.
+Artifacts P1 được lưu ở `jobs/<job_id>/p1/`.
+Mọi pipeline artifact phải chứa: `job_id`, `source_fingerprint`, `source duration`, `FPS/timebase`, và `artifact version`.

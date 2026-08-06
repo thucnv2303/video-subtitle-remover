@@ -1,4 +1,4 @@
-﻿# Current Task
+# Current Task
 
 ## Task ID
 RECOVERY-007E-AI-SETTINGS-001
@@ -42,9 +42,18 @@ FAIL - Owner-observed blockers:
 - node --check src/renderer/js/app.js: EXIT 0
 - git diff --check (working tree): EXIT 0
 
+## PR Ancestry Facts
+- PR #8 base branch: review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
+- PR #8 base SHA: 7e18c04cf2483403010f237356dfb7f369dae1a8
+- Publication parent: abf0ee2f3f0d309ed7e371c4a4f3094c20c08651
+- COMMIT SEPARATION: NOT SATISFIED - hook-staged documentation into source commit 5be1d2bc.
+
 ## Tracking
 - RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED
-- BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST PENDING
+- Source commit: 5be1d2bc728ab282914b9d99cd050cd98916a2d6 (mixed with hook-staged docs)
+- Docs follow-up: d5e40a5ed6816e1304b369013c7bbde481cc1364
+- Encoding repair: PENDING
+- BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - Owner manual verification: NOT STARTED
 - PR #8: DO NOT MERGE
 
@@ -53,5 +62,5 @@ FAIL - Owner-observed blockers:
 - Automated verification: PASS
 - Code review: WAITING
 - Owner manual app verification: NOT STARTED
-- Documentation synchronization: PASS
+- Documentation synchronization: WAITING_PM_REVIEW
 - Merge permission: BLOCKED
