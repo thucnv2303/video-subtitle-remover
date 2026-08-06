@@ -307,14 +307,18 @@ fs.writeFileSync(path.join(evDir, "commands.txt"), [
 ].join("\n"), "utf8");
 
 const matrix = evidence.map(e => "TC: "+e.tc+"\n  Input:  "+e.input+"\n  Branch: "+e.branch+"\n  After:  "+e.after+"\n  Error:  "+(e.err||"(none)")).join("\n\n");
-fs.writeFileSync(path.join(evDir, "recovery-matrix.txt"), [
+console.log("\n=== RECOVERY MATRIX ===");
+console.log([
+
   "FORENSIC RECOVERY MATRIX - CLOSEOUT-COLLISION-FIX-012",
   "Platform: Windows 10 Pro  Node: " + process.version,
   "",
   matrix
-].join("\n"), "utf8");
+].join("\n"));
 
-fs.writeFileSync(path.join(evDir, "results.txt"), [
+console.log("\n=== DETAILED RESULTS ===");
+console.log([
+
   "RESULTS - FORENSIC-ROLLBACK-FIX010-CLOSEOUT-011",
   "Platform: Windows 10 Pro  Node: " + process.version,
   "PASS: " + PASS + "   FAIL: " + FAIL,
@@ -328,9 +332,9 @@ fs.writeFileSync(path.join(evDir, "results.txt"), [
   "",
   "FAILED:",
   failed.length ? failed.map(r => "  FAIL: " + r.label + " " + r.detail).join("\n") : "  (none)"
-].join("\n"), "utf8");
+].join("\n"));
 
 cleanup();
 try { fs.rmdirSync(testDir); } catch(e) {}
-console.log("Evidence written to: " + evDir);
+console.log("Test execution completed.");
 process.exit(FAIL > 0 ? 1 : 0);
