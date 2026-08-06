@@ -57,7 +57,7 @@ CANDIDATE_FIX
   - UI: refreshProviderStatus and delete handler handle structured results
   - Electron launch: Page loaded successfully, Window is now visible, Python backend started
   - Node verify: 26/27 PASS (1 test-script error, not production), Windows second-save: 12/12 PASS
-- CRASH-RECOVERY-CORRECTION-009: PENDING COMMIT
+- CRASH-RECOVERY-CORRECTION-009: d76fcdab2fb8a72054ae5f9001d52189d677ee63 — COMMITTED
   - State machine: most-specific first (E,A,D,B,C,normal)
   - Case E now reachable and confirmed by TC9 (65/65 PASS)
   - windowsSafeRestoreFromBak: moves corrupt to .corrupt before rename

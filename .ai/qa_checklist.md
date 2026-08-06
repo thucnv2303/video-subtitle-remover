@@ -114,3 +114,15 @@ Source: src/main/main.js only. Owner retest: NOT STARTED.
 - [ ] Owner: Ollama scan/test functional.
 - [ ] Owner: Pipeline 2 sanitizer intact.
 - [ ] Owner: Voice-clone cancel produces no error.
+
+## CRASH-RECOVERY-CORRECTION-009 QA (commit d76fcda)
+Source: src/main/main.js only. Owner retest: NOT STARTED.
+*Note: Supersedes the 40/40 PASS claims from FIX-008 which had unreachable states.*
+
+- [x] Production recovery matrix test: 65/65 PASS.
+- [x] Case E reachable (keys+tmp+bak): Confirmed via TC9.
+- [x] Windows-safe restore: TC5 and TC14 confirm corrupt primary is moved before bak restore.
+- [x] Post-write validation rollback: simulated TC13 confirms fallback to bak if written data is invalid.
+- [x] Cleanup failure: TC12 confirms tryUnlink directory returns {ok:false, code:EPERM} and is not swallowed.
+- [x] Electron launch: npx electron . (no --no-sandbox) -> Page loaded, Window visible, Python 8765.
+- [ ] Owner: UI tests remain identical to FIX-008.

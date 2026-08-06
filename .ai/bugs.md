@@ -105,3 +105,21 @@ BUG-029: loadEncryptedKeys did not run recovery before loading; no cross-restart
 - Root cause: loadEncryptedKeys called readFileSync directly without any artifact state check.
 - Fixed: recoverKeyStore() called at the start of both loadEncryptedKeys and saveEncryptedKeys.
   recoverKeyStore handles 5 deterministic cases (A-E) and restores from .bak automatically.
+
+## CRASH-RECOVERY-CORRECTION-009 at head 9900523 — fixed in d76fcda
+
+BUG-030: State machine overlap made Case E unreachable
+- Root cause: Case A (keys + bak) was evaluated before Case E (keys + tmp + bak), so Case E could never run.
+- Fixed: State machine order changed to evaluate most-specific cases first (E, A, D, B, C, normal). TC9 confirmed execution.
+
+BUG-031: Windows restore over existing primary failed with EPERM
+- Root cause: fs.renameSync(bak, keys) fails on Windows if keys exists.
+- Fixed: windowsSafeRestoreFromBak helper moves existing corrupt keys to deterministic forensic path (.corrupt) before restoring bak.
+
+BUG-032: Post-write validation failure left corrupt primary active
+- Root cause: if the newly written primary failed validation, the code threw an error but left the invalid file as primary.
+- Fixed: on validation failure, corrupt primary is moved to .corrupt, and bak is restored to keys and validated.
+
+BUG-033: Unlink failures silently swallowed
+- Root cause: try { fs.unlinkSync(bak) } catch {} swallowed permission errors.
+- Fixed: tryUnlink helper ignores ENOENT but returns other errors (e.g. EPERM). Callers now inspect the result and throw STORE_CORRUPT or log STORE_WARN appropriately.

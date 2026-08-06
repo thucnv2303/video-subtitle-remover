@@ -24,7 +24,7 @@ RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX)
   - UI: delete handler and refreshProviderStatus handle structured results.
   - Electron runtime: launched OK, Page loaded, Window visible, Python backend 8765.
 - CRASH-RECOVERY-FIX-008: 0be3180ee5a866f24fd5b23bebcac9f2ff65a03c — COMMITTED.
-- CRASH-RECOVERY-CORRECTION-009: PENDING COMMIT.
+- CRASH-RECOVERY-CORRECTION-009: d76fcdab2fb8a72054ae5f9001d52189d677ee63 — COMMITTED.
   - src/main/main.js only.
   - State machine: most-specific first (E,A,D,B,C,normal). Case E now reachable.
   - windowsSafeRestoreFromBak: moves corrupt to .corrupt before rename (Windows-safe).
