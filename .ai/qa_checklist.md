@@ -1,4 +1,4 @@
-﻿# QA Checklist
+# QA Checklist
 
 ## Owner Manual App Verification (RECOVERY-007-OWNER-VERIFY-001)
 PAUSED - BLOCKED BY BUG-008/BUG-009
@@ -43,3 +43,24 @@ Must not start until PM code review on PR #8 passes.
 - [ ] Pipeline 2 regression: subtitle removal produces expected clean-video.
 - [ ] RECOVERY-007 ASR regression passes.
 - [ ] No unintended ai_api_key or ai_api_keys_* values remain in localStorage after session.
+
+## Credential Hardening QA (RECOVERY-007E-AI-SETTINGS-001-SOURCE-REVIEW-FIX-006)
+PM NEEDS_REVISION addressed in commit 4ee2f542. Owner retest: NOT STARTED.
+
+- [ ] No mojibake in visible UI text on Home, Settings, or Pipeline 1.
+- [ ] No mojibake in renderer DevTools console for normal navigation.
+- [ ] Unknown provider IPC returns controlled error; ai_keys.json is not modified.
+- [ ] Corrupt ai_keys.json -> app reports controlled error; file is not overwritten.
+- [ ] Valid save -> temp file created, atomically renamed, final file has hex ciphertext only.
+- [ ] Invalid DeepSeek key returns controlled authentication error, not stored.
+- [ ] Invalid Gemini key is not accepted through any fallback or hardcoded model list.
+- [ ] Gemini with no compatible models returns controlled noCompatibleModels result.
+- [ ] Ollama scan and test remain functional (regression).
+- [ ] Pipeline 2 sanitizer remains functional (regression).
+- [ ] Voice-clone dialog cancel and preview remain functional (regression).
+- [ ] Home layout remains correct (regression).
+- [ ] ai:has-provider-keys does not decrypt keys unnecessarily; counts ciphertext entries.
+- [ ] Submitted keys are trimmed and deduplicated before validation.
+- [ ] Empty key input is rejected before calling provider API.
+- [ ] Key count stored does not exceed MAX_KEYS_PER_PROVIDER (10).
+- [ ] Provider URLs containing keys are not logged to console.

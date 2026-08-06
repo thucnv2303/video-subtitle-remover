@@ -1,4 +1,4 @@
-﻿# API Contracts
+# API Contracts
 
 ## DeepSeek Provider Contracts
 
@@ -47,13 +47,16 @@ Key rotation:
 Request:
   GET https://generativelanguage.googleapis.com/v1beta/models?key=<decrypted_key>
 
-Response (200):
+Response (200 - valid):
   { models: [ { name: string, supportedGenerationMethods: [...] } ] }
   Filter by supportedGenerationMethods includes generateContent.
-  Fallback: gemini-1.5-flash, gemini-1.5-pro (if API unavailable or empty).
+  Returns { verified: true, noCompatibleModels: false, models: [...] } when models found.
+  Returns { verified: true, noCompatibleModels: true, models: [] } when no compatible models.
+  Invalid JSON -> validation error (rejected).
+  Missing models array -> validation error (rejected).
+  No hardcoded fallback model list substituted on validation failure.
 
-NOTE: Gemini model discovery via this endpoint is not separately contract-verified.
-Manual model entry is supported.
+NOTE: Key is in URL query string. Do not log the URL.
 
 ### Rewrite / Generate Content
 Request:

@@ -87,3 +87,39 @@ Kiến trúc chia thành 3 pipeline hoạt động hoàn toàn độc lập, gia
 ### Artifact Boundaries & Source Identity
 Artifacts P1 được lưu ở `jobs/<job_id>/p1/`.
 Mọi pipeline artifact phải chứa: `job_id`, `source_fingerprint`, `source duration`, `FPS/timebase`, và `artifact version`.
+
+## Credential Hardening (RECOVERY-007E-AI-SETTINGS-001-SOURCE-REVIEW-FIX-006, commit 4ee2f542)
+
+### Provider Allowlist
+ALLOWED_CLOUD_PROVIDERS = Set { 'deepseek', 'gemini' }.
+assertCloudProvider(provider) enforced before ALL credential access in:
+  ai:save-provider-keys, ai:has-provider-keys, ai:delete-provider-keys, ai:test-provider, ai:rewrite.
+Unknown providers return controlled error. Never written to ai_keys.json.
+Ollama uses its dedicated ollama:* IPC handlers exclusively.
+
+### Key Store (ai_keys.json)
+Shape: { deepseek?: string[], gemini?: string[] }.
+ENOENT -> returns empty store {}.
+Invalid JSON / wrong root type / unknown provider key / invalid array entry -> throws controlled error; does not return {} and does not overwrite.
+Writes are atomic: serialize -> writeFileSync(tmpPath) -> renameSync(tmpPath, keysPath). Cleanup exact tmp file on failure only.
+
+### Response Size Limits (2 MB)
+Applied to all provider HTTP responses:
+  DeepSeek GET /models, DeepSeek POST /chat/completions,
+  Gemini GET models?key=, Gemini POST :generateContent.
+req.destroy() called on exceed. Partial content not parsed.
+
+### Gemini Validation Contract
+HTTP success + valid models array + >=1 generateContent-capable model required for PASS.
+Invalid JSON -> error. Missing models array -> error.
+No compatible models -> { verified:true, noCompatibleModels:true, models:[] } (not a success state).
+No hardcoded fallback model list substituted on validation failure.
+
+### Key Sanitization
+Keys trimmed, deduplicated, empty-rejected before provider API call.
+Stored count capped at MAX_KEYS_PER_PROVIDER (10).
+
+### Source Encoding
+All source files written in UTF-8 without BOM.
+Vietnamese strings, emoji, box-drawing characters verified against parent commit abf0ee2.
+No mojibake patterns (ChÆ°a, KhÃ´ng, etc.) in any allowed source file.

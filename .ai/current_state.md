@@ -47,7 +47,8 @@ CANDIDATE_FIX
 - Docs follow-up: d5e40a5ed6816e1304b369013c7bbde481cc1364
 - Encoding repair: acdbf602c33fbcd77b9f11d6decbbb7aba5bb31f — COMPLETED
 - Encoding closeout: 70b3db51b16af797960b99202ab88b6c922ea56d — COMPLETED
-- Credential hardening: PENDING COMMIT (hook requires joint staging)
+- Credential hardening: 4ee2f542838a4f5f132d7f673f1b89848dc367b2 — COMMITTED (hook staged .ai alongside source)
+- PM source review NEEDS_REVISION at 70b3db51: addressed in 4ee2f542
 - BUG-008: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - PR #8: DO NOT MERGE

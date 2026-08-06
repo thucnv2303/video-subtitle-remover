@@ -1,4 +1,4 @@
-﻿# Bug Ledger
+# Bug Ledger
 
 | ID | Hien tuong | Bang chung | Root cause | Status | Phan loai |
 |---|---|---|---|---|---|
@@ -28,3 +28,33 @@
 - Home layout regression fixed by removing duplicated three-col wrapper.
 - Pipeline 1 AI selector synchronized with Settings via aiModelChanged event.
 - Status: CANDIDATE FIX - OWNER RETEST NOT STARTED.
+
+## PM Source Review NEEDS_REVISION at head 70b3db51 - findings and fixes applied in 4ee2f542
+
+BUG-014: Source encoding corruption (mojibake in main.js, settings.js)
+- Root cause: Files written through encoding-lossy shell pipeline. Fixed in 4ee2f542.
+- All Vietnamese strings, emoji, box-drawing characters restored from parent commit abf0ee2.
+
+BUG-015: Non-atomic ai_keys.json write
+- Root cause: Direct writeFileSync without temp-file rename.
+- Fixed: serialize -> write tmp_PID -> renameSync -> cleanup on failure. No wildcard delete.
+
+BUG-016: Corrupt key store returned {} silently
+- Root cause: loadEncryptedKeys returned {} on any error, masking corruption.
+- Fixed: ENOENT returns {}; all other parse/shape errors throw controlled error and do not overwrite.
+
+BUG-017: No provider allowlist - arbitrary string written to ai_keys.json
+- Root cause: No validation of provider string before credential access.
+- Fixed: assertCloudProvider() helper enforces ALLOWED_CLOUD_PROVIDERS = {deepseek, gemini}.
+
+BUG-018: Gemini validation false positive on invalid JSON / no models
+- Root cause: On JSON parse failure, fallback returned hardcoded model list as if validation passed.
+- Fixed: Invalid JSON rejects with error. Missing models array rejects. No compatible models returns { verified:true, noCompatibleModels:true, models:[] } - not treated as success.
+
+BUG-019: No response-size limit on DeepSeek/Gemini discovery and rewrite calls
+- Root cause: Provider calls used unbounded string concat, memory exhaustion possible.
+- Fixed: 2MB limit applied to all provider responses. req.destroy on exceed.
+
+BUG-020: No key sanitization before validation
+- Root cause: Keys passed unsanitized to provider APIs.
+- Fixed: trim(), dedup, reject empty, cap at MAX_KEYS_PER_PROVIDER (10).
