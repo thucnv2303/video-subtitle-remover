@@ -16,6 +16,12 @@ RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX)
 - Encoding closeout: 70b3db51b16af797960b99202ab88b6c922ea56d — COMPLETED.
 - Credential hardening: 4ee2f542838a4f5f132d7f673f1b89848dc367b2 — COMMITTED (hook staged .ai alongside source).
 - PM source review NEEDS_REVISION at 70b3db51: addressed in 4ee2f542.
+- HARDENING-CORRECTION-007: PENDING COMMIT.
+  - B1: Gemini no-compatible-models rejected (controlled error, not stored).
+  - B2: Structured IPC {status,count/error} for has/delete-provider-keys.
+  - B3: Windows-safe backup+restore atomic write; stale-cleanup on entry.
+  - HEX: isValidCiphertext (even-len, hex-only, max 8192).
+  - UI: delete handler and refreshProviderStatus handle structured results.
 - BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED.
 - Owner manual verification: NOT STARTED.
 

@@ -92,11 +92,17 @@ function bindAiEvents() {
 
   $('btn-delete-keys')?.addEventListener('click', async () => {
     const provider = value('ai-provider');
-    await window.electronAPI.deleteProviderKeys(provider);
-    if ($('ai-cloud-keys')) $('ai-cloud-keys').value = '';
-    toast('Đã xóa keys', 'info');
-    await refreshProviderStatus(provider);
-    await syncModelsDropdown(provider);
+    const result = await window.electronAPI.deleteProviderKeys(provider);
+    if (result && result.status === 'ok') {
+      if ($('ai-cloud-keys')) $('ai-cloud-keys').value = '';
+      toast('Đã xóa keys', 'info');
+      await refreshProviderStatus(provider);
+      await syncModelsDropdown(provider);
+    } else {
+      const errMsg = (result && result.error) ? result.error : 'Không thể xóa keys.';
+      setAiStatus(errMsg, 'offline');
+      toast(errMsg, 'error');
+    }
   });
 
   $('btn-save-ai')?.addEventListener('click', () => { saveAll(); addLog('Đã lưu cấu hình AI & TTS!', 'success'); toast('Đã lưu cài đặt!', 'success'); });
@@ -161,8 +167,15 @@ async function testProvider() {
 
 async function refreshProviderStatus(provider) {
   if (provider === 'ollama') return;
-  const count = await window.electronAPI.hasProviderKeys(provider);
+  const result = await window.electronAPI.hasProviderKeys(provider);
   const btnDelete = $('btn-delete-keys');
+  if (result && result.status === 'error') {
+    // Corrupt store or safeStorage unavailable — show controlled error, not 'no key'
+    setAiStatus(result.error || 'Lỗi đọc kho khóa.', 'offline');
+    if (btnDelete) btnDelete.style.display = 'none';
+    return;
+  }
+  const count = (result && result.status === 'ok') ? result.count : 0;
   if (count > 0) {
     setAiStatus(`Đã lưu ${count} key`, 'online');
     if (btnDelete) btnDelete.style.display = '';

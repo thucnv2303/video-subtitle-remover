@@ -286,8 +286,18 @@ function getKeysPath() {
 }
 
 // Validate store shape: { deepseek?: string[], gemini?: string[] }
-// Only allows known providers; all values must be non-empty hex strings.
-// Throws on invalid shape; returns {} on ENOENT.
+// Only allows known providers; all values must be valid hex ciphertext strings.
+// Throws on invalid shape or invalid ciphertext; returns {} on ENOENT.
+const MAX_HEX_CIPHERTEXT_LENGTH = 8192; // safeStorage output is bounded
+const HEX_REGEX = /^[0-9a-f]+$/i;
+function isValidCiphertext(entry) {
+  return typeof entry === 'string' &&
+    entry.length > 0 &&
+    entry.length % 2 === 0 &&
+    entry.length <= MAX_HEX_CIPHERTEXT_LENGTH &&
+    HEX_REGEX.test(entry);
+}
+
 function loadEncryptedKeys() {
   const keysPath = getKeysPath();
   let raw;
@@ -307,25 +317,63 @@ function loadEncryptedKeys() {
     if (!ALLOWED_CLOUD_PROVIDERS.has(k)) {
       throw new Error(`Kho khóa chứa provider không hợp lệ: ${k}`);
     }
-    if (!Array.isArray(v) || v.some(entry => typeof entry !== 'string' || entry.length === 0)) {
-      throw new Error(`Kho khóa có giá trị không hợp lệ cho provider: ${k}`);
+    if (!Array.isArray(v) || !v.every(isValidCiphertext)) {
+      throw new Error(`Kho khóa có mục mã hóa không hợp lệ cho provider: ${k}`);
     }
   }
   return parsed;
 }
 
-// Atomic write: serialize → temp file → rename.
-// Does NOT delete the existing file before success.
+// Windows-safe atomic replacement:
+// 1. Write serialized JSON to exact temp path (keysPath.tmp_PID).
+// 2. If destination exists, move it to an exact backup path (keysPath.bak_PID).
+// 3. Rename temp to destination.
+// 4. If step 3 fails, restore backup to destination.
+// 5. Remove exact backup after successful replacement.
+// 6. Clean up any stale temp/backup from prior interrupted operation on entry.
 function saveEncryptedKeys(data) {
   const keysPath = getKeysPath();
   const tmpPath = keysPath + '.tmp_' + process.pid;
+  const bakPath = keysPath + '.bak_' + process.pid;
   const serialized = JSON.stringify(data);
+
+  // Clean up any stale artifacts from prior interrupted saves
+  try { fs.unlinkSync(tmpPath); } catch {}
+  try { fs.unlinkSync(bakPath); } catch {}
+
   try {
     fs.writeFileSync(tmpPath, serialized, 'utf8');
-    fs.renameSync(tmpPath, keysPath);
   } catch (err) {
     try { fs.unlinkSync(tmpPath); } catch {}
+    throw new Error('Không thể ghi tệp tạm kho khóa: ' + err.message);
+  }
+
+  // Move existing destination to backup before rename
+  let hadExisting = false;
+  try {
+    fs.renameSync(keysPath, bakPath);
+    hadExisting = true;
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      try { fs.unlinkSync(tmpPath); } catch {}
+      throw new Error('Không thể tạo bản sao lưu kho khóa: ' + err.message);
+    }
+  }
+
+  try {
+    fs.renameSync(tmpPath, keysPath);
+  } catch (err) {
+    // Restore backup if rename failed
+    if (hadExisting) {
+      try { fs.renameSync(bakPath, keysPath); } catch {}
+    }
+    try { fs.unlinkSync(tmpPath); } catch {}
     throw new Error('Không thể ghi kho khóa: ' + err.message);
+  }
+
+  // Cleanup backup only after successful replacement
+  if (hadExisting) {
+    try { fs.unlinkSync(bakPath); } catch {}
   }
 }
 
@@ -363,13 +411,22 @@ ipcMain.handle('ai:has-provider-keys', (event, provider) => {
     checkSafeStorage();
     const data = loadEncryptedKeys();
     const arr = data[provider];
-    if (!Array.isArray(arr)) return 0;
-    return arr.filter(entry => typeof entry === 'string' && entry.length > 0).length;
-  } catch { return 0; }
+    if (!Array.isArray(arr)) return { status: 'ok', count: 0 };
+    const count = arr.filter(isValidCiphertext).length;
+    return { status: 'ok', count };
+  } catch (err) {
+    return { status: 'error', error: err.message };
+  }
 });
 
 ipcMain.handle('ai:delete-provider-keys', (event, provider) => {
-  try { assertCloudProvider(provider); storeProviderKeys(provider, null); return true; } catch { return false; }
+  try {
+    assertCloudProvider(provider);
+    storeProviderKeys(provider, null);
+    return { status: 'ok' };
+  } catch (err) {
+    return { status: 'error', error: err.message };
+  }
 });
 
 async function fetchDeepSeekModels(key) {
@@ -407,6 +464,11 @@ async function fetchDeepSeekModels(key) {
   });
 }
 
+// fetchGeminiModels returns a flat string[] of model IDs when key is valid and
+// compatible models exist. Rejects with a controlled error in all other cases:
+//   - Invalid JSON -> error
+//   - Missing models array -> error
+//   - No generateContent-capable model -> controlled 'no_compatible_models' error
 async function fetchGeminiModels(key) {
   return new Promise((resolve, reject) => {
     // NOTE: key is in URL query; do not log this URL
@@ -434,11 +496,11 @@ async function fetchGeminiModels(key) {
             .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
             .map(m => m.name.replace('models/', ''));
           if (models.length === 0) {
-            // Validation pass, but no compatible models found — return controlled result
-            resolve({ verified: true, noCompatibleModels: true, models: [] });
-          } else {
-            resolve({ verified: true, noCompatibleModels: false, models });
+            // Authenticated but no compatible model — not usable, do not save
+            reject(new Error('API key được xác thực nhưng không có model generateContent tương thích.'));
+            return;
           }
+          resolve(models);
         } else {
           reject(new Error(res.statusCode === 400 || res.statusCode === 403 ? 'API key không hợp lệ.' : `Gemini HTTP ${res.statusCode}`));
         }
@@ -448,13 +510,6 @@ async function fetchGeminiModels(key) {
     req.setTimeout(10000, () => req.destroy(new Error('Timeout Gemini')));
     req.end();
   });
-}
-
-// Normalize fetchGeminiModels result to a flat string[] for callers
-async function fetchGeminiModelsList(key) {
-  const result = await fetchGeminiModels(key);
-  if (result && result.verified) return result.models;
-  return result; // fallback if already array (should not happen)
 }
 
 ipcMain.handle('ai:save-provider-keys', async (event, provider, keys) => {
@@ -477,7 +532,7 @@ ipcMain.handle('ai:save-provider-keys', async (event, provider, keys) => {
       try {
         let models = [];
         if (provider === 'deepseek') models = await fetchDeepSeekModels(key);
-        else if (provider === 'gemini') models = await fetchGeminiModelsList(key);
+        else if (provider === 'gemini') models = await fetchGeminiModels(key);
         allModels.push(...models);
         validKeys.push(key);
       } catch (err) {
@@ -508,7 +563,7 @@ ipcMain.handle('ai:test-provider', async (event, provider) => {
       try {
         let models = [];
         if (provider === 'deepseek') models = await fetchDeepSeekModels(key);
-        else if (provider === 'gemini') models = await fetchGeminiModelsList(key);
+        else if (provider === 'gemini') models = await fetchGeminiModels(key);
         allModels.push(...models);
         validKeys++;
       } catch (e) {}
