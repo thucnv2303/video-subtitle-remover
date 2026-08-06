@@ -139,3 +139,11 @@ BUG-033: Unlink failures silently swallowed
 - Owner retest: NOT STARTED.
 - Documentation synchronization: WAITING_PM_REVIEW.
 - Merge permission: BLOCKED.
+
+## [RESOLVED] RECOVERY-007E-PIPELINE1-JOB-MODEL-VOICE-RUNTIME-FIX-024
+- Bug: state is not defined unhandledrejection trace bug.
+- Bug: Job Queue did not render clear individual job cards.
+- Bug: Owner could not select a job and configure that job independently.
+- Bug: AI model selector displayed mojibake 'ChÆ°a chá» n'
+- Bug: Voice selector did not expose usable TTS voice choices because alue attributes were missing.
+- Resolution: UI models synchronized properly and per-job options explicitly stored in job state. Mojibake converted to valid UTF-8. pp.js and main.css adjusted for proper job styling. Tests written in 	est_pipeline1_runtime.js.

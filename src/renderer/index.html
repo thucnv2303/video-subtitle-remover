@@ -93,15 +93,15 @@
                    <div class="tk-group">
                       <label>Voice Settings</label>
                       <select id="step1-tts-voice" class="tk-input">
-                         <option>Không lồng tiếng</option>
-                         <option>Hoài My (Nữ, Miền Nam)</option>
-                         <option>Nam Minh (Nam, Miền Bắc)</option>
-                      </select>
+                        <option value="none">Không lồng tiếng</option>
+                        <option value="vi-VN-HoaiMyNeural">Hoài My (Nữ, Miền Nam)</option>
+                        <option value="vi-VN-NamMinhNeural">Nam Minh (Nam, Miền Bắc)</option>
+                     </select>
                    </div>
                    
                    <div class="tk-group">
                       <label>Speed (1.0x)</label>
-                      <input type="range" class="tk-slider" min="0" max="100" value="50">
+                      <input type="range" class="tk-slider" id="step1-tts-speed" min="0" max="100" value="50">
                    </div>
                    
                    <div class="tk-group" style="margin-top: 20px;">

@@ -223,20 +223,46 @@
 
   document.getElementById('step1-btn-copy-log')?.addEventListener('click', () => {
     const s1 = document.getElementById('step1-log-output');
-    if (s1) navigator.clipboard.writeText(s1.innerText).then(() => showToast('ÄÃ£ sao chÃ©p!', 'success'));
+    if (s1) navigator.clipboard.writeText(s1.innerText).then(() => showToast('Ä Ã£ sao chÃ©p!', 'success'));
   });
 
   window.addEventListener('error', (e) => addLog(`[UI Error] ${e.message}`, 'error'));
-  window.addEventListener('unhandledrejection', (e) => addLog(`[UI Async Error] ${e.reason?.message || e.reason}`, 'error'));
+  window.addEventListener('unhandledrejection', (e) => {
+    addLog(`[UI Async Error] ${e.reason?.message || e.reason}`, 'error');
+    console.log(`[UI Async Error Stack]`, e.reason?.stack || 'no stack');
+  });
 
-  window.addEventListener('aiModelChanged', () => {
+  window.addEventListener('aiModelChanged', (e) => {
     const provider = localStorage.getItem('ai_provider') || 'gemini';
     const savedModel = localStorage.getItem(provider === 'ollama' ? 'ai_model_ollama' : `ai_model_${provider}`) || '';
-    const label = savedModel ? `${provider.toUpperCase()}: ${savedModel}` : 'ChÆ°a chá»n';
     if (el.aiModel2) {
       el.aiModel2.innerHTML = '';
-      el.aiModel2.append(new Option(label, savedModel));
+      const sourceSelect = provider === 'ollama' ? document.getElementById('ai-ollama-model-select') : document.getElementById('ai-cloud-model');
+      if (sourceSelect && sourceSelect.options.length > 0) {
+        Array.from(sourceSelect.options).forEach(opt => el.aiModel2.append(new Option(opt.text, opt.value)));
+      } else {
+        el.aiModel2.append(new Option('Chưa chọn', ''));
+      }
+      const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+      if (job && job.p1AiModel !== undefined) {
+         el.aiModel2.value = job.p1AiModel;
+      } else if (savedModel) {
+         el.aiModel2.value = savedModel;
+      }
     }
+  });
+
+  document.getElementById('step1-ai-model')?.addEventListener('change', (e) => {
+    const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+    if (job) job.p1AiModel = e.target.value;
+  });
+  document.getElementById('step1-tts-voice')?.addEventListener('change', (e) => {
+    const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+    if (job) job.p1TtsVoice = e.target.value;
+  });
+  document.getElementById('step1-tts-speed')?.addEventListener('change', (e) => {
+    const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+    if (job) job.p1TtsSpeed = e.target.value;
   });
 
   // â”€â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1361,6 +1387,18 @@
       if (audioEl) { audioEl.style.display = 'none'; audioEl.src = ''; }
       if (audioEmptyEl) audioEmptyEl.style.display = 'block';
     }
+
+    if (el.aiModel2 && job.p1AiModel !== undefined) {
+      el.aiModel2.value = job.p1AiModel;
+    }
+    const ttsVoice = document.getElementById('step1-tts-voice');
+    if (ttsVoice && job.p1TtsVoice !== undefined) {
+      ttsVoice.value = job.p1TtsVoice;
+    }
+    const ttsSpeed = document.getElementById('step1-tts-speed');
+    if (ttsSpeed && job.p1TtsSpeed !== undefined) {
+      ttsSpeed.value = job.p1TtsSpeed;
+    }
   }
 
   document.getElementById('step1-btn-save-text')?.addEventListener('click', () => {
@@ -1377,3 +1415,4 @@
       addLog('ÄÃ£ lÆ°u ná»™i dung cáº­p nháº­t cho ' + job.fileName, 'info');
     }
   });
+

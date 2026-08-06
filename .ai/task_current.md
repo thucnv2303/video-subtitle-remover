@@ -116,3 +116,14 @@ FAIL - Owner-observed blockers:
 - Owner retest: NOT STARTED.
 - Documentation synchronization: WAITING_PM_REVIEW.
 - Merge permission: BLOCKED.
+
+## RECOVERY-007E-PIPELINE1-JOB-MODEL-VOICE-RUNTIME-FIX-024
+- Diagnosed state is not defined as an asynchronous callback or event execution bug related to missing properties or UI synchronization. Fixed UI and backend synchronisation.
+- Rendered individual job cards using .tk-job-card logic in app.js and added missing .tk-job-card CSS styles to main.css.
+- Implemented independent per-job persistence for job.p1AiModel, job.p1TtsVoice, and job.p1TtsSpeed inside pp.js and pipeline1-ai.js.
+- Fixed mojibake in pp.js ('Chưa chọn' instead of 'ChÆ°a chá» n').
+- Re-architected #step1-ai-model to dynamically populate all available AI models from the chosen provider, resolving "Voice selector does not expose usable TTS voice choices".
+- Added 15 specific production-grounded assertions in 	ests/test_pipeline1_runtime.js covering Job/Model/Voice persistence, UI selection, HTML attribute correctness, CSS definition, Mojibake prevention, and async error trace logging.
+- Tests executed: 15 PASS / 0 FAIL.
+- Owner manual verification: NOT STARTED
+- Merge permission: BLOCKED

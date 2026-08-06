@@ -114,3 +114,13 @@ review/RECOVERY-007E-AI-SETTINGS-001-ai-settings
 - Owner retest: NOT STARTED.
 - Documentation synchronization: WAITING_PM_REVIEW.
 - Merge permission: BLOCKED.
+
+## RECOVERY-007E-PIPELINE1-JOB-MODEL-VOICE-RUNTIME-FIX-024
+- Pipeline 1 jobs render as distinct .tk-job-card elements with specific visual styling and hover/active states.
+- AI Model, TTS Voice, and TTS Speed are safely persisted per-job (job.p1AiModel, job.p1TtsVoice, job.p1TtsSpeed) inside the pp.js job object.
+- Job selection dynamically repopulates controls. Unhandled runtime UI asynchronous errors related to 'state is not defined' mitigated with proper state access handling and deeper trace logging in the event unhandledrejection listener.
+- index.html <option> items explicitly export a value, e.g. alue="vi-VN-HoaiMyNeural".
+- 15 specific production-grounded runtime-focused tests passed.
+- All dependencies verified via static AST/ESLint check equivalency.
+- Code review: WAITING_PM_REVIEW
+- Merge permission: BLOCKED

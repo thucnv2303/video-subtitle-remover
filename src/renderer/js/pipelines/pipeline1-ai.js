@@ -10,7 +10,7 @@ export async function triggerAutoAiRewrite(job, srtText) {
 
   try {
     const provider = localStorage.getItem('ai_provider') || 'gemini';
-    const model = localStorage.getItem(`ai_model_${provider}`) || '';
+    const model = job.p1AiModel || localStorage.getItem(`ai_model_${provider}`) || '';
     const prompt = _getActivePrompt();
     if (!prompt) throw new Error('Chưa cấu hình prompt AI.');
 
@@ -71,7 +71,7 @@ function _getActivePrompt() {
 }
 
 export async function triggerAutoTts(job, srtText) {
-  const voice = job.ttsVoice || localStorage.getItem('tts_voice') || 'none';
+  const voice = job.p1TtsVoice || job.ttsVoice || localStorage.getItem('tts_voice') || 'none';
   if (!voice || voice === 'none') {
     _addLog('[TTS] ⚠️ Chưa chọn giọng — bỏ qua TTS.', 'warning');
     return;
@@ -98,6 +98,7 @@ export async function triggerAutoTts(job, srtText) {
         tts_voice: voice,
         video_path: job.filePath,
         tts_ref_audio: refAudio,
+        speed: (job.p1TtsSpeed !== undefined ? Number(job.p1TtsSpeed) : 50) / 50.0 // Normalize speed (50 is 1.0x)
       }),
     });
     const result = await response.json();
