@@ -62,7 +62,16 @@ FAIL - Owner-observed blockers:
   - Windows atomic: backup+restore, stale-cleanup, hex validation
   - UI: delete handler and refreshProviderStatus handle structured results
   - Electron runtime: Page loaded successfully, Window visible, Python backend 8765 OK
-- CRASH-RECOVERY-FIX-008: 0be3180ee5a866f24fd5b23bebcac9f2ff65a03c — COMMITTED
+- CRASH-RECOVERY-CORRECTION-009: PENDING COMMIT
+  - src/main/main.js only
+  - State machine order: E,A,D,B,C,normal (most-specific first)
+  - Case E proven reachable: TC9 caseE===true PASS
+  - windowsSafeRestoreFromBak helper for Windows-safe restore with .corrupt forensic path
+  - tryUnlink: ignores ENOENT, reports EPERM etc.
+  - POST-WRITE: rollback to bak if validation fails; validate restored bak
+  - NODE_ENV=test: _credStore exported for production test
+  - Production test: 65/65 PASS; evidence in .ai/evidence/
+  - Electron: npx electron . -> OK (no --no-sandbox)
   - src/main/main.js only
   - Deterministic paths, recoverKeyStore 5-case matrix, fsync, post-write validation, typed errors
   - Recovery matrix: 40/40 PASS

@@ -24,6 +24,15 @@ RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX)
   - UI: delete handler and refreshProviderStatus handle structured results.
   - Electron runtime: launched OK, Page loaded, Window visible, Python backend 8765.
 - CRASH-RECOVERY-FIX-008: 0be3180ee5a866f24fd5b23bebcac9f2ff65a03c — COMMITTED.
+- CRASH-RECOVERY-CORRECTION-009: PENDING COMMIT.
+  - src/main/main.js only.
+  - State machine: most-specific first (E,A,D,B,C,normal). Case E now reachable.
+  - windowsSafeRestoreFromBak: moves corrupt to .corrupt before rename (Windows-safe).
+  - Post-write validation rollback: preserves invalid as .corrupt, restores bak, validates restored.
+  - tryUnlink: reports non-ENOENT failures (EPERM confirmed TC12).
+  - NODE_ENV=test: _credStore exports for production test.
+  - Production test: 65/65 PASS. Evidence: .ai/evidence/ (commands.txt, results.txt, recovery-matrix.txt).
+  - Electron launch (no --no-sandbox): Page loaded, Window visible, Python 8765.
   - src/main/main.js only (settings.js unchanged).
   - Deterministic paths: ai_keys.json, ai_keys.json.tmp, ai_keys.json.bak (no PID).
   - recoverKeyStore() covers 5 cases A-E; auto-restores from .bak across process restarts.

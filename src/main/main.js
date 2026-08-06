@@ -286,14 +286,15 @@ function getKeysPath() {
 }
 
 // ---------------------------------------------------------------------------
-// Credential Store — deterministic crash recovery
+// Credential Store — deterministic crash recovery (CORRECTION-009)
 // Artifact paths (no PID — recoverable across process restarts):
-//   ai_keys.json       → primary credential file
-//   ai_keys.json.tmp   → in-progress write
-//   ai_keys.json.bak   → pre-replacement backup
+//   ai_keys.json         → primary credential file
+//   ai_keys.json.tmp     → in-progress write
+//   ai_keys.json.bak     → pre-replacement backup
+//   ai_keys.json.corrupt → forensic copy of invalid primary during restore
 // ---------------------------------------------------------------------------
 
-const MAX_HEX_CIPHERTEXT_LENGTH = 8192; // safeStorage output is bounded
+const MAX_HEX_CIPHERTEXT_LENGTH = 8192;
 const HEX_REGEX = /^[0-9a-f]+$/i;
 function isValidCiphertext(entry) {
   return typeof entry === 'string' &&
@@ -306,12 +307,17 @@ function isValidCiphertext(entry) {
 // Deterministic artifact paths
 function getKeysPaths() {
   const base = path.join(app.getPath('userData'), 'ai_keys.json');
-  return { keysPath: base, tmpPath: base + '.tmp', bakPath: base + '.bak' };
+  return {
+    keysPath:    base,
+    tmpPath:     base + '.tmp',
+    bakPath:     base + '.bak',
+    corruptPath: base + '.corrupt'
+  };
 }
 
 // validateStoreContent — parse and shape-check raw file content.
 // Returns { ok: true, data } or { ok: false, error: string }.
-// Does NOT log content or ciphertext.
+// Never logs content or ciphertext.
 function validateStoreContent(content) {
   let parsed;
   try { parsed = JSON.parse(content); }
@@ -330,7 +336,7 @@ function validateStoreContent(content) {
   return { ok: true, data: parsed };
 }
 
-// readFileContent — read a file; returns { ok, content, code } without logging content.
+// readFileContent — returns { ok, content } or { ok: false, code, error }. Never logs content.
 function readFileContent(filePath) {
   try {
     const content = fs.readFileSync(filePath, 'utf8');
@@ -340,146 +346,223 @@ function readFileContent(filePath) {
   }
 }
 
-// fileExists — true if file is readable.
+// fileExists — true if path is accessible.
 function fileExists(filePath) {
   try { fs.accessSync(filePath, fs.constants.F_OK); return true; } catch { return false; }
 }
 
+// tryUnlink — unlink a specific file.
+// Ignores ENOENT (already gone). Returns { ok: true } or { ok: false, code, error }.
+// Caller must inspect result for recovery-critical paths.
+function tryUnlink(filePath) {
+  try {
+    fs.unlinkSync(filePath);
+    return { ok: true };
+  } catch (err) {
+    if (err.code === 'ENOENT') return { ok: true };
+    return { ok: false, code: err.code, error: err.message };
+  }
+}
+
+// windowsSafeRestoreFromBak — restore bakPath to keysPath without overwriting keysPath.
+// If keysPath exists (corrupt), moves it to corruptPath first.
+// Returns { ok: true } or throws typed Error.
+function windowsSafeRestoreFromBak(keysPath, bakPath, corruptPath) {
+  const keysPresent = fileExists(keysPath);
+  if (keysPresent) {
+    // Move corrupt primary to forensic path
+    if (fileExists(corruptPath)) {
+      // Refuse to overwrite existing forensic file ambiguously
+      throw Object.assign(
+        new Error('[RESTORE_FAILED] Tệp pháp y đã tồn tại; không ghi đè cần khôi phục thủ công.'),
+        { code: 'RESTORE_FAILED' }
+      );
+    }
+    try {
+      fs.renameSync(keysPath, corruptPath);
+    } catch (err) {
+      throw Object.assign(
+        new Error('[RESTORE_FAILED] Không thể chỉnh tệp hỏng sang đường dạn pháp y: ' + err.message),
+        { code: 'RESTORE_FAILED' }
+      );
+    }
+  }
+  // Rename bak to keys (keysPath is now absent)
+  try {
+    fs.renameSync(bakPath, keysPath);
+  } catch (err) {
+    // Attempt rollback: move corrupt back to keys
+    if (keysPresent) {
+      try { fs.renameSync(corruptPath, keysPath); } catch {}
+    }
+    throw Object.assign(
+      new Error('[RESTORE_FAILED] Không thể khôi phục từ bản sao lưu: ' + err.message),
+      { code: 'RESTORE_FAILED' }
+    );
+  }
+  // Validate restored primary
+  const vr = readFileContent(keysPath);
+  if (!vr.ok || !validateStoreContent(vr.content).ok) {
+    // Move invalid restored file to forensic, put corrupt back if possible
+    try { fs.renameSync(keysPath, corruptPath); } catch {}
+    if (keysPresent) { try { fs.renameSync(corruptPath, keysPath); } catch {} }
+    throw Object.assign(
+      new Error('[RESTORE_FAILED] Khôi phục thành công nhưng tệp đã khôi phục không hợp lệ.'),
+      { code: 'RESTORE_FAILED' }
+    );
+  }
+  // Clean forensic artifact only after successful restore+validation
+  if (keysPresent) { tryUnlink(corruptPath); }
+  return { ok: true };
+}
+
 // ---------------------------------------------------------------------------
-// recoverKeyStore — run before every load or save.
-// Handles all 5 cases from the spec. Returns { recovered: true } on success,
-// throws a typed Error otherwise.
-// Error prefixes: [STORE_CORRUPT], [RECOVERY_REQUIRED], [RESTORE_FAILED]
+// recoverKeyStore — explicit state machine.
+// States evaluated most-specific first:
+//   1. keys + tmp + bak  (Case E)
+//   2. keys + bak        (Case A)
+//   3. keys + tmp        (Case D)
+//   4. no keys + bak     (Case B)
+//   5. no keys + tmp     (Case C)
+//   6. normal            (keys only, or nothing)
+// Returns { recovered: true } on success.
+// Throws typed Error on unrecoverable state.
 // ---------------------------------------------------------------------------
 function recoverKeyStore() {
-  const { keysPath, tmpPath, bakPath } = getKeysPaths();
+  const { keysPath, tmpPath, bakPath, corruptPath } = getKeysPaths();
   const keysExists = fileExists(keysPath);
   const tmpExists  = fileExists(tmpPath);
   const bakExists  = fileExists(bakPath);
 
-  // Case A: keys exists AND bak exists
-  if (keysExists && bakExists) {
+  // ---- Case E: all three exist — most specific, must be checked first ----
+  if (keysExists && tmpExists && bakExists) {
     const kr = readFileContent(keysPath);
     const keysValid = kr.ok && validateStoreContent(kr.content).ok;
     if (keysValid) {
-      // keys is good — bak is a leftover from a prior successful save, remove it
-      try { fs.unlinkSync(bakPath); } catch {}
-      // Case D overlap: remove stale tmp if keys is valid
-      if (tmpExists) { try { fs.unlinkSync(tmpPath); } catch {} }
-      return { recovered: true };
+      // keys is good; stale tmp and bak are leftovers
+      const rt = tryUnlink(tmpPath);
+      const rb = tryUnlink(bakPath);
+      if (!rt.ok || !rb.ok) {
+        const which = !rt.ok ? tmpPath : bakPath;
+        const err   = !rt.ok ? rt : rb;
+        throw Object.assign(
+          new Error(`[STORE_CORRUPT] Không thể xóa tệp thừa (${path.basename(which)}): ${err.error}`),
+          { code: 'STORE_CORRUPT' }
+        );
+      }
+      return { recovered: true, caseE: true };
     }
-    // keys is corrupt — try to restore from bak
+    // keys is corrupt; try bak (Windows-safe: move keys to .corrupt first)
     const br = readFileContent(bakPath);
     const bakValid = br.ok && validateStoreContent(br.content).ok;
     if (bakValid) {
-      try {
-        fs.renameSync(bakPath, keysPath);
-        if (tmpExists) { try { fs.unlinkSync(tmpPath); } catch {} }
-        return { recovered: true };
-      } catch (err) {
-        throw Object.assign(
-          new Error('[RESTORE_FAILED] Không thể khôi phục kho khóa từ bản sao lưu: ' + err.message),
-          { code: 'RESTORE_FAILED' }
-        );
-      }
+      windowsSafeRestoreFromBak(keysPath, bakPath, corruptPath); // throws on failure
+      tryUnlink(tmpPath); // best-effort; ignore ENOENT
+      return { recovered: true, caseE: true };
     }
-    // Neither valid — preserve both, fail closed
+    // Neither keys nor bak valid — preserve all, fail closed
     throw Object.assign(
-      new Error('[STORE_CORRUPT] Cả kho khóa có bản sao lưu đều bị hỏng. Bảo tồn cả hai tệp.'),
+      new Error('[STORE_CORRUPT] Trạng thái ba tệp: cả keys và bak đều hỏng. Bảo tồn tất cả.'),
       { code: 'STORE_CORRUPT' }
     );
   }
 
-  // Case B: keys missing AND bak exists
+  // ---- Case A: keys + bak (no tmp) ----
+  if (keysExists && bakExists) {
+    const kr = readFileContent(keysPath);
+    const keysValid = kr.ok && validateStoreContent(kr.content).ok;
+    if (keysValid) {
+      // bak is leftover from last successful save
+      const rb = tryUnlink(bakPath);
+      if (!rb.ok) {
+        throw Object.assign(
+          new Error(`[STORE_CORRUPT] Không thể xóa bản sao lưu sau khi xác nhận: ${rb.error}`),
+          { code: 'STORE_CORRUPT' }
+        );
+      }
+      return { recovered: true, caseA: true };
+    }
+    // keys is corrupt; restore from bak
+    const br = readFileContent(bakPath);
+    const bakValid = br.ok && validateStoreContent(br.content).ok;
+    if (bakValid) {
+      windowsSafeRestoreFromBak(keysPath, bakPath, corruptPath); // throws on failure
+      return { recovered: true, caseA: true };
+    }
+    throw Object.assign(
+      new Error('[STORE_CORRUPT] Cả keys và bak đều hỏng. Bảo tồn cả hai.'),
+      { code: 'STORE_CORRUPT' }
+    );
+  }
+
+  // ---- Case D: keys + tmp (no bak) ----
+  if (keysExists && tmpExists) {
+    const kr = readFileContent(keysPath);
+    const keysValid = kr.ok && validateStoreContent(kr.content).ok;
+    if (keysValid) {
+      const rt = tryUnlink(tmpPath);
+      if (!rt.ok) {
+        throw Object.assign(
+          new Error(`[STORE_CORRUPT] Không thể xóa tệp tạm thừa: ${rt.error}`),
+          { code: 'STORE_CORRUPT' }
+        );
+      }
+      return { recovered: true, caseD: true };
+    }
+    throw Object.assign(
+      new Error('[STORE_CORRUPT] Kho khóa hỏng và chỉ có tệp tạm. Cần khôi phục thủ công.'),
+      { code: 'STORE_CORRUPT' }
+    );
+  }
+
+  // ---- Case B: no keys + bak ----
   if (!keysExists && bakExists) {
     const br = readFileContent(bakPath);
     const bakValid = br.ok && validateStoreContent(br.content).ok;
     if (bakValid) {
-      try {
-        fs.renameSync(bakPath, keysPath);
-        if (tmpExists) { try { fs.unlinkSync(tmpPath); } catch {} }
-        return { recovered: true };
-      } catch (err) {
+      // keysPath is absent — simple rename
+      try { fs.renameSync(bakPath, keysPath); }
+      catch (err) {
         throw Object.assign(
           new Error('[RESTORE_FAILED] Không thể khôi phục từ bản sao lưu: ' + err.message),
           { code: 'RESTORE_FAILED' }
         );
       }
+      // Validate restored
+      const vr = readFileContent(keysPath);
+      if (!vr.ok || !validateStoreContent(vr.content).ok) {
+        throw Object.assign(
+          new Error('[RESTORE_FAILED] Tệp khôi phục không hợp lệ.'),
+          { code: 'RESTORE_FAILED' }
+        );
+      }
+      if (tmpExists) { tryUnlink(tmpPath); }
+      return { recovered: true, caseB: true };
     }
-    // bak invalid — preserve bak for forensics, fail closed
     throw Object.assign(
-      new Error('[STORE_CORRUPT] Bản sao lưu kho khóa bị hỏng. Bảo tồn tệp cho kiểm tra.'),
+      new Error('[STORE_CORRUPT] Bản sao lưu bị hỏng. Bảo tồn.'),
       { code: 'STORE_CORRUPT' }
     );
   }
 
-  // Case C: keys missing, tmp exists, no bak
-  if (!keysExists && tmpExists && !bakExists) {
-    // tmp may represent an incomplete write — do not auto-promote; preserve for forensics
+  // ---- Case C: no keys + tmp (no bak) ----
+  if (!keysExists && tmpExists) {
     throw Object.assign(
       new Error('[RECOVERY_REQUIRED] Kho khóa chính bị mất; chỉ có tệp tạm. Cần khôi phục thủ công.'),
       { code: 'RECOVERY_REQUIRED' }
     );
   }
 
-  // Case D: keys exists, tmp exists (no bak) — keys is source of truth
-  if (keysExists && tmpExists && !bakExists) {
-    const kr = readFileContent(keysPath);
-    const keysValid = kr.ok && validateStoreContent(kr.content).ok;
-    if (keysValid) {
-      try { fs.unlinkSync(tmpPath); } catch {}
-      return { recovered: true };
-    }
-    // keys corrupt and only tmp available — fail closed, preserve tmp
-    throw Object.assign(
-      new Error('[STORE_CORRUPT] Kho khóa bị hỏng và chỉ có tệp tạm. Cần khôi phục thủ công.'),
-      { code: 'STORE_CORRUPT' }
-    );
-  }
-
-  // Case E: all three exist — ambiguous state
-  if (keysExists && tmpExists && bakExists) {
-    // Validate each conservatively
-    const kr = readFileContent(keysPath);
-    const keysValid = kr.ok && validateStoreContent(kr.content).ok;
-    // keys is good — remove stale tmp, treat bak as leftover from last successful save
-    if (keysValid) {
-      try { fs.unlinkSync(tmpPath); } catch {}
-      try { fs.unlinkSync(bakPath); } catch {}
-      return { recovered: true };
-    }
-    // keys corrupt — try bak before failing
-    const br = readFileContent(bakPath);
-    const bakValid = br.ok && validateStoreContent(br.content).ok;
-    if (bakValid) {
-      try {
-        fs.renameSync(bakPath, keysPath);
-        try { fs.unlinkSync(tmpPath); } catch {}
-        return { recovered: true };
-      } catch (err) {
-        throw Object.assign(
-          new Error('[RESTORE_FAILED] Trạng thái đa tệp, khôi phục thất bại: ' + err.message),
-          { code: 'RESTORE_FAILED' }
-        );
-      }
-    }
-    // All files present but neither keys nor bak valid — do not delete any
-    throw Object.assign(
-      new Error('[STORE_CORRUPT] Trạng thái đa tệp không rõ ràng: cả hai keys và bak đều hỏng. Bảo tồn tất cả.'),
-      { code: 'STORE_CORRUPT' }
-    );
-  }
-
-  // Normal state: only keys exists, or nothing exists
+  // ---- Normal: keys only, or nothing ----
   return { recovered: true };
 }
 
 // ---------------------------------------------------------------------------
-// loadEncryptedKeys — run recovery, then load primary file.
-// Returns {} on ENOENT (clean install). Throws typed errors on corrupt/unrecoverable state.
+// loadEncryptedKeys — run recovery then load primary.
+// Returns {} on clean install (ENOENT). Throws on unrecoverable/corrupt state.
 // ---------------------------------------------------------------------------
 function loadEncryptedKeys() {
-  recoverKeyStore(); // throws if unrecoverable
+  recoverKeyStore();
   const { keysPath } = getKeysPaths();
   let raw;
   try {
@@ -494,17 +577,16 @@ function loadEncryptedKeys() {
 }
 
 // ---------------------------------------------------------------------------
-// saveEncryptedKeys — full save flow with fsync and post-write validation.
+// saveEncryptedKeys — fsync write with post-write validation and rollback.
 // Error types: WRITE_FAILED, RESTORE_FAILED, STORE_CORRUPT
 // ---------------------------------------------------------------------------
 function saveEncryptedKeys(data) {
-  // 1. Run recovery before write
-  recoverKeyStore(); // throws if unrecoverable
+  recoverKeyStore();
 
-  const { keysPath, tmpPath, bakPath } = getKeysPaths();
+  const { keysPath, tmpPath, bakPath, corruptPath } = getKeysPaths();
   const serialized = JSON.stringify(data);
 
-  // 2. Write to deterministic tmp path with fsync
+  // Write tmp with fsync
   let fd;
   try {
     fd = fs.openSync(tmpPath, 'w');
@@ -514,32 +596,31 @@ function saveEncryptedKeys(data) {
     fd = undefined;
   } catch (err) {
     if (fd !== undefined) { try { fs.closeSync(fd); } catch {} }
-    try { fs.unlinkSync(tmpPath); } catch {}
+    tryUnlink(tmpPath);
     throw Object.assign(
-      new Error('[WRITE_FAILED] Không thể ghi tệp tạm kho khóa: ' + err.message),
+      new Error('[WRITE_FAILED] Không thể ghi tệp tạm: ' + err.message),
       { code: 'WRITE_FAILED' }
     );
   }
 
-  // 3. Backup existing keys file before replacing
+  // Backup existing keys
   const keysExists = fileExists(keysPath);
   if (keysExists) {
     try {
       fs.renameSync(keysPath, bakPath);
     } catch (err) {
-      try { fs.unlinkSync(tmpPath); } catch {}
+      tryUnlink(tmpPath);
       throw Object.assign(
-        new Error('[WRITE_FAILED] Không thể tạo bản sao lưu kho khóa: ' + err.message),
+        new Error('[WRITE_FAILED] Không thể tạo bản sao lưu: ' + err.message),
         { code: 'WRITE_FAILED' }
       );
     }
   }
 
-  // 4. Rename tmp -> keys
+  // Rename tmp -> keys
   try {
     fs.renameSync(tmpPath, keysPath);
   } catch (err) {
-    // Attempt restore from backup
     if (keysExists) {
       let restoreErr;
       try { fs.renameSync(bakPath, keysPath); }
@@ -550,40 +631,83 @@ function saveEncryptedKeys(data) {
           { code: 'RESTORE_FAILED' }
         );
       }
-      // Restore succeeded — preserve backup until next successful write, report write error
       throw Object.assign(
-        new Error('[WRITE_FAILED] Không thể hoàn tất ghi kho khóa; đã khôi phục bản sao lưu: ' + err.message),
+        new Error('[WRITE_FAILED] Không thể hoàn tất ghi; đã khôi phục: ' + err.message),
         { code: 'WRITE_FAILED' }
       );
     }
-    try { fs.unlinkSync(tmpPath); } catch {}
+    tryUnlink(tmpPath);
     throw Object.assign(
       new Error('[WRITE_FAILED] Không thể ghi kho khóa: ' + err.message),
       { code: 'WRITE_FAILED' }
     );
   }
 
-  // 5. Post-write validation of newly written keys file
-  let verifyRaw;
-  try { verifyRaw = fs.readFileSync(keysPath, 'utf8'); }
-  catch (err) {
+  // Post-write validation with rollback
+  const vr = readFileContent(keysPath);
+  const valid = vr.ok && validateStoreContent(vr.content).ok;
+  if (!valid) {
+    // Preserve invalid new file under forensic path
+    try { fs.renameSync(keysPath, corruptPath); } catch {}
+    if (keysExists) {
+      // Restore backup to primary
+      let rollbackErr;
+      try { fs.renameSync(bakPath, keysPath); }
+      catch (re) { rollbackErr = re; }
+      if (rollbackErr) {
+        throw Object.assign(
+          new Error('[RESTORE_FAILED] Khôi phục sau kiểm tra viết thất bại: ' + rollbackErr.message),
+          { code: 'RESTORE_FAILED' }
+        );
+      }
+      // Validate restored primary
+      const rvr = readFileContent(keysPath);
+      if (!rvr.ok || !validateStoreContent(rvr.content).ok) {
+        throw Object.assign(
+          new Error('[RESTORE_FAILED] Tệp khôi phục sau kiểm tra ghi không hợp lệ.'),
+          { code: 'RESTORE_FAILED' }
+        );
+      }
+      throw Object.assign(
+        new Error('[WRITE_FAILED] Dữ liệu mới không hợp lệ sau khi ghi; đã khôi phục từ bản sao lưu.'),
+        { code: 'WRITE_FAILED' }
+      );
+    }
     throw Object.assign(
-      new Error('[STORE_CORRUPT] Không thể đọc lại sau khi ghi: ' + err.message),
-      { code: 'STORE_CORRUPT' }
-    );
-  }
-  const verify = validateStoreContent(verifyRaw);
-  if (!verify.ok) {
-    throw Object.assign(
-      new Error('[STORE_CORRUPT] Tệp kho khóa không hợp lệ sau khi ghi: ' + verify.error),
+      new Error('[STORE_CORRUPT] Dữ liệu không hợp lệ sau khi ghi (không có bản sao lưu để khôi phục).'),
       { code: 'STORE_CORRUPT' }
     );
   }
 
-  // 6. Remove backup only after new keys validation succeeds
+  // Remove backup only after validation passes
   if (keysExists) {
-    try { fs.unlinkSync(bakPath); } catch {}
+    const rb = tryUnlink(bakPath);
+    if (!rb.ok) {
+      // Non-fatal: bak remains but primary is valid. Report warning in error message prefix.
+      console.warn('[STORE_WARN] Không thể xóa bản sao lưu sau khi ghi thành công:', rb.error);
+    }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Test-only export (guarded by NODE_ENV=test) — NEVER exposed to renderer.
+// ---------------------------------------------------------------------------
+if (process.env.NODE_ENV === 'test') {
+  module.exports = module.exports || {};
+  Object.assign(module.exports, {
+    _credStore: {
+      isValidCiphertext,
+      getKeysPaths,
+      validateStoreContent,
+      readFileContent,
+      fileExists,
+      tryUnlink,
+      windowsSafeRestoreFromBak,
+      recoverKeyStore,
+      loadEncryptedKeys,
+      saveEncryptedKeys
+    }
+  });
 }
 
 function storeProviderKeys(provider, keysArray) {
