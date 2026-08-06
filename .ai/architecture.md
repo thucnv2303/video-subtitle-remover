@@ -123,3 +123,52 @@ Stored count capped at MAX_KEYS_PER_PROVIDER (10).
 All source files written in UTF-8 without BOM.
 Vietnamese strings, emoji, box-drawing characters verified against parent commit abf0ee2.
 No mojibake patterns (ChÆ°a, KhÃ´ng, etc.) in any allowed source file.
+
+## HARDENING-CORRECTION-007 (7a6157cdea399a219081f01f661da2419196f47a)
+
+### Gemini Model Discovery — revised contract
+fetchGeminiModels returns a flat string[] of model IDs directly.
+Rejects with Error in all failure cases:
+  - HTTP non-200 -> error
+  - Invalid JSON -> error
+  - Missing models array -> error
+  - No generateContent-capable models -> 'API key được xác thực nhưng không có model generateContent tương thích.'
+No structured {verified,noCompatibleModels,models} return value.
+fetchGeminiModelsList wrapper removed.
+
+### Structured IPC Results (new contracts)
+ai:has-provider-keys:
+  Success: { status: 'ok', count: number } (count of isValidCiphertext entries)
+  Failure: { status: 'error', error: string }
+  Never returns plain number. Never silently returns 0 on corrupt store.
+
+ai:delete-provider-keys:
+  Success: { status: 'ok' }
+  Failure: { status: 'error', error: string }
+  Never returns boolean.
+
+### Windows-Safe Atomic Key Store Replacement (revised)
+saveEncryptedKeys steps:
+  0. Clean stale tmpPath and bakPath from prior interrupted saves (unlinkSync, ignore ENOENT).
+  1. writeFileSync(tmpPath, serialized, 'utf8')
+  2. If keysPath exists: renameSync(keysPath, bakPath), set hadExisting=true.
+     If ENOENT: continue (no backup needed).
+     Any other error: unlink tmpPath, throw.
+  3. renameSync(tmpPath, keysPath)
+     If fails: restore if hadExisting (renameSync bakPath -> keysPath), unlink tmpPath, throw.
+  4. If hadExisting: unlinkSync(bakPath).
+No wildcard cleanup. No delete before backup.
+
+### isValidCiphertext (revised)
+Enforces: non-empty string, even length, length <= MAX_HEX_CIPHERTEXT_LENGTH (8192), HEX_REGEX (/^[0-9a-f]+$/i).
+Used in loadEncryptedKeys and ai:has-provider-keys count.
+
+### UI Corrections (settings.js)
+refreshProviderStatus(provider):
+  Checks result.status === 'error' and shows error message as 'offline' status chip.
+  Does not show 'Chưa có key' when store cannot be read.
+  Uses result.count when result.status === 'ok'.
+
+btn-delete-keys handler:
+  Checks result.status === 'ok' before clearing input and showing toast.
+  Shows error message and sets status 'offline' when result.status !== 'ok'.

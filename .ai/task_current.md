@@ -56,11 +56,12 @@ FAIL - Owner-observed blockers:
 - Encoding closeout: 70b3db51b16af797960b99202ab88b6c922ea56d — COMPLETED
 - Credential hardening: 4ee2f542838a4f5f132d7f673f1b89848dc367b2 — COMMITTED (hook staged .ai alongside source)
 - PM source review NEEDS_REVISION at 70b3db51: addressed in 4ee2f542
-- HARDENING-CORRECTION-007: PENDING COMMIT
+- HARDENING-CORRECTION-007: 7a6157cdea399a219081f01f661da2419196f47a — COMMITTED
   - Gemini no-compatible-models: rejects with controlled error, not stored
   - Structured IPC: has-provider-keys, delete-provider-keys return {status,count/error}
   - Windows atomic: backup+restore, stale-cleanup, hex validation
   - UI: delete handler and refreshProviderStatus handle structured results
+  - Electron runtime: Page loaded successfully, Window visible, Python backend 8765 OK
 - BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - Owner manual verification: NOT STARTED
 - PR #8: DO NOT MERGE

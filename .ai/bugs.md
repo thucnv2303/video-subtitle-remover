@@ -58,3 +58,30 @@ BUG-019: No response-size limit on DeepSeek/Gemini discovery and rewrite calls
 BUG-020: No key sanitization before validation
 - Root cause: Keys passed unsanitized to provider APIs.
 - Fixed: trim(), dedup, reject empty, cap at MAX_KEYS_PER_PROVIDER (10).
+
+## HARDENING-CORRECTION-007 at head 781ca260 — fixed in 7a6157c
+
+BUG-021: Gemini no-compatible-models counted as valid and stored
+- Root cause: fetchGeminiModelsList flattened noCompatibleModels result to [] and save-provider-keys treated empty-but-no-error as valid key.
+- Fixed: fetchGeminiModels now rejects with controlled error 'API key được xác thực nhưng không có model generateContent tương thích.' Key not stored as usable.
+- fetchGeminiModelsList wrapper removed.
+
+BUG-022: ai:has-provider-keys returned count 0 on corrupt store instead of error
+- Root cause: catch block silently returned 0, masking store corruption from UI.
+- Fixed: returns {status:'ok',count} on success or {status:'error',error:message} on failure.
+- UI: refreshProviderStatus displays controlled error on error status, does not show 'Chưa có key'.
+
+BUG-023: ai:delete-provider-keys returned boolean instead of structured result
+- Root cause: returned true/false; UI could not distinguish failure from success.
+- Fixed: returns {status:'ok'} or {status:'error',error:message}.
+- UI: delete handler inspects result.status; does not show 'Đã xóa keys' on failure.
+
+BUG-024: Windows rename-over-existing file unreliable
+- Root cause: renameSync(tmp, keysPath) may fail on Windows when destination exists; no backup strategy.
+- Fixed: backup-rename-restore pattern: backup existing -> rename tmp -> cleanup backup; restore on failure.
+- Stale tmp/bak from prior interrupted saves cleaned on every entry.
+
+BUG-025: Hex ciphertext validation insufficient
+- Root cause: only checked typeof string and non-empty; did not validate hex characters, even length, or max length.
+- Fixed: isValidCiphertext() enforces: non-empty, even-length, hex-only chars [0-9a-f], max 8192 bytes.
+- loadEncryptedKeys uses isValidCiphertext for all entries.

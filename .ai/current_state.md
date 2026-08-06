@@ -49,12 +49,14 @@ CANDIDATE_FIX
 - Encoding closeout: 70b3db51b16af797960b99202ab88b6c922ea56d — COMPLETED
 - Credential hardening: 4ee2f542838a4f5f132d7f673f1b89848dc367b2 — COMMITTED (hook staged .ai alongside source)
 - PM source review NEEDS_REVISION at 70b3db51: addressed in 4ee2f542
-- HARDENING-CORRECTION-007: PENDING COMMIT
+- HARDENING-CORRECTION-007: 7a6157cdea399a219081f01f661da2419196f47a — COMMITTED
   - B1: fetchGeminiModels rejects on no-compatible-models (not stored as usable)
   - B2: ai:has-provider-keys returns {status,count/error}; ai:delete-provider-keys returns {status/error}
   - B3: Windows-safe atomic write with backup+restore
   - HEX: isValidCiphertext validates even-length hex with max length
   - UI: refreshProviderStatus and delete handler handle structured results
+  - Electron launch: Page loaded successfully, Window is now visible, Python backend started
+  - Node verify: 26/27 PASS (1 test-script error, not production), Windows second-save: 12/12 PASS
 - BUG-008: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - PR #8: DO NOT MERGE

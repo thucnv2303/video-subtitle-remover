@@ -50,11 +50,12 @@ Request:
 Response (200 - valid):
   { models: [ { name: string, supportedGenerationMethods: [...] } ] }
   Filter by supportedGenerationMethods includes generateContent.
-  Returns { verified: true, noCompatibleModels: false, models: [...] } when models found.
-  Returns { verified: true, noCompatibleModels: true, models: [] } when no compatible models.
+  Returns flat string[] of model IDs (e.g. ['gemini-1.5-flash', 'gemini-1.5-pro']).
   Invalid JSON -> validation error (rejected).
   Missing models array -> validation error (rejected).
-  No hardcoded fallback model list substituted on validation failure.
+  No compatible models -> controlled rejection:
+    Error: 'API key được xác thực nhưng không có model generateContent tương thích.'
+  No hardcoded fallback model list. No structured {verified,models} object returned.
 
 NOTE: Key is in URL query string. Do not log the URL.
 

@@ -64,3 +64,27 @@ PM NEEDS_REVISION addressed in commit 4ee2f542. Owner retest: NOT STARTED.
 - [ ] Empty key input is rejected before calling provider API.
 - [ ] Key count stored does not exceed MAX_KEYS_PER_PROVIDER (10).
 - [ ] Provider URLs containing keys are not logged to console.
+
+## HARDENING-CORRECTION-007 QA (commit 7a6157c)
+PM NEEDS_REVISION at 781ca260 addressed. Owner retest: NOT STARTED.
+
+- [ ] Gemini authenticated key with no compatible models: controlled error shown; key not saved; status not 'online'.
+- [ ] Gemini invalid key: authentication error; key not saved.
+- [ ] ai:has-provider-keys returns {status:'ok',count:N} for valid store.
+- [ ] ai:has-provider-keys returns {status:'error',error:...} for corrupt store.
+- [ ] Status chip shows controlled error message (not 'Chưa có key') on corrupt store.
+- [ ] ai:delete-provider-keys returns {status:'ok'} on success; UI clears and toasts success.
+- [ ] ai:delete-provider-keys returns {status:'error',...} on failure; UI does not show 'Đã xóa keys'.
+- [ ] First save creates ai_keys.json with valid hex ciphertext only.
+- [ ] Second save on Windows: ai_keys.json updated; no stale .tmp or .bak files remain.
+- [ ] Simulated replacement failure: prior ai_keys.json preserved or restored.
+- [ ] Store with odd-length ciphertext: controlled error; file not overwritten.
+- [ ] Store with non-hex ciphertext: controlled error; file not overwritten.
+- [ ] Store with unknown provider key: controlled error; file not overwritten.
+- [ ] Stale .tmp_PID and .bak_PID from prior interrupted save cleaned on next saveEncryptedKeys call.
+- [ ] Electron launched: page loaded, window visible, no crash.
+- [ ] Home layout correct (regression).
+- [ ] Pipeline 1 DeepSeek selector present (regression).
+- [ ] Ollama scan/test functional (regression).
+- [ ] Pipeline 2 sanitizer intact (regression).
+- [ ] Voice-clone cancel produces no error (regression).
