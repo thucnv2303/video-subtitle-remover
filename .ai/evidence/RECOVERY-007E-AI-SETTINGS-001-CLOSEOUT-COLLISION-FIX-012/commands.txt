@@ -1,0 +1,7 @@
+SOURCE_SHA: e3db5fcb74ec45ed48b949a42d6786adc151ccaa
+Windows: Microsoft Windows NT 10.0.26200.0
+Node: v24.18.0
+Electron:  v43.3.0
+
+Command: node tests/test_credential_recovery.js
+Exit Code: 0

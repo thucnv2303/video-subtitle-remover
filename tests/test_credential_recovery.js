@@ -94,14 +94,24 @@ console.log("\n=== TC2: existing corrupt-new forensic artifact before post-write
 cleanup();
 writeRaw(P.keysPath, JSON.stringify({ deepseek: [PH] }));
 writeRaw(P.corruptNewPath, "{old_corrupt_new}");
+let tc2Renames = 0;
+const tc2Orig = fs.renameSync;
+fs.renameSync = function(o, n) { tc2Renames++; return tc2Orig(o, n); };
 try {
-  saveEncryptedKeys({ deepseek: ["abc"] }); // odd length = invalid
-  ok("Should throw RESTORE_FAILED", false);
+  saveEncryptedKeys({ deepseek: ["abc"] });
+  ok("Should throw RECOVERY_REQUIRED", false);
 } catch(e) {
-  ok("throws RESTORE_FAILED", e.code === "RESTORE_FAILED", e.code);
-  ok("corruptNew untouched", fileExists(P.corruptNewPath));
+  ok("throws RECOVERY_REQUIRED", e.code === "RECOVERY_REQUIRED", e.code);
+  ok("zero rename calls", tc2Renames === 0, tc2Renames + " calls");
+  ok("keys content unchanged", fs.readFileSync(P.keysPath, "utf8") === JSON.stringify({ deepseek: [PH] }));
+  ok("corrupt.new content unchanged", fs.readFileSync(P.corruptNewPath, "utf8") === "{old_corrupt_new}");
+  ok("bak absent", !fileExists(P.bakPath));
+  ok("tmp absent", !fileExists(P.tmpPath));
+  ok("corrupt.primary absent", !fileExists(P.corruptPrimaryPath));
+  ok("corrupt.restored absent", !fileExists(P.corruptRestoredPath));
   rec("TC2","keys+c.new","post-write-blocked",stateDesc(),e.message.substring(0,80));
 }
+fs.renameSync = tc2Orig;
 
 console.log("\n=== TC3: restored backup fails validation ===");
 cleanup();
@@ -123,14 +133,22 @@ cleanup();
 writeRaw(P.keysPath, "{corrupt}");
 writeRaw(P.bakPath, "{corrupt_bak}");
 writeRaw(P.corruptRestoredPath, "{old_c.res}");
+let tc4Renames = 0;
+const tc4Orig = fs.renameSync;
+fs.renameSync = function(o, n) { tc4Renames++; return tc4Orig(o, n); };
 try {
   windowsSafeRestoreFromBak(P.keysPath, P.bakPath, P);
-  ok("Should throw RESTORE_FAILED", false);
+  ok("Should throw RECOVERY_REQUIRED", false);
 } catch(e) {
-  ok("throws RESTORE_FAILED", e.code === "RESTORE_FAILED", e.code);
-  ok("c.res untouched", fileExists(P.corruptRestoredPath));
+  ok("throws RECOVERY_REQUIRED", e.code === "RECOVERY_REQUIRED", e.code);
+  ok("zero rename calls", tc4Renames === 0, tc4Renames + " calls");
+  ok("keys content unchanged", fs.readFileSync(P.keysPath, "utf8") === "{corrupt}");
+  ok("bak content unchanged", fs.readFileSync(P.bakPath, "utf8") === "{corrupt_bak}");
+  ok("corrupt.restored unchanged", fs.readFileSync(P.corruptRestoredPath, "utf8") === "{old_c.res}");
+  ok("corrupt.primary absent", !fileExists(P.corruptPrimaryPath));
   rec("TC4","keys(corrupt)+bak(corrupt)+c.res","windowsSafeRestore-blocked",stateDesc(),e.message.substring(0,80));
 }
+fs.renameSync = tc4Orig;
 
 console.log("\n=== TC5: restoring original primary fails (simulated via permissions) ===");
 
@@ -165,12 +183,12 @@ writeRaw(P.keysPath, JSON.stringify({ deepseek: [PH] }));
 writeRaw(P.corruptRestoredPath, "{old}");
 try {
   saveEncryptedKeys({ deepseek: ["abc"] }); // new write invalid
-  ok("Should throw", false);
+  ok("Should throw RECOVERY_REQUIRED", false);
 } catch(e) {
-  ok("throws WRITE_FAILED on successful rollback", e.code === "WRITE_FAILED", e.code);
+  ok("throws RECOVERY_REQUIRED", e.code === "RECOVERY_REQUIRED", e.code);
   ok("c.new created", fileExists(P.corruptNewPath));
-  ok("bak consumed by restore", !fileExists(P.bakPath));
-  rec("TC6","keys+c.res (write invalid)","post-write-rollback-success",stateDesc(),e.message.substring(0,80));
+  ok("bak remains untouched (since restore blocked)", fileExists(P.bakPath) && fs.readFileSync(P.bakPath, "utf8") === JSON.stringify({ deepseek: [PH] }));
+  rec("TC6","keys+bak+c.res (write invalid)","post-write-rollback-blocked",stateDesc(),e.message.substring(0,80));
 }
 
 console.log("\n=== TC7: Case E restore followed by tmp cleanup EPERM ===");
