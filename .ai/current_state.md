@@ -1,7 +1,7 @@
-﻿# Current State
+# Current State
 
 ## Status
-CANDIDATE_FIX
+CANDIDATE_FIX — READY_FOR_OWNER_RETEST
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 va P2).
@@ -14,7 +14,7 @@ CANDIDATE_FIX
 ## Documentation and Task State
 - INCIDENT-RECOVERY-007E-STAGED-TREE-001: COMPLETED
 - RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
-- RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX - OWNER RETEST NOT STARTED
+- RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX — READY_FOR_OWNER_RETEST - OWNER RETEST NOT STARTED
 
 ## Security Incident
 - Owner test at abf0ee2 was FAIL.
@@ -78,7 +78,7 @@ CANDIDATE_FIX
 ## Verification gates
 - Execution: PASS (static checks pass)
 - Automated verification: PASS
-- Code review: SOURCE REVIEW PASS
+- Code review: PASS
 - Owner manual app verification: NOT STARTED
 - Documentation synchronization: PASS
 - Merge permission: BLOCKED

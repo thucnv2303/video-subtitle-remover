@@ -1,4 +1,4 @@
-﻿# Current Task
+# Current Task
 
 ## Task ID
 RECOVERY-007E-AI-SETTINGS-001
@@ -7,7 +7,7 @@ RECOVERY-007E-AI-SETTINGS-001
 SECURE PROVIDER CREDENTIALS AND DIRECT PROVIDER EXECUTION
 
 ## Status
-CANDIDATE_FIX
+CANDIDATE_FIX — READY_FOR_OWNER_RETEST
 
 ## Owner Test at Previous Head (abf0ee2)
 FAIL - Owner-observed blockers:
@@ -83,7 +83,7 @@ FAIL - Owner-observed blockers:
 ## Verification gates
 - Execution: PASS
 - Automated verification: PASS
-- Code review: SOURCE REVIEW PASS
+- Code review: PASS
 - Owner manual app verification: NOT STARTED
 - Documentation synchronization: PASS
 - Merge permission: BLOCKED

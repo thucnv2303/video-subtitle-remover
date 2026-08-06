@@ -1,10 +1,10 @@
-﻿# AgentOS Handoff Status
+# AgentOS Handoff Status
 
 ## Last completed task
 RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
 
 ## Active Task
-RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX)
+RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX — READY_FOR_OWNER_RETEST)
 
 ## Status
 - Owner test at abf0ee2: FAIL (see blockers in task_current.md).
