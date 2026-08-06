@@ -15,6 +15,7 @@
 ## RECOVERY-007E-AI-SETTINGS-001 candidate resolution
 - Cloud API keys and models are separate values.
 - Ollama stores endpoint/model only and removes legacy Ollama key entries.
+- Ollama transport is cleanly moved to the main process, avoiding Node core HTTP imports in the sandboxed preload (preload runtime failure fixed).
 - Ollama model discovery reads `/api/tags`; rewrite sends `model` to `/api/chat`.
 - Pipeline 2 transport is sanitized to remove AI configuration.
 - Status remains candidate fix until GitHub code review and owner runtime verification pass.

@@ -3,40 +3,50 @@
 ## Status
 WAITING_REVIEW
 
-## Active task
-RECOVERY-007E-AI-SETTINGS-001 — IMPLEMENT PROVIDER KEYS AND OLLAMA MODEL DISCOVERY
+## Primary Input (OWNER CONFIRMED)
+- Chinese product-review videos (Original source cho P1 và P2).
 
-## Review publication
-- Draft PR: #8
-- Base: `review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure@7e18c04cf2483403010f237356dfb7f369dae1a8`
-- Head branch: `review/RECOVERY-007E-AI-SETTINGS-001-ai-settings`
-- Current source head: `e3d5615a58680a05e41bc1a380258ff6ab4ff157`
-- Source commits:
-  - `03f07892fba09d9db276641d5e745ffc6ef25689` — Ollama preload bridge
-  - `6b1a04e631cbcd273375c1ddca636a7e6b1091ac` — provider UI/model discovery/Pipeline 1 contract
-  - `e3d5615a58680a05e41bc1a380258ff6ab4ff157` — preserve voice-clone preview and selection behavior
-- Source files: `src/main/preload.js`, `src/renderer/js/components/settings.js`, `src/renderer/js/pipelines/pipeline1-ai.js`
+## Current Working Capabilities (OWNER CONFIRMED)
+- Voice cloning currently works.
+- TTS generation currently works.
+- Hard-subtitle removal (Pipeline 2) currently works.
 
-## Verified implementation facts
-- Cloud API keys and model selection are separate controls.
-- Ollama uses endpoint and model only; model is not stored as an API key.
-- Ollama discovery uses `/api/tags`; Ollama rewrite uses `/api/chat` through the preload bridge.
-- Pipeline 2 batch transport removes AI provider/key/model/endpoint fields, forces `ai_rewrite=false`, and forces `tts_voice=none`.
-- Pipeline 1 remains AI rewrite/TTS artifact generation only.
-- Voice-clone upload preview, generated-sample preview, automatic clone selection and form reset are preserved in the review head.
-- Static `node --check`: PASS for all three changed JavaScript files.
-- Runtime Electron/Ollama verification: NOT STARTED.
+## Documentation & Task State
+- INCIDENT-RECOVERY-007E-STAGED-TREE-001: COMPLETED
+- RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED — PASS WITH GIT-NORMALIZED LF
+- Project Manager Decision: PASS — SOURCE CONTENT ACCEPTED; LINE-ENDING NORMALIZATION RECORDED
+
+## Source Publication Facts
+- Published as Git-normalized LF text, content-equivalent to the approved local snapshots.
+- **pipeline1-ai.js**: 3502E378BE17B0111FD6ECDA6373301276B0E4326780A2A76E73925BD18D4C31
+- **pipeline3-finalize.js**: B22B80B1975921B3ACF4D5858C0ECD5279767D72EE5C976D74DD8F79015712EB
+- **prompt-manager.js**: C5A144620554FB4E94C934EDC5903E8C6E6243B966590F59C8CBFBF6BB7F4793
+- **store.js**: 1AF5545FF5537ED582B3AC0C8DE27ED2CFEA9F84E24CFE40C41A332ED5B25AC4
+- **logger.js**: 44ED9EB4A8F59AF30031F99EAB7187040C26EF84EF1288FEA08BD50BDAA07905
+- **dom.js**: 4A13A7E26ABDC0FA45422C0B341A47F010EE035558F6BD740CF0AA460DFD9B5B
+- Five differences are CRLF → LF normalization only.
+- No JavaScript token or runtime logic changed.
+- Independent node --check: 6/6 PASS.
 
 ## Tracking
-- RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED — PASS WITH GIT-NORMALIZED LF
-- BUG-008: CANDIDATE FIX IN DRAFT PR #8 — OWNER TEST PENDING
-- BUG-009: CANDIDATE FIX IN DRAFT PR #8 — OWNER TEST PENDING
-- RECOVERY-007 owner verification: PAUSED
-- PR #4, #5, #6, #7 and #8: DO NOT MERGE
+- Active task: RECOVERY-007E-AI-SETTINGS-001
+- **Preload Runtime Failure**: Confirmed at old head 8e871c29... Root cause: Node core HTTP imports in sandboxed preload.
+- **Corrected Architecture**: Ollama transport moved to main process, minimal IPC preload.
+- Source fix commit SHA: 1e349b744ee52aeeaec21693e2681456ac7ac849
+- Exact static results: node --check (4 files) PASS, git diff --check PASS. Preload contains no Node HTTP imports.
+- Runtime provider-switching and persistence results: PASS.
+- Ollama success result or dependency WAITING: WAITING (Controlled-error path passed locally, full models test passed via CDP locally).
+- BUG-008 and BUG-009 remain CANDIDATE FIX — OWNER TEST PENDING
+- RECOVERY-007 owner verification PAUSED
+- PR #4 DO NOT MERGE
+- PR #5 DO NOT MERGE
+- PR #6 DO NOT MERGE
+- PR #7 DO NOT MERGE
+- PR #8 DO NOT MERGE
 
 ## Verification gates
-- Execution: PASS — implementation published to Draft PR #8
-- Automated verification: PASS — static syntax and source-scope checks
+- Execution: PASS — runtime fix published
+- Automated verification: PASS WITH OLLAMA SUCCESS PATH WAITING
 - Code review: WAITING
 - Owner manual app verification: BLOCKED
 - Documentation synchronization: WAITING_REVIEW
