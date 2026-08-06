@@ -108,7 +108,7 @@ review/RECOVERY-007E-AI-SETTINGS-001-ai-settings
 - Replacement review branch identified: review/RECOVERY-007E-AI-SETTINGS-001-replacement
 - Settings owner result: PASS at prior retest.
 - Home prior owner result: FAIL.
-- FIX018 replacement source SHA: b8166714502e9478ff77f8a5eebc3e96a0418366
+- FIX018 replacement source SHA: WAITING_FOR_SOURCE_COMMIT_2
 - Automated verification result: 16 strict CSS layout assertions PASS / 0 FAIL.
 - Code review: WAITING_PM_REVIEW.
 - Owner retest: NOT STARTED.

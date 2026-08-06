@@ -176,6 +176,16 @@ if (tk3col) {
     assert(false, 'toolkit wrapper not under narrow sidebar');
 }
 
+const visualSelectors = [
+    '.pipeline-bar-v2', '.step-chevron', '.step-chevron.active',
+    '.step-title', '.step-sub', '.tk-group', '.tk-input', '.tk-slider',
+    '.tk-btn', '.tk-btn-primary', '.tk-btn-danger', '.tk-btn-sm',
+    '.tk-prompt-box', '.tk-prompt-list', '.tk-prompt-item',
+    '.tk-prompt-item.active', '.tk-job-list', '.tk-log-console', '.tk-log-header'
+];
+for (const sel of visualSelectors) {
+    assert(getCssRule(sel) !== null, 'Visual selector ' + sel + ' exists in CSS');
+}
 assert(duplicates.length === 0, 'no duplicate IDs');
 
 console.log('TOTAL: ' + passCount + ' PASS / ' + failCount + ' FAIL');
