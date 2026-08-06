@@ -10,7 +10,7 @@ RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX)
 - Owner test at abf0ee2: FAIL (see blockers in task_current.md).
 - DeepSeek API key visible in owner screenshot is COMPROMISED. Owner must rotate key.
 - Corrected Architecture: safeStorage integrated (failing closed). Main process directly executes DeepSeek/Gemini requests. Python backend never receives raw credentials.
-- Source commit: PENDING publication.
+- Source commit: 5be1d2bc728ab282914b9d99cd050cd98916a2d6.
 - Docs commit: PENDING publication.
 - BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST PENDING.
 - Owner manual verification: NOT STARTED.

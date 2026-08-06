@@ -37,7 +37,7 @@ CANDIDATE_FIX
 
 ## Tracking
 - Active task: RECOVERY-007E-AI-SETTINGS-001
-- Source commit: PENDING (publication in progress)
+- Source commit: 5be1d2bc728ab282914b9d99cd050cd98916a2d6
 - Docs commit: PENDING (publication in progress)
 - BUG-008: CANDIDATE FIX - OWNER RETEST PENDING
 - BUG-009: CANDIDATE FIX - OWNER RETEST PENDING
