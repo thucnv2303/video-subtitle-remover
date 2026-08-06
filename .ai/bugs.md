@@ -1,4 +1,4 @@
-# Bug Ledger
+﻿# Bug Ledger
 
 | ID | Hien tuong | Bang chung | Root cause | Status | Phan loai |
 |---|---|---|---|---|---|
@@ -106,7 +106,7 @@ BUG-029: loadEncryptedKeys did not run recovery before loading; no cross-restart
 - Fixed: recoverKeyStore() called at the start of both loadEncryptedKeys and saveEncryptedKeys.
   recoverKeyStore handles 5 deterministic cases (A-E) and restores from .bak automatically.
 
-## CRASH-RECOVERY-CORRECTION-009 at head 9900523 — fixed in d76fcda
+## CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010 at head 9900523 — fixed in PENDING
 
 BUG-030: State machine overlap made Case E unreachable
 - Root cause: Case A (keys + bak) was evaluated before Case E (keys + tmp + bak), so Case E could never run.

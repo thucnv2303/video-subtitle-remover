@@ -1,4 +1,4 @@
-# Current State
+﻿# Current State
 
 ## Status
 CANDIDATE_FIX
@@ -57,14 +57,14 @@ CANDIDATE_FIX
   - UI: refreshProviderStatus and delete handler handle structured results
   - Electron launch: Page loaded successfully, Window is now visible, Python backend started
   - Node verify: 26/27 PASS (1 test-script error, not production), Windows second-save: 12/12 PASS
-- CRASH-RECOVERY-CORRECTION-009: d76fcdab2fb8a72054ae5f9001d52189d677ee63 — COMMITTED
+- CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010: PENDING — COMMITTED
   - State machine: most-specific first (E,A,D,B,C,normal)
   - Case E now reachable and confirmed by TC9 (65/65 PASS)
   - windowsSafeRestoreFromBak: moves corrupt to .corrupt before rename
   - Post-write validation rollback: preserves invalid file as .corrupt, restores bak
   - tryUnlink: reports non-ENOENT failures (EPERM confirmed in TC12)
   - NODE_ENV=test guard: exports _credStore for production testability
-  - Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CRASH-RECOVERY-CORRECTION-009/
+  - Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010/
   - Electron launch (no --no-sandbox): Page loaded, Window visible, Python 8765
   - Deterministic paths: ai_keys.json, ai_keys.json.tmp, ai_keys.json.bak (no PID)
   - recoverKeyStore(): 5 cases A-E; auto-restore from bak across process restarts

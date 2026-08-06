@@ -1,4 +1,4 @@
-# Project Architecture
+﻿# Project Architecture
 
 ## 1. CURRENT IMPLEMENTATION — CODE OBSERVED
 
@@ -173,7 +173,7 @@ btn-delete-keys handler:
   Checks result.status === 'ok' before clearing input and showing toast.
   Shows error message and sets status 'offline' when result.status !== 'ok'.
 
-## CRASH-RECOVERY-CORRECTION-009 (d76fcdab2fb8a72054ae5f9001d52189d677ee63)
+## CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010 (PENDING)
 
 ### Deterministic Artifact Paths
 Primary:  app.getPath('userData')/ai_keys.json

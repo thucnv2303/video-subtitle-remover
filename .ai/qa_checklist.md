@@ -1,4 +1,4 @@
-# QA Checklist
+﻿# QA Checklist
 
 ## Owner Manual App Verification (RECOVERY-007-OWNER-VERIFY-001)
 PAUSED - BLOCKED BY BUG-008/BUG-009
@@ -115,7 +115,7 @@ Source: src/main/main.js only. Owner retest: NOT STARTED.
 - [ ] Owner: Pipeline 2 sanitizer intact.
 - [ ] Owner: Voice-clone cancel produces no error.
 
-## CRASH-RECOVERY-CORRECTION-009 QA (commit d76fcda)
+## CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010 QA (commit PENDING)
 Source: src/main/main.js only. Owner retest: NOT STARTED.
 *Note: Supersedes the 40/40 PASS claims from FIX-008 which had unreachable states.*
 

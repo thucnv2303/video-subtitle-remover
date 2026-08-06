@@ -1,4 +1,4 @@
-# Current Task
+﻿# Current Task
 
 ## Task ID
 RECOVERY-007E-AI-SETTINGS-001
@@ -62,7 +62,7 @@ FAIL - Owner-observed blockers:
   - Windows atomic: backup+restore, stale-cleanup, hex validation
   - UI: delete handler and refreshProviderStatus handle structured results
   - Electron runtime: Page loaded successfully, Window visible, Python backend 8765 OK
-- CRASH-RECOVERY-CORRECTION-009: d76fcdab2fb8a72054ae5f9001d52189d677ee63 — COMMITTED
+- CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010: PENDING — COMMITTED
   - src/main/main.js only
   - State machine order: E,A,D,B,C,normal (most-specific first)
   - Case E proven reachable: TC9 caseE===true PASS
