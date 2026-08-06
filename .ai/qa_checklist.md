@@ -1,10 +1,10 @@
-# QA Checklist
+﻿# QA Checklist
 
 ## Owner Manual App Verification (RECOVERY-007-OWNER-VERIFY-001)
-PAUSED — BLOCKED BY BUG-008/BUG-009
+PAUSED - BLOCKED BY BUG-008/BUG-009
 
-- [ ] Owner launches the existing application using the normal known launch procedure.
-- [ ] No dependencies, packages or environment components are installed or upgraded.
+- [ ] Owner launches existing application using normal known launch procedure.
+- [ ] No dependencies, packages or environment components installed or upgraded.
 - [ ] Owner imports a representative Chinese product-review source video.
 - [ ] Owner starts Pipeline 1 only.
 - [ ] Pipeline 1 uses the selected original video.
@@ -13,28 +13,33 @@ PAUSED — BLOCKED BY BUG-008/BUG-009
 - [ ] The Step 1 editor displays the returned text/SRT.
 - [ ] No Pipeline 2 subtitle-removal or inpaint operation starts during Pipeline 1.
 - [ ] No unintended *_ocr_tmp.mp4 file is generated.
-- [ ] Pipeline 1 does not time out while waiting for OCR/ASR/SRT.
+- [ ] Pipeline 1 does not time out waiting for OCR/ASR/SRT.
 - [ ] Error and progress states are visible and understandable.
-- [ ] After the Pipeline 1 observation is recorded, owner runs a separate existing Pipeline 2 regression check.
-- [ ] Pipeline 2 still produces the expected clean-video result.
+- [ ] After Pipeline 1 observation is recorded, owner runs separate Pipeline 2 regression check.
+- [ ] Pipeline 2 still produces expected clean-video result.
 - [ ] Owner records exact observed PASS/FAIL, error text, visible state and output filenames.
-- [ ] AI provider/model discovery is explicitly excluded because RECOVERY-007E is NOT IMPLEMENTED.
 
 ## RECOVERY-007E Owner Verification
-Owner test must not resume until implementation automated verification and Project Manager code review both PASS.
+Owner retest: NOT STARTED.
+Must not start until PM code review on PR #8 passes.
 
-- [ ] Each paid provider row is independently editable.
-- [ ] Changing provider does not overwrite another provider’s key.
-- [ ] Saved keys remain masked.
-- [ ] Ollama does not show or require an API key.
-- [ ] Scan loading state displays correctly.
-- [ ] Scan success state displays correctly.
-- [ ] Empty state displays correctly.
-- [ ] Error state displays correctly.
-- [ ] Previous model retained after scan failure.
-- [ ] Selected Ollama model persists after reopening settings.
-- [ ] Pipeline 1 AI analysis uses the selected model.
-- [ ] AI rewrite uses the same selected provider contract.
-- [ ] API key is absent from visible logs.
-- [ ] Pipeline 2 regression passes.
+- [ ] Settings page renders without layout regression on home page.
+- [ ] DeepSeek provider panel has masked API key input (type=password).
+- [ ] Entering a valid DeepSeek key triggers real GET /models via Kiểm tra & Lấy model button.
+- [ ] DeepSeek model list populates from API response.
+- [ ] Entering an invalid placeholder key shows a controlled auth failure, does not save key.
+- [ ] Saved keys remain masked; DOM is not refilled with raw key text.
+- [ ] Key count indicator (Da luu X key) reflects actual saved count.
+- [ ] Deleting keys removes ciphertext from userData/ai_keys.json.
+- [ ] Gemini provider panel has masked API key input.
+- [ ] Gemini key saved via safeStorage.
+- [ ] Ollama panel does not show or require an API key.
+- [ ] Ollama endpoint and model remain functional.
+- [ ] Pipeline 1 AI selector displays the active provider/model.
+- [ ] Pipeline 1 AI selector updates when Settings provider/model changes.
+- [ ] AI rewrite via DeepSeek completes successfully with a valid key.
+- [ ] AI rewrite does not log or expose raw key in any visible UI output.
+- [ ] Home page three-column layout is correct after fix.
+- [ ] Pipeline 2 regression: subtitle removal produces expected clean-video.
 - [ ] RECOVERY-007 ASR regression passes.
+- [ ] No unintended ai_api_key or ai_api_keys_* values remain in localStorage after session.

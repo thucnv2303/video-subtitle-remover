@@ -29,23 +29,11 @@ export async function triggerAutoAiRewrite(job, srtText) {
       if (result.status !== 'ok') throw new Error(result.error || 'Ollama rewrite failed');
       aiText = result.result;
     } else {
-      const apiKeys = _getProviderKeys(provider);
-      if (apiKeys.length === 0) throw new Error(`Chưa cấu hình API key cho ${provider}.`);
-      const response = await fetch(`${window.api.base}/api/ai-rewrite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          srt_content: srtText,
-          ai_config: {
-            provider,
-            api_keys: apiKeys,
-            model,
-            prompt,
-          },
-        }),
+      if (!window.electronAPI?.aiRewrite) throw new Error('Cần chạy trong Electron app để sử dụng API key an toàn.');
+      const result = await window.electronAPI.aiRewrite({
+        provider, model, prompt, srt_content: srtText
       });
-      const result = await response.json();
-      if (!response.ok || result.status !== 'ok') throw new Error(result.error || `HTTP ${response.status}`);
+      if (result.status !== 'ok') throw new Error(result.error);
       aiText = result.result;
     }
 
@@ -68,15 +56,7 @@ export async function triggerAutoAiRewrite(job, srtText) {
   }
 }
 
-function _getProviderKeys(provider) {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(`ai_api_keys_${provider}`) || '[]');
-    const keys = Array.isArray(parsed) ? parsed.map(item => item?.key || item).filter(Boolean) : [];
-    if (keys.length > 0) return keys;
-  } catch { /* fallback below */ }
-  const legacy = localStorage.getItem('ai_api_key');
-  return legacy ? [legacy] : [];
-}
+
 
 function _getActivePrompt() {
   const direct = localStorage.getItem('ai_prompt') || '';
