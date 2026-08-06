@@ -1,0 +1,62 @@
+FORENSIC RECOVERY MATRIX - FIX-010
+Platform: Windows 10 Pro  Node: v24.18.0
+
+TC: TC1
+  Input:  keys(corrupt)+bak+c.pri
+  Branch: caseA-blocked
+  After:  keys+bak+c.pri
+  Error:  [RECOVERY_REQUIRED] Tệp pháp y đã tồn tại (corrupt.primary); không thể tự động k
+
+TC: TC2
+  Input:  keys+c.new
+  Branch: post-write-blocked
+  After:  keys+bak+c.new
+  Error:  [RESTORE_FAILED] Dữ liệu mới lỗi và tệp pháp y (corrupt.new) đã tồn tại. Cần can
+
+TC: TC3
+  Input:  keys(corrupt)+bak(corrupt)
+  Branch: windowsSafeRestore-fail
+  After:  keys+c.res
+  Error:  [RESTORE_FAILED] Khôi phục thành công nhưng tệp đã khôi phục không hợp lệ.
+
+TC: TC4
+  Input:  keys(corrupt)+bak(corrupt)+c.res
+  Branch: windowsSafeRestore-blocked
+  After:  keys+c.pri+c.res
+  Error:  [RESTORE_FAILED] Khôi phục thành công nhưng tệp khôi phục không hợp lệ, và tệp p
+
+TC: TC6
+  Input:  keys+c.res (write invalid)
+  Branch: post-write-rollback-success
+  After:  keys+c.new+c.res
+  Error:  [WRITE_FAILED] Dữ liệu mới không hợp lệ sau khi ghi; đã khôi phục từ bản sao lưu
+
+TC: TC7
+  Input:  keys(corrupt)+bak+tmp(dir)
+  Branch: caseE-unlink-fail
+  After:  keys+tmp
+  Error:  [STORE_CORRUPT] Khôi phục thành công nhưng không thể xóa tệp tạm: EPERM: operati
+
+TC: TC8
+  Input:  bak+tmp(dir)
+  Branch: caseB-unlink-fail
+  After:  keys+tmp
+  Error:  [STORE_CORRUPT] Khôi phục thành công nhưng không xóa được tệp tạm: EPERM: operat
+
+TC: TC9
+  Input:  keys(corrupt)+bak
+  Branch: restore-cleanup-fail
+  After:  keys+tmp+c.pri
+  Error:  [STORE_CORRUPT] Khôi phục thành công nhưng không thể xóa tệp pháp y: EPERM
+
+TC: TC10
+  Input:  keys(odd)+bak(odd)
+  Branch: STORE_CORRUPT
+  After:  keys+tmp+bak
+  Error:  [STORE_CORRUPT] Trạng thái ba tệp: cả keys và bak đều hỏng. Bảo tồn tất cả.
+
+TC: TC11
+  Input:  keys+bak(dir)
+  Branch: caseA-cleanup-fail
+  After:  keys+tmp+bak
+  Error:  [STORE_CORRUPT] Không thể xóa tệp thừa (ai_keys.json.tmp): EPERM: operation not 

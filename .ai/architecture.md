@@ -173,7 +173,7 @@ btn-delete-keys handler:
   Checks result.status === 'ok' before clearing input and showing toast.
   Shows error message and sets status 'offline' when result.status !== 'ok'.
 
-## CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010 (PENDING)
+## CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010 (8ef4f6b3e2a9eb3ad020db15f08ca19ec56eb298)
 
 ### Deterministic Artifact Paths
 Primary:  app.getPath('userData')/ai_keys.json

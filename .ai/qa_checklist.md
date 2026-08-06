@@ -115,7 +115,7 @@ Source: src/main/main.js only. Owner retest: NOT STARTED.
 - [ ] Owner: Pipeline 2 sanitizer intact.
 - [ ] Owner: Voice-clone cancel produces no error.
 
-## CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010 QA (commit PENDING)
+## CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010 QA (commit 8ef4f6b3e2a9eb3ad020db15f08ca19ec56eb298)
 Source: src/main/main.js only. Owner retest: NOT STARTED.
 *Note: Supersedes the 40/40 PASS claims from FIX-008 which had unreachable states.*
 

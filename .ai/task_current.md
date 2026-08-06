@@ -62,7 +62,7 @@ FAIL - Owner-observed blockers:
   - Windows atomic: backup+restore, stale-cleanup, hex validation
   - UI: delete handler and refreshProviderStatus handle structured results
   - Electron runtime: Page loaded successfully, Window visible, Python backend 8765 OK
-- CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010: PENDING — COMMITTED
+- CRASH-RECOVERY-FORENSIC-ROLLBACK-FIX-010: 8ef4f6b3e2a9eb3ad020db15f08ca19ec56eb298 — COMMITTED
   - src/main/main.js only
   - State machine order: E,A,D,B,C,normal (most-specific first)
   - Case E proven reachable: TC9 caseE===true PASS
