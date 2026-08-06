@@ -1,0 +1,6 @@
+State: MERGED
+Merged At: 2026-08-06T10:47:56Z
+Base Ref Name: review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
+Head Ref Name: review/RECOVERY-007E-AI-SETTINGS-001-ai-settings
+Merge Commit: 09eb0a8da11bad135ad8f1b379c99edb6a345746
+Created At: 2026-08-05T15:47:01Z

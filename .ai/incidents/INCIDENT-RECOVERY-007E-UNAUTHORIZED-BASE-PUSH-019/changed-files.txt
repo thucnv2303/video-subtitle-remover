@@ -1,0 +1,14 @@
+Commit a282117c1180481d674ab878b0d7beb85d9494cf:
+src/renderer/styles/main.css
+tests/test_renderer_dom_structure.js
+
+Commit 73f8ed7bd425b805dfba4182bf89345f62fca953:
+.ai/bugs.md
+.ai/current_state.md
+.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-HOME-LAYOUT-FULL-FIX-018/commands.txt
+.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-HOME-LAYOUT-FULL-FIX-018/layout-analysis.txt
+.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-HOME-LAYOUT-FULL-FIX-018/results.txt
+.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-HOME-LAYOUT-FULL-FIX-018/runtime-observations.txt
+.ai/handoff.md
+.ai/qa_checklist.md
+.ai/task_current.md
