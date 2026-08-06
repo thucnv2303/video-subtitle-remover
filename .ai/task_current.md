@@ -62,7 +62,7 @@ FAIL - Owner-observed blockers:
   - Windows atomic: backup+restore, stale-cleanup, hex validation
   - UI: delete handler and refreshProviderStatus handle structured results
   - Electron runtime: Page loaded successfully, Window visible, Python backend 8765 OK
-- FIX012-EVIDENCE-CLOSEOUT-013: e3db5fcb74ec45ed48b949a42d6786adc151ccaa — COMMITTED
+- FIX013-CLEAN-RUN-014: e3db5fcb74ec45ed48b949a42d6786adc151ccaa — COMMITTED
   - src/main/main.js only
   - State machine order: E,A,D,B,C,normal (most-specific first)
   - Case E proven reachable: TC9 caseE===true PASS

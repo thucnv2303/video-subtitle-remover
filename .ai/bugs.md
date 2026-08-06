@@ -106,7 +106,7 @@ BUG-029: loadEncryptedKeys did not run recovery before loading; no cross-restart
 - Fixed: recoverKeyStore() called at the start of both loadEncryptedKeys and saveEncryptedKeys.
   recoverKeyStore handles 5 deterministic cases (A-E) and restores from .bak automatically.
 
-## CRASH-RECOVERY-FIX012-EVIDENCE-CLOSEOUT-013 at head 9900523 — fixed in e3db5fcb74ec45ed48b949a42d6786adc151ccaa
+## CRASH-RECOVERY-FIX013-CLEAN-RUN-014 at head 9900523 — fixed in e3db5fcb74ec45ed48b949a42d6786adc151ccaa
 
 BUG-030: State machine overlap made Case E unreachable
 - Root cause: Case A (keys + bak) was evaluated before Case E (keys + tmp + bak), so Case E could never run.

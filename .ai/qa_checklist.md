@@ -115,7 +115,7 @@ Source: src/main/main.js only. Owner retest: NOT STARTED.
 - [ ] Owner: Pipeline 2 sanitizer intact.
 - [ ] Owner: Voice-clone cancel produces no error.
 
-## FIX012-EVIDENCE-CLOSEOUT-013 QA (commit e3db5fcb74ec45ed48b949a42d6786adc151ccaa)
+## FIX013-CLEAN-RUN-014 QA (commit e3db5fcb74ec45ed48b949a42d6786adc151ccaa)
 Source: src/main/main.js only. Owner retest: NOT STARTED.
 *Note: Supersedes the 36/36 PASS claims from FIX-008 which had unreachable states.*
 
