@@ -105,3 +105,6 @@ BLOCKED
 - Owner retest: NOT STARTED.
 - Documentation synchronization: WAITING_PM_REVIEW.
 - Merge permission: BLOCKED.
+
+## Handoff 029
+Pre-commit hook requires docs and source in the same commit, violating instruction to keep clean source separation.

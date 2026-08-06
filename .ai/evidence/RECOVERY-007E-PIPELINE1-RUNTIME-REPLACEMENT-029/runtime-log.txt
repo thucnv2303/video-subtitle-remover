@@ -1,0 +1,13 @@
+Runtime Tests PASSED:
+PASS: window._appState exists
+PASS: window._appState is object
+PASS: pipeline1SelectedJobId is initialized
+PASS: btn-start-all exists (DOM layout)
+PASS: Job A model is restored
+PASS: Job A voice is restored
+PASS: Job A speed is restored
+PASS: Job A model saved via event
+PASS: Job B model is different
+PASS: Job A model restored again
+PASS: AI model copies options
+PASS: Empty model state displays Chưa chọn. Actual: Chưa chọn

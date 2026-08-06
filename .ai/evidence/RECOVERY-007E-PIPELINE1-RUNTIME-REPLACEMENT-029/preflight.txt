@@ -1,0 +1,62 @@
+--- node --check app.js ---
+Exit 0. Output: 
+--- final 40 lines of app.js ---
+      if (audioEl) { audioEl.style.display = 'none'; audioEl.src = ''; }
+      if (audioEmptyEl) audioEmptyEl.style.display = 'block';
+      return;
+    }
+
+    const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+    if (!job) return;
+
+    if (titleEl) titleEl.textContent = job.fileName;
+    if (statusEl) statusEl.textContent = job.status.toUpperCase();
+
+    if (textEl) textEl.value = job.aiContent || job.srtContent || '';
+
+    if (job.ttsAudioPath) {
+      if (audioEl) {
+        audioEl.style.display = 'block';
+        audioEl.src = 'file://' + job.ttsAudioPath.replace(/\\/g, '/');
+      }
+      if (audioEmptyEl) audioEmptyEl.style.display = 'none';
+    } else {
+      if (audioEl) { audioEl.style.display = 'none'; audioEl.src = ''; }
+      if (audioEmptyEl) audioEmptyEl.style.display = 'block';
+    }
+  }
+
+  document.getElementById('step1-btn-save-text')?.addEventListener('click', () => {
+    if (!state.pipeline1SelectedJobId) return;
+    const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+    if (!job) return;
+    const textEl = document.getElementById('step1-detail-text');
+    if (textEl) {
+      if (job.aiContent !== undefined) {
+        job.aiContent = textEl.value;
+      } else {
+        job.srtContent = textEl.value;
+      }
+      addLog('ÄÃ£ lÆ°u ná»™i dung cáº­p nháº­t cho ' + job.fileName, 'info');
+    }
+  });
+
+--- declarations and assignments of state ---
+app.js:24: const state = {
+store.js:1: export const state = {
+--- window._appState references ---
+app.js:47: window._appState = state;
+store.js:22: window._appState = state; // Keep global for backward compatibility for now
+--- script order in index.html ---
+787: <script src="js/api.js"></script>
+788: <script src="js/pipeline.js"></script>
+794: <script type="module">
+820: <script src="js/app.js" defer></script>
+--- whether js/pipeline.js exists ---
+No
+--- package.json dependencies (jsdom) ---
+jsdom is NOT present in package.json
+--- hashes ---
+app.js: 5f2ae7bb58d139c06b5a7ab182b97187d72c0490a1e7180ca227d66bece3bc75
+store.js: 128ac86b9fe0ba4d21a47c677c9e580458394cc7459ec37f68da9f1d370eeb2e
+index.html: 482cf2ae0093cab2556f2dd61b374496d9f34551781e1cb16cb3b8eb4b5e0e11

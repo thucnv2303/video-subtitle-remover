@@ -142,3 +142,7 @@ Source: src/main/main.js only. Owner retest: NOT STARTED.
 - Owner retest: NOT STARTED.
 - Documentation synchronization: WAITING_PM_REVIEW.
 - Merge permission: BLOCKED.
+
+- [x] Shared state identity
+- [x] No state ReferenceError
+- [x] Job cards render and save values independently

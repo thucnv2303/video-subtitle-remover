@@ -116,3 +116,6 @@ FAIL - Owner-observed blockers:
 - Owner retest: NOT STARTED.
 - Documentation synchronization: WAITING_PM_REVIEW.
 - Merge permission: BLOCKED.
+
+## Task 029 Status
+BLOCKED — HOOK POLICY CONFLICT.

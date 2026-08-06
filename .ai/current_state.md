@@ -114,3 +114,6 @@ review/RECOVERY-007E-AI-SETTINGS-001-ai-settings
 - Owner retest: NOT STARTED.
 - Documentation synchronization: WAITING_PM_REVIEW.
 - Merge permission: BLOCKED.
+
+## RECOVERY-007E-PIPELINE1-RUNTIME-REPLACEMENT-029
+Source commit BLOCKED — HOOK POLICY CONFLICT. PR #10 invalidated. Replacement branch review/RECOVERY-007E-PIPELINE1-RUNTIME-replacement-029 created.

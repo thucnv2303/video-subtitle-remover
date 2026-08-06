@@ -139,3 +139,5 @@ BUG-033: Unlink failures silently swallowed
 - Owner retest: NOT STARTED.
 - Documentation synchronization: WAITING_PM_REVIEW.
 - Merge permission: BLOCKED.
+
+- (Fixed in source, blocked from commit) Pipeline 1 Jobs do not store separate AI model/voice values.
