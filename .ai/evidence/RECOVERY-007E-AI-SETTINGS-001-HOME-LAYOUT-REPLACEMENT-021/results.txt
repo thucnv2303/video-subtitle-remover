@@ -13,5 +13,24 @@ PASS: #page-settings inside .main-area
 PASS: Home and Settings siblings
 PASS: toolkit wrapper under pipeline container
 PASS: toolkit wrapper not under narrow sidebar
+PASS: Visual selector .pipeline-bar-v2 exists in CSS
+PASS: Visual selector .step-chevron exists in CSS
+PASS: Visual selector .step-chevron.active exists in CSS
+PASS: Visual selector .step-title exists in CSS
+PASS: Visual selector .step-sub exists in CSS
+PASS: Visual selector .tk-group exists in CSS
+PASS: Visual selector .tk-input exists in CSS
+PASS: Visual selector .tk-slider exists in CSS
+PASS: Visual selector .tk-btn exists in CSS
+PASS: Visual selector .tk-btn-primary exists in CSS
+PASS: Visual selector .tk-btn-danger exists in CSS
+PASS: Visual selector .tk-btn-sm exists in CSS
+PASS: Visual selector .tk-prompt-box exists in CSS
+PASS: Visual selector .tk-prompt-list exists in CSS
+PASS: Visual selector .tk-prompt-item exists in CSS
+PASS: Visual selector .tk-prompt-item.active exists in CSS
+PASS: Visual selector .tk-job-list exists in CSS
+PASS: Visual selector .tk-log-console exists in CSS
+PASS: Visual selector .tk-log-header exists in CSS
 PASS: no duplicate IDs
-TOTAL: 16 PASS / 0 FAIL
+TOTAL: 35 PASS / 0 FAIL

@@ -99,8 +99,8 @@ BLOCKED
 - Replacement review branch identified: review/RECOVERY-007E-AI-SETTINGS-001-replacement
 - Settings owner result: PASS at prior retest.
 - Home prior owner result: FAIL.
-- FIX018 replacement source SHA: WAITING_FOR_SOURCE_COMMIT_2
-- Automated verification result: 16 strict CSS layout assertions PASS / 0 FAIL.
+- FIX018 replacement source SHA: 007e78227e8af0888e4765df034f77e2c0dc4123
+- Automated verification result: 35 strict CSS layout and visual assertions PASS / 0 FAIL.
 - Code review: WAITING_PM_REVIEW.
 - Owner retest: NOT STARTED.
 - Documentation synchronization: WAITING_PM_REVIEW.

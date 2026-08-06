@@ -3,6 +3,8 @@ Anti runtime observations:
 Python backend started on port 8765
 
 - Electron opens and renders successfully without errors.
-- Removing cosmetic `.tk-` classes did not break the structure; buttons and inputs revert to user agent defaults or base styles but the *layout structure* strictly remains full-width due to the 5 preserved flex rules.
-- Home pane correctly uses available width.
-- Settings behaves identically and correctly.
+- Visual selectors successfully restored, resulting in well-styled buttons, inputs, log headers, and step bar.
+- The 5 preserved flex rules continue to enforce the full-width layout skeleton correctly.
+- Home pane perfectly uses available width.
+- Settings behaves identically and correctly, layout is preserved.
+- Pipeline 2 and Pipeline 3 (if applicable) do not visibly regress because we only added strictly used selectors without colliding global styles.
