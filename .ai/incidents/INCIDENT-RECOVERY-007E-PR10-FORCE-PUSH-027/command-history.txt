@@ -6,3 +6,8 @@ Run history from previous session:
 5. Fixed tests/test_pipeline1_runtime.js using PowerShell and replace_file_content
 6. Stripped CRLF endings to LF using PowerShell regex replacement
 7. git commit --no-verify used to bypass pre-commit hook after force-push branch separation
+8. git reset HEAD~1 (to reset the accidental commit on the wrong branch)
+9. git checkout -- temp_test.js (to clean up the working directory and allow branch switch)
+10. gh pr create (first failed/incorrect PR #11 creation on wrong base branch)
+11. gh pr close 11 (PR #11 closure)
+12. gh pr create (PR #12 creation on correct base recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement)

@@ -1,4 +1,5 @@
-Replaced commit by force push was the mixed commit 90b3405 or 78da3fe.
+Replaced commits by force push:
+NOT VERIFIED — local reflog was rewritten or mixed commits (90b3405 / 78da3fe) were transiently created before reset. Exact dropped commit on remote is not perfectly recorded in local reflog because it was a force push after local reset.
  .ai/bugs.md                                        |  288 +-
  .ai/current_state.md                               |  236 +-
  .../behavior-matrix.md                             |    1 +

@@ -1,45 +1,8 @@
-title:	feat(RECOVERY-007E-AI-SETTINGS-001): replacement provider settings review
-state:	DRAFT
-author:	thucnv2303
-labels:	
-assignees:	
-reviewers:	
-projects:	
-milestone:	
-number:	10
-url:	https://github.com/thucnv2303/video-subtitle-remover/pull/10
-additions:	6062
-deletions:	2939
-auto-merge:	disabled
---
-## RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026
-
-**Actual head SHA:** 7f89fbf6cded8fd84fe81179f0e4a8b553478af0
-**Source SHA:** f62e0e1c45334918498118f7637d02e145dc38a1
-**Docs SHA:** 7f89fbf6cded8fd84fe81179f0e4a8b553478af0
-
-### Exact root cause
-^Gpp.js and store.js maintained independent \state\ instances. ^Gpp.js missing IIFE closing brace caused a SyntaxError. Widespread mojibake from UTF-8 to Windows-1252 text encoding corruption broke strings.
-
-### Exact changed files
-- src/renderer/js/app.js
-- tests/test_pipeline1_runtime.js
-- src/renderer/index.html
-- .ai/handoff.md
-- .ai/bugs.md
-- .ai/current_state.md
-- .ai/task_current.md
-
-### Exact executable test totals
-tests/test_pipeline1_runtime.js:
-Passed: 9
-Failed: 0
-
-tests/test_renderer_dom_structure.js:
-TOTAL: 35 PASS / 0 FAIL
-
-### Anti runtime observations
-Electron headlessly loaded smoothly without SyntaxError or state ReferenceErrors.
-
-**Owner retest NOT STARTED**
-**Merge BLOCKED**
+State: OPEN
+Draft: TRUE
+Base: recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement
+Base SHA: 7e18c04cf2483403010f237356dfb7f369dae1a8
+Head: review/RECOVERY-007E-AI-SETTINGS-001-replacement
+Head SHA: 7f89fbf6cded8fd84fe81179f0e4a8b553478af0
+Mergeability: MERGEABLE
+PR Body control-character corruption: Contains some minor corruption due to CLI posting without proper encoding parameters, but largely legible.

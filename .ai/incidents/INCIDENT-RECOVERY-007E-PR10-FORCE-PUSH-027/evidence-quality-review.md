@@ -28,3 +28,10 @@ Electron loaded smoothly without state ReferenceErrors.
 --- script-order.md ---
 Scripts loaded: api.js, store.js, settings.js, app.js.
 
+
+### Evidence Quality Classification (Task 026)
+- **Summary-only**: The evidence contains high-level summaries written by the AI rather than raw execution artifacts.
+- **No raw stdout/stderr**: Missing the actual uncut terminal output from the executed tests and electron app.
+- **No exact exit-code transcript**: Exit codes are stated but not captured directly from the execution shell.
+- **No runtime stack**: Missing the full runtime trace to confirm the absence of exceptions.
+- **Insufficient to prove automated or runtime PASS**: The gathered evidence does not meet the strict evidentiary standards required to definitively prove the task was successfully verified by automation or runtime execution.

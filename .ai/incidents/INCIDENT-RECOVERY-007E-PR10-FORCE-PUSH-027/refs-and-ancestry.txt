@@ -1,42 +1,17 @@
-7f89fbf6cded8fd84fe81179f0e4a8b553478af0	refs/heads/review/RECOVERY-007E-AI-SETTINGS-001-replacement
-7e18c04cf2483403010f237356dfb7f369dae1a8	refs/heads/recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement
---- Reflog for branch ---
-7f89fbf HEAD@{0}: commit: docs(RECOVERY-007E): record shared-state runtime correction
-f62e0e1 HEAD@{1}: commit: fix(RECOVERY-007E): unify Pipeline 1 renderer state
-4dafa2e HEAD@{2}: reset: moving to HEAD~1
-78da3fe HEAD@{3}: commit: fix(RECOVERY-007E): unify Pipeline 1 renderer state
-4dafa2e HEAD@{4}: reset: moving to HEAD~1
-90b3405 HEAD@{5}: commit: docs(RECOVERY-007E): record shared-state runtime correction
-4dafa2e HEAD@{6}: commit: fix(pipeline1): per-job state isolation, UI mojibake, missing styles, unhandled async traces
-d7770c2 HEAD@{7}: commit: docs(RECOVERY-007E-AI-SETTINGS-001): record final home visual correction
-007e782 HEAD@{8}: commit: fix(RECOVERY-007E-AI-SETTINGS-001): restore required home control styling
-5405e34 HEAD@{9}: commit: docs(RECOVERY-007E-AI-SETTINGS-001): correct replacement evidence and governance
---- Ancestry ---
-commit d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd
-tree 8290fff2d1c91422f2a700dea44ed81e6e8e01a8
-parent 007e78227e8af0888e4765df034f77e2c0dc4123
-author Thuc Nguyen <thucnguyen@gmail.com> 1786022073 +0700
-committer Thuc Nguyen <thucnguyen@gmail.com> 1786022073 +0700
+### Exact Parents
+- d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd: 007e78227e8af0888e4765df034f77e2c0dc4123
+- 4dafa2e620d9895918d0dba02c99e9d00d2b9637: d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd
+- f62e0e1c45334918498118f7637d02e145dc38a1: 4dafa2e620d9895918d0dba02c99e9d00d2b9637
+- 7f89fbf6cded8fd84fe81179f0e4a8b553478af0: f62e0e1c45334918498118f7637d02e145dc38a1
 
-    docs(RECOVERY-007E-AI-SETTINGS-001): record final home visual correction
-commit 4dafa2e620d9895918d0dba02c99e9d00d2b9637
-tree 819c6b0d2c397d6583b4d22017df55f38bfaebd8
-parent d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd
-author Thuc Nguyen <thucnguyen@gmail.com> 1786023762 +0700
-committer Thuc Nguyen <thucnguyen@gmail.com> 1786023762 +0700
+### Remote Branch State (review/RECOVERY-007E-AI-SETTINGS-001-replacement)
+BEFORE FORCE PUSH:
+- Last verified remote head: NOT VERIFIED — remote head was overwritten and no remote reflog is accessible. Local reflog confirms previous local head was 4dafa2e620d9895918d0dba02c99e9d00d2b9637 before the resets and force push.
+- Evidence source: Local git reflog (`git reflog HEAD -n 10`)
 
-    fix(pipeline1): per-job state isolation, UI mojibake, missing styles, unhandled async traces
-commit f62e0e1c45334918498118f7637d02e145dc38a1
-tree 0bfdd6e93883a06e76843fd177d31b7e92957c0f
-parent 4dafa2e620d9895918d0dba02c99e9d00d2b9637
-author Thuc Nguyen <thucnguyen@gmail.com> 1786026053 +0700
-committer Thuc Nguyen <thucnguyen@gmail.com> 1786026053 +0700
+AFTER FORCE PUSH:
+- 7f89fbf6cded8fd84fe81179f0e4a8b553478af0
 
-    fix(RECOVERY-007E): unify Pipeline 1 renderer state
-commit 7f89fbf6cded8fd84fe81179f0e4a8b553478af0
-tree a7c4bd274837a80773c78eccb8f31fe2e481c170
-parent f62e0e1c45334918498118f7637d02e145dc38a1
-author Thuc Nguyen <thucnguyen@gmail.com> 1786026064 +0700
-committer Thuc Nguyen <thucnguyen@gmail.com> 1786026064 +0700
-
-    docs(RECOVERY-007E): record shared-state runtime correction
+### Reachability
+- Reachable from current remote refs: f62e0e1c45334918498118f7637d02e145dc38a1, 7f89fbf6cded8fd84fe81179f0e4a8b553478af0, 4dafa2e620d9895918d0dba02c99e9d00d2b9637, d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd.
+- Only recoverable from local reflog: 90b3405, 78da3fe (transient mixed commits created before resets).
