@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-CANDIDATE_FIX — READY_FOR_OWNER_RETEST
+CANDIDATE_FIX — WAITING_PM_REVIEW
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 va P2).
@@ -14,7 +14,7 @@ CANDIDATE_FIX — READY_FOR_OWNER_RETEST
 ## Documentation and Task State
 - INCIDENT-RECOVERY-007E-STAGED-TREE-001: COMPLETED
 - RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
-- RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX — READY_FOR_OWNER_RETEST - OWNER RETEST NOT STARTED
+- RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX — WAITING_PM_REVIEW - OWNER RETEST NOT STARTED
 
 ## Security Incident
 - Owner test at abf0ee2 was FAIL.
@@ -78,7 +78,7 @@ CANDIDATE_FIX — READY_FOR_OWNER_RETEST
 ## Verification gates
 - Execution: PASS
 - Automated verification: PASS
-- Code review: PASS
+- Code review: WAITING
 - Owner manual app verification: NOT STARTED
 - Documentation synchronization: PASS
 - Merge permission: BLOCKED
@@ -91,3 +91,12 @@ review/RECOVERY-007E-AI-SETTINGS-001-ai-settings
 - Clean-run tested SHA: d2fcb5def5c132cc69e59d001b35e812ab4f3662
 - Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/
 - Test result: 36 PASS / 0 FAIL
+## UI Regression Fix (017)
+- Owner runtime test at eaf6d393...: FAIL.
+- Blank Settings and broken Home layout recorded as owner-observed blockers.
+- Verified root cause: Stray </div> prematurely closed #step-2-content and <main>, breaking .page flexbox logic.
+- Exact regression test result: 36 PASS / 0 FAIL (Recovery) + 12 PASS (DOM tests).
+- Anti runtime observation status: PASS (Electron opened, UI loaded successfully, port 8765 active).
+- PM review: WAITING.
+- Owner retest: NOT STARTED.
+- Merge: BLOCKED.

@@ -4,7 +4,7 @@
 RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
 
 ## Active Task
-RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX — READY_FOR_OWNER_RETEST)
+RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX — WAITING_PM_REVIEW)
 
 ## Status
 - Owner test at abf0ee2: FAIL (see blockers in task_current.md).
@@ -82,3 +82,12 @@ BLOCKED
 - Clean-run tested SHA: d2fcb5def5c132cc69e59d001b35e812ab4f3662
 - Evidence: .ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/
 - Test result: 36 PASS / 0 FAIL
+## UI Regression Fix (017)
+- Owner runtime test at eaf6d393...: FAIL.
+- Blank Settings and broken Home layout recorded as owner-observed blockers.
+- Verified root cause: Stray </div> prematurely closed #step-2-content and <main>, breaking .page flexbox logic.
+- Exact regression test result: 36 PASS / 0 FAIL (Recovery) + 12 PASS (DOM tests).
+- Anti runtime observation status: PASS (Electron opened, UI loaded successfully, port 8765 active).
+- PM review: WAITING.
+- Owner retest: NOT STARTED.
+- Merge: BLOCKED.

@@ -1,4 +1,4 @@
-﻿# QA Checklist
+# QA Checklist
 
 ## Owner Manual App Verification (RECOVERY-007-OWNER-VERIFY-001)
 PAUSED - BLOCKED BY BUG-008/BUG-009
@@ -126,3 +126,5 @@ Source: src/main/main.js only. Owner retest: NOT STARTED.
 - [x] Cleanup failure: TC12 confirms tryUnlink directory returns {ok:false, code:EPERM} and is not swallowed.
 - [x] Electron launch: npx electron . (no --no-sandbox) -> Page loaded, Window visible, Python 8765.
 - [ ] Owner: UI tests remain identical to FIX-008.
+
+- [x] UI DOM Structure (test_renderer_dom_structure.js) verified.

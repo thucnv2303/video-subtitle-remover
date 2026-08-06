@@ -1,4 +1,4 @@
-﻿# Bug Ledger
+# Bug Ledger
 
 | ID | Hien tuong | Bang chung | Root cause | Status | Phan loai |
 |---|---|---|---|---|---|
@@ -123,3 +123,5 @@ BUG-032: Post-write validation failure left corrupt primary active
 BUG-033: Unlink failures silently swallowed
 - Root cause: try { fs.unlinkSync(bak) } catch {} swallowed permission errors.
 - Fixed: tryUnlink helper ignores ENOENT but returns other errors (e.g. EPERM). Callers now inspect the result and throw STORE_CORRUPT or log STORE_WARN appropriately.
+
+- UI Regression (017): Stray </div> closed main container early, collapsing Settings to 0px height and breaking Home grid. Fixed.
