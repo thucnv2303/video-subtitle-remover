@@ -1,3 +1,4 @@
+STATUS: WAITING_PM_REVIEW
 # Current Task
 
 ## Task ID
@@ -127,3 +128,4 @@ FAIL - Owner-observed blockers:
 - Tests executed: 15 PASS / 0 FAIL.
 - Owner manual verification: NOT STARTED
 - Merge permission: BLOCKED
+

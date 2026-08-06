@@ -147,3 +147,7 @@ BUG-033: Unlink failures silently swallowed
 - Bug: AI model selector displayed mojibake 'ChÆ°a chá» n'
 - Bug: Voice selector did not expose usable TTS voice choices because alue attributes were missing.
 - Resolution: UI models synchronized properly and per-job options explicitly stored in job state. Mojibake converted to valid UTF-8. pp.js and main.css adjusted for proper job styling. Tests written in 	est_pipeline1_runtime.js.
+
+## Bug: Pipeline 1 Runtime (state is not defined)
+- Status: CANDIDATE FIX
+- Resolution: Unified state instances between app.js and store.js via window._appState. Fixed app.js missing IIFE closure.

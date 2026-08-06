@@ -1,0 +1,1 @@
+app.js state -> window._appState, missing closing brace IIFE.

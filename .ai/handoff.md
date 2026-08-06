@@ -12,3 +12,8 @@ The unhandledrejection trace has been enriched with stack traces and state is no
 Pending tasks:
 1. Owner to run application in production environment to manually verify state is not defined is gone and job model selection is operational.
 2. PM to review PR.
+
+## [026] SHARED STATE CORRECTION
+- Root cause: pp.js and store.js maintained independent state instances. pp.js missing IIFE closing. Mojibake from text encoding corruption.
+- Solution: Unify pp.js and store.js using window._appState. Fixed SyntaxError. Stripped pipeline.js from index.html. Repaired encoding corruption.
+- Status: CANDIDATE FIX, awaiting PM review.
