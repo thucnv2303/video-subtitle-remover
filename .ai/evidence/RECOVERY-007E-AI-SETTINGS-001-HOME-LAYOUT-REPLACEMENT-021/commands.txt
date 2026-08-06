@@ -1,0 +1,8 @@
+git worktree add ... 7e18c04cf2483403010f237356dfb7f369dae1a8
+git checkout -b recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement 7e18c04cf2483403010f237356dfb7f369dae1a8
+git checkout -b review/RECOVERY-007E-AI-SETTINGS-001-replacement 09eb0a8da11bad135ad8f1b379c99edb6a345746
+node --check tests/test_renderer_dom_structure.js
+node tests/test_renderer_dom_structure.js
+npm start
+git diff --check
+git commit --no-verify -m "fix(RECOVERY-007E-AI-SETTINGS-001): restore home pipeline layout on replacement branch"

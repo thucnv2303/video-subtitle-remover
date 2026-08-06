@@ -125,3 +125,16 @@ BUG-033: Unlink failures silently swallowed
 - Fixed: tryUnlink helper ignores ENOENT but returns other errors (e.g. EPERM). Callers now inspect the result and throw STORE_CORRUPT or log STORE_WARN appropriately.
 
 - UI Regression (017): Stray </div> closed main container early, collapsing Settings to 0px height and breaking Home grid. Fixed.
+## INCIDENT-RECOVERY-007E-REPLACEMENT-PR-021
+- PR #8 merged without approval: INCIDENT RECORDED.
+- Damaged branch preserved and not canonical.
+- Replacement base identified: 7e18c04cf2483403010f237356dfb7f369dae1a8 (recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement)
+- Replacement review branch identified: review/RECOVERY-007E-AI-SETTINGS-001-replacement
+- Settings owner result: PASS at prior retest.
+- Home prior owner result: FAIL.
+- FIX018 replacement source SHA: e466aa003513bfe32bede6fd85102b59a4461856
+- Automated verification result: 16 strict CSS layout assertions PASS / 0 FAIL.
+- Code review: WAITING_PM_REVIEW.
+- Owner retest: NOT STARTED.
+- Documentation synchronization: WAITING_PM_REVIEW.
+- Merge permission: BLOCKED.

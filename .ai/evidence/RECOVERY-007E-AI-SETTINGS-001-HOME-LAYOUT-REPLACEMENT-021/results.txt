@@ -1,0 +1,1 @@
+16 strict CSS layout assertions: 16 PASS / 0 FAIL.

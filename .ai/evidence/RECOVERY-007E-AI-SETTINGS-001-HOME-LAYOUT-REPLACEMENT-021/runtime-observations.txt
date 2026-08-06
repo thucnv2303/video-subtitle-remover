@@ -1,0 +1,7 @@
+Anti runtime observations (not owner verification):
+- Electron opens successfully with no immediate renderer exception.
+- Home uses the intended full width of the application.
+- Pipeline 1 controls are no longer compressed.
+- Job Queue, content, and audio areas render perfectly in their intended multi-column layout.
+- Settings page remains fully visible and intact.
+- Pipeline 2 and Pipeline 3 do not visibly regress.

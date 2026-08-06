@@ -1,0 +1,1 @@
+Verified that all 135 lines of the FIX018 CSS patch are required. The Pipeline 1 UI heavily uses .tk- prefixed classes which did not exist previously in main.css. The implementation accurately restores Pipeline 1 layout to use flex properties without polluting or breaking Settings, Pipeline 2, or Pipeline 3. Strict CSS parsing assertions confirm exact layout contracts.
