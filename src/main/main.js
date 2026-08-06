@@ -124,7 +124,7 @@ ipcMain.handle('dialog:openFile', async (event, customFilters) => {
     { name: 'All Files', extensions: ['*'] }
   ];
   const result = await dialog.showOpenDialog({
-    title: 'Chá»n file',
+    title: 'Chọn file',
     properties: ['openFile', 'multiSelections'],
     filters: customFilters || defaultFilters
   });
@@ -133,7 +133,7 @@ ipcMain.handle('dialog:openFile', async (event, customFilters) => {
 
 ipcMain.handle('dialog:openDirectory', async () => {
   const result = await dialog.showOpenDialog({
-    title: 'Chá»n thÆ° má»¥c Ä‘áº§u ra',
+    title: 'Chọn thư mục đầu ra',
     properties: ['openDirectory']
   });
   return result;
@@ -141,7 +141,7 @@ ipcMain.handle('dialog:openDirectory', async () => {
 
 ipcMain.handle('dialog:saveFile', async (event, defaultPath) => {
   const { canceled, filePath } = await dialog.showSaveDialog({
-    title: 'LÆ°u file',
+    title: 'Lưu file',
     defaultPath
   });
   if (canceled) {
@@ -179,7 +179,7 @@ function normalizeOllamaChatEndpoint(endpoint) {
   if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(value)) value = `http://${value}`;
   const parsed = new URL(value);
   if (!['http:', 'https:'].includes(parsed.protocol)) {
-    throw new Error('Ollama endpoint chá»‰ há»— trá»£ http hoáº·c https.');
+    throw new Error('Ollama endpoint chỉ hỗ trợ http hoặc https.');
   }
   let pathname = parsed.pathname.replace(/\/+$/, '');
   if (!pathname || pathname === '/') pathname = '/api/chat';
@@ -195,7 +195,7 @@ function requestJson(urlValue, { method = 'GET', body = null, timeoutMs = 10000 
   return new Promise((resolve, reject) => {
     let parsed;
     try { parsed = new URL(urlValue); }
-    catch { reject(new Error('Endpoint khÃ´ng há»£p lá»‡.')); return; }
+    catch { reject(new Error('Endpoint không hợp lệ.')); return; }
 
     const transport = parsed.protocol === 'https:' ? https : http;
     const payload = body == null ? null : Buffer.from(JSON.stringify(body), 'utf8');
@@ -208,7 +208,7 @@ function requestJson(urlValue, { method = 'GET', body = null, timeoutMs = 10000 
       response.on('data', chunk => {
         size += chunk.length;
         if (size > 2 * 1024 * 1024) {
-          request.destroy(new Error('Pháº£n há»“i Ollama vÆ°á»£t quÃ¡ giá»›i háº¡n 2 MB.'));
+          request.destroy(new Error('Phản hồi Ollama vượt quá giới hạn 2 MB.'));
           return;
         }
         chunks.push(chunk);
@@ -217,7 +217,7 @@ function requestJson(urlValue, { method = 'GET', body = null, timeoutMs = 10000 
         const text = Buffer.concat(chunks).toString('utf8');
         let data;
         try { data = text ? JSON.parse(text) : {}; }
-        catch { reject(new Error(`Ollama tráº£ vá» JSON khÃ´ng há»£p lá»‡ (HTTP ${response.statusCode || 0}).`)); return; }
+        catch { reject(new Error(`Ollama trả về JSON không hợp lệ (HTTP ${response.statusCode || 0}).`)); return; }
         if ((response.statusCode || 500) >= 400) {
           reject(new Error(data.error || `Ollama HTTP ${response.statusCode}`));
           return;
@@ -247,9 +247,9 @@ ipcMain.handle('ollama:list-models', async (event, endpoint) => {
 ipcMain.handle('ollama:chat', async (event, payload = {}) => {
   try {
     const model = String(payload.model || '').trim();
-    if (!model) throw new Error('ChÆ°a chá»n model Ollama.');
+    if (!model) throw new Error('Chưa chọn model Ollama.');
     const messages = Array.isArray(payload.messages) ? payload.messages : [];
-    if (messages.length === 0) throw new Error('Ná»™i dung gá»­i Ollama Ä‘ang trá»‘ng.');
+    if (messages.length === 0) throw new Error('Nội dung gửi Ollama đang trống.');
     const endpoint = normalizeOllamaChatEndpoint(payload.endpoint);
     const data = await requestJson(endpoint, {
       method: 'POST',
@@ -257,7 +257,7 @@ ipcMain.handle('ollama:chat', async (event, payload = {}) => {
       timeoutMs: 120000,
     });
     const result = data?.message?.content;
-    if (!result) throw new Error('Ollama khÃ´ng tráº£ vá» ná»™i dung.');
+    if (!result) throw new Error('Ollama không trả về nội dung.');
     return { status: 'ok', result, endpoint, model };
   } catch (error) {
     return { status: 'error', error: error.message };
@@ -265,9 +265,19 @@ ipcMain.handle('ollama:chat', async (event, payload = {}) => {
 });
 
 // AI Settings & Secure Storage
+
+const ALLOWED_CLOUD_PROVIDERS = new Set(['deepseek', 'gemini']);
+const MAX_KEYS_PER_PROVIDER = 10;
+
+function assertCloudProvider(provider) {
+  if (!ALLOWED_CLOUD_PROVIDERS.has(provider)) {
+    throw new Error(`Nhà cung cấp không được hỗ trợ: ${provider}`);
+  }
+}
+
 function checkSafeStorage() {
   if (!safeStorage.isEncryptionAvailable()) {
-    throw new Error('Há»‡ Ä‘iá»u hÃ nh khÃ´ng há»— trá»£ mÃ£ hÃ³a an toÃ n (safeStorage).');
+    throw new Error('Hệ điều hành không hỗ trợ mã hóa an toàn (safeStorage).');
   }
 }
 
@@ -275,24 +285,57 @@ function getKeysPath() {
   return path.join(app.getPath('userData'), 'ai_keys.json');
 }
 
+// Validate store shape: { deepseek?: string[], gemini?: string[] }
+// Only allows known providers; all values must be non-empty hex strings.
+// Throws on invalid shape; returns {} on ENOENT.
 function loadEncryptedKeys() {
+  const keysPath = getKeysPath();
+  let raw;
   try {
-    const data = fs.readFileSync(getKeysPath(), 'utf8');
-    return JSON.parse(data);
-  } catch {
-    return {};
+    raw = fs.readFileSync(keysPath, 'utf8');
+  } catch (err) {
+    if (err.code === 'ENOENT') return {};
+    throw new Error('Không thể đọc kho khóa: ' + err.code);
+  }
+  let parsed;
+  try { parsed = JSON.parse(raw); }
+  catch { throw new Error('Kho khóa bị lỗi định dạng JSON. Không nạp.'); }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error('Kho khóa có cấu trúc không hợp lệ (root phải là object).');
+  }
+  for (const [k, v] of Object.entries(parsed)) {
+    if (!ALLOWED_CLOUD_PROVIDERS.has(k)) {
+      throw new Error(`Kho khóa chứa provider không hợp lệ: ${k}`);
+    }
+    if (!Array.isArray(v) || v.some(entry => typeof entry !== 'string' || entry.length === 0)) {
+      throw new Error(`Kho khóa có giá trị không hợp lệ cho provider: ${k}`);
+    }
+  }
+  return parsed;
+}
+
+// Atomic write: serialize → temp file → rename.
+// Does NOT delete the existing file before success.
+function saveEncryptedKeys(data) {
+  const keysPath = getKeysPath();
+  const tmpPath = keysPath + '.tmp_' + process.pid;
+  const serialized = JSON.stringify(data);
+  try {
+    fs.writeFileSync(tmpPath, serialized, 'utf8');
+    fs.renameSync(tmpPath, keysPath);
+  } catch (err) {
+    try { fs.unlinkSync(tmpPath); } catch {}
+    throw new Error('Không thể ghi kho khóa: ' + err.message);
   }
 }
 
-function saveEncryptedKeys(data) {
-  fs.writeFileSync(getKeysPath(), JSON.stringify(data), 'utf8');
-}
-
 function storeProviderKeys(provider, keysArray) {
+  assertCloudProvider(provider);
   checkSafeStorage();
   const data = loadEncryptedKeys();
   if (keysArray && keysArray.length > 0) {
-    const encrypted = keysArray.map(key => safeStorage.encryptString(key).toString('hex'));
+    const limited = keysArray.slice(0, MAX_KEYS_PER_PROVIDER);
+    const encrypted = limited.map(key => safeStorage.encryptString(key).toString('hex'));
     data[provider] = encrypted;
   } else {
     delete data[provider];
@@ -301,6 +344,7 @@ function storeProviderKeys(provider, keysArray) {
 }
 
 function getProviderKeys(provider) {
+  assertCloudProvider(provider);
   checkSafeStorage();
   const data = loadEncryptedKeys();
   const encrypted = data[provider] || [];
@@ -314,11 +358,18 @@ function getProviderKeys(provider) {
 }
 
 ipcMain.handle('ai:has-provider-keys', (event, provider) => {
-  try { return getProviderKeys(provider).length; } catch { return 0; }
+  try {
+    assertCloudProvider(provider);
+    checkSafeStorage();
+    const data = loadEncryptedKeys();
+    const arr = data[provider];
+    if (!Array.isArray(arr)) return 0;
+    return arr.filter(entry => typeof entry === 'string' && entry.length > 0).length;
+  } catch { return 0; }
 });
 
 ipcMain.handle('ai:delete-provider-keys', (event, provider) => {
-  try { storeProviderKeys(provider, null); return true; } catch { return false; }
+  try { assertCloudProvider(provider); storeProviderKeys(provider, null); return true; } catch { return false; }
 });
 
 async function fetchDeepSeekModels(key) {
@@ -327,23 +378,30 @@ async function fetchDeepSeekModels(key) {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${key}` }
     }, (res) => {
-      let body = '';
-      res.on('data', chunk => body += chunk);
+      const chunks = [];
+      let size = 0;
+      res.on('data', chunk => {
+        size += chunk.length;
+        if (size > 2 * 1024 * 1024) { req.destroy(new Error('Phản hồi DeepSeek vượt quá giới hạn 2 MB.')); return; }
+        chunks.push(chunk);
+      });
       res.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8');
         if (res.statusCode === 200) {
           try {
             const parsed = JSON.parse(body);
-            const models = (parsed.data || []).map(m => m.id);
+            if (!Array.isArray(parsed.data)) { reject(new Error('DeepSeek trả về dữ liệu models không hợp lệ.')); return; }
+            const models = [...new Set(parsed.data.map(m => m.id).filter(Boolean))];
             resolve(models);
           } catch (e) {
-            reject(new Error('Invalid JSON from DeepSeek'));
+            reject(new Error('DeepSeek trả về JSON không hợp lệ.'));
           }
         } else {
-          reject(new Error(res.statusCode === 401 || res.statusCode === 403 ? 'API key khÃ´ng há»£p lá»‡ hoáº·c khÃ´ng cÃ³ quyá»n' : `DeepSeek HTTP ${res.statusCode}`));
+          reject(new Error(res.statusCode === 401 || res.statusCode === 403 ? 'API key không hợp lệ hoặc không có quyền.' : `DeepSeek HTTP ${res.statusCode}`));
         }
       });
     });
-    req.on('error', (e) => reject(new Error('Lá»—i káº¿t ná»‘i DeepSeek: ' + e.message)));
+    req.on('error', (e) => reject(new Error('Lỗi kết nối DeepSeek: ' + e.message)));
     req.setTimeout(10000, () => req.destroy(new Error('Timeout DeepSeek')));
     req.end();
   });
@@ -351,34 +409,56 @@ async function fetchDeepSeekModels(key) {
 
 async function fetchGeminiModels(key) {
   return new Promise((resolve, reject) => {
+    // NOTE: key is in URL query; do not log this URL
     const req = https.request(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`, {
       method: 'GET'
     }, (res) => {
-      let body = '';
-      res.on('data', chunk => body += chunk);
+      const chunks = [];
+      let size = 0;
+      res.on('data', chunk => {
+        size += chunk.length;
+        if (size > 2 * 1024 * 1024) { req.destroy(new Error('Phản hồi Gemini vượt quá giới hạn 2 MB.')); return; }
+        chunks.push(chunk);
+      });
       res.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8');
         if (res.statusCode === 200) {
-          try {
-            const parsed = JSON.parse(body);
-            const models = (parsed.models || [])
-              .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-              .map(m => m.name.replace('models/', ''));
-            resolve(models.length ? models : ['gemini-1.5-flash', 'gemini-1.5-pro']);
-          } catch (e) {
-            resolve(['gemini-1.5-flash', 'gemini-1.5-pro']); // fallback
+          let parsed;
+          try { parsed = JSON.parse(body); }
+          catch { reject(new Error('Gemini trả về JSON không hợp lệ.')); return; }
+          if (!parsed || !Array.isArray(parsed.models)) {
+            reject(new Error('Gemini trả về danh sách models không hợp lệ.'));
+            return;
+          }
+          const models = parsed.models
+            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+            .map(m => m.name.replace('models/', ''));
+          if (models.length === 0) {
+            // Validation pass, but no compatible models found — return controlled result
+            resolve({ verified: true, noCompatibleModels: true, models: [] });
+          } else {
+            resolve({ verified: true, noCompatibleModels: false, models });
           }
         } else {
-          reject(new Error(res.statusCode === 400 || res.statusCode === 403 ? 'API key khÃ´ng há»£p lá»‡' : `Gemini HTTP ${res.statusCode}`));
+          reject(new Error(res.statusCode === 400 || res.statusCode === 403 ? 'API key không hợp lệ.' : `Gemini HTTP ${res.statusCode}`));
         }
       });
     });
-    req.on('error', (e) => reject(new Error('Lá»—i káº¿t ná»‘i Gemini: ' + e.message)));
+    req.on('error', (e) => reject(new Error('Lỗi kết nối Gemini: ' + e.message)));
     req.setTimeout(10000, () => req.destroy(new Error('Timeout Gemini')));
     req.end();
   });
 }
 
+// Normalize fetchGeminiModels result to a flat string[] for callers
+async function fetchGeminiModelsList(key) {
+  const result = await fetchGeminiModels(key);
+  if (result && result.verified) return result.models;
+  return result; // fallback if already array (should not happen)
+}
+
 ipcMain.handle('ai:save-provider-keys', async (event, provider, keys) => {
+  try { assertCloudProvider(provider); } catch(e) { return { status: 'error', error: e.message }; }
   if (!keys || keys.length === 0) {
     try { storeProviderKeys(provider, null); } catch(e) { return { status: 'error', error: e.message }; }
     return { status: 'ok', models: [], validCount: 0, invalidCount: 0 };
@@ -389,11 +469,15 @@ ipcMain.handle('ai:save-provider-keys', async (event, provider, keys) => {
     let validKeys = [];
     let invalidCount = 0;
 
-    for (const key of keys) {
+    // Sanitize: trim, deduplicate, reject empty, cap count
+    const sanitized = [...new Set((Array.isArray(keys) ? keys : []).map(k => String(k).trim()).filter(Boolean))].slice(0, MAX_KEYS_PER_PROVIDER);
+    if (sanitized.length === 0) throw new Error('Không có API key hợp lệ nào được gửi.');
+
+    for (const key of sanitized) {
       try {
         let models = [];
         if (provider === 'deepseek') models = await fetchDeepSeekModels(key);
-        else if (provider === 'gemini') models = await fetchGeminiModels(key);
+        else if (provider === 'gemini') models = await fetchGeminiModelsList(key);
         allModels.push(...models);
         validKeys.push(key);
       } catch (err) {
@@ -401,7 +485,7 @@ ipcMain.handle('ai:save-provider-keys', async (event, provider, keys) => {
       }
     }
 
-    if (validKeys.length === 0) throw new Error('KhÃ´ng cÃ³ API key nÃ o há»£p lá»‡.');
+    if (validKeys.length === 0) throw new Error('Không có API key nào hợp lệ.');
 
     storeProviderKeys(provider, validKeys);
 
@@ -412,8 +496,10 @@ ipcMain.handle('ai:save-provider-keys', async (event, provider, keys) => {
 });
 
 ipcMain.handle('ai:test-provider', async (event, provider) => {
-  const keys = getProviderKeys(provider);
-  if (keys.length === 0) return { status: 'error', error: 'ChÆ°a lÆ°u API key nÃ o.' };
+  try { assertCloudProvider(provider); } catch(e) { return { status: 'error', error: e.message }; }
+  let keys;
+  try { keys = getProviderKeys(provider); } catch(e) { return { status: 'error', error: e.message }; }
+  if (keys.length === 0) return { status: 'error', error: 'Chưa lưu API key nào.' };
 
   try {
     let allModels = [];
@@ -422,12 +508,12 @@ ipcMain.handle('ai:test-provider', async (event, provider) => {
       try {
         let models = [];
         if (provider === 'deepseek') models = await fetchDeepSeekModels(key);
-        else if (provider === 'gemini') models = await fetchGeminiModels(key);
+        else if (provider === 'gemini') models = await fetchGeminiModelsList(key);
         allModels.push(...models);
         validKeys++;
       } catch (e) {}
     }
-    if (validKeys === 0) return { status: 'error', error: 'API key khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ háº¿t háº¡n.' };
+    if (validKeys === 0) return { status: 'error', error: 'API key không hợp lệ hoặc đã hết hạn.' };
     return { status: 'ok', models: [...new Set(allModels)], validCount: validKeys };
   } catch (error) {
     return { status: 'error', error: error.message };
@@ -459,7 +545,8 @@ async function executeDeepSeekRewrite(keys, payload) {
           }
         }, (res) => {
           let chunks = [];
-          res.on('data', chunk => chunks.push(chunk));
+          let size = 0;
+          res.on('data', chunk => { size += chunk.length; if (size > 2 * 1024 * 1024) { req.destroy(new Error('Phản hồi DeepSeek rewrite vượt quá giới hạn 2 MB.')); return; } chunks.push(chunk); });
           res.on('end', () => {
             const resultStr = Buffer.concat(chunks).toString('utf8');
             if (res.statusCode >= 400) {
@@ -479,13 +566,13 @@ async function executeDeepSeekRewrite(keys, payload) {
         req.end();
       });
       const resultContent = response.choices?.[0]?.message?.content;
-      if (!resultContent) throw new Error('KhÃ´ng nháº­n Ä‘Æ°á»£c ná»™i dung tá»« AI.');
+      if (!resultContent) throw new Error('Không nhận được nội dung từ AI.');
       return resultContent;
     } catch (err) {
       lastError = err;
     }
   }
-  throw new Error(`AI Request Failed sau ${Math.min(keys.length, 3)} láº§n thá»­. Lá»—i cuá»‘i: ${lastError?.message || 'Unknown'}`);
+  throw new Error(`AI Request Failed sau ${Math.min(keys.length, 3)} lần thử. Lỗi cuối: ${lastError?.message || 'Unknown'}`);
 }
 
 async function executeGeminiRewrite(keys, payload) {
@@ -510,7 +597,8 @@ async function executeGeminiRewrite(keys, payload) {
           }
         }, (res) => {
           let chunks = [];
-          res.on('data', chunk => chunks.push(chunk));
+          let size = 0;
+          res.on('data', chunk => { size += chunk.length; if (size > 2 * 1024 * 1024) { req.destroy(new Error('Phản hồi Gemini rewrite vượt quá giới hạn 2 MB.')); return; } chunks.push(chunk); });
           res.on('end', () => {
             const resultStr = Buffer.concat(chunks).toString('utf8');
             if (res.statusCode >= 400) {
@@ -530,25 +618,23 @@ async function executeGeminiRewrite(keys, payload) {
         req.end();
       });
       const resultContent = response.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!resultContent) throw new Error('KhÃ´ng nháº­n Ä‘Æ°á»£c ná»™i dung tá»« AI.');
+      if (!resultContent) throw new Error('Không nhận được nội dung từ AI.');
       return resultContent;
     } catch (err) {
       lastError = err;
     }
   }
-  throw new Error(`AI Request Failed sau ${Math.min(keys.length, 3)} láº§n thá»­. Lá»—i cuá»‘i: ${lastError?.message || 'Unknown'}`);
+  throw new Error(`AI Request Failed sau ${Math.min(keys.length, 3)} lần thử. Lỗi cuối: ${lastError?.message || 'Unknown'}`);
 }
 
 ipcMain.handle('ai:rewrite', async (event, payload) => {
   try {
     const { provider, model, prompt, srt_content } = payload;
 
-    if (!provider || provider === 'ollama') {
-      throw new Error('ai:rewrite khÃ´ng há»— trá»£ Ollama qua kÃªnh nÃ y.');
-    }
+    try { assertCloudProvider(provider); } catch(e) { throw new Error(e.message); }
 
     const keys = getProviderKeys(provider);
-    if (keys.length === 0) throw new Error(`ChÆ°a cÃ³ API key há»£p lá»‡ cho ${provider}.`);
+    if (keys.length === 0) throw new Error(`Chưa có API key hợp lệ cho ${provider}.`);
 
     let result;
     if (provider === 'deepseek') {
@@ -556,7 +642,7 @@ ipcMain.handle('ai:rewrite', async (event, payload) => {
     } else if (provider === 'gemini') {
       result = await executeGeminiRewrite(keys, payload);
     } else {
-      throw new Error(`NhÃ  cung cáº¥p khÃ´ng há»£p lá»‡: ${provider}`);
+      throw new Error(`Nhà cung cấp không hợp lệ: ${provider}`);
     }
 
     return { status: 'ok', result };

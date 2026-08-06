@@ -36,7 +36,7 @@ export async function loadSettingsValues() {
     $('tts-bg-volume').value = localStorage.getItem('tts_bg_volume') || '10';
     if ($('vol-label')) $('vol-label').textContent = `${$('tts-bg-volume').value}%`;
   }
-  if ($('output-dir-text')) $('output-dir-text').textContent = state.outputDir || localStorage.getItem('output_dir') || 'Máº·c Ä‘á»‹nh (cÃ¹ng thÆ° má»¥c video gá»‘c)';
+  if ($('output-dir-text')) $('output-dir-text').textContent = state.outputDir || localStorage.getItem('output_dir') || 'Mặc định (cùng thư mục video gốc)';
   syncProviderPanels();
   await refreshProviderStatus(provider);
   await syncModelsDropdown(provider);
@@ -53,26 +53,26 @@ function upgradeAiUi() {
   wrapper.id = 'ai-provider-config';
   wrapper.innerHTML = `
     <div id="ai-cloud-panel">
-      <div class="form-group"><label class="form-label">API key cá»§a nhÃ  cung cáº¥p</label>
-        <input type="password" id="ai-cloud-keys" class="form-input" autocomplete="off" spellcheck="false" placeholder="Nháº­p má»™t hoáº·c nhiá»u API key, cÃ¡ch nhau báº±ng dáº¥u pháº©y">
-        <div class="form-help">Chá»‰ lÆ°u trÃªn mÃ¡y nÃ y; khÃ´ng gá»­i raw key sang backend.</div></div>
+      <div class="form-group"><label class="form-label">API key của nhà cung cấp</label>
+        <input type="password" id="ai-cloud-keys" class="form-input" autocomplete="off" spellcheck="false" placeholder="Nhập một hoặc nhiều API key, cách nhau bằng dấu phẩy">
+        <div class="form-help">Chỉ lưu trên máy này; không gửi raw key sang backend.</div></div>
       <div class="form-group"><label class="form-label">Model</label>
         <select id="ai-cloud-model" class="dropdown form-input">
-           <option value="">Báº¥m Kiá»ƒm tra & Láº¥y model Ä‘á»ƒ cáº­p nháº­t</option>
+           <option value="">Bấm Kiểm tra & Lấy model để cập nhật</option>
         </select>
       </div>
     </div>
     <div id="ai-ollama-panel" hidden>
       <div class="form-group"><label class="form-label">Ollama endpoint</label><input id="ai-endpoint" class="form-input" value="${OLLAMA_DEFAULT}"></div>
       <div class="form-group"><label class="form-label">Model Ollama</label>
-        <div style="display:flex;gap:8px"><select id="ai-ollama-model-select" class="dropdown form-input"><option value="">Báº¥m QuÃ©t model</option></select>
-        <button id="btn-scan-ollama" class="btn btn-secondary" type="button">QuÃ©t model</button></div>
-        <input id="ai-ollama-model-custom" class="form-input" style="margin-top:8px" placeholder="Hoáº·c nháº­p tÃªn model"></div>
+        <div style="display:flex;gap:8px"><select id="ai-ollama-model-select" class="dropdown form-input"><option value="">Bấm Quét model</option></select>
+        <button id="btn-scan-ollama" class="btn btn-secondary" type="button">Quét model</button></div>
+        <input id="ai-ollama-model-custom" class="form-input" style="margin-top:8px" placeholder="Hoặc nhập tên model"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;margin:10px 0">
-      <button id="btn-test-ai-provider" class="btn btn-secondary" type="button">Kiá»ƒm tra & Láº¥y model</button>
-      <button id="btn-delete-keys" class="btn btn-danger" type="button" style="display:none">XÃ³a keys</button>
-      <span id="ai-provider-status" class="status-chip">ChÆ°a kiá»ƒm tra</span>
+      <button id="btn-test-ai-provider" class="btn btn-secondary" type="button">Kiểm tra & Lấy model</button>
+      <button id="btn-delete-keys" class="btn btn-danger" type="button" style="display:none">Xóa keys</button>
+      <span id="ai-provider-status" class="status-chip">Chưa kiểm tra</span>
     </div>`;
   provider.closest('.form-group')?.insertAdjacentElement('afterend', wrapper);
 }
@@ -81,7 +81,7 @@ function bindAiEvents() {
   $('ai-provider')?.addEventListener('change', async () => {
     const provider = value('ai-provider');
     if ($('ai-cloud-keys')) $('ai-cloud-keys').value = '';
-    setAiStatus('Äang táº£i...', '');
+    setAiStatus('Đang tải...', '');
     syncProviderPanels();
     await refreshProviderStatus(provider);
     await syncModelsDropdown(provider);
@@ -94,12 +94,12 @@ function bindAiEvents() {
     const provider = value('ai-provider');
     await window.electronAPI.deleteProviderKeys(provider);
     if ($('ai-cloud-keys')) $('ai-cloud-keys').value = '';
-    toast('ÄÃ£ xÃ³a keys', 'info');
+    toast('Đã xóa keys', 'info');
     await refreshProviderStatus(provider);
     await syncModelsDropdown(provider);
   });
 
-  $('btn-save-ai')?.addEventListener('click', () => { saveAll(); addLog('ÄÃ£ lÆ°u cáº¥u hÃ¬nh AI & TTS!', 'success'); toast('ÄÃ£ lÆ°u cÃ i Ä‘áº·t!', 'success'); });
+  $('btn-save-ai')?.addEventListener('click', () => { saveAll(); addLog('Đã lưu cấu hình AI & TTS!', 'success'); toast('Đã lưu cài đặt!', 'success'); });
 }
 
 function syncProviderPanels() {
@@ -110,34 +110,34 @@ function syncProviderPanels() {
 
 async function scanOllama() {
   const button = $('btn-scan-ollama');
-  if (!window.electronAPI?.listOllamaModels) return setAiStatus('Cáº§n cháº¡y trong Electron app', 'offline');
-  button.disabled = true; button.textContent = 'Äang quÃ©t...'; setAiStatus('Äang káº¿t ná»‘i...');
+  if (!window.electronAPI?.listOllamaModels) return setAiStatus('Cần chạy trong Electron app', 'offline');
+  button.disabled = true; button.textContent = 'Đang quét...'; setAiStatus('Đang kết nối...');
   try {
     const result = await window.electronAPI.listOllamaModels(value('ai-endpoint') || OLLAMA_DEFAULT);
-    if (result.status !== 'ok') throw new Error(result.error || 'KhÃ´ng thá»ƒ quÃ©t Ollama');
+    if (result.status !== 'ok') throw new Error(result.error || 'Không thể quét Ollama');
     $('ai-endpoint').value = result.endpoint;
     const select = $('ai-ollama-model-select');
-    select.innerHTML = '<option value="">Chá»n model</option>';
+    select.innerHTML = '<option value="">Chọn model</option>';
     result.models.forEach(name => select.append(new Option(name, name)));
     const saved = localStorage.getItem('ai_model_ollama') || '';
     if (result.models.includes(saved)) select.value = saved;
-    setAiStatus(`Ollama online â€” ${result.models.length} model`, 'online');
+    setAiStatus(`Ollama online — ${result.models.length} model`, 'online');
   } catch (error) { setAiStatus(error.message, 'offline'); }
-  finally { button.disabled = false; button.textContent = 'QuÃ©t model'; }
+  finally { button.disabled = false; button.textContent = 'Quét model'; }
 }
 
 async function testProvider() {
   const provider = value('ai-provider') || 'gemini';
   const button = $('btn-test-ai-provider');
-  button.disabled = true; button.textContent = 'Äang kiá»ƒm tra...';
+  button.disabled = true; button.textContent = 'Đang kiểm tra...';
   try {
     if (provider === 'ollama') {
       const model = value('ai-ollama-model-custom').trim() || value('ai-ollama-model-select').trim();
-      if (!model) throw new Error('ChÆ°a chá»n model Ollama.');
-      if (!window.electronAPI?.ollamaChat) throw new Error('Cáº§n cháº¡y trong Electron app.');
+      if (!model) throw new Error('Chưa chọn model Ollama.');
+      if (!window.electronAPI?.ollamaChat) throw new Error('Cần chạy trong Electron app.');
       const result = await window.electronAPI.ollamaChat({ endpoint: value('ai-endpoint') || OLLAMA_DEFAULT, model, messages: [{ role: 'user', content: 'Reply with exactly: OK' }] });
       if (result.status !== 'ok') throw new Error(result.error || 'Ollama test failed');
-      setAiStatus(`Káº¿t ná»‘i thÃ nh cÃ´ng: ${model}`, 'online');
+      setAiStatus(`Kết nối thành công: ${model}`, 'online');
     } else {
       const keysInput = value('ai-cloud-keys').trim();
       let res;
@@ -153,10 +153,10 @@ async function testProvider() {
 
       await refreshProviderStatus(provider);
       await syncModelsDropdown(provider);
-      toast('Kiá»ƒm tra thÃ nh cÃ´ng!', 'success');
+      toast('Kiểm tra thành công!', 'success');
     }
   } catch (error) { setAiStatus(error.message, 'offline'); }
-  finally { button.disabled = false; button.textContent = 'Kiá»ƒm tra & Láº¥y model'; }
+  finally { button.disabled = false; button.textContent = 'Kiểm tra & Lấy model'; }
 }
 
 async function refreshProviderStatus(provider) {
@@ -164,10 +164,10 @@ async function refreshProviderStatus(provider) {
   const count = await window.electronAPI.hasProviderKeys(provider);
   const btnDelete = $('btn-delete-keys');
   if (count > 0) {
-    setAiStatus(`ÄÃ£ lÆ°u ${count} key`, 'online');
+    setAiStatus(`Đã lưu ${count} key`, 'online');
     if (btnDelete) btnDelete.style.display = '';
   } else {
-    setAiStatus('ChÆ°a cÃ³ key', '');
+    setAiStatus('Chưa có key', '');
     if (btnDelete) btnDelete.style.display = 'none';
   }
 }
@@ -188,10 +188,10 @@ async function syncModelsDropdown(provider) {
       else if (res.models.length > 0) select.value = res.models[0];
       window.dispatchEvent(new CustomEvent('aiModelChanged'));
     } else {
-      select.innerHTML = '<option value="">(KhÃ´ng cÃ³ model / Lá»—i)</option>';
+      select.innerHTML = '<option value="">(Không có model / Lỗi)</option>';
     }
   } catch (e) {
-    select.innerHTML = '<option value="">(KhÃ´ng cÃ³ model)</option>';
+    select.innerHTML = '<option value="">(Không có model)</option>';
   }
 }
 
@@ -235,15 +235,15 @@ export function renderSavedVoices() {
   const voices = getSavedVoices();
   const list = $('saved-voices-list');
   if (!list) return;
-  list.innerHTML = voices.length ? voices.map((voice, index) => `<div class="voice-card"><div class="voice-icon">ðŸŽ™</div><div class="voice-info"><div class="voice-name">${escapeHtml(voice.name)}</div><div class="voice-meta">${escapeHtml(voice.audioFile)} â€¢ ${escapeHtml(voice.date)}</div></div><button class="btn-voice-del" data-idx="${index}">âœ•</button></div>`).join('') : '<div class="voice-empty">ChÆ°a cÃ³ giá»ng clone nÃ o.</div>';
+  list.innerHTML = voices.length ? voices.map((voice, index) => `<div class="voice-card"><div class="voice-icon">🎙</div><div class="voice-info"><div class="voice-name">${escapeHtml(voice.name)}</div><div class="voice-meta">${escapeHtml(voice.audioFile)} • ${escapeHtml(voice.date)}</div></div><button class="btn-voice-del" data-idx="${index}">✕</button></div>`).join('') : '<div class="voice-empty">Chưa có giọng clone nào.</div>';
   updateVoiceDropdown(voices);
-  list.querySelectorAll('.btn-voice-del').forEach(button => button.addEventListener('click', () => { const next = getSavedVoices(); next.splice(Number(button.dataset.idx), 1); saveVoices(next); renderSavedVoices(); toast('ÄÃ£ xÃ³a giá»ng!', 'info'); }));
+  list.querySelectorAll('.btn-voice-del').forEach(button => button.addEventListener('click', () => { const next = getSavedVoices(); next.splice(Number(button.dataset.idx), 1); saveVoices(next); renderSavedVoices(); toast('Đã xóa giọng!', 'info'); }));
 }
 
 export function updateVoiceDropdown(voices) {
   [$('tts-voice'), $('job-tts-voice'), $('step1-tts-voice')].filter(Boolean).forEach(select => {
     [...select.options].filter(option => option.value.startsWith('clone:')).forEach(option => option.remove());
-    voices.forEach((voice, index) => select.append(new Option(`ðŸŽ¤ ${voice.name}`, `clone:${index}`)));
+    voices.forEach((voice, index) => select.append(new Option(`🎤 ${voice.name}`, `clone:${index}`)));
     const saved = localStorage.getItem('tts_voice') || 'none';
     if ([...select.options].some(option => option.value === saved)) select.value = saved;
   });
@@ -252,8 +252,8 @@ export function updateVoiceDropdown(voices) {
 export async function checkTTSStatus() {
   const chip = $('tts-status-chip');
   if (!chip) return;
-  try { const status = await (await fetch('http://localhost:8765/api/tts/status')).json(); chip.textContent = status.available ? 'Sáºµn sÃ ng' : 'ChÆ°a cÃ i OmniVoice'; chip.className = `status-chip ${status.available ? 'online' : 'offline'}`; }
-  catch { chip.textContent = 'Backend chÆ°a káº¿t ná»‘i'; chip.className = 'status-chip offline'; setTimeout(checkTTSStatus, 10000); }
+  try { const status = await (await fetch('http://localhost:8765/api/tts/status')).json(); chip.textContent = status.available ? 'Sẵn sàng' : 'Chưa cài OmniVoice'; chip.className = `status-chip ${status.available ? 'online' : 'offline'}`; }
+  catch { chip.textContent = 'Backend chưa kết nối'; chip.className = 'status-chip offline'; setTimeout(checkTTSStatus, 10000); }
 }
 
 function bindCommonEvents() {
@@ -276,13 +276,13 @@ function bindVoiceClone() {
   });
   $('btn-clone-voice')?.addEventListener('click', async event => {
     const name = value('clone-voice-name').trim();
-    if (!name || !refAudioPath) return toast('Nháº­p tÃªn vÃ  chá»n audio máº«u!', 'warn');
+    if (!name || !refAudioPath) return toast('Nhập tên và chọn audio mẫu!', 'warn');
     const button = event.target;
     const originalText = button.textContent;
     button.disabled = true;
-    button.textContent = 'Äang táº¡o máº«u...';
+    button.textContent = 'Đang tạo mẫu...';
     try {
-      const result = await window.api.generateTTS('Xin chÃ o, Ä‘Ã¢y lÃ  giá»ng Ä‘Æ°á»£c clone bá»Ÿi OmniVoice.', refAudioPath, value('tts-language') || 'vi');
+      const result = await window.api.generateTTS('Xin chào, đây là giọng được clone bởi OmniVoice.', refAudioPath, value('tts-language') || 'vi');
       if (result.status !== 'ok' || !result.audio_path) throw new Error(result.error || 'Unknown');
       const voices = getSavedVoices();
       voices.push({ name, audioPath: refAudioPath, audioFile: refAudioPath.split(/[\\/]/).pop(), samplePath: result.audio_path, date: new Date().toLocaleDateString('vi-VN') });
@@ -293,18 +293,18 @@ function bindVoiceClone() {
       if ($('tts-voice')) $('tts-voice').value = selected;
       if ($('tts-test-audio')) { $('tts-test-audio').src = `file:///${result.audio_path.replace(/\\/g, '/')}`; $('tts-test-audio').style.display = ''; await $('tts-test-audio').play().catch(() => {}); }
       if ($('clone-voice-name')) $('clone-voice-name').value = '';
-      if ($('ref-audio-name')) $('ref-audio-name').textContent = 'ChÆ°a chá»n file';
+      if ($('ref-audio-name')) $('ref-audio-name').textContent = 'Chưa chọn file';
       if ($('ref-audio-preview')) { $('ref-audio-preview').removeAttribute('src'); $('ref-audio-preview').style.display = 'none'; }
       refAudioPath = null;
-      toast('Clone giá»ng thÃ nh cÃ´ng!', 'success');
-    } catch (error) { addLog(`[TTS] Clone tháº¥t báº¡i: ${error.message}`, 'error'); toast(error.message, 'error'); }
+      toast('Clone giọng thành công!', 'success');
+    } catch (error) { addLog(`[TTS] Clone thất bại: ${error.message}`, 'error'); toast(error.message, 'error'); }
     finally { button.disabled = false; button.textContent = originalText; }
   });
 }
 
 function bindTestTts() {
   $('btn-test-tts')?.addEventListener('click', async event => {
-    const text = value('tts-test-text').trim(); if (!text) return toast('Nháº­p text Ä‘á»ƒ thá»­!', 'warn');
+    const text = value('tts-test-text').trim(); if (!text) return toast('Nhập text để thử!', 'warn');
     const voice = value('tts-voice') || 'default'; const ref = voice.startsWith('clone:') ? getSavedVoices()[Number(voice.split(':')[1])]?.audioPath || null : null;
     event.target.disabled = true;
     try { const result = await window.api.generateTTS(text, ref, value('tts-language') || 'vi', voice); if (result.status !== 'ok') throw new Error(result.error || 'Unknown'); if ($('tts-test-audio')) { $('tts-test-audio').src = `file:///${result.audio_path.replace(/\\/g, '/')}`; $('tts-test-audio').style.display = ''; await $('tts-test-audio').play(); } }
