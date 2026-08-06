@@ -62,6 +62,11 @@ FAIL - Owner-observed blockers:
   - Windows atomic: backup+restore, stale-cleanup, hex validation
   - UI: delete handler and refreshProviderStatus handle structured results
   - Electron runtime: Page loaded successfully, Window visible, Python backend 8765 OK
+- CRASH-RECOVERY-FIX-008: PENDING COMMIT
+  - src/main/main.js only
+  - Deterministic paths, recoverKeyStore 5-case matrix, fsync, post-write validation, typed errors
+  - Recovery matrix: 40/40 PASS
+  - Electron: npx electron . (no --no-sandbox) -> Page loaded, Window visible, Python 8765
 - BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - Owner manual verification: NOT STARTED
 - PR #8: DO NOT MERGE

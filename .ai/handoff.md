@@ -23,6 +23,13 @@ RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX)
   - HEX: isValidCiphertext (even-len, hex-only, max 8192).
   - UI: delete handler and refreshProviderStatus handle structured results.
   - Electron runtime: launched OK, Page loaded, Window visible, Python backend 8765.
+- CRASH-RECOVERY-FIX-008: PENDING COMMIT.
+  - src/main/main.js only (settings.js unchanged).
+  - Deterministic paths: ai_keys.json, ai_keys.json.tmp, ai_keys.json.bak (no PID).
+  - recoverKeyStore() covers 5 cases A-E; auto-restores from .bak across process restarts.
+  - saveEncryptedKeys(): fsync, post-write validation, typed errors (WRITE_FAILED, RESTORE_FAILED, STORE_CORRUPT).
+  - validateStoreContent(): returns {ok,data/error} (no throws).
+  - Recovery matrix: 40/40 PASS. Electron launch (no --no-sandbox): OK.
 - BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED.
 - Owner manual verification: NOT STARTED.
 

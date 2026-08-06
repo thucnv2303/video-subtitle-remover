@@ -57,7 +57,13 @@ CANDIDATE_FIX
   - UI: refreshProviderStatus and delete handler handle structured results
   - Electron launch: Page loaded successfully, Window is now visible, Python backend started
   - Node verify: 26/27 PASS (1 test-script error, not production), Windows second-save: 12/12 PASS
-- BUG-008: CANDIDATE FIX - OWNER RETEST NOT STARTED
+- CRASH-RECOVERY-FIX-008: PENDING COMMIT
+  - Deterministic paths: ai_keys.json, ai_keys.json.tmp, ai_keys.json.bak (no PID)
+  - recoverKeyStore(): 5 cases A-E; auto-restore from bak across process restarts
+  - saveEncryptedKeys(): fsync + post-write validation + explicit error types
+  - validateStoreContent(): pure helper returning {ok,data/error}
+  - Matrix test: 40/40 PASS
+  - Electron launch (no --no-sandbox): Page loaded, Window visible, Python 8765
 - BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED
 - PR #8: DO NOT MERGE
 
