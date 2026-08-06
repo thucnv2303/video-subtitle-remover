@@ -1,0 +1,130 @@
+# Untracked Files Manifest
+
+- **Path:** .ai/evidence/RECOVERY-007E-PIPELINE1-RUNTIME-REPLACEMENT-029/test_pipeline1_runtime.untracked.txt
+  - **Size:** 5225 bytes
+  - **SHA256:** 415aa0f8344982312805b11084e1e498df14daecb91f944c112d9e3cac4685ed
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** apply_patches.js
+  - **Size:** 5938 bytes
+  - **SHA256:** 6fa80c0acea028b2f11ed77170609d18f3bb5016b50d4046fc9f7ea40c705994
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** create_evidence.js
+  - **Size:** 3136 bytes
+  - **SHA256:** d586f66ce8b80f0b68f0b1d3b3aa451781fe6b077da05e096a35552f82a58597
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** debug_test.js
+  - **Size:** 434 bytes
+  - **SHA256:** 08883fdb47f7d98819bbece810a582764e2bf4d0e5bbe7c4a8a393040c93444e
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** fix_aimodel.js
+  - **Size:** 2105 bytes
+  - **SHA256:** ffef3cdd05233d7cb1cb68fd9981ddf2a25a7d492d4cc1fb91c7a8d88e17397a
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** fix_mojibake.js
+  - **Size:** 1362 bytes
+  - **SHA256:** 2f08912fe4877aa7470f0266ac6f157093f294ca8df7e21e8d749888187ee145
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** fix_mojibake2.js
+  - **Size:** 904 bytes
+  - **SHA256:** e07cf12aee9c940f290628421a6391a3eb5da77d677b5800f296a4a89b7ca5b1
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** gather_preflight.js
+  - **Size:** 2680 bytes
+  - **SHA256:** 5ec33e1684bfce7f9976441742ff5d972442f8895b6ae9dede0e5e5bb99bdac9
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** gather_untracked.js
+  - **Size:** 1853 bytes
+  - **SHA256:** 06dbe2e4260c2ad03b03fe2d1a6d6a95a80def16620b3a259ebd87c2aa41b62c
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** patch_renderJob.js
+  - **Size:** 3229 bytes
+  - **SHA256:** c296f2da76bf5b562f295ab41164325e3d38e1ee50e803beebb123f41fbea90e
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** quick_scan.js
+  - **Size:** 1077 bytes
+  - **SHA256:** 886305d5b672917caa0d70bbdd40901516249a7d9a08592cf7bfe1da4123c954
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** scan_controls.js
+  - **Size:** 1705 bytes
+  - **SHA256:** f45c3188fe6a5fa3f956497bfe606be8e3f0326f053efafd427991a16df848be
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** temp_dom.js
+  - **Size:** 1496 bytes
+  - **SHA256:** b4351e0e1254584cceb0c2d94cbb64edfb90afdbd258e507d6eb3b5182b0fb39
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** test_electron.js
+  - **Size:** 614 bytes
+  - **SHA256:** 48099df8970d1e2b422dda09fccd0537f4a78383919868f7262a60719e5de765
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** test_electron_runtime.js
+  - **Size:** 714 bytes
+  - **SHA256:** 17cf542b4dca854f641768033b5834bb233389830cb960e1712671a834828be4
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
+- **Path:** tests/test_pipeline1_runtime.js
+  - **Size:** 5052 bytes
+  - **SHA256:** fea0c925c8432e5cd5b96ad1439c3c6d5989e114be43b8d73d5efb01b8889f58
+  - **Stated Purpose:** Temporary script or evidence generated during this task.
+  - **Task-Created:** YES
+  - **Required for Final Implementation:** NO
+  - **Safe Status:** VERIFIED (local scripts)
+
