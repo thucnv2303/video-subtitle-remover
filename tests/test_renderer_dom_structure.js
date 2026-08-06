@@ -77,20 +77,25 @@ function getAncestors(node) {
 }
 
 let exitCode = 0;
+let passCount = 0;
+let failCount = 0;
+
 function assert(condition, message) {
     if (!condition) {
         console.error('FAIL: ' + message);
         exitCode = 1;
+        failCount++;
     } else {
         console.log('PASS: ' + message);
+        passCount++;
     }
 }
 
-// Assertions
+// Prerequisites (not counted as assertions)
 const pageHome = findNodeById(root, 'page-home');
 const pageSettings = findNodeById(root, 'page-settings');
-const mainArea = root.children.flatMap(c => c.children).find(n => hasClass(n, 'main-area')) || 
-                 getAncestors(pageHome || root).find(n => hasClass(n, 'main-area')); // brute search
+if (!pageHome) throw new Error('#page-home missing');
+if (!pageSettings) throw new Error('#page-settings missing');
 
 let mainAreaFound = false;
 function findMainArea(node) {
@@ -105,17 +110,13 @@ function findMainArea(node) {
     return null;
 }
 const mainAreaNode = findMainArea(root);
-
-assert(pageHome !== null, '#page-home exists');
-assert(pageSettings !== null, '#page-settings exists');
-assert(mainAreaNode !== null, '.main-area exists');
+if (!mainAreaNode) throw new Error('.main-area missing');
 
 // Check CSS contract with bounded extraction
 const cssPath = path.join(__dirname, '../src/renderer/styles/main.css');
 const cssContent = fs.readFileSync(cssPath, 'utf8');
 
 function getCssRule(selector) {
-    // Escaped regex for selector to find its block {}
     const escaped = selector.replace(/\./g, '\\.');
     const regex = new RegExp(escaped + '\\s*\\{([^}]*)\\}');
     const match = cssContent.match(regex);
@@ -123,62 +124,59 @@ function getCssRule(selector) {
 }
 
 const pipelineContainerRule = getCssRule('.pipeline-container');
-assert(pipelineContainerRule !== null, '1. .pipeline-container rule exists.');
+assert(pipelineContainerRule !== null, '.pipeline-container exists');
 if (pipelineContainerRule) {
-    assert(pipelineContainerRule.includes('display: flex;'), '2. Its own declarations include display:flex.');
-    assert(pipelineContainerRule.includes('flex-direction: column;'), '3. Its own declarations include flex-direction:column.');
-    assert(pipelineContainerRule.includes('flex: 1;'), '4. Its own declarations include flex:1.');
-    assert(pipelineContainerRule.includes('width: 100%;'), '5. Its own declarations include width:100%.');
+    assert(pipelineContainerRule.includes('display: flex;'), 'display:flex');
+    assert(pipelineContainerRule.includes('flex-direction: column;'), 'flex-direction:column');
+    assert(pipelineContainerRule.includes('flex: 1;'), 'flex:1');
+    assert(pipelineContainerRule.includes('width: 100%;'), 'width:100%');
 } else {
-    assert(false, '2. Its own declarations include display:flex.');
-    assert(false, '3. Its own declarations include flex-direction:column.');
-    assert(false, '4. Its own declarations include flex:1.');
-    assert(false, '5. Its own declarations include width:100%.');
+    assert(false, 'display:flex');
+    assert(false, 'flex-direction:column');
+    assert(false, 'flex:1');
+    assert(false, 'width:100%');
 }
 
 const pipelineContentAreaRule = getCssRule('.pipeline-content-area');
-assert(pipelineContentAreaRule && pipelineContentAreaRule.includes('display: flex;') && pipelineContentAreaRule.includes('flex: 1;'), '6. .pipeline-content-area rule has display:flex and flex:1.');
+assert(pipelineContentAreaRule && pipelineContentAreaRule.includes('display: flex;'), '.pipeline-content-area display:flex');
+assert(pipelineContentAreaRule && pipelineContentAreaRule.includes('flex: 1;'), '.pipeline-content-area flex:1');
 
 const pipelinePaneActiveRule = getCssRule('.pipeline-pane.active');
-assert(pipelinePaneActiveRule && pipelinePaneActiveRule.includes('display: flex;'), '7. .pipeline-pane.active rule has display:flex.');
+assert(pipelinePaneActiveRule && pipelinePaneActiveRule.includes('display: flex;'), '.pipeline-pane.active display:flex');
 
 const toolkitLayout3ColRule = getCssRule('.toolkit-layout-3col');
-assert(toolkitLayout3ColRule && toolkitLayout3ColRule.includes('display: flex;') && toolkitLayout3ColRule.includes('flex: 1;'), '8. .toolkit-layout-3col rule has display:flex and flex:1.');
+assert(toolkitLayout3ColRule && toolkitLayout3ColRule.includes('display: flex;'), '.toolkit-layout-3col display:flex');
+assert(toolkitLayout3ColRule && toolkitLayout3ColRule.includes('flex: 1;'), '.toolkit-layout-3col flex:1');
 
-const pageHomeAncestors = pageHome ? getAncestors(pageHome) : [];
-assert(pageHomeAncestors.some(n => hasClass(n, 'main-area')), '9. #page-home remains inside .main-area.');
+const pageHomeAncestors = getAncestors(pageHome);
+assert(pageHomeAncestors.some(n => hasClass(n, 'main-area')), '#page-home inside .main-area');
 
-const pageSettingsAncestors = pageSettings ? getAncestors(pageSettings) : [];
-assert(pageSettingsAncestors.some(n => hasClass(n, 'main-area')), '10. #page-settings remains inside .main-area.');
+const pageSettingsAncestors = getAncestors(pageSettings);
+assert(pageSettingsAncestors.some(n => hasClass(n, 'main-area')), '#page-settings inside .main-area');
 
-assert(pageHome && pageSettings && pageHome.parent === pageSettings.parent, '11. Home and Settings remain sibling page sections.');
+assert(pageHome.parent === pageSettings.parent, 'Home and Settings siblings');
 
 let tk3col = null;
 function findTk3col(node) {
-    if (hasClass(node, 'toolkit-layout-3col')) {
-        tk3col = node;
-        return node;
-    }
+    if (hasClass(node, 'toolkit-layout-3col')) return node;
     for (const child of node.children) {
-        if (findTk3col(child)) return child;
+        const found = findTk3col(child);
+        if (found) return found;
     }
     return null;
 }
-findTk3col(root);
+tk3col = findTk3col(root);
 
-assert(tk3col !== null, '12. .toolkit-layout-3col exists in production HTML.');
 if (tk3col) {
     const pAncestors = getAncestors(tk3col);
-    assert(pAncestors.some(n => hasClass(n, 'pipeline-container')), '13. It is under .pipeline-container.');
-    assert(!pAncestors.some(n => hasClass(n, 'col-controls') || hasClass(n, 'toolkit-sidebar')), '14. It is not under a narrow sidebar/control column.');
+    assert(pAncestors.some(n => hasClass(n, 'pipeline-container')), 'toolkit wrapper under pipeline container');
+    assert(!pAncestors.some(n => hasClass(n, 'col-controls') || hasClass(n, 'toolkit-sidebar')), 'toolkit wrapper not under narrow sidebar');
 } else {
-    assert(false, '13. It is under .pipeline-container.');
-    assert(false, '14. It is not under a narrow sidebar/control column.');
+    assert(false, 'toolkit wrapper under pipeline container');
+    assert(false, 'toolkit wrapper not under narrow sidebar');
 }
 
-assert(duplicates.length === 0, '15. No duplicate IDs.');
+assert(duplicates.length === 0, 'no duplicate IDs');
 
-if (exitCode !== 0) {
-    console.error('16. Test exits non-zero on any failed assertion.');
-}
+console.log('TOTAL: ' + passCount + ' PASS / ' + failCount + ' FAIL');
 process.exit(exitCode);

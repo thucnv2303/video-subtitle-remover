@@ -102,6 +102,7 @@ FAIL - Owner-observed blockers:
 - PM review: WAITING.
 - Owner retest: NOT STARTED.
 - Merge: BLOCKED.
+
 ## INCIDENT-RECOVERY-007E-REPLACEMENT-PR-021
 - PR #8 merged without approval: INCIDENT RECORDED.
 - Damaged branch preserved and not canonical.
@@ -109,7 +110,7 @@ FAIL - Owner-observed blockers:
 - Replacement review branch identified: review/RECOVERY-007E-AI-SETTINGS-001-replacement
 - Settings owner result: PASS at prior retest.
 - Home prior owner result: FAIL.
-- FIX018 replacement source SHA: e466aa003513bfe32bede6fd85102b59a4461856
+- FIX018 replacement source SHA: WAITING_FOR_SOURCE_COMMIT
 - Automated verification result: 16 strict CSS layout assertions PASS / 0 FAIL.
 - Code review: WAITING_PM_REVIEW.
 - Owner retest: NOT STARTED.
