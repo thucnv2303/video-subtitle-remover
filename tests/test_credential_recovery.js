@@ -284,27 +284,7 @@ console.log("PASS: " + PASS + "  FAIL: " + FAIL);
 const failed = rows.filter(r => r.s === "FAIL");
 if (failed.length) { console.log("FAILED:"); failed.forEach(r => console.log("  - " + r.label + " " + r.detail)); }
 
-const evDir = path.resolve(__dirname, '..', '.ai', 'evidence', 'RECOVERY-007E-AI-SETTINGS-001-CLOSEOUT-COLLISION-FIX-012');
-fs.mkdirSync(evDir, { recursive: true });
 
-fs.writeFileSync(path.join(evDir, "commands.txt"), [
-  "TASK: RECOVERY-007E-AI-SETTINGS-001-CLOSEOUT-COLLISION-FIX-012",
-  "Platform: Windows 10 Pro",
-  "Node: " + process.version,
-  "HEAD: (git rev-parse HEAD)",
-  "",
-  "TEST COMMAND:",
-  "  \$env:NODE_ENV='test'; node test_forensic.js",
-  "",
-  "STATIC CHECKS:",
-  "  node --check src/main/main.js",
-  "  git diff --check 4d0a38c4a69b94531d828f7a59dcdb0c360c5df4..HEAD",
-  "  git diff --check",
-  "",
-  "ELECTRON LAUNCH:",
-  "  npx electron .",
-  "  (no --no-sandbox)"
-].join("\n"), "utf8");
 
 const matrix = evidence.map(e => "TC: "+e.tc+"\n  Input:  "+e.input+"\n  Branch: "+e.branch+"\n  After:  "+e.after+"\n  Error:  "+(e.err||"(none)")).join("\n\n");
 console.log("\n=== RECOVERY MATRIX ===");
