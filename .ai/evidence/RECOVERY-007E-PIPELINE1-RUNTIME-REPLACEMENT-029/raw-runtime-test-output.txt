@@ -1,0 +1,25 @@
+npm notice run video-subtitle-remover@1.0.0 npx
+npm notice run electron tests/test_pipeline1_runtime.js
+
+[29856:0806/221137.991:ERROR:cache_util_win.cc(20)] Unable to move the cache: Access is denied. (0x5)
+[29856:0806/221137.992:ERROR:cache_util_win.cc(20)] Unable to move the cache: Access is denied. (0x5)
+[29856:0806/221137.992:ERROR:cache_util_win.cc(20)] Unable to move the cache: Access is denied. (0x5)
+[29856:0806/221137.995:ERROR:disk_cache.cc(208)] Unable to create cache
+[29856:0806/221137.995:ERROR:gpu_disk_cache.cc(713)] Gpu Cache Creation failed: -2
+[29856:0806/221137.995:ERROR:disk_cache.cc(208)] Unable to create cache
+[29856:0806/221137.995:ERROR:gpu_disk_cache.cc(713)] Gpu Cache Creation failed: -2
+[29856:0806/221137.995:ERROR:disk_cache.cc(208)] Unable to create cache
+[29856:0806/221137.995:ERROR:gpu_disk_cache.cc(713)] Gpu Cache Creation failed: -2
+All Runtime Tests PASSED:
+PASS: window._appState exists
+PASS: window._appState is object
+PASS: pipeline1SelectedJobId is initialized
+PASS: btn-start-all exists (DOM layout)
+PASS: Job A model is restored
+PASS: Job A voice is restored
+PASS: Job A speed is restored
+PASS: Job A model saved via event
+PASS: Job B model is different
+PASS: Job A model restored again
+PASS: AI model copies options
+PASS: Empty model state displays Chưa chọn. Actual: Chưa chọn

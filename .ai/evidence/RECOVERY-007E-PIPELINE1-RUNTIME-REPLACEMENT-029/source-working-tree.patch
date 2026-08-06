@@ -1,0 +1,129 @@
+diff --git a/src/renderer/index.html b/src/renderer/index.html
+index edf88c4..08cb054 100644
+--- a/src/renderer/index.html
++++ b/src/renderer/index.html
+@@ -101,7 +101,7 @@
+                    
+                    <div class="tk-group">
+                       <label>Speed (1.0x)</label>
+-                      <input type="range" class="tk-slider" min="0" max="100" value="50">
++                      <input type="range" id="step1-tts-speed" class="tk-slider" min="0" max="100" value="50">
+                    </div>
+                    
+                    <div class="tk-group" style="margin-top: 20px;">
+@@ -785,7 +785,6 @@
+   
+   <!-- Non-module scripts (loaded first, expose window.api) -->
+   <script src="js/api.js"></script>
+-  <script src="js/pipeline.js"></script>
+ 
+   <!--
+     ES6 Module bridge: load các module và expose hàm lên window.*
+diff --git a/src/renderer/js/app.js b/src/renderer/js/app.js
+index cb79c0a..d6fd0cb 100644
+--- a/src/renderer/js/app.js
++++ b/src/renderer/js/app.js
+@@ -21,9 +21,10 @@
+   const REGION_COLORS = ['#7c3aed', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#ef4444'];
+ 
+   // â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-  const state = {
+-    jobs: [],
+-    activeJobId: null, pipeline1SelectedJobId: null,
++  const state = window._appState;
++  if (!state) { throw new Error('Shared application state was not initialized before app.js'); }
++  const uiState = {
++    pipeline1SelectedJobId: null,
+     outputDir: localStorage.getItem('output_dir') || null,
+     isBackendReady: false,
+     isDrawing: false,
+@@ -40,11 +41,11 @@
+     activeLogTab: 'all',
+     processingStartTime: null,
+     processingTimerInterval: null,
+-    pipeline1JobId: null,  // job Ä‘ang cháº¡y Pipeline 1 (AI+TTS)
++    pipeline1JobId: null,
+   };
+-
+-  // Expose state globally so modules (pipeline3-finalize, etc.) can read it
+-  window._appState = state;
++  for (const key in uiState) {
++    if (state[key] === undefined) { state[key] = uiState[key]; }
++  }
+ 
+   // â”€â”€â”€ SRT Display Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   /**
+@@ -232,12 +233,24 @@
+   window.addEventListener('aiModelChanged', () => {
+     const provider = localStorage.getItem('ai_provider') || 'gemini';
+     const savedModel = localStorage.getItem(provider === 'ollama' ? 'ai_model_ollama' : `ai_model_${provider}`) || '';
+-    const label = savedModel ? `${provider.toUpperCase()}: ${savedModel}` : 'ChÆ°a chá»n';
+     if (el.aiModel2) {
+       el.aiModel2.innerHTML = '';
+-      el.aiModel2.append(new Option(label, savedModel));
++      const sourceSelect = provider === 'ollama' ? document.getElementById('ai-ollama-model-select') : document.getElementById('ai-cloud-model');
++      if (sourceSelect && sourceSelect.options.length > 0) {
++        Array.from(sourceSelect.options).forEach(opt => {
++          if (opt.value) el.aiModel2.append(new Option(opt.text, opt.value));
++        });
++        if (savedModel && Array.from(el.aiModel2.options).some(o => o.value === savedModel)) {
++          el.aiModel2.value = savedModel;
++        } else if (savedModel && provider === 'ollama') {
++          el.aiModel2.append(new Option(savedModel, savedModel));
++          el.aiModel2.value = savedModel;
++        }
++      } else {
++        el.aiModel2.append(new Option('Chưa chọn', ''));
++      }
+     }
+-  });
++  });
+ 
+   // â”€â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   el.navItems.forEach(item => {
+@@ -1325,7 +1338,6 @@
+     addLog('App khá»Ÿi Ä‘á»™ng thÃ nh cÃ´ng.', 'info');
+   }, 100);
+ 
+-})(); // end IIFE
+ 
+   window.renderJobDetail1 = function() {
+     const titleEl = document.getElementById('step1-detail-title');
+@@ -1350,6 +1362,12 @@
+     if (statusEl) statusEl.textContent = job.status.toUpperCase();
+ 
+     if (textEl) textEl.value = job.aiContent || job.srtContent || '';
++    const aiModelEl = document.getElementById('step1-ai-model');
++    if (aiModelEl && job.aiModel) aiModelEl.value = job.aiModel;
++    const ttsVoiceEl = document.getElementById('step1-tts-voice');
++    if (ttsVoiceEl && job.ttsVoice) ttsVoiceEl.value = job.ttsVoice;
++    const ttsSpeedEl = document.getElementById('step1-tts-speed');
++    if (ttsSpeedEl && job.ttsSpeed !== undefined) ttsSpeedEl.value = job.ttsSpeed;
+ 
+     if (job.ttsAudioPath) {
+       if (audioEl) {
+@@ -1377,3 +1395,23 @@
+       addLog('ÄÃ£ lÆ°u ná»™i dung cáº­p nháº­t cho ' + job.fileName, 'info');
+     }
+   });
++
++  document.getElementById('step1-ai-model')?.addEventListener('change', (e) => {
++    if (state.pipeline1SelectedJobId) {
++      const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
++      if (job) job.aiModel = e.target.value;
++    }
++  });
++  document.getElementById('step1-tts-voice')?.addEventListener('change', (e) => {
++    if (state.pipeline1SelectedJobId) {
++      const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
++      if (job) job.ttsVoice = e.target.value;
++    }
++  });
++  document.getElementById('step1-tts-speed')?.addEventListener('change', (e) => {
++    if (state.pipeline1SelectedJobId) {
++      const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
++      if (job) job.ttsSpeed = e.target.value;
++    }
++  });
++})();
+\ No newline at end of file

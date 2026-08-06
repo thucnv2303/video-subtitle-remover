@@ -1,0 +1,1830 @@
+package-lock.json:1: trailing whitespace.
++{
+package-lock.json:2: trailing whitespace.
++  "name": "video-subtitle-remover",
+package-lock.json:3: trailing whitespace.
++  "version": "1.0.0",
+package-lock.json:4: trailing whitespace.
++  "lockfileVersion": 3,
+package-lock.json:5: trailing whitespace.
++  "requires": true,
+package-lock.json:6: trailing whitespace.
++  "packages": {
+package-lock.json:7: trailing whitespace.
++    "": {
+package-lock.json:8: trailing whitespace.
++      "name": "video-subtitle-remover",
+package-lock.json:9: trailing whitespace.
++      "version": "1.0.0",
+package-lock.json:10: trailing whitespace.
++      "dependencies": {
+package-lock.json:11: trailing whitespace.
++        "ws": "^8.18.0"
+package-lock.json:12: trailing whitespace.
++      },
+package-lock.json:13: trailing whitespace.
++      "devDependencies": {
+package-lock.json:14: trailing whitespace.
++        "electron": "^33.0.0"
+package-lock.json:15: trailing whitespace.
++      }
+package-lock.json:16: trailing whitespace.
++    },
+package-lock.json:17: trailing whitespace.
++    "node_modules/@electron/get": {
+package-lock.json:18: trailing whitespace.
++      "version": "2.0.3",
+package-lock.json:19: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/@electron/get/-/get-2.0.3.tgz",
+package-lock.json:20: trailing whitespace.
++      "integrity": "sha512-Qkzpg2s9GnVV2I2BjRksUi43U5e6+zaQMcjoJy0C+C5oxaKl+fmckGDQFtRpZpZV0NQekuZZ+tGz7EA9TVnQtQ==",
+package-lock.json:21: trailing whitespace.
++      "dev": true,
+package-lock.json:22: trailing whitespace.
++      "license": "MIT",
+package-lock.json:23: trailing whitespace.
++      "dependencies": {
+package-lock.json:24: trailing whitespace.
++        "debug": "^4.1.1",
+package-lock.json:25: trailing whitespace.
++        "env-paths": "^2.2.0",
+package-lock.json:26: trailing whitespace.
++        "fs-extra": "^8.1.0",
+package-lock.json:27: trailing whitespace.
++        "got": "^11.8.5",
+package-lock.json:28: trailing whitespace.
++        "progress": "^2.0.3",
+package-lock.json:29: trailing whitespace.
++        "semver": "^6.2.0",
+package-lock.json:30: trailing whitespace.
++        "sumchecker": "^3.0.1"
+package-lock.json:31: trailing whitespace.
++      },
+package-lock.json:32: trailing whitespace.
++      "engines": {
+package-lock.json:33: trailing whitespace.
++        "node": ">=12"
+package-lock.json:34: trailing whitespace.
++      },
+package-lock.json:35: trailing whitespace.
++      "optionalDependencies": {
+package-lock.json:36: trailing whitespace.
++        "global-agent": "^3.0.0"
+package-lock.json:37: trailing whitespace.
++      }
+package-lock.json:38: trailing whitespace.
++    },
+package-lock.json:39: trailing whitespace.
++    "node_modules/@sindresorhus/is": {
+package-lock.json:40: trailing whitespace.
++      "version": "4.6.0",
+package-lock.json:41: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/@sindresorhus/is/-/is-4.6.0.tgz",
+package-lock.json:42: trailing whitespace.
++      "integrity": "sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==",
+package-lock.json:43: trailing whitespace.
++      "dev": true,
+package-lock.json:44: trailing whitespace.
++      "license": "MIT",
+package-lock.json:45: trailing whitespace.
++      "engines": {
+package-lock.json:46: trailing whitespace.
++        "node": ">=10"
+package-lock.json:47: trailing whitespace.
++      },
+package-lock.json:48: trailing whitespace.
++      "funding": {
+package-lock.json:49: trailing whitespace.
++        "url": "https://github.com/sindresorhus/is?sponsor=1"
+package-lock.json:50: trailing whitespace.
++      }
+package-lock.json:51: trailing whitespace.
++    },
+package-lock.json:52: trailing whitespace.
++    "node_modules/@szmarczak/http-timer": {
+package-lock.json:53: trailing whitespace.
++      "version": "4.0.6",
+package-lock.json:54: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/@szmarczak/http-timer/-/http-timer-4.0.6.tgz",
+package-lock.json:55: trailing whitespace.
++      "integrity": "sha512-4BAffykYOgO+5nzBWYwE3W90sBgLJoUPRWWcL8wlyiM8IB8ipJz3UMJ9KXQd1RKQXpKp8Tutn80HZtWsu2u76w==",
+package-lock.json:56: trailing whitespace.
++      "dev": true,
+package-lock.json:57: trailing whitespace.
++      "license": "MIT",
+package-lock.json:58: trailing whitespace.
++      "dependencies": {
+package-lock.json:59: trailing whitespace.
++        "defer-to-connect": "^2.0.0"
+package-lock.json:60: trailing whitespace.
++      },
+package-lock.json:61: trailing whitespace.
++      "engines": {
+package-lock.json:62: trailing whitespace.
++        "node": ">=10"
+package-lock.json:63: trailing whitespace.
++      }
+package-lock.json:64: trailing whitespace.
++    },
+package-lock.json:65: trailing whitespace.
++    "node_modules/@types/cacheable-request": {
+package-lock.json:66: trailing whitespace.
++      "version": "6.0.3",
+package-lock.json:67: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/@types/cacheable-request/-/cacheable-request-6.0.3.tgz",
+package-lock.json:68: trailing whitespace.
++      "integrity": "sha512-IQ3EbTzGxIigb1I3qPZc1rWJnH0BmSKv5QYTalEwweFvyBDLSAe24zP0le/hyi7ecGfZVlIVAg4BZqb8WBwKqw==",
+package-lock.json:69: trailing whitespace.
++      "dev": true,
+package-lock.json:70: trailing whitespace.
++      "license": "MIT",
+package-lock.json:71: trailing whitespace.
++      "dependencies": {
+package-lock.json:72: trailing whitespace.
++        "@types/http-cache-semantics": "*",
+package-lock.json:73: trailing whitespace.
++        "@types/keyv": "^3.1.4",
+package-lock.json:74: trailing whitespace.
++        "@types/node": "*",
+package-lock.json:75: trailing whitespace.
++        "@types/responselike": "^1.0.0"
+package-lock.json:76: trailing whitespace.
++      }
+package-lock.json:77: trailing whitespace.
++    },
+package-lock.json:78: trailing whitespace.
++    "node_modules/@types/http-cache-semantics": {
+package-lock.json:79: trailing whitespace.
++      "version": "4.2.0",
+package-lock.json:80: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/@types/http-cache-semantics/-/http-cache-semantics-4.2.0.tgz",
+package-lock.json:81: trailing whitespace.
++      "integrity": "sha512-L3LgimLHXtGkWikKnsPg0/VFx9OGZaC+eN1u4r+OB1XRqH3meBIAVC2zr1WdMH+RHmnRkqliQAOHNJ/E0j/e0Q==",
+package-lock.json:82: trailing whitespace.
++      "dev": true,
+package-lock.json:83: trailing whitespace.
++      "license": "MIT"
+package-lock.json:84: trailing whitespace.
++    },
+package-lock.json:85: trailing whitespace.
++    "node_modules/@types/keyv": {
+package-lock.json:86: trailing whitespace.
++      "version": "3.1.4",
+package-lock.json:87: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/@types/keyv/-/keyv-3.1.4.tgz",
+package-lock.json:88: trailing whitespace.
++      "integrity": "sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==",
+package-lock.json:89: trailing whitespace.
++      "dev": true,
+package-lock.json:90: trailing whitespace.
++      "license": "MIT",
+package-lock.json:91: trailing whitespace.
++      "dependencies": {
+package-lock.json:92: trailing whitespace.
++        "@types/node": "*"
+package-lock.json:93: trailing whitespace.
++      }
+package-lock.json:94: trailing whitespace.
++    },
+package-lock.json:95: trailing whitespace.
++    "node_modules/@types/node": {
+package-lock.json:96: trailing whitespace.
++      "version": "20.19.43",
+package-lock.json:97: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/@types/node/-/node-20.19.43.tgz",
+package-lock.json:98: trailing whitespace.
++      "integrity": "sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==",
+package-lock.json:99: trailing whitespace.
++      "dev": true,
+package-lock.json:100: trailing whitespace.
++      "license": "MIT",
+package-lock.json:101: trailing whitespace.
++      "dependencies": {
+package-lock.json:102: trailing whitespace.
++        "undici-types": "~6.21.0"
+package-lock.json:103: trailing whitespace.
++      }
+package-lock.json:104: trailing whitespace.
++    },
+package-lock.json:105: trailing whitespace.
++    "node_modules/@types/responselike": {
+package-lock.json:106: trailing whitespace.
++      "version": "1.0.3",
+package-lock.json:107: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/@types/responselike/-/responselike-1.0.3.tgz",
+package-lock.json:108: trailing whitespace.
++      "integrity": "sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==",
+package-lock.json:109: trailing whitespace.
++      "dev": true,
+package-lock.json:110: trailing whitespace.
++      "license": "MIT",
+package-lock.json:111: trailing whitespace.
++      "dependencies": {
+package-lock.json:112: trailing whitespace.
++        "@types/node": "*"
+package-lock.json:113: trailing whitespace.
++      }
+package-lock.json:114: trailing whitespace.
++    },
+package-lock.json:115: trailing whitespace.
++    "node_modules/@types/yauzl": {
+package-lock.json:116: trailing whitespace.
++      "version": "2.10.3",
+package-lock.json:117: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/@types/yauzl/-/yauzl-2.10.3.tgz",
+package-lock.json:118: trailing whitespace.
++      "integrity": "sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==",
+package-lock.json:119: trailing whitespace.
++      "dev": true,
+package-lock.json:120: trailing whitespace.
++      "license": "MIT",
+package-lock.json:121: trailing whitespace.
++      "optional": true,
+package-lock.json:122: trailing whitespace.
++      "dependencies": {
+package-lock.json:123: trailing whitespace.
++        "@types/node": "*"
+package-lock.json:124: trailing whitespace.
++      }
+package-lock.json:125: trailing whitespace.
++    },
+package-lock.json:126: trailing whitespace.
++    "node_modules/boolean": {
+package-lock.json:127: trailing whitespace.
++      "version": "3.2.0",
+package-lock.json:128: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/boolean/-/boolean-3.2.0.tgz",
+package-lock.json:129: trailing whitespace.
++      "integrity": "sha512-d0II/GO9uf9lfUHH2BQsjxzRJZBdsjgsBiW4BvhWk/3qoKwQFjIDVN19PfX8F2D/r9PCMTtLWjYVCFrpeYUzsw==",
+package-lock.json:130: trailing whitespace.
++      "deprecated": "Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.",
+package-lock.json:131: trailing whitespace.
++      "dev": true,
+package-lock.json:132: trailing whitespace.
++      "license": "MIT",
+package-lock.json:133: trailing whitespace.
++      "optional": true
+package-lock.json:134: trailing whitespace.
++    },
+package-lock.json:135: trailing whitespace.
++    "node_modules/buffer-crc32": {
+package-lock.json:136: trailing whitespace.
++      "version": "0.2.13",
+package-lock.json:137: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/buffer-crc32/-/buffer-crc32-0.2.13.tgz",
+package-lock.json:138: trailing whitespace.
++      "integrity": "sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==",
+package-lock.json:139: trailing whitespace.
++      "dev": true,
+package-lock.json:140: trailing whitespace.
++      "license": "MIT",
+package-lock.json:141: trailing whitespace.
++      "engines": {
+package-lock.json:142: trailing whitespace.
++        "node": "*"
+package-lock.json:143: trailing whitespace.
++      }
+package-lock.json:144: trailing whitespace.
++    },
+package-lock.json:145: trailing whitespace.
++    "node_modules/cacheable-lookup": {
+package-lock.json:146: trailing whitespace.
++      "version": "5.0.4",
+package-lock.json:147: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/cacheable-lookup/-/cacheable-lookup-5.0.4.tgz",
+package-lock.json:148: trailing whitespace.
++      "integrity": "sha512-2/kNscPhpcxrOigMZzbiWF7dz8ilhb/nIHU3EyZiXWXpeq/au8qJ8VhdftMkty3n7Gj6HIGalQG8oiBNB3AJgA==",
+package-lock.json:149: trailing whitespace.
++      "dev": true,
+package-lock.json:150: trailing whitespace.
++      "license": "MIT",
+package-lock.json:151: trailing whitespace.
++      "engines": {
+package-lock.json:152: trailing whitespace.
++        "node": ">=10.6.0"
+package-lock.json:153: trailing whitespace.
++      }
+package-lock.json:154: trailing whitespace.
++    },
+package-lock.json:155: trailing whitespace.
++    "node_modules/cacheable-request": {
+package-lock.json:156: trailing whitespace.
++      "version": "7.0.4",
+package-lock.json:157: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/cacheable-request/-/cacheable-request-7.0.4.tgz",
+package-lock.json:158: trailing whitespace.
++      "integrity": "sha512-v+p6ongsrp0yTGbJXjgxPow2+DL93DASP4kXCDKb8/bwRtt9OEF3whggkkDkGNzgcWy2XaF4a8nZglC7uElscg==",
+package-lock.json:159: trailing whitespace.
++      "dev": true,
+package-lock.json:160: trailing whitespace.
++      "license": "MIT",
+package-lock.json:161: trailing whitespace.
++      "dependencies": {
+package-lock.json:162: trailing whitespace.
++        "clone-response": "^1.0.2",
+package-lock.json:163: trailing whitespace.
++        "get-stream": "^5.1.0",
+package-lock.json:164: trailing whitespace.
++        "http-cache-semantics": "^4.0.0",
+package-lock.json:165: trailing whitespace.
++        "keyv": "^4.0.0",
+package-lock.json:166: trailing whitespace.
++        "lowercase-keys": "^2.0.0",
+package-lock.json:167: trailing whitespace.
++        "normalize-url": "^6.0.1",
+package-lock.json:168: trailing whitespace.
++        "responselike": "^2.0.0"
+package-lock.json:169: trailing whitespace.
++      },
+package-lock.json:170: trailing whitespace.
++      "engines": {
+package-lock.json:171: trailing whitespace.
++        "node": ">=8"
+package-lock.json:172: trailing whitespace.
++      }
+package-lock.json:173: trailing whitespace.
++    },
+package-lock.json:174: trailing whitespace.
++    "node_modules/clone-response": {
+package-lock.json:175: trailing whitespace.
++      "version": "1.0.3",
+package-lock.json:176: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/clone-response/-/clone-response-1.0.3.tgz",
+package-lock.json:177: trailing whitespace.
++      "integrity": "sha512-ROoL94jJH2dUVML2Y/5PEDNaSHgeOdSDicUyS7izcF63G6sTc/FTjLub4b8Il9S8S0beOfYt0TaA5qvFK+w0wA==",
+package-lock.json:178: trailing whitespace.
++      "dev": true,
+package-lock.json:179: trailing whitespace.
++      "license": "MIT",
+package-lock.json:180: trailing whitespace.
++      "dependencies": {
+package-lock.json:181: trailing whitespace.
++        "mimic-response": "^1.0.0"
+package-lock.json:182: trailing whitespace.
++      },
+package-lock.json:183: trailing whitespace.
++      "funding": {
+package-lock.json:184: trailing whitespace.
++        "url": "https://github.com/sponsors/sindresorhus"
+package-lock.json:185: trailing whitespace.
++      }
+package-lock.json:186: trailing whitespace.
++    },
+package-lock.json:187: trailing whitespace.
++    "node_modules/debug": {
+package-lock.json:188: trailing whitespace.
++      "version": "4.4.3",
+package-lock.json:189: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+package-lock.json:190: trailing whitespace.
++      "integrity": "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==",
+package-lock.json:191: trailing whitespace.
++      "dev": true,
+package-lock.json:192: trailing whitespace.
++      "license": "MIT",
+package-lock.json:193: trailing whitespace.
++      "dependencies": {
+package-lock.json:194: trailing whitespace.
++        "ms": "^2.1.3"
+package-lock.json:195: trailing whitespace.
++      },
+package-lock.json:196: trailing whitespace.
++      "engines": {
+package-lock.json:197: trailing whitespace.
++        "node": ">=6.0"
+package-lock.json:198: trailing whitespace.
++      },
+package-lock.json:199: trailing whitespace.
++      "peerDependenciesMeta": {
+package-lock.json:200: trailing whitespace.
++        "supports-color": {
+package-lock.json:201: trailing whitespace.
++          "optional": true
+package-lock.json:202: trailing whitespace.
++        }
+package-lock.json:203: trailing whitespace.
++      }
+package-lock.json:204: trailing whitespace.
++    },
+package-lock.json:205: trailing whitespace.
++    "node_modules/decompress-response": {
+package-lock.json:206: trailing whitespace.
++      "version": "6.0.0",
+package-lock.json:207: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/decompress-response/-/decompress-response-6.0.0.tgz",
+package-lock.json:208: trailing whitespace.
++      "integrity": "sha512-aW35yZM6Bb/4oJlZncMH2LCoZtJXTRxES17vE3hoRiowU2kWHaJKFkSBDnDR+cm9J+9QhXmREyIfv0pji9ejCQ==",
+package-lock.json:209: trailing whitespace.
++      "dev": true,
+package-lock.json:210: trailing whitespace.
++      "license": "MIT",
+package-lock.json:211: trailing whitespace.
++      "dependencies": {
+package-lock.json:212: trailing whitespace.
++        "mimic-response": "^3.1.0"
+package-lock.json:213: trailing whitespace.
++      },
+package-lock.json:214: trailing whitespace.
++      "engines": {
+package-lock.json:215: trailing whitespace.
++        "node": ">=10"
+package-lock.json:216: trailing whitespace.
++      },
+package-lock.json:217: trailing whitespace.
++      "funding": {
+package-lock.json:218: trailing whitespace.
++        "url": "https://github.com/sponsors/sindresorhus"
+package-lock.json:219: trailing whitespace.
++      }
+package-lock.json:220: trailing whitespace.
++    },
+package-lock.json:221: trailing whitespace.
++    "node_modules/decompress-response/node_modules/mimic-response": {
+package-lock.json:222: trailing whitespace.
++      "version": "3.1.0",
+package-lock.json:223: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/mimic-response/-/mimic-response-3.1.0.tgz",
+package-lock.json:224: trailing whitespace.
++      "integrity": "sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==",
+package-lock.json:225: trailing whitespace.
++      "dev": true,
+package-lock.json:226: trailing whitespace.
++      "license": "MIT",
+package-lock.json:227: trailing whitespace.
++      "engines": {
+package-lock.json:228: trailing whitespace.
++        "node": ">=10"
+package-lock.json:229: trailing whitespace.
++      },
+package-lock.json:230: trailing whitespace.
++      "funding": {
+package-lock.json:231: trailing whitespace.
++        "url": "https://github.com/sponsors/sindresorhus"
+package-lock.json:232: trailing whitespace.
++      }
+package-lock.json:233: trailing whitespace.
++    },
+package-lock.json:234: trailing whitespace.
++    "node_modules/defer-to-connect": {
+package-lock.json:235: trailing whitespace.
++      "version": "2.0.1",
+package-lock.json:236: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/defer-to-connect/-/defer-to-connect-2.0.1.tgz",
+package-lock.json:237: trailing whitespace.
++      "integrity": "sha512-4tvttepXG1VaYGrRibk5EwJd1t4udunSOVMdLSAL6mId1ix438oPwPZMALY41FCijukO1L0twNcGsdzS7dHgDg==",
+package-lock.json:238: trailing whitespace.
++      "dev": true,
+package-lock.json:239: trailing whitespace.
++      "license": "MIT",
+package-lock.json:240: trailing whitespace.
++      "engines": {
+package-lock.json:241: trailing whitespace.
++        "node": ">=10"
+package-lock.json:242: trailing whitespace.
++      }
+package-lock.json:243: trailing whitespace.
++    },
+package-lock.json:244: trailing whitespace.
++    "node_modules/define-data-property": {
+package-lock.json:245: trailing whitespace.
++      "version": "1.1.4",
+package-lock.json:246: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/define-data-property/-/define-data-property-1.1.4.tgz",
+package-lock.json:247: trailing whitespace.
++      "integrity": "sha512-rBMvIzlpA8v6E+SJZoo++HAYqsLrkg7MSfIinMPFhmkorw7X+dOXVJQs+QT69zGkzMyfDnIMN2Wid1+NbL3T+A==",
+package-lock.json:248: trailing whitespace.
++      "dev": true,
+package-lock.json:249: trailing whitespace.
++      "license": "MIT",
+package-lock.json:250: trailing whitespace.
++      "optional": true,
+package-lock.json:251: trailing whitespace.
++      "dependencies": {
+package-lock.json:252: trailing whitespace.
++        "es-define-property": "^1.0.0",
+package-lock.json:253: trailing whitespace.
++        "es-errors": "^1.3.0",
+package-lock.json:254: trailing whitespace.
++        "gopd": "^1.0.1"
+package-lock.json:255: trailing whitespace.
++      },
+package-lock.json:256: trailing whitespace.
++      "engines": {
+package-lock.json:257: trailing whitespace.
++        "node": ">= 0.4"
+package-lock.json:258: trailing whitespace.
++      },
+package-lock.json:259: trailing whitespace.
++      "funding": {
+package-lock.json:260: trailing whitespace.
++        "url": "https://github.com/sponsors/ljharb"
+package-lock.json:261: trailing whitespace.
++      }
+package-lock.json:262: trailing whitespace.
++    },
+package-lock.json:263: trailing whitespace.
++    "node_modules/define-properties": {
+package-lock.json:264: trailing whitespace.
++      "version": "1.2.1",
+package-lock.json:265: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/define-properties/-/define-properties-1.2.1.tgz",
+package-lock.json:266: trailing whitespace.
++      "integrity": "sha512-8QmQKqEASLd5nx0U1B1okLElbUuuttJ/AnYmRXbbbGDWh6uS208EjD4Xqq/I9wK7u0v6O08XhTWnt5XtEbR6Dg==",
+package-lock.json:267: trailing whitespace.
++      "dev": true,
+package-lock.json:268: trailing whitespace.
++      "license": "MIT",
+package-lock.json:269: trailing whitespace.
++      "optional": true,
+package-lock.json:270: trailing whitespace.
++      "dependencies": {
+package-lock.json:271: trailing whitespace.
++        "define-data-property": "^1.0.1",
+package-lock.json:272: trailing whitespace.
++        "has-property-descriptors": "^1.0.0",
+package-lock.json:273: trailing whitespace.
++        "object-keys": "^1.1.1"
+package-lock.json:274: trailing whitespace.
++      },
+package-lock.json:275: trailing whitespace.
++      "engines": {
+package-lock.json:276: trailing whitespace.
++        "node": ">= 0.4"
+package-lock.json:277: trailing whitespace.
++      },
+package-lock.json:278: trailing whitespace.
++      "funding": {
+package-lock.json:279: trailing whitespace.
++        "url": "https://github.com/sponsors/ljharb"
+package-lock.json:280: trailing whitespace.
++      }
+package-lock.json:281: trailing whitespace.
++    },
+package-lock.json:282: trailing whitespace.
++    "node_modules/detect-node": {
+package-lock.json:283: trailing whitespace.
++      "version": "2.1.0",
+package-lock.json:284: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/detect-node/-/detect-node-2.1.0.tgz",
+package-lock.json:285: trailing whitespace.
++      "integrity": "sha512-T0NIuQpnTvFDATNuHN5roPwSBG83rFsuO+MXXH9/3N1eFbn4wcPjttvjMLEPWJ0RGUYgQE7cGgS3tNxbqCGM7g==",
+package-lock.json:286: trailing whitespace.
++      "dev": true,
+package-lock.json:287: trailing whitespace.
++      "license": "MIT",
+package-lock.json:288: trailing whitespace.
++      "optional": true
+package-lock.json:289: trailing whitespace.
++    },
+package-lock.json:290: trailing whitespace.
++    "node_modules/electron": {
+package-lock.json:291: trailing whitespace.
++      "version": "33.4.11",
+package-lock.json:292: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/electron/-/electron-33.4.11.tgz",
+package-lock.json:293: trailing whitespace.
++      "integrity": "sha512-xmdAs5QWRkInC7TpXGNvzo/7exojubk+72jn1oJL7keNeIlw7xNglf8TGtJtkR4rWC5FJq0oXiIXPS9BcK2Irg==",
+package-lock.json:294: trailing whitespace.
++      "dev": true,
+package-lock.json:295: trailing whitespace.
++      "hasInstallScript": true,
+package-lock.json:296: trailing whitespace.
++      "license": "MIT",
+package-lock.json:297: trailing whitespace.
++      "dependencies": {
+package-lock.json:298: trailing whitespace.
++        "@electron/get": "^2.0.0",
+package-lock.json:299: trailing whitespace.
++        "@types/node": "^20.9.0",
+package-lock.json:300: trailing whitespace.
++        "extract-zip": "^2.0.1"
+package-lock.json:301: trailing whitespace.
++      },
+package-lock.json:302: trailing whitespace.
++      "bin": {
+package-lock.json:303: trailing whitespace.
++        "electron": "cli.js"
+package-lock.json:304: trailing whitespace.
++      },
+package-lock.json:305: trailing whitespace.
++      "engines": {
+package-lock.json:306: trailing whitespace.
++        "node": ">= 12.20.55"
+package-lock.json:307: trailing whitespace.
++      }
+package-lock.json:308: trailing whitespace.
++    },
+package-lock.json:309: trailing whitespace.
++    "node_modules/end-of-stream": {
+package-lock.json:310: trailing whitespace.
++      "version": "1.4.5",
+package-lock.json:311: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/end-of-stream/-/end-of-stream-1.4.5.tgz",
+package-lock.json:312: trailing whitespace.
++      "integrity": "sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==",
+package-lock.json:313: trailing whitespace.
++      "dev": true,
+package-lock.json:314: trailing whitespace.
++      "license": "MIT",
+package-lock.json:315: trailing whitespace.
++      "dependencies": {
+package-lock.json:316: trailing whitespace.
++        "once": "^1.4.0"
+package-lock.json:317: trailing whitespace.
++      }
+package-lock.json:318: trailing whitespace.
++    },
+package-lock.json:319: trailing whitespace.
++    "node_modules/env-paths": {
+package-lock.json:320: trailing whitespace.
++      "version": "2.2.1",
+package-lock.json:321: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/env-paths/-/env-paths-2.2.1.tgz",
+package-lock.json:322: trailing whitespace.
++      "integrity": "sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==",
+package-lock.json:323: trailing whitespace.
++      "dev": true,
+package-lock.json:324: trailing whitespace.
++      "license": "MIT",
+package-lock.json:325: trailing whitespace.
++      "engines": {
+package-lock.json:326: trailing whitespace.
++        "node": ">=6"
+package-lock.json:327: trailing whitespace.
++      }
+package-lock.json:328: trailing whitespace.
++    },
+package-lock.json:329: trailing whitespace.
++    "node_modules/es-define-property": {
+package-lock.json:330: trailing whitespace.
++      "version": "1.0.1",
+package-lock.json:331: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.1.tgz",
+package-lock.json:332: trailing whitespace.
++      "integrity": "sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==",
+package-lock.json:333: trailing whitespace.
++      "dev": true,
+package-lock.json:334: trailing whitespace.
++      "license": "MIT",
+package-lock.json:335: trailing whitespace.
++      "optional": true,
+package-lock.json:336: trailing whitespace.
++      "engines": {
+package-lock.json:337: trailing whitespace.
++        "node": ">= 0.4"
+package-lock.json:338: trailing whitespace.
++      }
+package-lock.json:339: trailing whitespace.
++    },
+package-lock.json:340: trailing whitespace.
++    "node_modules/es-errors": {
+package-lock.json:341: trailing whitespace.
++      "version": "1.3.0",
+package-lock.json:342: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz",
+package-lock.json:343: trailing whitespace.
++      "integrity": "sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==",
+package-lock.json:344: trailing whitespace.
++      "dev": true,
+package-lock.json:345: trailing whitespace.
++      "license": "MIT",
+package-lock.json:346: trailing whitespace.
++      "optional": true,
+package-lock.json:347: trailing whitespace.
++      "engines": {
+package-lock.json:348: trailing whitespace.
++        "node": ">= 0.4"
+package-lock.json:349: trailing whitespace.
++      }
+package-lock.json:350: trailing whitespace.
++    },
+package-lock.json:351: trailing whitespace.
++    "node_modules/es6-error": {
+package-lock.json:352: trailing whitespace.
++      "version": "4.1.1",
+package-lock.json:353: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/es6-error/-/es6-error-4.1.1.tgz",
+package-lock.json:354: trailing whitespace.
++      "integrity": "sha512-Um/+FxMr9CISWh0bi5Zv0iOD+4cFh5qLeks1qhAopKVAJw3drgKbKySikp7wGhDL0HPeaja0P5ULZrxLkniUVg==",
+package-lock.json:355: trailing whitespace.
++      "dev": true,
+package-lock.json:356: trailing whitespace.
++      "license": "MIT",
+package-lock.json:357: trailing whitespace.
++      "optional": true
+package-lock.json:358: trailing whitespace.
++    },
+package-lock.json:359: trailing whitespace.
++    "node_modules/escape-string-regexp": {
+package-lock.json:360: trailing whitespace.
++      "version": "4.0.0",
+package-lock.json:361: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz",
+package-lock.json:362: trailing whitespace.
++      "integrity": "sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==",
+package-lock.json:363: trailing whitespace.
++      "dev": true,
+package-lock.json:364: trailing whitespace.
++      "license": "MIT",
+package-lock.json:365: trailing whitespace.
++      "optional": true,
+package-lock.json:366: trailing whitespace.
++      "engines": {
+package-lock.json:367: trailing whitespace.
++        "node": ">=10"
+package-lock.json:368: trailing whitespace.
++      },
+package-lock.json:369: trailing whitespace.
++      "funding": {
+package-lock.json:370: trailing whitespace.
++        "url": "https://github.com/sponsors/sindresorhus"
+package-lock.json:371: trailing whitespace.
++      }
+package-lock.json:372: trailing whitespace.
++    },
+package-lock.json:373: trailing whitespace.
++    "node_modules/extract-zip": {
+package-lock.json:374: trailing whitespace.
++      "version": "2.0.1",
+package-lock.json:375: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/extract-zip/-/extract-zip-2.0.1.tgz",
+package-lock.json:376: trailing whitespace.
++      "integrity": "sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==",
+package-lock.json:377: trailing whitespace.
++      "dev": true,
+package-lock.json:378: trailing whitespace.
++      "license": "BSD-2-Clause",
+package-lock.json:379: trailing whitespace.
++      "dependencies": {
+package-lock.json:380: trailing whitespace.
++        "debug": "^4.1.1",
+package-lock.json:381: trailing whitespace.
++        "get-stream": "^5.1.0",
+package-lock.json:382: trailing whitespace.
++        "yauzl": "^2.10.0"
+package-lock.json:383: trailing whitespace.
++      },
+package-lock.json:384: trailing whitespace.
++      "bin": {
+package-lock.json:385: trailing whitespace.
++        "extract-zip": "cli.js"
+package-lock.json:386: trailing whitespace.
++      },
+package-lock.json:387: trailing whitespace.
++      "engines": {
+package-lock.json:388: trailing whitespace.
++        "node": ">= 10.17.0"
+package-lock.json:389: trailing whitespace.
++      },
+package-lock.json:390: trailing whitespace.
++      "optionalDependencies": {
+package-lock.json:391: trailing whitespace.
++        "@types/yauzl": "^2.9.1"
+package-lock.json:392: trailing whitespace.
++      }
+package-lock.json:393: trailing whitespace.
++    },
+package-lock.json:394: trailing whitespace.
++    "node_modules/fd-slicer": {
+package-lock.json:395: trailing whitespace.
++      "version": "1.1.0",
+package-lock.json:396: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/fd-slicer/-/fd-slicer-1.1.0.tgz",
+package-lock.json:397: trailing whitespace.
++      "integrity": "sha512-cE1qsB/VwyQozZ+q1dGxR8LBYNZeofhEdUNGSMbQD3Gw2lAzX9Zb3uIU6Ebc/Fmyjo9AWWfnn0AUCHqtevs/8g==",
+package-lock.json:398: trailing whitespace.
++      "dev": true,
+package-lock.json:399: trailing whitespace.
++      "license": "MIT",
+package-lock.json:400: trailing whitespace.
++      "dependencies": {
+package-lock.json:401: trailing whitespace.
++        "pend": "~1.2.0"
+package-lock.json:402: trailing whitespace.
++      }
+package-lock.json:403: trailing whitespace.
++    },
+package-lock.json:404: trailing whitespace.
++    "node_modules/fs-extra": {
+package-lock.json:405: trailing whitespace.
++      "version": "8.1.0",
+package-lock.json:406: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/fs-extra/-/fs-extra-8.1.0.tgz",
+package-lock.json:407: trailing whitespace.
++      "integrity": "sha512-yhlQgA6mnOJUKOsRUFsgJdQCvkKhcz8tlZG5HBQfReYZy46OwLcY+Zia0mtdHsOo9y/hP+CxMN0TU9QxoOtG4g==",
+package-lock.json:408: trailing whitespace.
++      "dev": true,
+package-lock.json:409: trailing whitespace.
++      "license": "MIT",
+package-lock.json:410: trailing whitespace.
++      "dependencies": {
+package-lock.json:411: trailing whitespace.
++        "graceful-fs": "^4.2.0",
+package-lock.json:412: trailing whitespace.
++        "jsonfile": "^4.0.0",
+package-lock.json:413: trailing whitespace.
++        "universalify": "^0.1.0"
+package-lock.json:414: trailing whitespace.
++      },
+package-lock.json:415: trailing whitespace.
++      "engines": {
+package-lock.json:416: trailing whitespace.
++        "node": ">=6 <7 || >=8"
+package-lock.json:417: trailing whitespace.
++      }
+package-lock.json:418: trailing whitespace.
++    },
+package-lock.json:419: trailing whitespace.
++    "node_modules/get-stream": {
+package-lock.json:420: trailing whitespace.
++      "version": "5.2.0",
+package-lock.json:421: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/get-stream/-/get-stream-5.2.0.tgz",
+package-lock.json:422: trailing whitespace.
++      "integrity": "sha512-nBF+F1rAZVCu/p7rjzgA+Yb4lfYXrpl7a6VmJrU8wF9I1CKvP/QwPNZHnOlwbTkY6dvtFIzFMSyQXbLoTQPRpA==",
+package-lock.json:423: trailing whitespace.
++      "dev": true,
+package-lock.json:424: trailing whitespace.
++      "license": "MIT",
+package-lock.json:425: trailing whitespace.
++      "dependencies": {
+package-lock.json:426: trailing whitespace.
++        "pump": "^3.0.0"
+package-lock.json:427: trailing whitespace.
++      },
+package-lock.json:428: trailing whitespace.
++      "engines": {
+package-lock.json:429: trailing whitespace.
++        "node": ">=8"
+package-lock.json:430: trailing whitespace.
++      },
+package-lock.json:431: trailing whitespace.
++      "funding": {
+package-lock.json:432: trailing whitespace.
++        "url": "https://github.com/sponsors/sindresorhus"
+package-lock.json:433: trailing whitespace.
++      }
+package-lock.json:434: trailing whitespace.
++    },
+package-lock.json:435: trailing whitespace.
++    "node_modules/global-agent": {
+package-lock.json:436: trailing whitespace.
++      "version": "3.0.0",
+package-lock.json:437: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/global-agent/-/global-agent-3.0.0.tgz",
+package-lock.json:438: trailing whitespace.
++      "integrity": "sha512-PT6XReJ+D07JvGoxQMkT6qji/jVNfX/h364XHZOWeRzy64sSFr+xJ5OX7LI3b4MPQzdL4H8Y8M0xzPpsVMwA8Q==",
+package-lock.json:439: trailing whitespace.
++      "dev": true,
+package-lock.json:440: trailing whitespace.
++      "license": "BSD-3-Clause",
+package-lock.json:441: trailing whitespace.
++      "optional": true,
+package-lock.json:442: trailing whitespace.
++      "dependencies": {
+package-lock.json:443: trailing whitespace.
++        "boolean": "^3.0.1",
+package-lock.json:444: trailing whitespace.
++        "es6-error": "^4.1.1",
+package-lock.json:445: trailing whitespace.
++        "matcher": "^3.0.0",
+package-lock.json:446: trailing whitespace.
++        "roarr": "^2.15.3",
+package-lock.json:447: trailing whitespace.
++        "semver": "^7.3.2",
+package-lock.json:448: trailing whitespace.
++        "serialize-error": "^7.0.1"
+package-lock.json:449: trailing whitespace.
++      },
+package-lock.json:450: trailing whitespace.
++      "engines": {
+package-lock.json:451: trailing whitespace.
++        "node": ">=10.0"
+package-lock.json:452: trailing whitespace.
++      }
+package-lock.json:453: trailing whitespace.
++    },
+package-lock.json:454: trailing whitespace.
++    "node_modules/global-agent/node_modules/semver": {
+package-lock.json:455: trailing whitespace.
++      "version": "7.8.5",
+package-lock.json:456: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz",
+package-lock.json:457: trailing whitespace.
++      "integrity": "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==",
+package-lock.json:458: trailing whitespace.
++      "dev": true,
+package-lock.json:459: trailing whitespace.
++      "license": "ISC",
+package-lock.json:460: trailing whitespace.
++      "optional": true,
+package-lock.json:461: trailing whitespace.
++      "bin": {
+package-lock.json:462: trailing whitespace.
++        "semver": "bin/semver.js"
+package-lock.json:463: trailing whitespace.
++      },
+package-lock.json:464: trailing whitespace.
++      "engines": {
+package-lock.json:465: trailing whitespace.
++        "node": ">=10"
+package-lock.json:466: trailing whitespace.
++      }
+package-lock.json:467: trailing whitespace.
++    },
+package-lock.json:468: trailing whitespace.
++    "node_modules/globalthis": {
+package-lock.json:469: trailing whitespace.
++      "version": "1.0.4",
+package-lock.json:470: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/globalthis/-/globalthis-1.0.4.tgz",
+package-lock.json:471: trailing whitespace.
++      "integrity": "sha512-DpLKbNU4WylpxJykQujfCcwYWiV/Jhm50Goo0wrVILAv5jOr9d+H+UR3PhSCD2rCCEIg0uc+G+muBTwD54JhDQ==",
+package-lock.json:472: trailing whitespace.
++      "dev": true,
+package-lock.json:473: trailing whitespace.
++      "license": "MIT",
+package-lock.json:474: trailing whitespace.
++      "optional": true,
+package-lock.json:475: trailing whitespace.
++      "dependencies": {
+package-lock.json:476: trailing whitespace.
++        "define-properties": "^1.2.1",
+package-lock.json:477: trailing whitespace.
++        "gopd": "^1.0.1"
+package-lock.json:478: trailing whitespace.
++      },
+package-lock.json:479: trailing whitespace.
++      "engines": {
+package-lock.json:480: trailing whitespace.
++        "node": ">= 0.4"
+package-lock.json:481: trailing whitespace.
++      },
+package-lock.json:482: trailing whitespace.
++      "funding": {
+package-lock.json:483: trailing whitespace.
++        "url": "https://github.com/sponsors/ljharb"
+package-lock.json:484: trailing whitespace.
++      }
+package-lock.json:485: trailing whitespace.
++    },
+package-lock.json:486: trailing whitespace.
++    "node_modules/gopd": {
+package-lock.json:487: trailing whitespace.
++      "version": "1.2.0",
+package-lock.json:488: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz",
+package-lock.json:489: trailing whitespace.
++      "integrity": "sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==",
+package-lock.json:490: trailing whitespace.
++      "dev": true,
+package-lock.json:491: trailing whitespace.
++      "license": "MIT",
+package-lock.json:492: trailing whitespace.
++      "optional": true,
+package-lock.json:493: trailing whitespace.
++      "engines": {
+package-lock.json:494: trailing whitespace.
++        "node": ">= 0.4"
+package-lock.json:495: trailing whitespace.
++      },
+package-lock.json:496: trailing whitespace.
++      "funding": {
+package-lock.json:497: trailing whitespace.
++        "url": "https://github.com/sponsors/ljharb"
+package-lock.json:498: trailing whitespace.
++      }
+package-lock.json:499: trailing whitespace.
++    },
+package-lock.json:500: trailing whitespace.
++    "node_modules/got": {
+package-lock.json:501: trailing whitespace.
++      "version": "11.8.6",
+package-lock.json:502: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/got/-/got-11.8.6.tgz",
+package-lock.json:503: trailing whitespace.
++      "integrity": "sha512-6tfZ91bOr7bOXnK7PRDCGBLa1H4U080YHNaAQ2KsMGlLEzRbk44nsZF2E1IeRc3vtJHPVbKCYgdFbaGO2ljd8g==",
+package-lock.json:504: trailing whitespace.
++      "dev": true,
+package-lock.json:505: trailing whitespace.
++      "license": "MIT",
+package-lock.json:506: trailing whitespace.
++      "dependencies": {
+package-lock.json:507: trailing whitespace.
++        "@sindresorhus/is": "^4.0.0",
+package-lock.json:508: trailing whitespace.
++        "@szmarczak/http-timer": "^4.0.5",
+package-lock.json:509: trailing whitespace.
++        "@types/cacheable-request": "^6.0.1",
+package-lock.json:510: trailing whitespace.
++        "@types/responselike": "^1.0.0",
+package-lock.json:511: trailing whitespace.
++        "cacheable-lookup": "^5.0.3",
+package-lock.json:512: trailing whitespace.
++        "cacheable-request": "^7.0.2",
+package-lock.json:513: trailing whitespace.
++        "decompress-response": "^6.0.0",
+package-lock.json:514: trailing whitespace.
++        "http2-wrapper": "^1.0.0-beta.5.2",
+package-lock.json:515: trailing whitespace.
++        "lowercase-keys": "^2.0.0",
+package-lock.json:516: trailing whitespace.
++        "p-cancelable": "^2.0.0",
+package-lock.json:517: trailing whitespace.
++        "responselike": "^2.0.0"
+package-lock.json:518: trailing whitespace.
++      },
+package-lock.json:519: trailing whitespace.
++      "engines": {
+package-lock.json:520: trailing whitespace.
++        "node": ">=10.19.0"
+package-lock.json:521: trailing whitespace.
++      },
+package-lock.json:522: trailing whitespace.
++      "funding": {
+package-lock.json:523: trailing whitespace.
++        "url": "https://github.com/sindresorhus/got?sponsor=1"
+package-lock.json:524: trailing whitespace.
++      }
+package-lock.json:525: trailing whitespace.
++    },
+package-lock.json:526: trailing whitespace.
++    "node_modules/graceful-fs": {
+package-lock.json:527: trailing whitespace.
++      "version": "4.2.11",
+package-lock.json:528: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz",
+package-lock.json:529: trailing whitespace.
++      "integrity": "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==",
+package-lock.json:530: trailing whitespace.
++      "dev": true,
+package-lock.json:531: trailing whitespace.
++      "license": "ISC"
+package-lock.json:532: trailing whitespace.
++    },
+package-lock.json:533: trailing whitespace.
++    "node_modules/has-property-descriptors": {
+package-lock.json:534: trailing whitespace.
++      "version": "1.0.2",
+package-lock.json:535: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/has-property-descriptors/-/has-property-descriptors-1.0.2.tgz",
+package-lock.json:536: trailing whitespace.
++      "integrity": "sha512-55JNKuIW+vq4Ke1BjOTjM2YctQIvCT7GFzHwmfZPGo5wnrgkid0YQtnAleFSqumZm4az3n2BS+erby5ipJdgrg==",
+package-lock.json:537: trailing whitespace.
++      "dev": true,
+package-lock.json:538: trailing whitespace.
++      "license": "MIT",
+package-lock.json:539: trailing whitespace.
++      "optional": true,
+package-lock.json:540: trailing whitespace.
++      "dependencies": {
+package-lock.json:541: trailing whitespace.
++        "es-define-property": "^1.0.0"
+package-lock.json:542: trailing whitespace.
++      },
+package-lock.json:543: trailing whitespace.
++      "funding": {
+package-lock.json:544: trailing whitespace.
++        "url": "https://github.com/sponsors/ljharb"
+package-lock.json:545: trailing whitespace.
++      }
+package-lock.json:546: trailing whitespace.
++    },
+package-lock.json:547: trailing whitespace.
++    "node_modules/http-cache-semantics": {
+package-lock.json:548: trailing whitespace.
++      "version": "4.2.0",
+package-lock.json:549: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/http-cache-semantics/-/http-cache-semantics-4.2.0.tgz",
+package-lock.json:550: trailing whitespace.
++      "integrity": "sha512-dTxcvPXqPvXBQpq5dUr6mEMJX4oIEFv6bwom3FDwKRDsuIjjJGANqhBuoAn9c1RQJIdAKav33ED65E2ys+87QQ==",
+package-lock.json:551: trailing whitespace.
++      "dev": true,
+package-lock.json:552: trailing whitespace.
++      "license": "BSD-2-Clause"
+package-lock.json:553: trailing whitespace.
++    },
+package-lock.json:554: trailing whitespace.
++    "node_modules/http2-wrapper": {
+package-lock.json:555: trailing whitespace.
++      "version": "1.0.3",
+package-lock.json:556: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/http2-wrapper/-/http2-wrapper-1.0.3.tgz",
+package-lock.json:557: trailing whitespace.
++      "integrity": "sha512-V+23sDMr12Wnz7iTcDeJr3O6AIxlnvT/bmaAAAP/Xda35C90p9599p0F1eHR/N1KILWSoWVAiOMFjBBXaXSMxg==",
+package-lock.json:558: trailing whitespace.
++      "dev": true,
+package-lock.json:559: trailing whitespace.
++      "license": "MIT",
+package-lock.json:560: trailing whitespace.
++      "dependencies": {
+package-lock.json:561: trailing whitespace.
++        "quick-lru": "^5.1.1",
+package-lock.json:562: trailing whitespace.
++        "resolve-alpn": "^1.0.0"
+package-lock.json:563: trailing whitespace.
++      },
+package-lock.json:564: trailing whitespace.
++      "engines": {
+package-lock.json:565: trailing whitespace.
++        "node": ">=10.19.0"
+package-lock.json:566: trailing whitespace.
++      }
+package-lock.json:567: trailing whitespace.
++    },
+package-lock.json:568: trailing whitespace.
++    "node_modules/json-buffer": {
+package-lock.json:569: trailing whitespace.
++      "version": "3.0.1",
+package-lock.json:570: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/json-buffer/-/json-buffer-3.0.1.tgz",
+package-lock.json:571: trailing whitespace.
++      "integrity": "sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==",
+package-lock.json:572: trailing whitespace.
++      "dev": true,
+package-lock.json:573: trailing whitespace.
++      "license": "MIT"
+package-lock.json:574: trailing whitespace.
++    },
+package-lock.json:575: trailing whitespace.
++    "node_modules/json-stringify-safe": {
+package-lock.json:576: trailing whitespace.
++      "version": "5.0.1",
+package-lock.json:577: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/json-stringify-safe/-/json-stringify-safe-5.0.1.tgz",
+package-lock.json:578: trailing whitespace.
++      "integrity": "sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==",
+package-lock.json:579: trailing whitespace.
++      "dev": true,
+package-lock.json:580: trailing whitespace.
++      "license": "ISC",
+package-lock.json:581: trailing whitespace.
++      "optional": true
+package-lock.json:582: trailing whitespace.
++    },
+package-lock.json:583: trailing whitespace.
++    "node_modules/jsonfile": {
+package-lock.json:584: trailing whitespace.
++      "version": "4.0.0",
+package-lock.json:585: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-4.0.0.tgz",
+package-lock.json:586: trailing whitespace.
++      "integrity": "sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==",
+package-lock.json:587: trailing whitespace.
++      "dev": true,
+package-lock.json:588: trailing whitespace.
++      "license": "MIT",
+package-lock.json:589: trailing whitespace.
++      "optionalDependencies": {
+package-lock.json:590: trailing whitespace.
++        "graceful-fs": "^4.1.6"
+package-lock.json:591: trailing whitespace.
++      }
+package-lock.json:592: trailing whitespace.
++    },
+package-lock.json:593: trailing whitespace.
++    "node_modules/keyv": {
+package-lock.json:594: trailing whitespace.
++      "version": "4.5.4",
+package-lock.json:595: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/keyv/-/keyv-4.5.4.tgz",
+package-lock.json:596: trailing whitespace.
++      "integrity": "sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==",
+package-lock.json:597: trailing whitespace.
++      "dev": true,
+package-lock.json:598: trailing whitespace.
++      "license": "MIT",
+package-lock.json:599: trailing whitespace.
++      "dependencies": {
+package-lock.json:600: trailing whitespace.
++        "json-buffer": "3.0.1"
+package-lock.json:601: trailing whitespace.
++      }
+package-lock.json:602: trailing whitespace.
++    },
+package-lock.json:603: trailing whitespace.
++    "node_modules/lowercase-keys": {
+package-lock.json:604: trailing whitespace.
++      "version": "2.0.0",
+package-lock.json:605: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/lowercase-keys/-/lowercase-keys-2.0.0.tgz",
+package-lock.json:606: trailing whitespace.
++      "integrity": "sha512-tqNXrS78oMOE73NMxK4EMLQsQowWf8jKooH9g7xPavRT706R6bkQJ6DY2Te7QukaZsulxa30wQ7bk0pm4XiHmA==",
+package-lock.json:607: trailing whitespace.
++      "dev": true,
+package-lock.json:608: trailing whitespace.
++      "license": "MIT",
+package-lock.json:609: trailing whitespace.
++      "engines": {
+package-lock.json:610: trailing whitespace.
++        "node": ">=8"
+package-lock.json:611: trailing whitespace.
++      }
+package-lock.json:612: trailing whitespace.
++    },
+package-lock.json:613: trailing whitespace.
++    "node_modules/matcher": {
+package-lock.json:614: trailing whitespace.
++      "version": "3.0.0",
+package-lock.json:615: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/matcher/-/matcher-3.0.0.tgz",
+package-lock.json:616: trailing whitespace.
++      "integrity": "sha512-OkeDaAZ/bQCxeFAozM55PKcKU0yJMPGifLwV4Qgjitu+5MoAfSQN4lsLJeXZ1b8w0x+/Emda6MZgXS1jvsapng==",
+package-lock.json:617: trailing whitespace.
++      "dev": true,
+package-lock.json:618: trailing whitespace.
++      "license": "MIT",
+package-lock.json:619: trailing whitespace.
++      "optional": true,
+package-lock.json:620: trailing whitespace.
++      "dependencies": {
+package-lock.json:621: trailing whitespace.
++        "escape-string-regexp": "^4.0.0"
+package-lock.json:622: trailing whitespace.
++      },
+package-lock.json:623: trailing whitespace.
++      "engines": {
+package-lock.json:624: trailing whitespace.
++        "node": ">=10"
+package-lock.json:625: trailing whitespace.
++      }
+package-lock.json:626: trailing whitespace.
++    },
+package-lock.json:627: trailing whitespace.
++    "node_modules/mimic-response": {
+package-lock.json:628: trailing whitespace.
++      "version": "1.0.1",
+package-lock.json:629: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/mimic-response/-/mimic-response-1.0.1.tgz",
+package-lock.json:630: trailing whitespace.
++      "integrity": "sha512-j5EctnkH7amfV/q5Hgmoal1g2QHFJRraOtmx0JpIqkxhBhI/lJSl1nMpQ45hVarwNETOoWEimndZ4QK0RHxuxQ==",
+package-lock.json:631: trailing whitespace.
++      "dev": true,
+package-lock.json:632: trailing whitespace.
++      "license": "MIT",
+package-lock.json:633: trailing whitespace.
++      "engines": {
+package-lock.json:634: trailing whitespace.
++        "node": ">=4"
+package-lock.json:635: trailing whitespace.
++      }
+package-lock.json:636: trailing whitespace.
++    },
+package-lock.json:637: trailing whitespace.
++    "node_modules/ms": {
+package-lock.json:638: trailing whitespace.
++      "version": "2.1.3",
+package-lock.json:639: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+package-lock.json:640: trailing whitespace.
++      "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==",
+package-lock.json:641: trailing whitespace.
++      "dev": true,
+package-lock.json:642: trailing whitespace.
++      "license": "MIT"
+package-lock.json:643: trailing whitespace.
++    },
+package-lock.json:644: trailing whitespace.
++    "node_modules/normalize-url": {
+package-lock.json:645: trailing whitespace.
++      "version": "6.1.0",
+package-lock.json:646: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/normalize-url/-/normalize-url-6.1.0.tgz",
+package-lock.json:647: trailing whitespace.
++      "integrity": "sha512-DlL+XwOy3NxAQ8xuC0okPgK46iuVNAK01YN7RueYBqqFeGsBjV9XmCAzAdgt+667bCl5kPh9EqKKDwnaPG1I7A==",
+package-lock.json:648: trailing whitespace.
++      "dev": true,
+package-lock.json:649: trailing whitespace.
++      "license": "MIT",
+package-lock.json:650: trailing whitespace.
++      "engines": {
+package-lock.json:651: trailing whitespace.
++        "node": ">=10"
+package-lock.json:652: trailing whitespace.
++      },
+package-lock.json:653: trailing whitespace.
++      "funding": {
+package-lock.json:654: trailing whitespace.
++        "url": "https://github.com/sponsors/sindresorhus"
+package-lock.json:655: trailing whitespace.
++      }
+package-lock.json:656: trailing whitespace.
++    },
+package-lock.json:657: trailing whitespace.
++    "node_modules/object-keys": {
+package-lock.json:658: trailing whitespace.
++      "version": "1.1.1",
+package-lock.json:659: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/object-keys/-/object-keys-1.1.1.tgz",
+package-lock.json:660: trailing whitespace.
++      "integrity": "sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==",
+package-lock.json:661: trailing whitespace.
++      "dev": true,
+package-lock.json:662: trailing whitespace.
++      "license": "MIT",
+package-lock.json:663: trailing whitespace.
++      "optional": true,
+package-lock.json:664: trailing whitespace.
++      "engines": {
+package-lock.json:665: trailing whitespace.
++        "node": ">= 0.4"
+package-lock.json:666: trailing whitespace.
++      }
+package-lock.json:667: trailing whitespace.
++    },
+package-lock.json:668: trailing whitespace.
++    "node_modules/once": {
+package-lock.json:669: trailing whitespace.
++      "version": "1.4.0",
+package-lock.json:670: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/once/-/once-1.4.0.tgz",
+package-lock.json:671: trailing whitespace.
++      "integrity": "sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==",
+package-lock.json:672: trailing whitespace.
++      "dev": true,
+package-lock.json:673: trailing whitespace.
++      "license": "ISC",
+package-lock.json:674: trailing whitespace.
++      "dependencies": {
+package-lock.json:675: trailing whitespace.
++        "wrappy": "1"
+package-lock.json:676: trailing whitespace.
++      }
+package-lock.json:677: trailing whitespace.
++    },
+package-lock.json:678: trailing whitespace.
++    "node_modules/p-cancelable": {
+package-lock.json:679: trailing whitespace.
++      "version": "2.1.1",
+package-lock.json:680: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/p-cancelable/-/p-cancelable-2.1.1.tgz",
+package-lock.json:681: trailing whitespace.
++      "integrity": "sha512-BZOr3nRQHOntUjTrH8+Lh54smKHoHyur8We1V8DSMVrl5A2malOOwuJRnKRDjSnkoeBh4at6BwEnb5I7Jl31wg==",
+package-lock.json:682: trailing whitespace.
++      "dev": true,
+package-lock.json:683: trailing whitespace.
++      "license": "MIT",
+package-lock.json:684: trailing whitespace.
++      "engines": {
+package-lock.json:685: trailing whitespace.
++        "node": ">=8"
+package-lock.json:686: trailing whitespace.
++      }
+package-lock.json:687: trailing whitespace.
++    },
+package-lock.json:688: trailing whitespace.
++    "node_modules/pend": {
+package-lock.json:689: trailing whitespace.
++      "version": "1.2.0",
+package-lock.json:690: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/pend/-/pend-1.2.0.tgz",
+package-lock.json:691: trailing whitespace.
++      "integrity": "sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==",
+package-lock.json:692: trailing whitespace.
++      "dev": true,
+package-lock.json:693: trailing whitespace.
++      "license": "MIT"
+package-lock.json:694: trailing whitespace.
++    },
+package-lock.json:695: trailing whitespace.
++    "node_modules/progress": {
+package-lock.json:696: trailing whitespace.
++      "version": "2.0.3",
+package-lock.json:697: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/progress/-/progress-2.0.3.tgz",
+package-lock.json:698: trailing whitespace.
++      "integrity": "sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==",
+package-lock.json:699: trailing whitespace.
++      "dev": true,
+package-lock.json:700: trailing whitespace.
++      "license": "MIT",
+package-lock.json:701: trailing whitespace.
++      "engines": {
+package-lock.json:702: trailing whitespace.
++        "node": ">=0.4.0"
+package-lock.json:703: trailing whitespace.
++      }
+package-lock.json:704: trailing whitespace.
++    },
+package-lock.json:705: trailing whitespace.
++    "node_modules/pump": {
+package-lock.json:706: trailing whitespace.
++      "version": "3.0.4",
+package-lock.json:707: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/pump/-/pump-3.0.4.tgz",
+package-lock.json:708: trailing whitespace.
++      "integrity": "sha512-VS7sjc6KR7e1ukRFhQSY5LM2uBWAUPiOPa/A3mkKmiMwSmRFUITt0xuj+/lesgnCv+dPIEYlkzrcyXgquIHMcA==",
+package-lock.json:709: trailing whitespace.
++      "dev": true,
+package-lock.json:710: trailing whitespace.
++      "license": "MIT",
+package-lock.json:711: trailing whitespace.
++      "dependencies": {
+package-lock.json:712: trailing whitespace.
++        "end-of-stream": "^1.1.0",
+package-lock.json:713: trailing whitespace.
++        "once": "^1.3.1"
+package-lock.json:714: trailing whitespace.
++      }
+package-lock.json:715: trailing whitespace.
++    },
+package-lock.json:716: trailing whitespace.
++    "node_modules/quick-lru": {
+package-lock.json:717: trailing whitespace.
++      "version": "5.1.1",
+package-lock.json:718: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/quick-lru/-/quick-lru-5.1.1.tgz",
+package-lock.json:719: trailing whitespace.
++      "integrity": "sha512-WuyALRjWPDGtt/wzJiadO5AXY+8hZ80hVpe6MyivgraREW751X3SbhRvG3eLKOYN+8VEvqLcf3wdnt44Z4S4SA==",
+package-lock.json:720: trailing whitespace.
++      "dev": true,
+package-lock.json:721: trailing whitespace.
++      "license": "MIT",
+package-lock.json:722: trailing whitespace.
++      "engines": {
+package-lock.json:723: trailing whitespace.
++        "node": ">=10"
+package-lock.json:724: trailing whitespace.
++      },
+package-lock.json:725: trailing whitespace.
++      "funding": {
+package-lock.json:726: trailing whitespace.
++        "url": "https://github.com/sponsors/sindresorhus"
+package-lock.json:727: trailing whitespace.
++      }
+package-lock.json:728: trailing whitespace.
++    },
+package-lock.json:729: trailing whitespace.
++    "node_modules/resolve-alpn": {
+package-lock.json:730: trailing whitespace.
++      "version": "1.2.1",
+package-lock.json:731: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/resolve-alpn/-/resolve-alpn-1.2.1.tgz",
+package-lock.json:732: trailing whitespace.
++      "integrity": "sha512-0a1F4l73/ZFZOakJnQ3FvkJ2+gSTQWz/r2KE5OdDY0TxPm5h4GkqkWWfM47T7HsbnOtcJVEF4epCVy6u7Q3K+g==",
+package-lock.json:733: trailing whitespace.
++      "dev": true,
+package-lock.json:734: trailing whitespace.
++      "license": "MIT"
+package-lock.json:735: trailing whitespace.
++    },
+package-lock.json:736: trailing whitespace.
++    "node_modules/responselike": {
+package-lock.json:737: trailing whitespace.
++      "version": "2.0.1",
+package-lock.json:738: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/responselike/-/responselike-2.0.1.tgz",
+package-lock.json:739: trailing whitespace.
++      "integrity": "sha512-4gl03wn3hj1HP3yzgdI7d3lCkF95F21Pz4BPGvKHinyQzALR5CapwC8yIi0Rh58DEMQ/SguC03wFj2k0M/mHhw==",
+package-lock.json:740: trailing whitespace.
++      "dev": true,
+package-lock.json:741: trailing whitespace.
++      "license": "MIT",
+package-lock.json:742: trailing whitespace.
++      "dependencies": {
+package-lock.json:743: trailing whitespace.
++        "lowercase-keys": "^2.0.0"
+package-lock.json:744: trailing whitespace.
++      },
+package-lock.json:745: trailing whitespace.
++      "funding": {
+package-lock.json:746: trailing whitespace.
++        "url": "https://github.com/sponsors/sindresorhus"
+package-lock.json:747: trailing whitespace.
++      }
+package-lock.json:748: trailing whitespace.
++    },
+package-lock.json:749: trailing whitespace.
++    "node_modules/roarr": {
+package-lock.json:750: trailing whitespace.
++      "version": "2.15.4",
+package-lock.json:751: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/roarr/-/roarr-2.15.4.tgz",
+package-lock.json:752: trailing whitespace.
++      "integrity": "sha512-CHhPh+UNHD2GTXNYhPWLnU8ONHdI+5DI+4EYIAOaiD63rHeYlZvyh8P+in5999TTSFgUYuKUAjzRI4mdh/p+2A==",
+package-lock.json:753: trailing whitespace.
++      "dev": true,
+package-lock.json:754: trailing whitespace.
++      "license": "BSD-3-Clause",
+package-lock.json:755: trailing whitespace.
++      "optional": true,
+package-lock.json:756: trailing whitespace.
++      "dependencies": {
+package-lock.json:757: trailing whitespace.
++        "boolean": "^3.0.1",
+package-lock.json:758: trailing whitespace.
++        "detect-node": "^2.0.4",
+package-lock.json:759: trailing whitespace.
++        "globalthis": "^1.0.1",
+package-lock.json:760: trailing whitespace.
++        "json-stringify-safe": "^5.0.1",
+package-lock.json:761: trailing whitespace.
++        "semver-compare": "^1.0.0",
+package-lock.json:762: trailing whitespace.
++        "sprintf-js": "^1.1.2"
+package-lock.json:763: trailing whitespace.
++      },
+package-lock.json:764: trailing whitespace.
++      "engines": {
+package-lock.json:765: trailing whitespace.
++        "node": ">=8.0"
+package-lock.json:766: trailing whitespace.
++      }
+package-lock.json:767: trailing whitespace.
++    },
+package-lock.json:768: trailing whitespace.
++    "node_modules/semver": {
+package-lock.json:769: trailing whitespace.
++      "version": "6.3.1",
+package-lock.json:770: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz",
+package-lock.json:771: trailing whitespace.
++      "integrity": "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==",
+package-lock.json:772: trailing whitespace.
++      "dev": true,
+package-lock.json:773: trailing whitespace.
++      "license": "ISC",
+package-lock.json:774: trailing whitespace.
++      "bin": {
+package-lock.json:775: trailing whitespace.
++        "semver": "bin/semver.js"
+package-lock.json:776: trailing whitespace.
++      }
+package-lock.json:777: trailing whitespace.
++    },
+package-lock.json:778: trailing whitespace.
++    "node_modules/semver-compare": {
+package-lock.json:779: trailing whitespace.
++      "version": "1.0.0",
+package-lock.json:780: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/semver-compare/-/semver-compare-1.0.0.tgz",
+package-lock.json:781: trailing whitespace.
++      "integrity": "sha512-YM3/ITh2MJ5MtzaM429anh+x2jiLVjqILF4m4oyQB18W7Ggea7BfqdH/wGMK7dDiMghv/6WG7znWMwUDzJiXow==",
+package-lock.json:782: trailing whitespace.
++      "dev": true,
+package-lock.json:783: trailing whitespace.
++      "license": "MIT",
+package-lock.json:784: trailing whitespace.
++      "optional": true
+package-lock.json:785: trailing whitespace.
++    },
+package-lock.json:786: trailing whitespace.
++    "node_modules/serialize-error": {
+package-lock.json:787: trailing whitespace.
++      "version": "7.0.1",
+package-lock.json:788: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/serialize-error/-/serialize-error-7.0.1.tgz",
+package-lock.json:789: trailing whitespace.
++      "integrity": "sha512-8I8TjW5KMOKsZQTvoxjuSIa7foAwPWGOts+6o7sgjz41/qMD9VQHEDxi6PBvK2l0MXUmqZyNpUK+T2tQaaElvw==",
+package-lock.json:790: trailing whitespace.
++      "dev": true,
+package-lock.json:791: trailing whitespace.
++      "license": "MIT",
+package-lock.json:792: trailing whitespace.
++      "optional": true,
+package-lock.json:793: trailing whitespace.
++      "dependencies": {
+package-lock.json:794: trailing whitespace.
++        "type-fest": "^0.13.1"
+package-lock.json:795: trailing whitespace.
++      },
+package-lock.json:796: trailing whitespace.
++      "engines": {
+package-lock.json:797: trailing whitespace.
++        "node": ">=10"
+package-lock.json:798: trailing whitespace.
++      },
+package-lock.json:799: trailing whitespace.
++      "funding": {
+package-lock.json:800: trailing whitespace.
++        "url": "https://github.com/sponsors/sindresorhus"
+package-lock.json:801: trailing whitespace.
++      }
+package-lock.json:802: trailing whitespace.
++    },
+package-lock.json:803: trailing whitespace.
++    "node_modules/sprintf-js": {
+package-lock.json:804: trailing whitespace.
++      "version": "1.1.3",
+package-lock.json:805: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.1.3.tgz",
+package-lock.json:806: trailing whitespace.
++      "integrity": "sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==",
+package-lock.json:807: trailing whitespace.
++      "dev": true,
+package-lock.json:808: trailing whitespace.
++      "license": "BSD-3-Clause",
+package-lock.json:809: trailing whitespace.
++      "optional": true
+package-lock.json:810: trailing whitespace.
++    },
+package-lock.json:811: trailing whitespace.
++    "node_modules/sumchecker": {
+package-lock.json:812: trailing whitespace.
++      "version": "3.0.1",
+package-lock.json:813: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/sumchecker/-/sumchecker-3.0.1.tgz",
+package-lock.json:814: trailing whitespace.
++      "integrity": "sha512-MvjXzkz/BOfyVDkG0oFOtBxHX2u3gKbMHIF/dXblZsgD3BWOFLmHovIpZY7BykJdAjcqRCBi1WYBNdEC9yI7vg==",
+package-lock.json:815: trailing whitespace.
++      "dev": true,
+package-lock.json:816: trailing whitespace.
++      "license": "Apache-2.0",
+package-lock.json:817: trailing whitespace.
++      "dependencies": {
+package-lock.json:818: trailing whitespace.
++        "debug": "^4.1.0"
+package-lock.json:819: trailing whitespace.
++      },
+package-lock.json:820: trailing whitespace.
++      "engines": {
+package-lock.json:821: trailing whitespace.
++        "node": ">= 8.0"
+package-lock.json:822: trailing whitespace.
++      }
+package-lock.json:823: trailing whitespace.
++    },
+package-lock.json:824: trailing whitespace.
++    "node_modules/type-fest": {
+package-lock.json:825: trailing whitespace.
++      "version": "0.13.1",
+package-lock.json:826: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/type-fest/-/type-fest-0.13.1.tgz",
+package-lock.json:827: trailing whitespace.
++      "integrity": "sha512-34R7HTnG0XIJcBSn5XhDd7nNFPRcXYRZrBB2O2jdKqYODldSzBAqzsWoZYYvduky73toYS/ESqxPvkDf/F0XMg==",
+package-lock.json:828: trailing whitespace.
++      "dev": true,
+package-lock.json:829: trailing whitespace.
++      "license": "(MIT OR CC0-1.0)",
+package-lock.json:830: trailing whitespace.
++      "optional": true,
+package-lock.json:831: trailing whitespace.
++      "engines": {
+package-lock.json:832: trailing whitespace.
++        "node": ">=10"
+package-lock.json:833: trailing whitespace.
++      },
+package-lock.json:834: trailing whitespace.
++      "funding": {
+package-lock.json:835: trailing whitespace.
++        "url": "https://github.com/sponsors/sindresorhus"
+package-lock.json:836: trailing whitespace.
++      }
+package-lock.json:837: trailing whitespace.
++    },
+package-lock.json:838: trailing whitespace.
++    "node_modules/undici-types": {
+package-lock.json:839: trailing whitespace.
++      "version": "6.21.0",
+package-lock.json:840: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz",
+package-lock.json:841: trailing whitespace.
++      "integrity": "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==",
+package-lock.json:842: trailing whitespace.
++      "dev": true,
+package-lock.json:843: trailing whitespace.
++      "license": "MIT"
+package-lock.json:844: trailing whitespace.
++    },
+package-lock.json:845: trailing whitespace.
++    "node_modules/universalify": {
+package-lock.json:846: trailing whitespace.
++      "version": "0.1.2",
+package-lock.json:847: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/universalify/-/universalify-0.1.2.tgz",
+package-lock.json:848: trailing whitespace.
++      "integrity": "sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==",
+package-lock.json:849: trailing whitespace.
++      "dev": true,
+package-lock.json:850: trailing whitespace.
++      "license": "MIT",
+package-lock.json:851: trailing whitespace.
++      "engines": {
+package-lock.json:852: trailing whitespace.
++        "node": ">= 4.0.0"
+package-lock.json:853: trailing whitespace.
++      }
+package-lock.json:854: trailing whitespace.
++    },
+package-lock.json:855: trailing whitespace.
++    "node_modules/wrappy": {
+package-lock.json:856: trailing whitespace.
++      "version": "1.0.2",
+package-lock.json:857: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/wrappy/-/wrappy-1.0.2.tgz",
+package-lock.json:858: trailing whitespace.
++      "integrity": "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==",
+package-lock.json:859: trailing whitespace.
++      "dev": true,
+package-lock.json:860: trailing whitespace.
++      "license": "ISC"
+package-lock.json:861: trailing whitespace.
++    },
+package-lock.json:862: trailing whitespace.
++    "node_modules/ws": {
+package-lock.json:863: trailing whitespace.
++      "version": "8.21.1",
+package-lock.json:864: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/ws/-/ws-8.21.1.tgz",
+package-lock.json:865: trailing whitespace.
++      "integrity": "sha512-+0NTnW77fFN/DjQi6k/Sq/Yvk4Sgajw7urW8V+asjXnRgDs9gyGkdb7EzgfhA4goXsRIZKE28fzIXBHEzhuiWw==",
+package-lock.json:866: trailing whitespace.
++      "license": "MIT",
+package-lock.json:867: trailing whitespace.
++      "engines": {
+package-lock.json:868: trailing whitespace.
++        "node": ">=10.0.0"
+package-lock.json:869: trailing whitespace.
++      },
+package-lock.json:870: trailing whitespace.
++      "peerDependencies": {
+package-lock.json:871: trailing whitespace.
++        "bufferutil": "^4.0.1",
+package-lock.json:872: trailing whitespace.
++        "utf-8-validate": ">=5.0.2"
+package-lock.json:873: trailing whitespace.
++      },
+package-lock.json:874: trailing whitespace.
++      "peerDependenciesMeta": {
+package-lock.json:875: trailing whitespace.
++        "bufferutil": {
+package-lock.json:876: trailing whitespace.
++          "optional": true
+package-lock.json:877: trailing whitespace.
++        },
+package-lock.json:878: trailing whitespace.
++        "utf-8-validate": {
+package-lock.json:879: trailing whitespace.
++          "optional": true
+package-lock.json:880: trailing whitespace.
++        }
+package-lock.json:881: trailing whitespace.
++      }
+package-lock.json:882: trailing whitespace.
++    },
+package-lock.json:883: trailing whitespace.
++    "node_modules/yauzl": {
+package-lock.json:884: trailing whitespace.
++      "version": "2.10.0",
+package-lock.json:885: trailing whitespace.
++      "resolved": "https://registry.npmjs.org/yauzl/-/yauzl-2.10.0.tgz",
+package-lock.json:886: trailing whitespace.
++      "integrity": "sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==",
+package-lock.json:887: trailing whitespace.
++      "dev": true,
+package-lock.json:888: trailing whitespace.
++      "license": "MIT",
+package-lock.json:889: trailing whitespace.
++      "dependencies": {
+package-lock.json:890: trailing whitespace.
++        "buffer-crc32": "~0.2.3",
+package-lock.json:891: trailing whitespace.
++        "fd-slicer": "~1.1.0"
+package-lock.json:892: trailing whitespace.
++      }
+package-lock.json:893: trailing whitespace.
++    }
+package-lock.json:894: trailing whitespace.
++  }
+package-lock.json:895: trailing whitespace.
++}
+package.json:1: trailing whitespace.
++{
+package.json:2: trailing whitespace.
++  "name": "video-subtitle-remover",
+package.json:3: trailing whitespace.
++  "version": "1.0.0",
+package.json:4: trailing whitespace.
++  "description": "AI-powered Video Subtitle Remover",
+package.json:5: trailing whitespace.
++  "main": "src/main/main.js",
+package.json:6: trailing whitespace.
++  "scripts": {
+package.json:7: trailing whitespace.
++    "start": "electron .",
+package.json:8: trailing whitespace.
++    "dev": "electron . --dev"
+package.json:9: trailing whitespace.
++  },
+package.json:10: trailing whitespace.
++  "devDependencies": {
+package.json:11: trailing whitespace.
++    "electron": "^33.0.0"
+package.json:12: trailing whitespace.
++  },
+package.json:13: trailing whitespace.
++  "dependencies": {
+package.json:14: trailing whitespace.
++    "ws": "^8.18.0"
+package.json:15: trailing whitespace.
++  },
+package.json:16: trailing whitespace.
++  "allowScripts": {
+package.json:17: trailing whitespace.
++    "electron@33.4.11": true
+package.json:18: trailing whitespace.
++  }
+package.json:19: trailing whitespace.
++}
+src/renderer/js/app.js:253: trailing whitespace.
++  });
