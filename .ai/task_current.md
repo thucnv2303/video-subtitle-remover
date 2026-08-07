@@ -12,8 +12,8 @@ WAITING_PM_REVIEW
 ## Current PR / Branch / SHA
 - PR: #14
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
-- Source SHA (034-REV1): PENDING_COMMIT
-- Docs SHA: PENDING_DOCS_COMMIT
+- Source SHA (034-REV1): bd5e16f7d3bac53ea43653452b4c3cd01c5993e1
+- Docs SHA: see-second-docs-commit
 - Owner previous result (033 + 034): Job Card UI PASS / AI provider-model FAIL
 - Code review: WAITING_PM_REVIEW
 - Owner retest: NOT STARTED
