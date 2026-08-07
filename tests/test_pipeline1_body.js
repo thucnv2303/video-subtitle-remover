@@ -50,13 +50,32 @@
   var cards = list1.querySelectorAll('.job-card');
   assert(cards.length === 2, 'Two .job-card elements rendered (production class). Found: ' + cards.length);
 
-  // === 5. Initial state: detail title shows "Vui lòng chọn" ============
+  // === 5. Empty detail state — exact Vietnamese text ==================
   var titleEl = document.getElementById('step1-detail-title');
+  var statusEl = document.getElementById('step1-detail-status');
   assert(!!titleEl, 'step1-detail-title element exists');
-  assert(titleEl.textContent.trim().length > 0, 'step1-detail-title has content');
-  // It should still show the "choose" prompt since no job is selected
-  var initialTitle = titleEl.textContent.trim();
-  // No assertion on exact text since it may be in Vietnamese
+  assert(!!statusEl, 'step1-detail-status element exists');
+
+  // Force empty state and render
+  window._appState.pipeline1SelectedJobId = null;
+  window.renderJobDetail1();
+
+  assert(titleEl.textContent.trim() === 'Vui lòng chọn 1 Job',
+    'Empty state detail title exact Vietnamese. Got: "' + titleEl.textContent.trim() + '"');
+  assert(statusEl.textContent.trim() === 'Trống',
+    'Empty state detail status exact Vietnamese. Got: "' + statusEl.textContent.trim() + '"');
+
+  // Verify NO mojibake in empty detail state
+  var MOJIBAKE_PATTERNS = ['\u00c3', '\u00c4\u00b9', '\u00c6', '\u00e2', '\u00f0\u0178', '\u00ef\u00bf\u00bd',
+    '\u00e1\u00bb', '\u00e1\u00ba', '\u2122', '\u2018'];
+  function scanMojibake(text, label) {
+    MOJIBAKE_PATTERNS.forEach(function(pat) {
+      assert(text.indexOf(pat) === -1,
+        'No mojibake pattern "' + pat + '" in ' + label + '. Got: ' + JSON.stringify(text.slice(0,40)));
+    });
+  }
+  scanMojibake(titleEl.textContent, 'step1-detail-title (empty state)');
+  scanMojibake(statusEl.textContent, 'step1-detail-status (empty state)');
 
   // === 5b. Pre-seed AI model options so renderJobDetail1 can set values =
   var modelEl = document.getElementById('step1-ai-model');
@@ -192,13 +211,20 @@
   assert(!cards4[1].classList.contains('active'),
     'Card B not active after restore. Classes: ' + cards4[1].className);
 
-  // === 16. Mojibake scan of rendered Job Queue text ====================
-  var MOJIBAKE_PATTERNS = ['\u00c3', '\u00c4\u00b9', '\u00c3\u2020', '\u00c3\u00a0', '\u00f0\u0178', '\u00ef\u00bf\u00bd'];
+  // === 16. Mojibake scan: Job Queue + Detail Title + Detail Status ======
+  // After A->B->A, scan all Pipeline 1 visible UI areas
   var listText = list1.textContent || '';
-  MOJIBAKE_PATTERNS.forEach(function(pat) {
-    assert(listText.indexOf(pat) === -1,
-      'No mojibake pattern "' + pat + '" in Job Queue text');
-  });
+  scanMojibake(listText, 'step1-job-list (queue)');
+  scanMojibake(titleEl.textContent, 'step1-detail-title (post-selection)');
+  scanMojibake(statusEl.textContent, 'step1-detail-status (post-selection)');
+
+  // Also scan visible detail action labels that are in DOM at this point
+  var saveBtn = document.getElementById('step1-btn-save-text');
+  if (saveBtn) scanMojibake(saveBtn.textContent, 'step1-btn-save-text');
+  var extractBtn = document.getElementById('step1-btn-extract');
+  if (extractBtn) scanMojibake(extractBtn.textContent, 'step1-btn-extract');
+  var rewriteBtn = document.getElementById('step1-btn-rewrite');
+  if (rewriteBtn) scanMojibake(rewriteBtn.textContent, 'step1-btn-rewrite');
 
   // === 17. AI execution contract ========================================
   var capturedAiPayload = null;

@@ -268,3 +268,40 @@ Verification:
 
 Owner: NOT STARTED
 Merge: BLOCKED
+
+
+## RECOVERY-007E-PIPELINE1-JOB-UI-RUNTIME-FIX-033-REV1
+
+Task: RECOVERY-007E-PIPELINE1-JOB-UI-RUNTIME-FIX-033-REV1
+Status: WAITING_PM_REVIEW
+PR: #14
+Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
+Parent: 268613ae8b794119fddf8c2f30f76c32270d3ecf
+
+Verified defects fixed:
+- tk-job-card did not match existing .job-card CSS (fixed in 033)
+- production detail flow used ambiguous bare call; changed to explicit window.renderJobDetail1 (fixed in 033)
+- visible mojibake strings existed in Pipeline 1 detail:
+  L1358: 'Vui lòng ch\x8dn 1 Job' -> 'Vui lòng chọn 1 Job'
+  L1359: 'Tr\u00e1\u00bb\u2018ng' -> 'Trống'
+  L1409: addLog Đã lưu... garbled -> correct UTF-8
+  All 3 fixed in this REV1.
+
+Test improvements:
+- Exact assertion: step1-detail-title === 'Vui lòng chọn 1 Job'
+- Exact assertion: step1-detail-status === 'Trống'
+- Mojibake scan expanded to cover step1-detail-title, step1-detail-status,
+  step1-btn-save-text, step1-btn-extract, step1-btn-rewrite
+- Empty state then click A/B/A flow explicitly tested
+
+Verification:
+- node --check app.js: PASS (exit 0)
+- node --check test body: PASS (exit 0)
+- runtime: 134 PASS / 0 FAIL / 0 NOT TESTED (exit 0)
+- DOM: 35 PASS / 0 FAIL (exit 0)
+- git diff --check: PASS (exit 0)
+- npm start: Window visible, Page loaded, Python 8765, no errors
+- Real app card click A/B/A: NOT OBSERVED (no automation for file picker)
+
+Owner: NOT STARTED
+Merge: BLOCKED

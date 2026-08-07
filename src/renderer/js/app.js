@@ -1355,8 +1355,8 @@
     const audioEmptyEl = document.getElementById('step1-audio-empty');
 
     if (!state.pipeline1SelectedJobId) {
-      if (titleEl) titleEl.textContent = 'Vui lÃ²ng chá»n 1 Job';
-      if (statusEl) statusEl.textContent = 'Trá»‘ng';
+      if (titleEl) titleEl.textContent = 'Vui lòng chọn 1 Job';
+      if (statusEl) statusEl.textContent = 'Trống';
       if (textEl) textEl.value = '';
       if (audioEl) { audioEl.style.display = 'none'; audioEl.src = ''; }
       if (audioEmptyEl) audioEmptyEl.style.display = 'block';
@@ -1406,7 +1406,7 @@
       } else {
         job.srtContent = textEl.value;
       }
-      addLog('ÄÃ£ lÆ°u ná»™i dung cáº­p nháº­t cho ' + job.fileName, 'info');
+      addLog('Đã lưu nội dung cập nhật cho ' + job.fileName, 'info');
     }
   });
 
