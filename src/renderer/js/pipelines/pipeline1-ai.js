@@ -97,7 +97,8 @@ export async function triggerAutoTts(job, srtText) {
         srt_content: srtText,
         tts_voice: voice,
         video_path: job.filePath,
-        tts_ref_audio: refAudio,// Adding speed
+        tts_ref_audio: refAudio,
+        tts_speed: job.ttsSpeed !== undefined ? parseFloat(job.ttsSpeed) : null,
       }),
     });
     const result = await response.json();
