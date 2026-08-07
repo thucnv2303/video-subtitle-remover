@@ -22,10 +22,10 @@ WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
 - PR: #14
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
 - Source SHA (034-REV1): bd5e16f7d3bac53ea43653452b4c3cd01c5993e1
-- Docs SHA: see-second-docs-commit
 - Owner previous result: Job Card UI PASS / AI provider-model FAIL
+- Owner observation: Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong". Lịch sử source commit bd5e16f7 đã chứa .ai files.
 - Code review: WAITING_PM_REVIEW
-- Owner retest: NOT STARTED
+- Owner retest: WAITING
 - Merge: BLOCKED
 
 ### Historical: 032/033/034 ancestry
@@ -34,10 +34,10 @@ WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
 - Task 034: 1b66a10d / 034-REV1: see Source SHA above
 
 ## Verification Gates
-- Automated verification: PASS (49 PASS / 0 FAIL / 0 NOT TESTED, DOM 35/0)
+- Automated verification: node tests/test_pipeline1_runtime.js exit 1, node tests/test_renderer_dom_structure.js exit 0, app.js --check exit 0, pipeline1-ai.js --check exit 0
 - Code review: WAITING_PM_REVIEW
-- Owner: NOT STARTED
-- Documentation: WAITING_PM_REVIEW
+- Owner: WAITING
+- Documentation: PASS
 - Merge: BLOCKED
 - RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
 - RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX — WAITING_PM_REVIEW - OWNER RETEST NOT STARTED

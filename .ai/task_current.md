@@ -13,10 +13,10 @@ WAITING_PM_REVIEW
 - PR: #14
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
 - Source SHA (034-REV1): bd5e16f7d3bac53ea43653452b4c3cd01c5993e1
-- Docs SHA: see-second-docs-commit
 - Owner previous result (033 + 034): Job Card UI PASS / AI provider-model FAIL
+- Owner observation: Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong". Lịch sử source commit bd5e16f7 đã chứa .ai files.
 - Code review: WAITING_PM_REVIEW
-- Owner retest: NOT STARTED
+- Owner retest: WAITING
 - Merge: BLOCKED
 
 ## Historical: 032 / 033 ancestry
@@ -37,6 +37,12 @@ WAITING_PM_REVIEW
 - Saved keys are not refilled into the DOM.
 - Home layout regression fixed (removed duplicated three-col wrapper).
 - Pipeline 1 AI selector synchronized with Settings provider/model selection.
+
+## Rerun Verification
+- node tests/test_pipeline1_runtime.js: EXIT 1
+- node tests/test_renderer_dom_structure.js: EXIT 0
+- node --check src/renderer/js/app.js: EXIT 0
+- node --check src/renderer/js/pipelines/pipeline1-ai.js: EXIT 0
 
 ## Static Verification
 - node --check src/main/main.js: EXIT 0
