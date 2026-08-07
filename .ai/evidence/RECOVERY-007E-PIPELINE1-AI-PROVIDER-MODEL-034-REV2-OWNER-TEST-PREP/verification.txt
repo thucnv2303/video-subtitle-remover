@@ -1,0 +1,137 @@
+PM REVIEW EVIDENCE
+Task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2-OWNER-TEST-PREP-EVIDENCE-REV1
+Product task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
+Reviewed source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
+Evidence source: raw read-only command outputs returned by executor and reviewed against the active PM execution spec.
+
+1. git worktree list --porcelain
+
+worktree E:/Project AI/Video-sub-remove
+HEAD d67a427f1c90a2e98da560977736ead80637db3a
+branch refs/heads/rescue/wip-20260803
+
+worktree E:/Project AI/_owner_test/034-rev2
+HEAD ea9521f6fe957e24e49cc5d090e275511d91141d
+detached
+
+worktree E:/Project AI/_review/INCIDENT-RECOVERY-007E-002
+HEAD 7f84cca120a7cf08ba473181b1a70525990c04a0
+branch refs/heads/review/INCIDENT-RECOVERY-007E-001-evidence
+
+worktree E:/Project AI/Video-sub-remove-ai-settings
+HEAD 0cfc80edce614fd2c59939255439528015b8b600
+branch refs/heads/review/RECOVERY-007E-AI-SETTINGS-001-ai-settings
+
+worktree E:/Project AI/Video-sub-remove-ai-settings-publish
+HEAD c330f37a96aac7d2ba6e43d31b5c29f8de4704dd
+branch refs/heads/publish/RECOVERY-007E-AI-SETTINGS-001-clean
+
+worktree E:/Project AI/Video-sub-remove-ai-settings-verify
+HEAD 3eb744dc271b8f411f46069457459d4d3b07752b
+detached
+
+worktree E:/Project AI/Video-sub-remove-ai-settings-verify-013
+HEAD 4890f37180e0d4837486b101c5f7b610bc21af78
+detached
+
+worktree E:/Project AI/Video-sub-remove-ai-settings-verify-014
+HEAD c7b756cad783f21c4168f299474d6f54e5619b9d
+detached
+
+worktree E:/Project AI/Video-sub-remove-ai-settings-verify-014b
+HEAD d2fcb5def5c132cc69e59d001b35e812ab4f3662
+detached
+
+worktree E:/Project AI/Video-sub-remove-ai-settings-verify-015
+HEAD eaf6d393ebc827a4968ba2c05250fd8210d34a09
+detached
+
+worktree E:/Project AI/Video-sub-remove-ai-settings-verify-017
+HEAD 09eb0a8da11bad135ad8f1b379c99edb6a345746
+detached
+
+worktree E:/Project AI/Video-sub-remove-missing-modules-evidence
+HEAD 679a835de542470f56af38712923f153be4e7700
+branch refs/heads/review/RECOVERY-007E-SOURCE-BASELINE-002-missing-modules-evidence
+
+worktree E:/Project AI/Video-sub-remove-module-closure
+HEAD 7e18c04cf2483403010f237356dfb7f369dae1a8
+branch refs/heads/review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
+
+worktree E:/Project AI/Video-sub-remove-owner-retest
+HEAD eaf6d393ebc827a4968ba2c05250fd8210d34a09
+detached
+
+worktree E:/Project AI/Video-sub-remove-owner-retest-017
+HEAD 09eb0a8da11bad135ad8f1b379c99edb6a345746
+detached
+
+worktree E:/Project AI/Video-sub-remove-owner-retest-023
+HEAD d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd
+detached
+
+worktree E:/Project AI/Video-sub-remove-source-baseline
+HEAD 8d32226e780e8899a443cf4c480dbe95b45d0559
+branch refs/heads/review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline
+
+worktree E:/Project AI/Video-sub-remove-staged-tree-evidence
+HEAD aa7006e8a90afc44d5a8fedc2ec914c58a548212
+branch refs/heads/review/INCIDENT-RECOVERY-007E-STAGED-TREE-001-evidence
+
+worktree E:/Project AI/Video-sub-remove-worktree
+HEAD 2100d2bab683a43825a3e37537ed1976fe8583c4
+branch refs/heads/review/INCIDENT-RECOVERY-007E-TRACKING-001-evidence
+
+worktree E:/Project AI/video-subtitle-remover-fix018
+HEAD a136bc269b78bc2ea700bcab179fdd1f0191ae28
+branch refs/heads/incident/INCIDENT-RECOVERY-007E-UNAUTHORIZED-BASE-PUSH-019-evidence
+
+worktree E:/Project AI/video-subtitle-remover-recovery021
+HEAD a13aa911554c39fdd814723c0d6acb4393301559
+branch refs/heads/review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
+
+2. $PWD.Path
+
+E:\Project AI\_owner_test\034-rev2
+
+3. git rev-parse HEAD
+
+ea9521f6fe957e24e49cc5d090e275511d91141d
+
+4. git status --short
+
+[empty output]
+
+5. git diff --name-only
+
+[empty output]
+
+6. git diff --cached --name-only
+
+[empty output]
+
+7. Get-Item .\node_modules | Format-List FullName,LinkType,Target
+
+FullName : E:\Project AI\_owner_test\034-rev2\node_modules
+LinkType : Junction
+Target   : E:\Project AI\Video-sub-remove\node_modules
+
+8. final git status --short
+
+[empty output]
+
+9. App currently running: YES
+10. Files changed: NONE
+11. Commits created: NONE
+12. Push performed: NO
+13. Merge: BLOCKED
+
+PM VERDICT FOR OWNER-TEST PREP EVIDENCE: PASS
+- isolated worktree identity matches required path;
+- isolated HEAD exactly matches reviewed source SHA;
+- tracked tree is clean before Owner verification;
+- dependency reuse is local-only via Junction to existing node_modules;
+- no dependency install/update reported;
+- no source/docs mutation from the prep/evidence execution;
+- Owner manual verification may proceed from this isolated runtime;
+- merge remains BLOCKED pending Owner result and canonical closeout.
