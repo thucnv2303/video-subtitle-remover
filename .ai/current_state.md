@@ -359,9 +359,10 @@ Merge: BLOCKED
 ## RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 
 Task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
-Status: WAITING_OWNER_VERIFICATION
+Status: WAITING_PM_VERIFICATION
 PR: #14
 Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
+Reviewed source: ea9521f6fe957e24e49cc5d090e275511d91141d
 
 Changes:
 - Added comprehensive model priority logic (job -> saved model -> fallback) without polluting existing jobs when missing.
@@ -375,6 +376,9 @@ Verification:
 - runtime: 115 PASS / 0 FAIL / 0 NOT TESTED (exit 0)
 - DOM: 35 PASS / 0 FAIL (exit 0)
 
+Automated verification: PASS
 Code review: PASS
-Owner: WAITING
-Merge: BLOCKED
+Owner manual app verification / Owner retest: PASS
+Owner evidence: direct Owner report on 2026-08-07, `task 34 đã oke`
+Documentation synchronization: WAITING_PM_VERIFICATION
+Merge: BLOCKED pending explicit PM approval

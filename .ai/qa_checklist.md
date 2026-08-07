@@ -45,13 +45,15 @@ Must not start full logic test until PM code review on PR #14 passes.
 - [ ] No unintended ai_api_key or ai_api_keys_* values remain in localStorage after session.
 
 ## RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2 QA
+Owner overall PASS on 2026-08-07. Note: The final Owner message was an overall task PASS and did not separately enumerate per-item prose. Task-specific criteria are marked complete as accepted by Project Manager.
+
 - [x] Automation: `loadStep1Models` isolates defaults to new jobs.
 - [x] Automation: `aiModelChanged` isolates defaults to new jobs.
 - [x] Automation: Missing jobs no longer block settings changes.
 - [x] Automation: Production real path `electronAPI.openFile` tested.
-- [ ] Owner: Creating a new job from UI selects current Pipeline 1 UI provider and model.
-- [ ] Owner: Creating a new job and changing provider/model in settings does NOT affect existing job when returning to it.
-- [ ] Owner: Closing app and re-opening restores correct global provider and saved model in UI.
+- [x] Owner: Creating a new job from UI selects current Pipeline 1 UI provider and model.
+- [x] Owner: Creating a new job and changing provider/model in settings does NOT affect existing job when returning to it.
+- [x] Owner: Closing app and re-opening restores correct global provider and saved model in UI.
 
 ## Credential Hardening QA (RECOVERY-007E-AI-SETTINGS-001-SOURCE-REVIEW-FIX-006)
 PM NEEDS_REVISION addressed in commit 4ee2f542. Owner retest: NOT STARTED.

@@ -7,16 +7,18 @@ RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 Pipeline 1 Per-Job AI Provider + Model Selector (REV2)
 
 ## Status
-WAITING_OWNER_VERIFICATION
+COMPLETED
 
 ## Current PR / Branch / SHA
 - PR: #14
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
 - Source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
 - Owner previous result (033 + 034): Job Card UI PASS / AI provider-model FAIL
-- Owner observation: Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong". Lịch sử source commit bd5e16f7 đã chứa .ai files.
+- Owner observation: direct Owner report on 2026-08-07, `task 34 đã oke`
+- Automated verification: PASS
 - Code review: PASS
-- Owner retest: WAITING
+- Owner manual verification: PASS
+- Documentation synchronization: WAITING_PM_VERIFICATION
 - Merge: BLOCKED
 
 ## Historical: 032 / 033 ancestry
@@ -94,8 +96,8 @@ WAITING_OWNER_VERIFICATION
 - Execution: PASS
 - Automated verification: PASS
 - Code review: PASS
-- Owner manual app verification: WAITING
-- Documentation synchronization: PASS
+- Owner manual app verification: PASS
+- Documentation synchronization: WAITING_PM_VERIFICATION
 - Merge permission: BLOCKED
 
 ## PR Tracking Facts
