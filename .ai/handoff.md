@@ -290,3 +290,43 @@ Verification:
 
 Owner: NOT STARTED
 Merge: BLOCKED
+
+
+## RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
+
+Task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
+Status: WAITING_PM_REVIEW
+PR: #14
+Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
+Parent: 5db68bc6ac872b6674ac4b1c17727687f7dd5240
+
+Owner previous result (033): Job Card UI PASS, AI provider/model FAIL
+
+Changes:
+- index.html: Added step1-ai-provider select (Gemini/DeepSeek/Ollama) above step1-ai-model
+- app.js createJob: added aiProvider (from localStorage.ai_provider) and aiModel fields
+- app.js: Removed fragile aiModelChanged DOM-copy handler
+- app.js: Added loadStep1Models(provider, job) - uses testProvider IPC or listOllamaModels IPC
+  - Never copies from Settings DOM
+  - Shows controlled error message when no API key (not 'Dang tai...')
+- app.js: Added step1-ai-provider change handler
+  - Updates job.aiProvider, clears stale job.aiModel, loads new model list
+- app.js: Updated renderJobDetail1 to restore provider selector then call loadStep1Models
+- app.js: Added initStep1Provider() at startup to set initial provider from localStorage
+- pipeline1-ai.js: Fixed const provider = job.aiProvider || localStorage.getItem...
+
+Verification:
+- node --check: PASS all 4 files
+- git diff --check: PASS
+- runtime: 128 PASS / 0 FAIL / 0 NOT TESTED (exit 0)
+- DOM: 35 PASS / 0 FAIL (exit 0)
+- npm start: Window visible, Page loaded, Python 8765, no errors
+
+Real app observation:
+- UI loads: OBSERVED
+- 'Nguon AI' selector appears: NOT OBSERVED via automation
+- Provider dropdown change: NOT OBSERVED via automation
+- Model loading with real credentials: NOT AVAILABLE (no real keys in test env)
+
+Owner: NOT STARTED
+Merge: BLOCKED

@@ -60,6 +60,12 @@
       srtContent: '', aiContent: '', voiceSubContent: '', voiceSegments: [],
       ttsAudioPath: null, ttsTimedSrt: null, ttsAudioDurMs: 0,
       karaokeAss: null, finalOutputPath: null,
+      aiProvider: localStorage.getItem('ai_provider') || 'gemini',
+      aiModel: localStorage.getItem(
+        (localStorage.getItem('ai_provider') || 'gemini') === 'ollama'
+          ? 'ai_model_ollama'
+          : `ai_model_${localStorage.getItem('ai_provider') || 'gemini'}`
+      ) || '',
       _aiTriggered: false, _ttsTriggered: false, _ttsRunning: false,
     };
   }
@@ -209,29 +215,79 @@
   window.addEventListener('error', (e) => addLog(`[UI Error] ${e.message}`, 'error'));
   window.addEventListener('unhandledrejection', (e) => addLog(`[UI Async Error] ${e.reason?.message || e.reason}`, 'error'));
 
+    // aiModelChanged: when global Settings change provider, update any newly-created jobs'
+    // default. Existing selected job's controls are managed by loadStep1Models().
     window.addEventListener('aiModelChanged', () => {
-    const provider = localStorage.getItem('ai_provider') || 'gemini';
-    const savedModel = localStorage.getItem(provider === 'ollama' ? 'ai_model_ollama' : `ai_model_${provider}`) || '';
-    if (el.aiModel2) {
-      el.aiModel2.innerHTML = '';
-      const sourceSelect = provider === 'ollama' ? document.getElementById('ai-ollama-model-select') : document.getElementById('ai-cloud-model');
-      if (sourceSelect && sourceSelect.options.length > 0) {
-        Array.from(sourceSelect.options).forEach(opt => {
-          if (opt.value) el.aiModel2.append(new Option(opt.text, opt.value));
-        });
-        if (savedModel && Array.from(el.aiModel2.options).some(o => o.value === savedModel)) {
-          el.aiModel2.value = savedModel;
-        } else if (savedModel && provider === 'ollama') {
-          el.aiModel2.append(new Option(savedModel, savedModel));
-          el.aiModel2.value = savedModel;
-        }
-      } else {
-        el.aiModel2.append(new Option('Chưa chọn', ''));
-      }
-    }
-  });
+      const job = state.pipeline1SelectedJobId
+        ? state.jobs.find(j => j.id === state.pipeline1SelectedJobId)
+        : null;
+      // Re-load model list for currently selected job's provider (if any)
+      if (job) loadStep1Models(job.aiProvider || localStorage.getItem('ai_provider') || 'gemini', job);
+    });
 
   // â”€â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+  // --- Pipeline 1: Load model list for a given provider into step1-ai-model ---
+  // Uses real IPC contracts: testProvider (gemini/deepseek) or listOllamaModels (ollama)
+  // Never copies from Settings DOM. Shows controlled message when no key available.
+  async function loadStep1Models(provider, job) {
+    const modelEl = document.getElementById('step1-ai-model');
+    if (!modelEl) return;
+
+    modelEl.innerHTML = '';
+    modelEl.disabled = true;
+
+    try {
+      if (provider === 'ollama') {
+        if (!window.electronAPI?.listOllamaModels) {
+          modelEl.append(new Option('Ollama không khả dụng', ''));
+          return;
+        }
+        const endpoint = localStorage.getItem('ai_endpoint') || 'http://localhost:11434/api/chat';
+        const result = await window.electronAPI.listOllamaModels(endpoint);
+        if (result.status !== 'ok' || !result.models.length) {
+          const errMsg = result.error || 'Không tìm thấy model Ollama';
+          modelEl.append(new Option(errMsg.slice(0, 60), ''));
+        } else {
+          result.models.forEach(m => modelEl.append(new Option(m, m)));
+          // Restore job's model if available
+          if (job && job.aiModel && result.models.includes(job.aiModel)) {
+            modelEl.value = job.aiModel;
+          } else if (job && result.models.length > 0) {
+            // fallback: first available
+            modelEl.value = result.models[0];
+            if (job) job.aiModel = result.models[0];
+          }
+        }
+      } else {
+        // Cloud: gemini or deepseek
+        if (!window.electronAPI?.testProvider) {
+          modelEl.append(new Option('Cần chạy trong Electron app', ''));
+          return;
+        }
+        const result = await window.electronAPI.testProvider(provider);
+        if (result.status !== 'ok' || !result.models || result.models.length === 0) {
+          const errMsg = result.error || 'Chưa có API key — cấu hình trong Settings';
+          modelEl.append(new Option(errMsg.slice(0, 60), ''));
+        } else {
+          result.models.forEach(m => modelEl.append(new Option(m, m)));
+          if (job && job.aiModel && result.models.includes(job.aiModel)) {
+            modelEl.value = job.aiModel;
+          } else if (job && result.models.length > 0) {
+            modelEl.value = result.models[0];
+            if (job) job.aiModel = result.models[0];
+          }
+        }
+      }
+    } catch (err) {
+      modelEl.innerHTML = '';
+      modelEl.append(new Option('Lỗi tải model: ' + (err.message || '').slice(0, 40), ''));
+    } finally {
+      modelEl.disabled = false;
+    }
+  }
+  window.loadStep1Models = loadStep1Models;
+
   el.navItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1319,6 +1375,27 @@
 
 
 
+  document.getElementById('step1-ai-provider')?.addEventListener('change', async (e) => {
+    const provider = e.target.value;
+    if (state.pipeline1SelectedJobId) {
+      const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+      if (job) {
+        job.aiProvider = provider;
+        job.aiModel = ''; // Clear stale model from previous provider
+      }
+    }
+    // Reload model list for new provider
+    const job = state.pipeline1SelectedJobId
+      ? state.jobs.find(j => j.id === state.pipeline1SelectedJobId)
+      : null;
+    await loadStep1Models(provider, job);
+    // Save selected model into job
+    if (job) {
+      const modelEl = document.getElementById('step1-ai-model');
+      if (modelEl) job.aiModel = modelEl.value;
+    }
+  });
+
   document.getElementById('step1-ai-model')?.addEventListener('change', (e) => {
     if (state.pipeline1SelectedJobId) {
       const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
@@ -1370,8 +1447,16 @@
     if (statusEl) statusEl.textContent = job.status.toUpperCase();
 
     if (textEl) textEl.value = job.aiContent || job.srtContent || '';
+    // Restore per-job provider selector
+    const aiProviderEl = document.getElementById('step1-ai-provider');
+    if (aiProviderEl && job.aiProvider) aiProviderEl.value = job.aiProvider;
+    // Load model list for this job's provider, then restore model
     const aiModelEl = document.getElementById('step1-ai-model');
-    if (aiModelEl && job.aiModel) aiModelEl.value = job.aiModel;
+    if (aiModelEl) {
+      // Async load: restore job model after list is populated
+      const providerForJob = job.aiProvider || localStorage.getItem('ai_provider') || 'gemini';
+      loadStep1Models(providerForJob, job).catch(() => {});
+    }
     const ttsVoiceEl = document.getElementById('step1-tts-voice');
     if (ttsVoiceEl && job.ttsVoice) ttsVoiceEl.value = job.ttsVoice;
     const ttsSpeedEl = document.getElementById('step1-tts-speed');
@@ -1409,5 +1494,17 @@
       addLog('Đã lưu nội dung cập nhật cho ' + job.fileName, 'info');
     }
   });
+
+  // --- Pipeline 1 provider selector initialization ---
+  // Set initial provider from global Settings and trigger initial model load
+  (function initStep1Provider() {
+    const providerEl = document.getElementById('step1-ai-provider');
+    if (!providerEl) return;
+    const globalProvider = localStorage.getItem('ai_provider') || 'gemini';
+    providerEl.value = globalProvider;
+    // Initial model list load (no job selected yet — just prepopulate for first job creation)
+    // We don't pass a job here since none is selected yet
+    loadStep1Models(globalProvider, null).catch(() => {});
+  })();
 
 })();

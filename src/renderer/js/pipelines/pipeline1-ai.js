@@ -9,7 +9,7 @@ export async function triggerAutoAiRewrite(job, srtText) {
   _addLog('[AI] 🔄 Đang viết lại phụ đề bằng AI...', 'info');
 
   try {
-    const provider = localStorage.getItem('ai_provider') || 'gemini';
+    const provider = job.aiProvider || localStorage.getItem('ai_provider') || 'gemini';
     const model = job.aiModel || localStorage.getItem(`ai_model_${provider}`) || '';
     const prompt = _getActivePrompt();
     if (!prompt) throw new Error('Chưa cấu hình prompt AI.');
