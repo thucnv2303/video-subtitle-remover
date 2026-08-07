@@ -1427,8 +1427,9 @@ def api_tts_retry(req: TTSRetryReq):
         out_dir = tempfile.gettempdir()
         dubbed_path = os.path.join(out_dir, f'tts_retry_{abs(hash(req.srt_content[:80]))}.mp3')
 
-        # Compute edge-tts rate string from tts_speed (UI 0.5-2.0, 1.0=normal)
+        # Compute edge-tts rate string from tts_speed (multiplier 0.5-2.0, 1.0=normal)
         _speed = req.tts_speed if req.tts_speed is not None else 1.0
+        _speed = max(0.5, min(2.0, float(_speed)))  # defensive clamp: reject out-of-range
         _rate_pct = int(round((_speed - 1.0) * 100))
         rate_str = f'{_rate_pct:+d}%'
 

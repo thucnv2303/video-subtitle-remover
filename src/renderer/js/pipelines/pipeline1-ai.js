@@ -90,6 +90,9 @@ export async function triggerAutoTts(job, srtText) {
       const voices = JSON.parse(localStorage.getItem('tts_voices') || '[]');
       refAudio = voices[Number(voice.split(':')[1])]?.audioPath || null;
     }
+    // job.ttsSpeed is slider value 50-200 (100=1.0x). Convert to multiplier for backend.
+    const speedPercent = Number(job.ttsSpeed ?? 100);
+    const speedMultiplier = speedPercent / 100;
     const response = await fetch(`${window.api.base}/api/tts-retry`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -98,7 +101,7 @@ export async function triggerAutoTts(job, srtText) {
         tts_voice: voice,
         video_path: job.filePath,
         tts_ref_audio: refAudio,
-        tts_speed: job.ttsSpeed !== undefined ? parseFloat(job.ttsSpeed) : null,
+        tts_speed: speedMultiplier,
       }),
     });
     const result = await response.json();

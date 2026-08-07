@@ -146,3 +146,43 @@ review/RECOVERY-007E-AI-SETTINGS-001-ai-settings
 - npm start: PASS (Window is now visible, Page loaded successfully, Python backend started)
 - Owner retest: NOT STARTED
 - Merge: BLOCKED
+
+
+## RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032-REV2
+
+Active task: RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032-REV2
+PR: #14
+Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
+Previous head (REV1): 17b8d135ef62d5426e497acd0d637d81d70fcf48
+New head (REV2): <PENDING COMMIT>
+
+TTS speed contract:
+- UI slider: min=50, max=200, value=100, step=5 (100=1.0x)
+- Renderer: speedMultiplier = Number(job.ttsSpeed ?? 100) / 100
+- Backend: clamps 0.5-2.0, computes rate_str = f'{(speed-1)*100:+d}%'
+- Mapping: 0.5->-50%, 1.0->+0%, 1.5->+50%, 2.0->+100% PASS
+- UI 100 -> backend 1.0 -> +0%: PASS
+- UI 150 -> backend 1.5 -> +50%: PASS
+- Range validation clamp: PASS
+
+Per-job:
+- Job A/B card selection: PASS
+- AI model persistence: PASS
+- TTS voice persistence: PASS
+- TTS speed persistence: PASS
+
+Execution:
+- job.aiModel -> AI payload (provider, model, srt_content AWAITED): PASS
+- job.ttsVoice -> TTS payload: PASS
+- job.ttsSpeed -> converted TTS payload (1.5 for slider 150): PASS
+
+Automated verification:
+- runtime: 41 PASS / 0 FAIL / 0 NOT TESTED (exit 0)
+- DOM: 35 PASS / 0 FAIL (exit 0)
+- backend speed mapping: 7 PASS / 0 FAIL (Python, exit 0)
+- npm start: PASS (Window visible, Page loaded, Python 8765)
+
+Canonical docs: synchronized (active task updated, history preserved)
+Code review: WAITING_PM_REVIEW
+Owner: NOT STARTED
+Merge: BLOCKED

@@ -1337,6 +1337,8 @@
       const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
       if (job) job.ttsSpeed = e.target.value;
     }
+    const lbl = document.getElementById('step1-tts-speed-label');
+    if (lbl) lbl.textContent = `Speed (${(Number(e.target.value) / 100).toFixed(1)}x)`;
   });
 
   window.renderJobDetail1 = function() {
@@ -1368,7 +1370,11 @@
     const ttsVoiceEl = document.getElementById('step1-tts-voice');
     if (ttsVoiceEl && job.ttsVoice) ttsVoiceEl.value = job.ttsVoice;
     const ttsSpeedEl = document.getElementById('step1-tts-speed');
-    if (ttsSpeedEl && job.ttsSpeed !== undefined) ttsSpeedEl.value = job.ttsSpeed;
+    if (ttsSpeedEl && job.ttsSpeed !== undefined) {
+      ttsSpeedEl.value = job.ttsSpeed;
+      const lbl = document.getElementById('step1-tts-speed-label');
+      if (lbl) lbl.textContent = `Speed (${(Number(job.ttsSpeed) / 100).toFixed(1)}x)`;
+    }
 
     if (job.ttsAudioPath) {
       if (audioEl) {
