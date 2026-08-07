@@ -72,19 +72,19 @@ bd5e16f7d3bac53ea43653452b4c3cd01c5993e1
 - Legacy keys deleted (ai_api_key, ai_api_keys_gemini, ai_api_keys_deepseek, ai_api_keys_ollama).
 
 ## Next Permitted Action
-Owner manual verification after PM code review on PR #8.
+Owner manual verification ONLY after PM code review on PR #14 passes.
 
 ## Execution
-PASS (static checks)
+PASS (static checks and runtime tests)
 
 ## Code review
-PASS
+WAITING_PM_REVIEW
 
 ## Automated verification
-PASS (DOM structure, js syntax) - node tests/test_pipeline1_runtime.js exit 1
+PASS - .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (107 PASS / 0 FAIL), node tests/test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL)
 
 ## Owner manual app verification
-WAITING
+WAITING (Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong")
 
 ## Documentation synchronization
 PASS

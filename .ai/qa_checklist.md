@@ -19,9 +19,9 @@ PAUSED - BLOCKED BY BUG-008/BUG-009
 - [ ] Pipeline 2 still produces expected clean-video result.
 - [ ] Owner records exact observed PASS/FAIL, error text, visible state and output filenames.
 
-## RECOVERY-007E Owner Verification
-Owner retest: NOT STARTED.
-Must not start until PM code review on PR #8 passes.
+## RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034 Owner Verification
+Owner retest: WAITING (Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong").
+Must not start full logic test until PM code review on PR #14 passes.
 
 - [ ] Settings page renders without layout regression on home page.
 - [ ] DeepSeek provider panel has masked API key input (type=password).

@@ -39,8 +39,8 @@ WAITING_PM_REVIEW
 - Pipeline 1 AI selector synchronized with Settings provider/model selection.
 
 ## Rerun Verification
-- node tests/test_pipeline1_runtime.js: EXIT 1
-- node tests/test_renderer_dom_structure.js: EXIT 0
+- .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js: EXIT 0 (107 PASS / 0 FAIL)
+- node tests/test_renderer_dom_structure.js: EXIT 0 (35 PASS / 0 FAIL)
 - node --check src/renderer/js/app.js: EXIT 0
 - node --check src/renderer/js/pipelines/pipeline1-ai.js: EXIT 0
 

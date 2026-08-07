@@ -34,7 +34,7 @@ WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
 - Task 034: 1b66a10d / 034-REV1: see Source SHA above
 
 ## Verification Gates
-- Automated verification: node tests/test_pipeline1_runtime.js exit 1, node tests/test_renderer_dom_structure.js exit 0, app.js --check exit 0, pipeline1-ai.js --check exit 0
+- Automated verification: .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (107 PASS / 0 FAIL), node tests/test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL), app.js --check exit 0, pipeline1-ai.js --check exit 0
 - Code review: WAITING_PM_REVIEW
 - Owner: WAITING
 - Documentation: PASS
