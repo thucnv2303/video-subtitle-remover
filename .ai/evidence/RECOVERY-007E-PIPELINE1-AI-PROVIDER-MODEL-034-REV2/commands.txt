@@ -1,0 +1,4 @@
+.\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js
+node tests\test_renderer_dom_structure.js
+node --check src\renderer\js\app.js
+node --check src\renderer\js\pipelines\pipeline1-ai.js
