@@ -1,10 +1,10 @@
 # Current Task
 
 ## Task ID
-RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
+RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 
 ## Name
-Pipeline 1 Per-Job AI Provider + Model Selector (REV1)
+Pipeline 1 Per-Job AI Provider + Model Selector (REV2)
 
 ## Status
 WAITING_PM_REVIEW
@@ -39,7 +39,7 @@ WAITING_PM_REVIEW
 - Pipeline 1 AI selector synchronized with Settings provider/model selection.
 
 ## Rerun Verification
-- .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js: EXIT 0 (107 PASS / 0 FAIL)
+- .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js: EXIT 0 (115 PASS / 0 FAIL)
 - node tests/test_renderer_dom_structure.js: EXIT 0 (35 PASS / 0 FAIL)
 - node --check src/renderer/js/app.js: EXIT 0
 - node --check src/renderer/js/pipelines/pipeline1-ai.js: EXIT 0

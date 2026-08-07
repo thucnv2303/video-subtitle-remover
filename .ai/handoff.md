@@ -4,7 +4,7 @@
 RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
 
 ## Active Task
-RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034 (WAITING_PM_REVIEW)
+RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2 (WAITING_PM_REVIEW)
 
 ## Next permitted action
 PM code review of PR #14 (review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032).
@@ -81,7 +81,7 @@ PASS (static checks and runtime tests)
 WAITING_PM_REVIEW
 
 ## Automated verification
-PASS - .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (107 PASS / 0 FAIL), node tests/test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL)
+PASS - .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL), node tests/test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL)
 
 ## Owner manual app verification
 WAITING (Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong")

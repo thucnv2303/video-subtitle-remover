@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
+WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 va P2).
@@ -18,7 +18,7 @@ WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
 - RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032: WAITING_PM_REVIEW
 
 ## Active Task / PR
-- Active task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
+- Active task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 - PR: #14
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
 - Source SHA (034-REV1): bd5e16f7d3bac53ea43653452b4c3cd01c5993e1
@@ -34,7 +34,7 @@ WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
 - Task 034: 1b66a10d / 034-REV1: see Source SHA above
 
 ## Verification Gates
-- Automated verification: .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (107 PASS / 0 FAIL), node tests/test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL), app.js --check exit 0, pipeline1-ai.js --check exit 0
+- Automated verification: .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL), node tests/test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL), node --check src/renderer/js/app.js exit 0, node --check src/renderer/js/pipelines/pipeline1-ai.js exit 0
 - Code review: WAITING_PM_REVIEW
 - Owner: WAITING
 - Documentation: PASS
@@ -351,6 +351,29 @@ Real app observation:
 - 'Nguon AI' selector appears: NOT OBSERVED via automation
 - Provider dropdown change: NOT OBSERVED via automation
 - Model loading with real credentials: NOT AVAILABLE (no real keys in test env)
+
+Owner: NOT STARTED
+Merge: BLOCKED
+
+
+## RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
+
+Task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
+Status: WAITING_PM_REVIEW
+PR: #14
+Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
+
+Changes:
+- Added comprehensive model priority logic (job -> saved model -> fallback) without polluting existing jobs when missing.
+- Global settings provider change now correctly isolated to new jobs by checking state.pipeline1SelectedJobId inside aiModelChanged event handler.
+- Fixed STARTUP case to properly load the default global provider in the UI.
+- Removed synthetic mock fallback logic in test_pipeline1_body.js tests, verifying the production createJob path.
+- Verification command outputs 115 PASS / 0 FAIL.
+
+Verification:
+- node --check: PASS
+- runtime: 115 PASS / 0 FAIL / 0 NOT TESTED (exit 0)
+- DOM: 35 PASS / 0 FAIL (exit 0)
 
 Owner: NOT STARTED
 Merge: BLOCKED
