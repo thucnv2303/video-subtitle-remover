@@ -223,3 +223,33 @@ Code review: WAITING_PM_REVIEW
 Owner: NOT STARTED
 Merge: BLOCKED
 
+
+
+## RECOVERY-007E-PIPELINE1-JOB-UI-RUNTIME-FIX-033
+
+Task: RECOVERY-007E-PIPELINE1-JOB-UI-RUNTIME-FIX-033
+Status: WAITING_PM_REVIEW
+PR: #14
+Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
+Parent: 4b5e9bf09753d13f00facd71ea606e12a2e178bf
+
+Root cause of owner FAIL:
+1. renderJobDetail1() called as bare function inside renderJobList IIFE - ReferenceError
+   (was only assigned to window.renderJobDetail1, not declared as local function)
+2. Pipeline 1 cards used class=tk-job-card with NO CSS - cards appeared as plain text rows
+3. statusLabel emoji strings had mojibake (double-encoded UTF-8)
+4. Action button labels had mojibake (Dung/Huy/Chay)
+
+Fixes applied (app.js only, no source structure changes):
+- window.renderJobDetail1() in both delete and select click branches
+- card.className = 'job-card' (matches CSS .job-card rule)
+- statusLabel: correct UTF-8 emoji literals
+- action button emoji: correct UTF-8 literals
+
+Verification:
+- runtime: 58 PASS / 0 FAIL / 0 NOT TESTED (exit 0)
+- DOM: 35 PASS / 0 FAIL (exit 0)
+- npm start: Window visible, Page loaded, Python 8765
+
+Owner: NOT STARTED
+Merge: BLOCKED

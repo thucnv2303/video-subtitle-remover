@@ -408,7 +408,7 @@
 
   // â”€â”€â”€ Render Job List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function renderJobList() {
-    const statusLabel = { idle: 'â³ Chá»', queued: 'â³ Äang chá»', processing: 'ðŸ”„ Xá»­ lÃ½', finished: 'âœ… HoÃ n táº¥t', error: 'âŒ Lá»—i' };
+    const statusLabel = { idle: '⏳ Chờ', queued: '⏳ Đang chờ', processing: '🔄 Xử lý', finished: '✅ Hoàn tất', error: '❌ Lỗi' };
 
     // Step 2 job list (right column)
     const list2 = document.getElementById('job-list');
@@ -444,26 +444,25 @@
     if (jobCount) jobCount.textContent = `(${state.jobs.length} Items)`;
     if (list1) {
       if (state.jobs.length === 0) {
-        list1.innerHTML = '<div class="job-empty" style="text-align:center;color:#71717a;margin-top:50px;">ChÆ°a cÃ³ video nÃ o. Báº¥m "+ ThÃªm Video" Ä‘á»ƒ báº¯t Ä‘áº§u.</div>';
+        list1.innerHTML = '<div class="job-empty" style="text-align:center;color:#71717a;margin-top:50px;">Chưa có video nào. Bấm "+ Thêm Video" để bắt đầu.</div>';
       } else {
         list1.innerHTML = '';
         state.jobs.forEach((job, idx) => {
           const card = document.createElement('div');
-          card.className = 'tk-job-card';
+          card.className = 'job-card';
           if (state.pipeline1SelectedJobId === job.id) card.classList.add('active');
-          const stClass = { finished: 'completed', error: 'failed' }[job.status] || 'processing';
           const actionBtn = job.status === 'processing'
-            ? `<button class="btn-stop-job" data-id="${job.id}" style="background:#ef4444;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">â¹ Dá»«ng (${job._elapsedTimeString || '00:00'})</button>`
+            ? `<button class="btn-stop-job" data-id="${job.id}" style="background:#ef4444;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">⏹ Dừng (${job._elapsedTimeString || '00:00'})</button>`
             : job.status === 'queued'
-              ? `<button class="btn-stop-job" data-id="${job.id}" style="background:#ef4444;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">â¹ Há»§y</button>`
-              : `<button class="btn-process-job" data-id="${job.id}" style="background:#10b981;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">â–¶ Cháº¡y</button>`;
+              ? `<button class="btn-stop-job" data-id="${job.id}" style="background:#ef4444;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">⏹ Hủy</button>`
+              : `<button class="btn-process-job" data-id="${job.id}" style="background:#10b981;color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">▶ Chạy</button>`;
           card.innerHTML = `
-            <div class="tk-job-card-header ${stClass}">
-              <span>Job #${idx+1}: ${job.fileName}</span>
-              <div style="display:flex;gap:6px;align-items:center">
-                <span style="background:rgba(255,255,255,.2);padding:2px 8px;border-radius:4px;font-size:11px">${job.status.toUpperCase()}</span>
+            <div class="job-name">Job #${idx+1}: ${job.fileName}</div>
+            <div class="job-detail">
+              <span class="status-tag">${statusLabel[job.status] || job.status.toUpperCase()}</span>
+              <div style="display:flex;gap:4px;align-items:center">
                 ${actionBtn}
-                <button class="btn-delete-job" data-id="${job.id}" style="background:rgba(239,68,68,.8);color:white;border:none;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">âœ–</button>
+                <button class="btn-delete-job" data-id="${job.id}" style="background:rgba(239,68,68,.8);color:white;border:none;padding:2px 6px;border-radius:4px;cursor:pointer;font-size:11px">✖</button>
               </div>
             </div>`;
 
@@ -473,23 +472,23 @@
               if (state.activeJobId === job.id) state.activeJobId = null;
               if (state.pipeline1SelectedJobId === job.id) state.pipeline1SelectedJobId = null;
               renderJobList();
-              renderJobDetail1();
+              window.renderJobDetail1();
             } else if (e.target.classList.contains('btn-process-job')) {
               if (['idle','error','finished'].includes(job.status)) {
                 job.status   = 'queued';
-                job.pipeline = 1; // Pipeline 1: AI+TTS, khÃ´ng inpaint
+                job.pipeline = 1;
                 renderJobList();
                 processPipeline1Queue();
               }
             } else if (e.target.classList.contains('btn-stop-job')) {
-              if (job.status === 'processing') { addLog(`Dá»«ng Job "${job.fileName}"...`, 'warning'); await window.electronAPI?.cancelProcess(); }
+              if (job.status === 'processing') { addLog(`Dừng Job "${job.fileName}"...`, 'warning'); await window.electronAPI?.cancelProcess(); }
               job.status = 'idle'; job._elapsedTimeString = '';
               if (state.processingJobId === job.id) state.processingJobId = null;
               renderJobList(); updateStartButton();
             } else {
               state.pipeline1SelectedJobId = job.id;
               renderJobList();
-              renderJobDetail1();
+              window.renderJobDetail1();
             }
           });
           list1.appendChild(card);
