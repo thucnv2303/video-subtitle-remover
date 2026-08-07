@@ -88,6 +88,45 @@
     });
   };
 
+  // === 6.1. STARTUP / SAVED MODEL ==========================================
+  window._appState.pipeline1SelectedJobId = null;
+  localStorage.setItem('ai_provider', 'gemini');
+  localStorage.setItem('ai_model_gemini', 'gemini-2.5-pro');
+  providerEl.value = 'gemini';
+  await window.loadStep1Models('gemini', null);
+  assert(providerEl.value === 'gemini', '[STARTUP] provider=gemini');
+  assert(modelEl.value === 'gemini-2.5-pro', '[STARTUP] model=gemini-2.5-pro (không được ra flash)');
+
+  // === 6.2. SETTINGS EVENT / NO JOB =========================================
+  localStorage.setItem('ai_provider', 'deepseek');
+  localStorage.setItem('ai_model_deepseek', 'deepseek-coder');
+  window.dispatchEvent(new Event('aiModelChanged'));
+  await wait(150); // allow async model load
+  assert(providerEl.value === 'deepseek', '[SETTINGS NO-JOB] provider=deepseek');
+  assert(modelEl.value === 'deepseek-coder', '[SETTINGS NO-JOB] model=deepseek-coder');
+
+  // === 6.3. SETTINGS EVENT / EXISTING JOB ===================================
+  window._appState.jobs = [
+    { id: 'jobC', fileName: 'VideoC.mp4', filePath: '/tmp/VideoC.mp4', status: 'idle',
+      aiProvider: 'gemini', aiModel: 'gemini-2.5-flash',
+      ttsVoice: 'none', ttsSpeed: '100', pipeline: 1, srtContent: '' }
+  ];
+  window._appState.pipeline1SelectedJobId = 'jobC';
+  window.renderJobList();
+  window.renderJobDetail1();
+  await wait(150);
+
+  localStorage.setItem('ai_provider', 'deepseek');
+  window.dispatchEvent(new Event('aiModelChanged'));
+  await wait(150);
+  
+  var jobC = window._appState.jobs.find(function(j) { return j.id === 'jobC'; });
+  assert(jobC.aiProvider === 'gemini', '[SETTINGS EXISTING-JOB] job.aiProvider=gemini');
+  assert(jobC.aiModel === 'gemini-2.5-flash', '[SETTINGS EXISTING-JOB] job.aiModel=gemini-2.5-flash');
+  assert(providerEl.value === 'gemini', '[SETTINGS EXISTING-JOB] visible provider=gemini');
+  assert(modelEl.value === 'gemini-2.5-flash', '[SETTINGS EXISTING-JOB] visible model=gemini-2.5-flash');
+
+
   // === 7. Set up 2 jobs with full aiProvider+aiModel state =============
   window._appState.pipeline1SelectedJobId = null;
   window._appState.jobs = [
@@ -283,14 +322,13 @@
     return Promise.resolve({ status: 'ok', models: OLLAMA_MODELS });
   };
 
-  // ==============================================================
-  // === 14. NEW JOB DEFAULT: Pipeline 1 UI selection -> new job
-  // ==============================================================
+  // === 14. REAL NEW-JOB PRODUCTION PATH ==================================
 
   // Reset state: no selected job
   window._appState.pipeline1SelectedJobId = null;
   window._appState.jobs = [];
   window.renderJobList();
+  window.renderJobDetail1();
 
   // Set Pipeline 1 provider to deepseek via DOM
   providerEl.value = 'deepseek';
@@ -301,51 +339,24 @@
   modelEl.value = 'deepseek-chat';
   modelEl.dispatchEvent(new Event('change', { bubbles: true }));
 
-  // Verify pipeline 1 controls show deepseek / deepseek-chat
-  assert(providerEl.value === 'deepseek',
-    '[NEW JOB] Pipeline 1 provider = deepseek before add. Got: ' + providerEl.value);
-  assert(modelEl.value === 'deepseek-chat',
-    '[NEW JOB] Pipeline 1 model = deepseek-chat before add. Got: ' + modelEl.value);
+  assert(providerEl.value === 'deepseek', '[NEW JOB] Pipeline 1 provider = deepseek before add');
+  assert(modelEl.value === 'deepseek-chat', '[NEW JOB] Pipeline 1 model = deepseek-chat before add');
 
-  // Call createJob directly (simulates + Thêm Video click without file picker)
-  if (typeof window.createJobFromPath === 'function') {
-    window.createJobFromPath('/tmp/TestVideo.mp4');
-  } else {
-    // Simulate: call the internal job creation path
-    // The + Thêm Video button triggers electronAPI.openFiles -> addJobFromPath
-    // We can't open a file picker, so we directly exercise createJob
-    // by triggering the internal state-mutating path if exposed, or
-    // replicate what btn-upload-step1 does by injecting a fake file path.
-    // Production path in app.js: createJob(filePath) -> state.jobs.push(job)
-    // We test by calling the internal function if window.createJob is exposed,
-    // otherwise we add a synthetic job that mirrors createJob behavior.
-    if (typeof window.createJob === 'function') {
-      var newJob = window.createJob('/tmp/TestVideo.mp4');
-      window._appState.jobs.push(newJob);
-    } else {
-      // Mirror createJob logic: prefer current Pipeline 1 UI values
-      var uiProvider = document.getElementById('step1-ai-provider')?.value;
-      var uiModel = document.getElementById('step1-ai-model')?.value;
-      var newJob = {
-        id: 'testNewJob', fileName: 'TestVideo.mp4', filePath: '/tmp/TestVideo.mp4',
-        status: 'idle',
-        aiProvider: uiProvider || localStorage.getItem('ai_provider') || 'gemini',
-        aiModel: (uiModel && uiModel.trim()) ? uiModel : '',
-        ttsVoice: 'none', ttsSpeed: '100', pipeline: 1,
-        srtContent: '', aiContent: undefined, ttsAudioPath: null,
-        _aiTriggered: false, _ttsTriggered: false, _ttsRunning: false
-      };
-      window._appState.jobs.push(newJob);
-    }
-  }
+  // Mock openFile
+  var _origOpenFile = window.electronAPI.openFile;
+  window.electronAPI.openFile = function() {
+    return Promise.resolve({ canceled: false, filePaths: ['/tmp/TestVideo.mp4'] });
+  };
+  
+  document.getElementById('btn-upload-step1').click();
+  await wait(200); // wait for openFile, addToQueue, createJob
 
-  assert(window._appState.jobs.length === 1,
-    '[NEW JOB] One job created. Count: ' + window._appState.jobs.length);
+  assert(window._appState.jobs.length === 1, '[NEW JOB] One job created via upload. Count: ' + window._appState.jobs.length);
   var createdJob = window._appState.jobs[0];
-  assert(createdJob.aiProvider === 'deepseek',
-    '[NEW JOB] newJob.aiProvider === deepseek (from Pipeline 1 UI). Got: ' + createdJob.aiProvider);
-  assert(createdJob.aiModel === 'deepseek-chat',
-    '[NEW JOB] newJob.aiModel === deepseek-chat (from Pipeline 1 UI). Got: ' + createdJob.aiModel);
+  assert(createdJob.aiProvider === 'deepseek', '[NEW JOB] createdJob.aiProvider === deepseek. Got: ' + createdJob.aiProvider);
+  assert(createdJob.aiModel === 'deepseek-chat', '[NEW JOB] createdJob.aiModel === deepseek-chat. Got: ' + createdJob.aiModel);
+  
+  window.electronAPI.openFile = _origOpenFile;
 
   // ==============================================================
   // === 15. EXECUTION CONTRACT: Cloud Job A (gemini)

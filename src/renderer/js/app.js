@@ -223,14 +223,16 @@
   window.addEventListener('error', (e) => addLog(`[UI Error] ${e.message}`, 'error'));
   window.addEventListener('unhandledrejection', (e) => addLog(`[UI Async Error] ${e.reason?.message || e.reason}`, 'error'));
 
-    // aiModelChanged: when global Settings change provider, update any newly-created jobs'
-    // default. Existing selected job's controls are managed by loadStep1Models().
     window.addEventListener('aiModelChanged', () => {
       const job = state.pipeline1SelectedJobId
         ? state.jobs.find(j => j.id === state.pipeline1SelectedJobId)
         : null;
-      // Re-load model list for currently selected job's provider (if any)
-      if (job) loadStep1Models(job.aiProvider || localStorage.getItem('ai_provider') || 'gemini', job);
+      if (!job) {
+        const provider = localStorage.getItem('ai_provider') || 'gemini';
+        const providerEl = document.getElementById('step1-ai-provider');
+        if (providerEl) providerEl.value = provider;
+        loadStep1Models(provider, null).catch(() => {});
+      }
     });
 
   // â”€â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -298,11 +300,24 @@
         modelEl.append(new Option(errorMsg, ''));
       } else {
         models.forEach(m => modelEl.append(new Option(m, m)));
+        
+        let preferredModel = '';
         if (job && job.aiModel && models.includes(job.aiModel)) {
-          modelEl.value = job.aiModel;
-        } else if (job && models.length > 0) {
-          modelEl.value = models[0];
-          job.aiModel = models[0];
+          preferredModel = job.aiModel;
+        } else {
+          const savedModel = localStorage.getItem(provider === 'ollama' ? 'ai_model_ollama' : `ai_model_${provider}`);
+          if (savedModel && models.includes(savedModel)) {
+            preferredModel = savedModel;
+          } else if (models.length > 0) {
+            preferredModel = models[0];
+          }
+        }
+        
+        if (preferredModel) {
+          modelEl.value = preferredModel;
+          if (job) {
+            job.aiModel = preferredModel;
+          }
         }
       }
     } catch (err) {
