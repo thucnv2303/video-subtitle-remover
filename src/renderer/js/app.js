@@ -1331,6 +1331,12 @@
       const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
       if (job) job.ttsVoice = e.target.value;
     }
+    // Clone voices do not support speed — disable slider truthfully
+    const isClone = e.target.value.startsWith('clone:');
+    const speedEl = document.getElementById('step1-tts-speed');
+    const speedLbl = document.getElementById('step1-tts-speed-label');
+    if (speedEl) speedEl.disabled = isClone;
+    if (speedLbl) speedLbl.textContent = isClone ? 'Speed (N/A — clone voice)' : `Speed (${(Number(speedEl?.value ?? 100) / 100).toFixed(1)}x)`;
   });
   document.getElementById('step1-tts-speed')?.addEventListener('change', (e) => {
     if (state.pipeline1SelectedJobId) {
@@ -1370,10 +1376,12 @@
     const ttsVoiceEl = document.getElementById('step1-tts-voice');
     if (ttsVoiceEl && job.ttsVoice) ttsVoiceEl.value = job.ttsVoice;
     const ttsSpeedEl = document.getElementById('step1-tts-speed');
+    const isCloneVoice = job.ttsVoice && job.ttsVoice.startsWith('clone:');
+    if (ttsSpeedEl) ttsSpeedEl.disabled = !!isCloneVoice;
     if (ttsSpeedEl && job.ttsSpeed !== undefined) {
       ttsSpeedEl.value = job.ttsSpeed;
       const lbl = document.getElementById('step1-tts-speed-label');
-      if (lbl) lbl.textContent = `Speed (${(Number(job.ttsSpeed) / 100).toFixed(1)}x)`;
+      if (lbl) lbl.textContent = isCloneVoice ? 'Speed (N/A — clone voice)' : `Speed (${(Number(job.ttsSpeed) / 100).toFixed(1)}x)`;
     }
 
     if (job.ttsAudioPath) {

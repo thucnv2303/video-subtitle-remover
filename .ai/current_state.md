@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-CANDIDATE_FIX — WAITING_PM_REVIEW
+WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 va P2).
@@ -13,6 +13,23 @@ CANDIDATE_FIX — WAITING_PM_REVIEW
 
 ## Documentation and Task State
 - INCIDENT-RECOVERY-007E-STAGED-TREE-001: COMPLETED
+- RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED
+- RECOVERY-007E-AI-SETTINGS-001: COMPLETED (historical — see archive below)
+- RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032: WAITING_PM_REVIEW
+
+## Active Task / PR
+- Active task: RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032
+- PR: #14
+- Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
+- Latest source commit: 398ab2cc97df97c64a67e79e285168fa590bc1e1 (REV2, pre-REV3 commit)
+- REV3 commit: ed0bfecd04ce32a46caa1cbb6abbd4f3a73f0f38
+
+## Verification Gates
+- Automated verification: PASS (49 PASS / 0 FAIL / 0 NOT TESTED, DOM 35/0)
+- Code review: WAITING_PM_REVIEW
+- Owner: NOT STARTED
+- Documentation: WAITING_PM_REVIEW
+- Merge: BLOCKED
 - RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
 - RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX — WAITING_PM_REVIEW - OWNER RETEST NOT STARTED
 
@@ -154,7 +171,7 @@ Active task: RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032-REV2
 PR: #14
 Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
 Previous head (REV1): 17b8d135ef62d5426e497acd0d637d81d70fcf48
-New head (REV2): <PENDING COMMIT>
+New head (REV2): 398ab2cc97df97c64a67e79e285168fa590bc1e1
 
 TTS speed contract:
 - UI slider: min=50, max=200, value=100, step=5 (100=1.0x)
@@ -183,6 +200,41 @@ Automated verification:
 - npm start: PASS (Window visible, Page loaded, Python 8765)
 
 Canonical docs: synchronized (active task updated, history preserved)
+Code review: WAITING_PM_REVIEW
+Owner: NOT STARTED
+Merge: BLOCKED
+
+
+## RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032-REV3
+
+Active task: RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032
+PR: #14
+Previous head (REV2): 398ab2cc97df97c64a67e79e285168fa590bc1e1
+
+Voice contract:
+- step1-tts-voice options fixed with value= attributes matching Settings contract
+- production value=none: PASS
+- production value=vi-VN-HoaiMyNeural: PASS
+- production value=vi-VN-NamMinhNeural: PASS
+- job.ttsVoice -> payload exact voice ID: PASS
+
+Clone speed truthfulness:
+- speed slider disabled when clone: voice selected: PASS
+- label shows N/A -- clone voice: PASS
+- slider re-enabled when switching to Edge TTS: PASS
+- renderJobDetail1 also applies disable/enable on job restore: PASS
+
+Automated verification:
+- runtime: 49 PASS / 0 FAIL / 0 NOT TESTED (exit 0)
+- DOM: 35 PASS / 0 FAIL (exit 0)
+- npm start: PASS (Window visible, Page loaded, Python 8765)
+
+Canonical docs:
+- task_current.md Task ID updated to PIPELINE1
+- handoff.md Active Task updated to PIPELINE1
+- current_state.md Status and Active Task/PR updated
+- <PENDING COMMIT> replaced with 398ab2cc (REV2) throughout
+
 Code review: WAITING_PM_REVIEW
 Owner: NOT STARTED
 Merge: BLOCKED

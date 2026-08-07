@@ -4,7 +4,12 @@
 RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
 
 ## Active Task
-RECOVERY-007E-AI-SETTINGS-001 (CANDIDATE_FIX — WAITING_PM_REVIEW)
+RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032 (WAITING_PM_REVIEW)
+
+## Next permitted action
+PM code review of PR #14 (review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032).
+Then owner test ONLY if PM code review PASS.
+Merge BLOCKED until owner reports PASS.
 
 ## Status
 - Owner test at abf0ee2: FAIL (see blockers in task_current.md).
@@ -145,7 +150,7 @@ Active task: RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032-REV2
 PR: #14
 Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
 Previous head (REV1): 17b8d135ef62d5426e497acd0d637d81d70fcf48
-New head (REV2): <PENDING COMMIT>
+New head (REV2): 398ab2cc97df97c64a67e79e285168fa590bc1e1
 
 TTS speed contract:
 - UI slider: min=50, max=200, value=100, step=5 (100=1.0x)
@@ -174,6 +179,41 @@ Automated verification:
 - npm start: PASS (Window visible, Page loaded, Python 8765)
 
 Canonical docs: synchronized (active task updated, history preserved)
+Code review: WAITING_PM_REVIEW
+Owner: NOT STARTED
+Merge: BLOCKED
+
+
+## RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032-REV3
+
+Active task: RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032
+PR: #14
+Previous head (REV2): 398ab2cc97df97c64a67e79e285168fa590bc1e1
+
+Voice contract:
+- step1-tts-voice options fixed with value= attributes matching Settings contract
+- production value=none: PASS
+- production value=vi-VN-HoaiMyNeural: PASS
+- production value=vi-VN-NamMinhNeural: PASS
+- job.ttsVoice -> payload exact voice ID: PASS
+
+Clone speed truthfulness:
+- speed slider disabled when clone: voice selected: PASS
+- label shows N/A -- clone voice: PASS
+- slider re-enabled when switching to Edge TTS: PASS
+- renderJobDetail1 also applies disable/enable on job restore: PASS
+
+Automated verification:
+- runtime: 49 PASS / 0 FAIL / 0 NOT TESTED (exit 0)
+- DOM: 35 PASS / 0 FAIL (exit 0)
+- npm start: PASS (Window visible, Page loaded, Python 8765)
+
+Canonical docs:
+- task_current.md Task ID updated to PIPELINE1
+- handoff.md Active Task updated to PIPELINE1
+- current_state.md Status and Active Task/PR updated
+- <PENDING COMMIT> replaced with 398ab2cc (REV2) throughout
+
 Code review: WAITING_PM_REVIEW
 Owner: NOT STARTED
 Merge: BLOCKED
