@@ -11,6 +11,11 @@ PM code review of PR #14 (review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032).
 Then owner test ONLY if PM code review PASS.
 Merge BLOCKED until owner reports PASS.
 
+## Current Remote HEAD
+- REV3 SHA: 1f5ec183ea9bf536ef70b45fc8b6d4e9d89741a1
+- Parent (REV2): 398ab2cc97df97c64a67e79e285168fa590bc1e1
+- REV3 publication note: An unpushed local commit was amended despite explicit no-amend instruction. Final remote ancestry remains linear: 398ab2cc -> 1f5ec183. No force push occurred. Do not amend again.
+
 ## Status
 - Owner test at abf0ee2: FAIL (see blockers in task_current.md).
 - DeepSeek API key visible in owner screenshot is COMPROMISED. Owner must rotate key.
@@ -217,3 +222,4 @@ Canonical docs:
 Code review: WAITING_PM_REVIEW
 Owner: NOT STARTED
 Merge: BLOCKED
+

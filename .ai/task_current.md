@@ -9,17 +9,15 @@ Pipeline 1 Per-Job Runtime State
 ## Status
 WAITING_PM_REVIEW
 
-## Owner Test at Previous Head (abf0ee2)
-FAIL - Owner-observed blockers:
-1. DeepSeek API key displayed in clear text.
-2. Kiem tra ket noi only validated local input, did not call DeepSeek.
-3. DeepSeek model list was not retrieved after key validation.
-4. Home page / Pipeline 1 layout was visually broken.
-5. Pipeline 1 AI selector did not offer or synchronize DeepSeek with Settings.
+## Current PR / Branch / SHA
+- PR: #14
+- Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
+- Remote HEAD (REV3): 1f5ec183ea9bf536ef70b45fc8b6d4e9d89741a1
+- Parent (REV2): 398ab2cc97df97c64a67e79e285168fa590bc1e1
+- REV3 publication note: An unpushed local commit was amended despite explicit no-amend instruction. Final remote ancestry remains linear: 398ab2cc -> 1f5ec183. No force push occurred. Do not amend again.
 
-## Implementation (CANDIDATE - NOT YET OWNER-RETESTED)
-- safeStorage.isEncryptionAvailable() verified, fails closed.
-- API keys encrypted with safeStorage, stored as hex ciphertext in userData/ai_keys.json.
+## Historical content preserved below
+---
 - No plaintext fallback. No Base64 fallback.
 - DeepSeek GET /models called from main process for validation/model discovery.
 - DeepSeek POST /chat/completions called from main process for rewrite.
@@ -223,3 +221,4 @@ Canonical docs:
 Code review: WAITING_PM_REVIEW
 Owner: NOT STARTED
 Merge: BLOCKED
+

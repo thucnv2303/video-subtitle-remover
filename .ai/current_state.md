@@ -21,8 +21,8 @@ WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032
 - Active task: RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032
 - PR: #14
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
-- Latest source commit: 398ab2cc97df97c64a67e79e285168fa590bc1e1 (REV2, pre-REV3 commit)
-- REV3 commit: ed0bfecd04ce32a46caa1cbb6abbd4f3a73f0f38
+- Latest source commit (REV3): 1f5ec183ea9bf536ef70b45fc8b6d4e9d89741a1
+- REV3 publication note: An unpushed local commit was amended despite explicit no-amend instruction. Final remote ancestry remains linear: 398ab2cc -> 1f5ec183. No force push occurred. Do not amend again.
 
 ## Verification Gates
 - Automated verification: PASS (49 PASS / 0 FAIL / 0 NOT TESTED, DOM 35/0)
