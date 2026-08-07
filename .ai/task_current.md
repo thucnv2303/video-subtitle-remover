@@ -7,7 +7,7 @@ RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 Pipeline 1 Per-Job AI Provider + Model Selector (REV2)
 
 ## Status
-WAITING_PM_REVIEW
+WAITING_OWNER_VERIFICATION
 
 ## Current PR / Branch / SHA
 - PR: #14

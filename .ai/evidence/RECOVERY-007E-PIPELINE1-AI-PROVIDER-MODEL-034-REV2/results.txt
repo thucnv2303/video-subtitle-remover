@@ -9,6 +9,13 @@ https://electronjs.org/docs/tutorial/security.
 This warning will not show up
 once the app is packaged.
 [Renderer] Uncaught (in promise) TypeError: window.electronAPI.hasProviderKeys is not a function
+
+TEST-HARNESS WARNING:
+window.electronAPI.hasProviderKeys is not a function.
+Observed only in Electron test harness mock environment.
+Not proven to be a production application regression.
+Runtime assertions still completed 115 PASS / 0 FAIL / 0 NOT TESTED,
+EXIT CODE 0.
 PASS: window._appState is non-null object
 PASS: pipeline1SelectedJobId field exists
 PASS: state.jobs is array
