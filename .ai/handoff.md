@@ -7,7 +7,7 @@ RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
 RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2 (WAITING_PM_VERIFICATION)
 
 ## Next permitted action
-Project Manager verifies documentation closeout and decides whether 034-REV2 can be formally closed / whether a next task may be activated. No further Anti implementation task or Owner test is expected.
+Project Manager verifies documentation correction. No further Anti implementation task or Owner test is expected.
 Merge remains BLOCKED.
 
 ## Source SHA
@@ -71,7 +71,7 @@ ea9521f6fe957e24e49cc5d090e275511d91141d
 - Legacy keys deleted (ai_api_key, ai_api_keys_gemini, ai_api_keys_deepseek, ai_api_keys_ollama).
 
 ## Next Permitted Action
-Project Manager verifies documentation closeout and decides whether 034-REV2 can be formally closed / whether a next task may be activated. No further Anti implementation task or Owner test is expected.
+Project Manager verifies documentation correction. No further Anti implementation task or Owner test is expected.
 
 ## Execution
 PASS (static checks and runtime tests)
@@ -83,7 +83,7 @@ PASS
 PASS - .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL / 0 NOT TESTED), node tests\test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL)
 
 ## Owner manual app verification
-PASS (direct Owner report on 2026-08-07, `task 34 đã oke`)
+PASS (direct Owner report on 2026-08-07: 	ask 34 đã oke)
 
 ## Documentation synchronization
 WAITING_PM_VERIFICATION

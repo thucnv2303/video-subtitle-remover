@@ -378,7 +378,7 @@ Verification:
 
 Automated verification: PASS
 Code review: PASS
-Owner manual app verification / Owner retest: PASS
-Owner evidence: direct Owner report on 2026-08-07, `task 34 đã oke`
+Owner manual verification/retest: PASS
+Owner evidence: direct Owner report on 2026-08-07: 	ask 34 đã oke
 Documentation synchronization: WAITING_PM_VERIFICATION
-Merge: BLOCKED pending explicit PM approval
+Merge: BLOCKED

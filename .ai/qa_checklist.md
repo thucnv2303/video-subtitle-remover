@@ -45,7 +45,7 @@ Must not start full logic test until PM code review on PR #14 passes.
 - [ ] No unintended ai_api_key or ai_api_keys_* values remain in localStorage after session.
 
 ## RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2 QA
-Owner overall PASS on 2026-08-07. Note: The final Owner message was an overall task PASS and did not separately enumerate per-item prose. Task-specific criteria are marked complete as accepted by Project Manager.
+Owner overall PASS on 2026-08-07. Note: the final Owner message was an overall PASS and did not separately enumerate per-item prose.
 
 - [x] Automation: `loadStep1Models` isolates defaults to new jobs.
 - [x] Automation: `aiModelChanged` isolates defaults to new jobs.
