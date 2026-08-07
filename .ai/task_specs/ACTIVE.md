@@ -3,10 +3,10 @@
 Status: ACTIVE
 
 Task:
-`INCIDENT-RECOVERY-007E-034-CLOSEOUT-SCOPE-001`
+`INCIDENT-RECOVERY-007E-034-CLOSEOUT-RECOVERY-002`
 
 Spec:
-`.ai/task_specs/INCIDENT-RECOVERY-007E-034-CLOSEOUT-SCOPE-001.md`
+`.ai/task_specs/INCIDENT-RECOVERY-007E-034-CLOSEOUT-RECOVERY-002.md`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -20,14 +20,16 @@ Reviewed application source SHA:
 Owner result:
 PASS — Owner reported on 2026-08-07: `task 34 đã oke`
 
-Incident reason:
-The prior closeout execution ran an unapproved broad rewrite across `.ai/*.md`, so the exact local tracked dirty-tree scope is not yet proven. Documentation closeout is frozen until read-only evidence resolves this uncertainty.
+Incident finding:
+The prior closeout worktree has tracked changes outside the approved four-file scope. It is contaminated and must remain untouched.
 
 Purpose:
-Capture read-only local scope evidence only. Do not repair, edit, stage, unstage, commit, push, or merge.
+Recreate and publish the 034-REV2 Owner-PASS documentation closeout from current GitHub canonical files in a new isolated detached worktree, then push exactly one documentation-only commit to PR #14's existing review branch.
 
-Executor must read the full referenced incident spec before any action.
+Executor must read the full referenced recovery spec before any action.
 
+Do not use the contaminated worktree as a publication/content source.
 Do not modify application source or tests.
 Do not start Task 035 or Task 036.
+Do not merge PR #14.
 Merge remains BLOCKED.
