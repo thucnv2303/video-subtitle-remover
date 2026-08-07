@@ -21,30 +21,10 @@
   const REGION_COLORS = ['#7c3aed', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#ef4444'];
 
   // â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const state = {
-    jobs: [],
-    activeJobId: null, pipeline1SelectedJobId: null,
-    outputDir: localStorage.getItem('output_dir') || null,
-    isBackendReady: false,
-    isDrawing: false,
-    isSelecting: false,
-    selectionStart: null,
-    playIntervalOrig: null,
-    playIntervalResult: null,
-    currentFrameOrig: 0,
-    currentFrameResult: 0,
-    videoInfo: null,
-    processingJobId: null,
-    processingPassIndex: 0,
-    pollTimer: null,
-    activeLogTab: 'all',
-    processingStartTime: null,
-    processingTimerInterval: null,
-    pipeline1JobId: null,  // job Ä‘ang cháº¡y Pipeline 1 (AI+TTS)
-  };
-
-  // Expose state globally so modules (pipeline3-finalize, etc.) can read it
-  window._appState = state;
+  const state = window._appState;
+  if (!state) {
+    throw new Error('state is not defined');
+  }
 
   // â”€â”€â”€ SRT Display Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /**
@@ -229,13 +209,25 @@
   window.addEventListener('error', (e) => addLog(`[UI Error] ${e.message}`, 'error'));
   window.addEventListener('unhandledrejection', (e) => addLog(`[UI Async Error] ${e.reason?.message || e.reason}`, 'error'));
 
-  window.addEventListener('aiModelChanged', () => {
+    window.addEventListener('aiModelChanged', () => {
     const provider = localStorage.getItem('ai_provider') || 'gemini';
     const savedModel = localStorage.getItem(provider === 'ollama' ? 'ai_model_ollama' : `ai_model_${provider}`) || '';
-    const label = savedModel ? `${provider.toUpperCase()}: ${savedModel}` : 'ChÆ°a chá»n';
     if (el.aiModel2) {
       el.aiModel2.innerHTML = '';
-      el.aiModel2.append(new Option(label, savedModel));
+      const sourceSelect = provider === 'ollama' ? document.getElementById('ai-ollama-model-select') : document.getElementById('ai-cloud-model');
+      if (sourceSelect && sourceSelect.options.length > 0) {
+        Array.from(sourceSelect.options).forEach(opt => {
+          if (opt.value) el.aiModel2.append(new Option(opt.text, opt.value));
+        });
+        if (savedModel && Array.from(el.aiModel2.options).some(o => o.value === savedModel)) {
+          el.aiModel2.value = savedModel;
+        } else if (savedModel && provider === 'ollama') {
+          el.aiModel2.append(new Option(savedModel, savedModel));
+          el.aiModel2.value = savedModel;
+        }
+      } else {
+        el.aiModel2.append(new Option('Chưa chọn', ''));
+      }
     }
   });
 
@@ -1325,9 +1317,30 @@
     addLog('App khá»Ÿi Ä‘á»™ng thÃ nh cÃ´ng.', 'info');
   }, 100);
 
-})(); // end IIFE
+
+
+
+  document.getElementById('step1-ai-model')?.addEventListener('change', (e) => {
+    if (state.pipeline1SelectedJobId) {
+      const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+      if (job) job.aiModel = e.target.value;
+    }
+  });
+  document.getElementById('step1-tts-voice')?.addEventListener('change', (e) => {
+    if (state.pipeline1SelectedJobId) {
+      const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+      if (job) job.ttsVoice = e.target.value;
+    }
+  });
+  document.getElementById('step1-tts-speed')?.addEventListener('change', (e) => {
+    if (state.pipeline1SelectedJobId) {
+      const job = state.jobs.find(j => j.id === state.pipeline1SelectedJobId);
+      if (job) job.ttsSpeed = e.target.value;
+    }
+  });
 
   window.renderJobDetail1 = function() {
+
     const titleEl = document.getElementById('step1-detail-title');
     const statusEl = document.getElementById('step1-detail-status');
     const textEl = document.getElementById('step1-detail-text');
@@ -1350,6 +1363,12 @@
     if (statusEl) statusEl.textContent = job.status.toUpperCase();
 
     if (textEl) textEl.value = job.aiContent || job.srtContent || '';
+    const aiModelEl = document.getElementById('step1-ai-model');
+    if (aiModelEl && job.aiModel) aiModelEl.value = job.aiModel;
+    const ttsVoiceEl = document.getElementById('step1-tts-voice');
+    if (ttsVoiceEl && job.ttsVoice) ttsVoiceEl.value = job.ttsVoice;
+    const ttsSpeedEl = document.getElementById('step1-tts-speed');
+    if (ttsSpeedEl && job.ttsSpeed !== undefined) ttsSpeedEl.value = job.ttsSpeed;
 
     if (job.ttsAudioPath) {
       if (audioEl) {
@@ -1377,3 +1396,5 @@
       addLog('ÄÃ£ lÆ°u ná»™i dung cáº­p nháº­t cho ' + job.fileName, 'info');
     }
   });
+
+})();

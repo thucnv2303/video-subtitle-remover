@@ -10,7 +10,7 @@ export async function triggerAutoAiRewrite(job, srtText) {
 
   try {
     const provider = localStorage.getItem('ai_provider') || 'gemini';
-    const model = localStorage.getItem(`ai_model_${provider}`) || '';
+    const model = job.aiModel || localStorage.getItem(`ai_model_${provider}`) || '';
     const prompt = _getActivePrompt();
     if (!prompt) throw new Error('Chưa cấu hình prompt AI.');
 
@@ -97,7 +97,7 @@ export async function triggerAutoTts(job, srtText) {
         srt_content: srtText,
         tts_voice: voice,
         video_path: job.filePath,
-        tts_ref_audio: refAudio,
+        tts_ref_audio: refAudio,// Adding speed
       }),
     });
     const result = await response.json();
