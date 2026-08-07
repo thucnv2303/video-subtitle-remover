@@ -1,10 +1,10 @@
 # Current Task
 
 ## Task ID
-RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032
+RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
 
 ## Name
-Pipeline 1 Per-Job Runtime State
+Pipeline 1 Per-Job AI Provider + Model Selector (REV1)
 
 ## Status
 WAITING_PM_REVIEW
@@ -12,9 +12,15 @@ WAITING_PM_REVIEW
 ## Current PR / Branch / SHA
 - PR: #14
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
-- Remote HEAD (REV3): 1f5ec183ea9bf536ef70b45fc8b6d4e9d89741a1
-- Parent (REV2): 398ab2cc97df97c64a67e79e285168fa590bc1e1
-- REV3 publication note: An unpushed local commit was amended despite explicit no-amend instruction. Final remote ancestry remains linear: 398ab2cc -> 1f5ec183. No force push occurred. Do not amend again.
+- Source SHA (034-REV1): PENDING_COMMIT
+- Docs SHA: PENDING_DOCS_COMMIT
+- Owner previous result (033 + 034): Job Card UI PASS / AI provider-model FAIL
+- Code review: WAITING_PM_REVIEW
+- Owner retest: NOT STARTED
+- Merge: BLOCKED
+
+## Historical: 032 / 033 ancestry
+- Task 032 REV3: 1f5ec183 | Task 033: 268613ae | 033-REV1: 5db68bc6 | Task 034: 1b66a10d
 
 ## Historical content preserved below
 ---

@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032
+WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 va P2).
@@ -18,11 +18,20 @@ WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032
 - RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032: WAITING_PM_REVIEW
 
 ## Active Task / PR
-- Active task: RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032
+- Active task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034
 - PR: #14
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
-- Latest source commit (REV3): 1f5ec183ea9bf536ef70b45fc8b6d4e9d89741a1
-- REV3 publication note: An unpushed local commit was amended despite explicit no-amend instruction. Final remote ancestry remains linear: 398ab2cc -> 1f5ec183. No force push occurred. Do not amend again.
+- Source SHA (034-REV1): PENDING_COMMIT
+- Docs SHA: PENDING_DOCS_COMMIT
+- Owner previous result: Job Card UI PASS / AI provider-model FAIL
+- Code review: WAITING_PM_REVIEW
+- Owner retest: NOT STARTED
+- Merge: BLOCKED
+
+### Historical: 032/033/034 ancestry
+- Task 032 REV3: 1f5ec183ea9bf536ef70b45fc8b6d4e9d89741a1
+- Task 033: 268613ae / 033-REV1: 5db68bc6
+- Task 034: 1b66a10d / 034-REV1: see Source SHA above
 
 ## Verification Gates
 - Automated verification: PASS (49 PASS / 0 FAIL / 0 NOT TESTED, DOM 35/0)
