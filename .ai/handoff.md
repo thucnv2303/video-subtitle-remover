@@ -11,15 +11,15 @@ PM code review of PR #14 (review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032).
 Owner retest ONLY after PM code review PASS.
 Merge BLOCKED until owner reports PASS.
 
-## Source SHA (034-REV1)
-bd5e16f7d3bac53ea43653452b4c3cd01c5993e1
+## Source SHA
+ea9521f6fe957e24e49cc5d090e275511d91141d
 
 ## Current Remote HEAD
-- 034-REV1 Source SHA: bd5e16f7d3bac53ea43653452b4c3cd01c5993e1
+- Source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
 - Owner observation: Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong". Lịch sử source commit bd5e16f7 đã chứa .ai files.
-- 034: 1b66a10d | 033-REV1: 5db68bc6 | 033: 268613ae
-- Task 032 REV3: 1f5ec183ea9bf536ef70b45fc8b6d4e9d89741a1
-- REV3 publication note: An unpushed local commit was amended despite explicit no-amend instruction. Final remote ancestry remains linear: 398ab2cc -> 1f5ec183. No force push occurred. Do not amend again.
+- 034-REV2: 398ab2cc -> 17b8d135 -> ...
+- Previous docs SHA: 69fe35231af1d6df3feb32e0c9151b3a1aada250
+- Previous evidence HEAD: b8ad1f960d14f01f076b365fe364179c41ad9fa2
 
 ## Status
 - Owner test at abf0ee2: FAIL (see blockers in task_current.md).
@@ -78,10 +78,10 @@ Owner manual verification ONLY after PM code review on PR #14 passes.
 PASS (static checks and runtime tests)
 
 ## Code review
-WAITING_PM_REVIEW
+PASS
 
 ## Automated verification
-PASS - .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL), node tests/test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL)
+PASS - .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL / 0 NOT TESTED), node tests\test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL)
 
 ## Owner manual app verification
 WAITING (Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong")

@@ -12,10 +12,10 @@ WAITING_PM_REVIEW
 ## Current PR / Branch / SHA
 - PR: #14
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
-- Source SHA (034-REV1): bd5e16f7d3bac53ea43653452b4c3cd01c5993e1
+- Source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
 - Owner previous result (033 + 034): Job Card UI PASS / AI provider-model FAIL
 - Owner observation: Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong". Lịch sử source commit bd5e16f7 đã chứa .ai files.
-- Code review: WAITING_PM_REVIEW
+- Code review: PASS
 - Owner retest: WAITING
 - Merge: BLOCKED
 
@@ -39,7 +39,7 @@ WAITING_PM_REVIEW
 - Pipeline 1 AI selector synchronized with Settings provider/model selection.
 
 ## Rerun Verification
-- .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js: EXIT 0 (115 PASS / 0 FAIL)
+- .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js: EXIT 0 (115 PASS / 0 FAIL / 0 NOT TESTED)
 - node tests/test_renderer_dom_structure.js: EXIT 0 (35 PASS / 0 FAIL)
 - node --check src/renderer/js/app.js: EXIT 0
 - node --check src/renderer/js/pipelines/pipeline1-ai.js: EXIT 0
@@ -93,8 +93,8 @@ WAITING_PM_REVIEW
 ## Verification gates
 - Execution: PASS
 - Automated verification: PASS
-- Code review: WAITING
-- Owner manual app verification: NOT STARTED
+- Code review: PASS
+- Owner manual app verification: WAITING
 - Documentation synchronization: PASS
 - Merge permission: BLOCKED
 

@@ -21,7 +21,7 @@ WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 - Active task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 - PR: #14
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
-- Source SHA (034-REV1): bd5e16f7d3bac53ea43653452b4c3cd01c5993e1
+- Source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
 - Owner previous result: Job Card UI PASS / AI provider-model FAIL
 - Owner observation: Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong". Lịch sử source commit bd5e16f7 đã chứa .ai files.
 - Code review: WAITING_PM_REVIEW
@@ -34,8 +34,8 @@ WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 - Task 034: 1b66a10d / 034-REV1: see Source SHA above
 
 ## Verification Gates
-- Automated verification: .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL), node tests/test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL), node --check src/renderer/js/app.js exit 0, node --check src/renderer/js/pipelines/pipeline1-ai.js exit 0
-- Code review: WAITING_PM_REVIEW
+- Automated verification: .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL / 0 NOT TESTED), node tests\test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL), node --check src\renderer\js\app.js exit 0, node --check src\renderer\js\pipelines\pipeline1-ai.js exit 0
+- Code review: PASS
 - Owner: WAITING
 - Documentation: PASS
 - Merge: BLOCKED
@@ -375,5 +375,6 @@ Verification:
 - runtime: 115 PASS / 0 FAIL / 0 NOT TESTED (exit 0)
 - DOM: 35 PASS / 0 FAIL (exit 0)
 
-Owner: NOT STARTED
+Code review: PASS
+Owner: WAITING
 Merge: BLOCKED
