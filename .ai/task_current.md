@@ -1,28 +1,40 @@
 # Current Task
 
 ## Task ID
-GOVERNANCE-AGENTOS-PRECOMMIT-001
+RECOVERY-007E-SETTINGS-V1-001-REV3
 
 ## Name
-Governance AgentOS Pre-commit Hook Correction
+Settings V1 — Clean Continuation After Governance Fix
 
 ## Goal
-Correct the tracked `.githooks/pre-commit` so repository enforcement matches the active GitHub review workflow: source and documentation commits remain separate, while the three dynamic project-state files remain synchronized when documentation is committed.
+Implement the approved Settings V1 UI and supporting renderer logic from the post-governance canonical baseline without reusing invalidated Settings implementations or local REV2 stash/worktree changes.
 
 ## Status
-IMPLEMENTED — PM CODE REVIEW PASS — WAITING EXPLICIT MERGE DECISION
+AUTHORIZED — WAITING EXECUTOR REPORT
 
-## Single objective
-Implement a 4-case logic in `.githooks/pre-commit` to allow isolated source commits, block mixed commits, require all 3 dynamic docs in docs-only commits, and allow unrelated docs/governance commits.
+## Source basis
+`cf20a02f1e7491fddf7f05dab98fae12050460bb`
+
+## Review branch
+`review/RECOVERY-007E-SETTINGS-V1-001-REV3`
+
+## Required behavior
+- Five Settings sections: General, AI Provider, Pipeline 1 Defaults, Voice Cloning, System/Diagnostics.
+- Strict provider key/model isolation using `ai_api_keys_<provider>` and `ai_model_<provider>`.
+- Safe legacy `ai_api_key` migration only for the currently persisted cloud provider.
+- Ollama endpoint/model support with no API key authority.
+- Output directory row safe for long paths/narrow window.
+- Diagnostics use existing real Backend/GPU/TTS calls with payload-specific interpretation.
+- Preserve existing Pipeline 1/2/3 responsibilities and working TTS/voice-clone behavior.
 
 ## Verification gates
+- Execution: AUTHORIZED.
+- Automated/static verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: NOT STARTED — WAITING FOR PM CODE REVIEW.
+- Documentation synchronization: WAITING FOR EXECUTION RESULT.
+- Merge permission: BLOCKED.
 
-- Automated verification: PASS — PM independently reproduced all 7 required hook scenarios from the GitHub HEAD hook.
-- Executor fixture evidence: NOT AUTHORITATIVE because fixture setup used `--no-verify`; no product-repository commit bypass is evidenced.
-- Code review: PASS.
-- Owner manual app verification: NOT APPLICABLE.
-- Documentation synchronization: PASS after PM knowledge-only correction.
-- Merge permission: BLOCKED pending explicit Project Manager/Owner merge instruction.
-
-## Product task dependency
-`RECOVERY-007E-SETTINGS-V1-001-REV2` remains BLOCKED until this governance correction is merged/adopted and PM publishes a fresh remote continuation spec/ref.
+## Authority
+Remote `.ai/task_specs/ACTIVE.md` and `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV3.md` on this branch are authoritative.
+Earlier Settings PRs, commits, local stash, patches, scratch files, and REV2 local edits are invalid implementation sources.

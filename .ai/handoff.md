@@ -1,40 +1,30 @@
 # AgentOS Handoff Status
 
 ## Last completed task
-GOVERNANCE-AGENTOS-PRECOMMIT-001 — Governance AgentOS Pre-commit Hook Correction.
+GOVERNANCE-AGENTOS-PRECOMMIT-001 — PASS / MERGED via PR #34.
 
-## Result
-PASS — PM CODE REVIEW
+## Canonical baseline
+`recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
 
-## Hook implementation commit
-`286eeea1661d7a0736b74c07c40c1ea343ad2848`
+Current canonical HEAD:
+`cf20a02f1e7491fddf7f05dab98fae12050460bb`
 
-## Executor documentation commit
-`44ebc922725da87205d5bafcfa17b9a671be7470`
+## Active task
+`RECOVERY-007E-SETTINGS-V1-001-REV3`
 
-## PM verification
-- Reviewed PR #34 directly on GitHub.
-- Verified exact hook logic matches Cases A-D in the execution spec.
-- Independently reproduced all 7 required hook scenarios from the GitHub HEAD hook: PASS.
-- Executor disposable-fixture setup used `--no-verify`; that executor fixture evidence is therefore not accepted as authoritative. No bypassed project-repository commit is evidenced by GitHub.
+## Review branch
+`review/RECOVERY-007E-SETTINGS-V1-001-REV3`
 
-## GitHub checks
-No CI/status checks are configured/reported for PR #34.
+## Execution authority
+Read remote ACTIVE and exact REV3 spec from the review branch before editing. Do not use earlier Settings PRs, local REV2 changes, stashes, normalized files, patches, or scratch artifacts as implementation sources.
 
-## Code review
-PASS
+## Gates
+- Execution: AUTHORIZED / WAITING EXECUTOR REPORT
+- Automated/static verification: WAITING
+- Code review: WAITING
+- Owner manual app verification: NOT STARTED — WAITING FOR PM CODE REVIEW
+- Documentation synchronization: WAITING
+- Merge permission: BLOCKED
 
-## Owner manual app verification
-NOT APPLICABLE (Governance-only hook correction)
-
-## Documentation synchronization
-PASS after PM knowledge-only correction.
-
-## Merge permission
-BLOCKED pending explicit merge instruction.
-
-## Next task
-After governance correction is merged/adopted, publish a fresh remote continuation spec/ref for `RECOVERY-007E-SETTINGS-V1-001-REV2`.
-
-## Product task status
-BLOCKED / NOT RESUMED. Owner product test remains NOT STARTED.
+## Next action
+Anti executes only the exact remote REV3 spec and publishes a Draft PR back to the canonical baseline branch.
