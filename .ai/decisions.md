@@ -69,3 +69,12 @@ Rules:
 - Whole-file rewrite tools, wildcard file loops, and line-ending conversion are forbidden for narrow documentation edits unless the active spec explicitly requires them.
 - For deterministic governance/spec/knowledge-only updates, the Project Manager may write directly through the GitHub API to avoid local dirty-tree and line-ending risk. This exception does not authorize PM application-source edits and does not bypass required review/gate recording.
 - Long specs may retain rationale/evidence, but the execution contract at the top must state hard rules, allowed commands/files, STOP behavior, and push gates compactly and unambiguously.
+
+
+## Architecture Decisions
+
+### Pipeline 1 Artifact Persistence (036-A-REV1)
+- Uses jobs/<job_id>/p1/manifest.json with strict schema validation.
+- Source identity verified by full-file SHA-256 hashing in 4 MiB chunks.
+- Atomic JSON file writing via .tmp rename to prevent corruption.
+- FPS timebase formatted as denominator/numerator.

@@ -219,3 +219,8 @@ WRITE_FAILED:       write or backup step failed, or post-write validation failed
 RESTORE_FAILED:     backup restoration failed, or post-write rollback failed.
 STORE_CORRUPT:      primary file and/or bak are invalid; or unlink failed on stale artifact.
 RECOVERY_REQUIRED:  keys missing; only tmp present; manual intervention needed.
+
+
+## Backend Modules
+- pi/p1_artifacts.py: Foundation for Pipeline 1 identity validation and artifact persistence.
+- pi/server.py: FastAPI server handling endpoints, including P1 dedicated logic.

@@ -382,3 +382,7 @@ Owner manual verification/retest: PASS
 Owner evidence: direct Owner report on 2026-08-07: task 34 đã oke
 Documentation synchronization: PASS
 Merge: MERGED — edc699930f4537f5f52568e9c0aaa8aeb68fb67b
+
+
+## Recent Changes
+- RECOVERY-007E-036-A-REV1: Implemented Pipeline 1 artifact persistence with full file SHA-256 fingerprinting, timebase, and atomic JSON manifest updates.
