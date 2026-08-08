@@ -1,40 +1,43 @@
 # AgentOS Handoff Status
 
-## Last completed task
-GOVERNANCE-AGENTOS-PRECOMMIT-001 — Governance AgentOS Pre-commit Hook Correction.
+## Last completed governance task
+GOVERNANCE-AGENTOS-PRECOMMIT-001 — PASS / MERGED via PR #34.
 
-## Result
-PASS — PM CODE REVIEW
+## Canonical baseline
+`recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
 
-## Hook implementation commit
-`286eeea1661d7a0736b74c07c40c1ea343ad2848`
+Current canonical HEAD:
+`cf20a02f1e7491fddf7f05dab98fae12050460bb`
 
-## Executor documentation commit
-`44ebc922725da87205d5bafcfa17b9a671be7470`
+## Invalidated product execution
+RECOVERY-007E-SETTINGS-V1-001-REV3 — INVALIDATED by PM review.
 
-## PM verification
-- Reviewed PR #34 directly on GitHub.
-- Verified exact hook logic matches Cases A-D in the execution spec.
-- Independently reproduced all 7 required hook scenarios from the GitHub HEAD hook: PASS.
-- Executor disposable-fixture setup used `--no-verify`; that executor fixture evidence is therefore not accepted as authoritative. No bypassed project-repository commit is evidenced by GitHub.
+## Active task
+`RECOVERY-007E-SETTINGS-V1-001-REV4`
 
-## GitHub checks
-No CI/status checks are configured/reported for PR #34.
+## Status
+WAITING_EVIDENCE
 
-## Code review
-PASS
+## Review branch
+`review/RECOVERY-007E-SETTINGS-V1-001-REV4`
 
-## Owner manual app verification
-NOT APPLICABLE (Governance-only hook correction)
+## Source Commit
+`7ba7c45`
 
-## Documentation synchronization
-PASS after PM knowledge-only correction.
+## Completed REV4 Implementation Highlights
+1. Restructured `src/renderer/index.html` into 5 clean product cards: General, AI Provider, Pipeline 1 Defaults, Voice Cloning, System / Diagnostics.
+2. Verified DOM ID uniqueness: all 10 required DOM IDs (`output-dir-text`, `btn-output-dir`, `ai-provider`, `ai-api-key`, `ai-endpoint`, `tts-status-chip`, `btn-save-ai`, `backend-status-chip`, `gpu-status-chip`, `btn-refresh-diagnostics`) occur **EXACTLY ONCE**.
+3. Implemented provider isolation & migration in `settings.js`: `initialPersistedProvider` recorded at startup, provider key loaded from `ai_api_keys_<provider>`, legacy key migrated ONLY when provider equals initial provider, blank key when switching to provider with no key, saving provider A writes `ai_api_keys_A` without mutating provider B or globally writing `ai_api_key`.
+4. API diagnostics: strictly uses `window.api.health()`, `window.api.gpuInfo()`, `window.api.getTTSStatus()`. ZERO direct `fetch()` calls. `gpu_available === false` correctly rendered as neutral CPU Mode (`status-chip neutral`).
+5. Static syntax checks passed (`node --check settings.js`, `node --check api.js`).
 
-## Merge permission
-BLOCKED pending explicit merge instruction.
+## Gates
+- Execution: COMPLETE
+- Automated/static verification: PASSED
+- Code review: WAITING_EVIDENCE
+- Owner manual app verification: WAITING FOR CHATGPT SUPERVISOR REVIEW
+- Documentation synchronization: COMPLETE
+- Merge permission: BLOCKED
 
-## Next task
-After governance correction is merged/adopted, publish a fresh remote continuation spec/ref for `RECOVERY-007E-SETTINGS-V1-001-REV2`.
-
-## Product task status
-BLOCKED / NOT RESUMED. Owner product test remains NOT STARTED.
+## Next action
+WAIT_FOR_CHATGPT_SUPERVISOR
