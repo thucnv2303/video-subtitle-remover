@@ -131,12 +131,14 @@ def main() -> None:
     for rel in FILES:
         before = originals[rel]
         after = patched[rel]
+        crlf_count = after.count(b"\r\n")
+        lf_count = after.count(b"\n")
         print(
             f"PATCHED {rel} "
             f"blob_before={git_blob_sha(before)} "
             f"blob_after={git_blob_sha(after)} "
             f"bytes_before={len(before)} bytes_after={len(after)} "
-            f"crlf={after.count(b'\\r\\n')} lf={after.count(b'\\n')}"
+            f"crlf={crlf_count} lf={lf_count}"
         )
 
 
