@@ -1,51 +1,68 @@
 # Active PM Execution Spec
 
-Status: HOLD
+Status: ACTIVE
 
 Task:
-`NONE — TASK 034 COMPLETE / POST-MERGE SYNC COMPLETE`
+`RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035`
+
+Spec:
+`.ai/task_specs/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035.md`
+
+PM-authored closeout helper:
+`.ai/task_specs/tools/close_pipeline1_artifact_audit_035.py`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
 
-Canonical branch:
+Canonical base:
 `recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement`
 
-Canonical branch state before this governance closeout:
-`6793020cee8bce4f089935a84a58774b37cd3d36`
+Canonical activation basis:
+`55be60509a94b4e6f18397dd691b42fd95776faa`
 
-Merged product PR #14:
-`edc699930f4537f5f52568e9c0aaa8aeb68fb67b`
-
-Merged documentation PR #15:
-`6793020cee8bce4f089935a84a58774b37cd3d36`
-
-Accepted Post-Merge Canonical Sync 009 executor commit:
-`6949de804fa46fa79345d610d8334900b61ef9a5`
+Review branch:
+`review/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035`
 
 Reviewed application source SHA:
 `ea9521f6fe957e24e49cc5d090e275511d91141d`
 
-Task 034 final verified gates:
-- application execution: PASS
-- automated verification: PASS
-- code review: PASS
-- Owner manual app verification: PASS — overall Owner report on 2026-08-07: `task 34 đã oke`
-- documentation synchronization: PASS
-- PR #14: MERGED
-- post-merge canonical synchronization: PASS
-- PR #15: MERGED
-- credential-rotation blocker from shared screenshot: NONE
-- unresolved Task 034 incident: NONE
+Why this task is active:
+- `.ai/project.md` orders a read-only audit of current Pipeline 1 and gap analysis against the target artifact contract as the next recovery milestone.
+- `.ai/migration_status.md` identifies Pipeline 1 as the current technical priority and says Pipeline 3 is not the next task.
+- `.ai/architecture.md` defines proposed P1 artifacts and source-identity requirements that must be audited before implementation.
+
+Execution type:
+READ-ONLY PRODUCT AUDIT plus documentation publication only.
 
 Anti authorization:
-NONE
+- read approved canonical/source files listed in the spec;
+- create `.ai/audits/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035.md`;
+- run the exact PM closeout helper once after the report is complete;
+- publish exactly the four authorized documentation files to this review branch.
 
-Task 035/036 authorization:
-NONE
+Application source/test/dependency authorization:
+NONE.
+
+Owner app verification:
+NOT REQUIRED for Audit 035.
+
+Task 036 authorization:
+NONE.
 
 Merge permission:
-USED — PR #14 and documentation-only PR #15 were merged by Project Manager after verification.
+BLOCKED pending executor audit publication and Project Manager GitHub review.
+
+Executor must fetch GitHub, read this ACTIVE file directly from `origin/review/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035`, then read the full referenced spec from the same remote ref.
+
+Local ACTIVE/spec copies are not authority.
+No manual edits to existing dynamic state files.
+No self-repair.
+No command outside the spec whitelist.
+Do not modify application source/tests/dependencies.
+Do not run the app.
+Do not start Task 036.
+Do not force push.
+Do not merge the Draft PR.
 
 Next permitted action:
-Project Manager selects the next product task from the merged canonical state. No executor implementation is authorized until a new PM-authored remote ACTIVE spec is published.
+Anti executes the exact read-only Audit 035 spec and publishes the audit report plus PM-helper-generated state synchronization. Project Manager then verifies the report and chooses the first implementation task from the evidence.
