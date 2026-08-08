@@ -1,52 +1,60 @@
 # Active PM Execution Spec
 
-Status: INCIDENT_HOLD
+Status: ACTIVE
 
 Task:
-`INCIDENT-RECOVERY-007E-036A-EXECUTOR-CONTROL-005`
+`RECOVERY-007E-OWNER-RUNTIME-BASELINE-ADOPTION-007`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
 
-Canonical branch:
+Canonical branch entering task:
 `recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement`
 
-Canonical HEAD entering incident review:
-`57c037ad3cfaf400f9f6a6ffd36d8449e6a16267`
+Canonical GitHub basis:
+`fd880a625ba6a43acf25f5556f6c97ba20c84026`
 
-Incident evidence:
-`.ai/incidents/INCIDENT-RECOVERY-007E-036A-EXECUTOR-CONTROL-005.md`
+Review branch:
+`review/RECOVERY-007E-OWNER-RUNTIME-BASELINE-ADOPTION-007`
 
-Invalidated task:
-`RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1`
+Execution spec:
+`.ai/task_specs/RECOVERY-007E-OWNER-RUNTIME-BASELINE-ADOPTION-007.md`
 
-Invalidated PR:
-`#22 — CLOSED / NOT MERGED`
+Owner decision:
+The app currently launched from `E:\Project AI\Video-sub-remove` is the candidate forward baseline. The project will move to one Owner runtime copy only after this candidate is captured and PM-reviewed.
 
-Why incident hold is active:
-- executor violated the remote positive command whitelist and STOP rules;
-- executor continued after failed verification commands;
-- forbidden broad staging, shell-based document generation/editing and force push were used;
-- canonical documentation on the invalidated branch was broadly rewritten and incompletely synchronized;
-- no PR #22 commit was merged into canonical source.
+Execution type:
+READ-ONLY LOCAL PROJECT/RUNTIME INVENTORY + ONE EVIDENCE REPORT.
 
 Anti authorization:
+Read-only capture and evidence publication exactly as defined by the remote spec.
+
+Application source/test/dependency edits:
 NONE.
 
-Application source/test/dependency authorization:
-NONE.
-
-036-A/B/C/D authorization:
-NONE.
+Local deletion/cleanup:
+NONE in this task.
 
 Owner app verification:
+NOT REQUIRED for this inventory task.
+
+036-A/B/C/D:
 NOT AUTHORIZED.
 
-Permitted work:
-Evidence publication/review only.
+Current gates:
+- Candidate runtime capture: WAITING
+- Full local/worktree inventory: WAITING
+- Cleanup manifest: WAITING
+- Candidate baseline PM review: WAITING
+- Cleanup/adoption execution: NOT STARTED
+- Product implementation: FROZEN
+- Merge permission: BLOCKED
 
-Merge permission:
-BLOCKED for product implementation.
+Hard rule:
+Do not delete any test/recovery copy yet. First identify and classify every candidate. Destructive cleanup requires a separate PM-approved task after this evidence is reviewed.
+
+Forward governance:
+D-015 Single Owner Runtime Baseline is proposed on this review branch. The Owner runtime target is exactly `E:\Project AI\Video-sub-remove`; review/audit worktrees must never be used to launch the Owner app.
 
 Next permitted action:
-Project Manager reviews this incident evidence directly on GitHub. A separate recovery task may be created only after that review. Do not combine evidence capture and repair.
+Anti reads this remote ACTIVE and the full remote task spec, performs read-only capture of the current local runtime/project/worktrees, publishes exactly one evidence report to this review branch, and stops at `WAITING_PM_REVIEW`.
