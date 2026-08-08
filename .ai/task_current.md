@@ -7,19 +7,19 @@ RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 Pipeline 1 Per-Job AI Provider + Model Selector (REV2)
 
 ## Status
-COMPLETED
+COMPLETED — MERGED
 
 ## Current PR / Branch / SHA
-- PR: #14
-- Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
-- Source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
+- PR: #14 — MERGED
+- Canonical branch: recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement
+- Reviewed source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
 - Owner previous result (033 + 034): Job Card UI PASS / AI provider-model FAIL
 - Owner observation: direct Owner report on 2026-08-07: task 34 đã oke
 - Automated verification: PASS
 - Code review: PASS
 - Owner manual verification: PASS
 - Documentation synchronization: PASS
-- Merge: BLOCKED
+- Merge: MERGED — edc699930f4537f5f52568e9c0aaa8aeb68fb67b
 
 ## Historical: 032 / 033 ancestry
 - Task 032 REV3: 1f5ec183 | Task 033: 268613ae | 033-REV1: 5db68bc6 | Task 034: 1b66a10d
@@ -98,7 +98,7 @@ COMPLETED
 - Code review: PASS
 - Owner manual verification: PASS
 - Documentation synchronization: PASS
-- Merge permission: BLOCKED
+- Merge permission: USED — PR #14 merged at edc699930f4537f5f52568e9c0aaa8aeb68fb67b
 
 ## PR Tracking Facts
 - Source commit: e3db5fcb74ec45ed48b949a42d6786adc151ccaa

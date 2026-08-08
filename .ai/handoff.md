@@ -1,21 +1,21 @@
 # AgentOS Handoff Status
 
 ## Last completed task
-RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2: COMPLETED — PM VERIFIED
+RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2: COMPLETED — PM VERIFIED — MERGED
 
 ## Active Task
-RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2 (COMPLETED — PM VERIFIED)
+NONE — Task 034 merged in PR #14
 
 ## Next permitted action
-Project Manager performs the final merge-readiness decision for PR #14. No further Anti implementation task or Owner retest is required for Task 034.
-Merge remains BLOCKED until explicit PM merge approval.
+No active executor task. Project Manager selects the next task from the merged canonical base. Task 035/036 remain NOT AUTHORIZED until a new remote ACTIVE spec is published.
+PR #14 merged at edc699930f4537f5f52568e9c0aaa8aeb68fb67b after explicit PM approval.
 
 ## Source SHA
 ea9521f6fe957e24e49cc5d090e275511d91141d
 
 ## Review ancestry / source identity
 - Source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
-- Final PR HEAD is authoritative in GitHub PR #14
+- Merged PR #14 is authoritative; merge commit: edc699930f4537f5f52568e9c0aaa8aeb68fb67b
 - Previous docs/evidence SHAs: 69fe35231af1d6df3feb32e0c9151b3a1aada250, b8ad1f960d14f01f076b365fe364179c41ad9fa2
 - 034-REV2: 398ab2cc -> 17b8d135 -> ...
 - Owner observation: Owner reported on 2026-08-07: task 34 đã oke
@@ -71,7 +71,7 @@ ea9521f6fe957e24e49cc5d090e275511d91141d
 - Legacy keys deleted (ai_api_key, ai_api_keys_gemini, ai_api_keys_deepseek, ai_api_keys_ollama).
 
 ## Next Permitted Action
-Project Manager performs the final merge-readiness decision for PR #14. No further Anti implementation task or Owner retest is required for Task 034.
+No active executor task. Project Manager selects the next task from the merged canonical base. Task 035/036 remain NOT AUTHORIZED until a new remote ACTIVE spec is published.
 
 ## Execution
 PASS (static checks and runtime tests)
@@ -89,7 +89,7 @@ PASS (direct Owner report on 2026-08-07: task 34 đã oke)
 PASS
 
 ## Merge permission
-BLOCKED
+USED — PR #14 merged at edc699930f4537f5f52568e9c0aaa8aeb68fb67b
 
 ## PR Tracking Facts
 - Source commit: e3db5fcb74ec45ed48b949a42d6786adc151ccaa
