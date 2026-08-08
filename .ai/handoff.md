@@ -1,44 +1,40 @@
 # AgentOS Handoff Status
 
 ## Last completed task
-RECOVERY-006 — Pipeline 1 Baseline Characterization.
+GOVERNANCE-AGENTOS-PRECOMMIT-001 — Governance AgentOS Pre-commit Hook Correction.
 
 ## Result
-PASS
+PASS — PM CODE REVIEW
 
-## Baseline report
-.ai/audits/pipeline1_baseline_runtime.md
+## Hook implementation commit
+`286eeea1661d7a0736b74c07c40c1ea343ad2848`
 
-## Baseline checkpoint
-Current HEAD before the RECOVERY-006 documentation checkpoint:
-5b87037
+## Executor documentation commit
+`44ebc922725da87205d5bafcfa17b9a671be7470`
 
-Resolve the final checkpoint commit from Git history after it is created.
+## PM verification
+- Reviewed PR #34 directly on GitHub.
+- Verified exact hook logic matches Cases A-D in the execution spec.
+- Independently reproduced all 7 required hook scenarios from the GitHub HEAD hook: PASS.
+- Executor disposable-fixture setup used `--no-verify`; that executor fixture evidence is therefore not accepted as authoritative. No bypassed project-repository commit is evidenced by GitHub.
 
-## Files intended for the RECOVERY-006 documentation commit
-- .ai/audits/pipeline1_baseline_runtime.md
-- .ai/bugs.md
-- .ai/current_state.md
-- .ai/task_current.md
-- .ai/handoff.md
-
-## Automated verification
-NOT RUN — baseline was manually executed.
+## GitHub checks
+No CI/status checks are configured/reported for PR #34.
 
 ## Code review
-NOT APPLICABLE — no source was modified.
+PASS
 
 ## Owner manual app verification
-PASS — owner executed the baseline procedure.
+NOT APPLICABLE (Governance-only hook correction)
 
-## Feature result
-FAIL/BLOCKED — the current Pipeline 1 path did not complete.
+## Documentation synchronization
+PASS after PM knowledge-only correction.
 
 ## Merge permission
-BLOCKED
+BLOCKED pending explicit merge instruction.
 
 ## Next task
-RECOVERY-007 — Dedicated Pipeline 1 Text Extraction Path.
+After governance correction is merged/adopted, publish a fresh remote continuation spec/ref for `RECOVERY-007E-SETTINGS-V1-001-REV2`.
 
-## Next task status
-NOT STARTED — RECOVERY-006 documentation checkpoint must be committed first.
+## Product task status
+BLOCKED / NOT RESUMED. Owner product test remains NOT STARTED.

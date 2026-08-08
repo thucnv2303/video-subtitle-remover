@@ -9,31 +9,47 @@ code_changed="$(
     true
 )"
 
-# Không có source code được stage thì không cần kiểm memory.
-if [ -z "$code_changed" ]; then
-    exit 0
-fi
+dyn_changed="$(
+    printf '%s\n' "$staged" |
+    grep -E '^(\.ai/current_state\.md|\.ai/task_current\.md|\.ai/handoff\.md)$' ||
+    true
+)"
 
-missing=""
-
-for file in \
-    ".ai/current_state.md" \
-    ".ai/task_current.md" \
-    ".ai/handoff.md"
-do
-    if ! printf '%s\n' "$staged" | grep -Fxq "$file"; then
-        missing="${missing}
-- ${file}"
-    fi
-done
-
-if [ -n "$missing" ]; then
+# Case B: mixed source + dynamic project-state docs
+if [ -n "$code_changed" ] && [ -n "$dyn_changed" ]; then
     printf '\nAGENTOS GATE: COMMIT BI CHAN.\n'
-    printf 'Source code da duoc stage nhung cac file memory sau chua duoc cap nhat:%s\n' "$missing"
-    printf '\nAnti phai cap nhat ket qua vao .ai truoc khi commit.\n'
-    printf 'Sau do chay:\n'
-    printf 'git add .ai/current_state.md .ai/task_current.md .ai/handoff.md\n\n'
+    printf 'Source code va documentation khong duoc chung commit.\n'
+    printf 'Ban phai tach thanh 1 commit source-only va 1 commit docs-only.\n\n'
     exit 1
 fi
 
+# Case A: source-only commit
+if [ -n "$code_changed" ] && [ -z "$dyn_changed" ]; then
+    exit 0
+fi
+
+# Case C: documentation-only dynamic state commit
+if [ -z "$code_changed" ] && [ -n "$dyn_changed" ]; then
+    missing=""
+    for file in \
+        ".ai/current_state.md" \
+        ".ai/task_current.md" \
+        ".ai/handoff.md"
+    do
+        if ! printf '%s\n' "$staged" | grep -Fxq "$file"; then
+            missing="${missing}
+- ${file}"
+        fi
+    done
+
+    if [ -n "$missing" ]; then
+        printf '\nAGENTOS GATE: COMMIT BI CHAN.\n'
+        printf 'Ban dang commit file .ai dynamic nhung thieu cac file sau:%s\n' "$missing"
+        printf '\nBan phai stage ca 3 file cung luc de dam bao tinh dong bo.\n\n'
+        exit 1
+    fi
+    exit 0
+fi
+
+# Case D: unrelated docs/governance-only commit
 exit 0
