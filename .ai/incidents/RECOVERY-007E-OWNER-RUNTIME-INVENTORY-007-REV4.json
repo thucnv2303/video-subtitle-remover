@@ -1,0 +1,3028 @@
+{
+  "schema_version": 4,
+  "captured_at_utc": "2026-08-08T08:15:28.408986+00:00",
+  "root": "E:\\Project AI",
+  "canonical_basis": "fd880a625ba6a43acf25f5556f6c97ba20c84026",
+  "owner_runtime": {
+    "path": "E:\\Project AI\\Video-sub-remove",
+    "head": "d67a427f1c90a2e98da560977736ead80637db3a",
+    "branch_or_detached": "rescue/wip-20260803",
+    "remotes": [
+      "origin\thttps://github.com/thucnv2303/video-subtitle-remover.git (fetch)",
+      "origin\thttps://github.com/thucnv2303/video-subtitle-remover.git (push)"
+    ],
+    "status_porcelain_v2": [
+      "# branch.oid d67a427f1c90a2e98da560977736ead80637db3a",
+      "# branch.head rescue/wip-20260803",
+      "# branch.upstream origin/rescue/wip-20260803",
+      "# branch.ab +0 -0",
+      "1 .M N... 100644 100644 100644 76a1b200d730ba51015bf6b7f6a4f32ca532b98a 76a1b200d730ba51015bf6b7f6a4f32ca532b98a .ai/current_state.md",
+      "1 .M N... 100644 100644 100644 510e9d12a875e905f349f3dd6065d847bd8b2849 510e9d12a875e905f349f3dd6065d847bd8b2849 .ai/handoff.md",
+      "1 .M N... 100644 100644 100644 e04a6f0c2027a9b1e0e7e7c9788da041f243d902 e04a6f0c2027a9b1e0e7e7c9788da041f243d902 .ai/task_current.md",
+      "1 .M N... 100644 100644 100644 5ada627ff132f575b2eaab24b282e12856d614f9 5ada627ff132f575b2eaab24b282e12856d614f9 api/server.py",
+      "1 .M N... 100644 100644 100644 1d7304e5b62565206786e0afad7b738d21454d54 1d7304e5b62565206786e0afad7b738d21454d54 src/main/main.js",
+      "1 .M N... 100644 100644 100644 eebd9560e3214f7c4487922fab7c78525bcd966b eebd9560e3214f7c4487922fab7c78525bcd966b src/main/preload.js",
+      "1 .M N... 100644 100644 100644 23db1343ebb9578dcbaf27826e97f1976d02b7e5 23db1343ebb9578dcbaf27826e97f1976d02b7e5 src/renderer/index.html",
+      "1 .M N... 100644 100644 100644 4b03585eebfd32902efa4e7a42d9672f6791862e 4b03585eebfd32902efa4e7a42d9672f6791862e src/renderer/js/api.js",
+      "1 .M N... 100644 100644 100644 7876e583cbe42a4895ecd9c643caca6ea2471af5 7876e583cbe42a4895ecd9c643caca6ea2471af5 src/renderer/js/app.js",
+      "1 .M N... 100644 100644 100644 ff5f281bf53ae2602fffcd6c7e746b3f25aa8223 ff5f281bf53ae2602fffcd6c7e746b3f25aa8223 src/renderer/styles/main.css",
+      "? .ai/audits/ai_settings_model_recovery_preflight.md",
+      "? .ai/audits/recovery007E_review.md",
+      "? .ai/audits/recovery007_preflight.md",
+      "? fix_main3.py",
+      "? patch_app.py",
+      "? patch_app_ui.py",
+      "? patch_index_log.py",
+      "? patch_main.py",
+      "? patch_main_pos.py",
+      "? patch_server.py",
+      "? scratch/",
+      "? src/renderer/js/app.backup.js",
+      "? src/renderer/js/components/",
+      "? src/renderer/js/pipeline.js",
+      "? src/renderer/js/pipelines/",
+      "? src/renderer/js/store.js",
+      "? src/renderer/js/utils/",
+      "? test_ocr_check.srt",
+      "? test_ocr_check_tts.mp3"
+    ],
+    "unstaged_name_status": [
+      "M\t.ai/current_state.md",
+      "M\t.ai/handoff.md",
+      "M\t.ai/task_current.md",
+      "M\tapi/server.py",
+      "M\tsrc/main/main.js",
+      "M\tsrc/main/preload.js",
+      "M\tsrc/renderer/index.html",
+      "M\tsrc/renderer/js/api.js",
+      "M\tsrc/renderer/js/app.js",
+      "M\tsrc/renderer/styles/main.css"
+    ],
+    "staged_name_status": [],
+    "untracked": [
+      ".ai/audits/ai_settings_model_recovery_preflight.md",
+      ".ai/audits/recovery007E_review.md",
+      ".ai/audits/recovery007_preflight.md",
+      "fix_main3.py",
+      "patch_app.py",
+      "patch_app_ui.py",
+      "patch_index_log.py",
+      "patch_main.py",
+      "patch_main_pos.py",
+      "patch_server.py",
+      "scratch/apply_fixes_v4.py",
+      "scratch/create_struct.py",
+      "scratch/el_extracted.js",
+      "scratch/fix_process_job.js",
+      "scratch/patch_main_tts.py",
+      "scratch/replace.py",
+      "scratch/restore.js",
+      "scratch/test_paddle_crash.py",
+      "scratch/test_server.py",
+      "src/renderer/js/app.backup.js",
+      "src/renderer/js/components/job-manager.js",
+      "src/renderer/js/components/prompt-manager.js",
+      "src/renderer/js/components/settings.js",
+      "src/renderer/js/components/video-preview.js",
+      "src/renderer/js/pipeline.js",
+      "src/renderer/js/pipelines/pipeline1-ai.js",
+      "src/renderer/js/pipelines/pipeline2-remove.js",
+      "src/renderer/js/pipelines/pipeline3-finalize.js",
+      "src/renderer/js/pipelines/pipeline3-sub.js",
+      "src/renderer/js/pipelines/pipeline3-tts.js",
+      "src/renderer/js/store.js",
+      "src/renderer/js/utils/dom.js",
+      "src/renderer/js/utils/formatters.js",
+      "src/renderer/js/utils/logger.js",
+      "test_ocr_check.srt",
+      "test_ocr_check_tts.mp3"
+    ],
+    "worktrees": [
+      "worktree E:/Project AI/Video-sub-remove",
+      "HEAD d67a427f1c90a2e98da560977736ead80637db3a",
+      "branch refs/heads/rescue/wip-20260803",
+      "",
+      "worktree E:/Project AI/_audit/035-pipeline1-artifact-contract",
+      "HEAD 2a5319cb8b46bee6a90d9181bf53d870403c17b4",
+      "detached",
+      "",
+      "worktree E:/Project AI/_audit/035-pm-closeout-002",
+      "HEAD 000842e0e62332e28da857448e028fdb459e6a51",
+      "detached",
+      "",
+      "worktree E:/Project AI/_audit/035-rev1-pipeline1-artifact-contract",
+      "HEAD e761266ee273de9237df907292e595c20b485db2",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-final-merge-readiness-handoff-008",
+      "HEAD 7d3412e8843501c8a333adba1ce2bcffd923078b",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-merge-readiness-knowledge-007",
+      "HEAD 12199a537197e0bb63d66054391b9c48ffa02e6b",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-merge-readiness-knowledge-007-rev1",
+      "HEAD 576cb8c84ae925570596c7ef4870033ea56fc3e6",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-owner-pass-churn-fix",
+      "HEAD c5376def7c79cd0df68b90da24a0ada52986d862",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-owner-pass-finalize-004",
+      "HEAD c6ed57e7a56f1dc56b7cfc9bd39f4986f6ca6134",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-owner-pass-finalize-005",
+      "HEAD 1b5c957472a47e5a12b533e05a16483d87c92b3a",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-owner-pass-finalize-005-rev1",
+      "HEAD 7d2e108a3fe57b6cdbc55f31b966bb633894f772",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-owner-pass-recovery",
+      "HEAD beafac07a0a258ee3d2328234a94b102eec07e21",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-pm-verified-closeout-006",
+      "HEAD 253ec6bce306f8dc1493c98b83b5fe13e752bce5",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-pm-verified-closeout-006-rev1",
+      "HEAD ab572faccd205930e9ad7466e65436d99be17078",
+      "detached",
+      "",
+      "worktree E:/Project AI/_closeout/034-post-merge-canonical-sync-009",
+      "HEAD 6949de804fa46fa79345d610d8334900b61ef9a5",
+      "detached",
+      "",
+      "worktree E:/Project AI/_evidence/007-owner-runtime-baseline-adoption",
+      "HEAD 31163c31bda3e5415d7dccb920891f30b12b3348",
+      "detached",
+      "",
+      "worktree E:/Project AI/_evidence/007-rev1-owner-runtime-inventory",
+      "HEAD a0ee3f4a1f08570407ba2d403a27b259d8619975",
+      "detached",
+      "",
+      "worktree E:/Project AI/_evidence/007-rev2-owner-runtime-inventory",
+      "HEAD be32b60dab5dcd134d6d453d46153eceaf5b76ca",
+      "detached",
+      "",
+      "worktree E:/Project AI/_evidence/007-rev3-owner-runtime-inventory-20260808-1500",
+      "HEAD 61f54e6a750418ebb72fb7d12b8f4b4a3a872cbc",
+      "detached",
+      "",
+      "worktree E:/Project AI/_evidence/007-rev4-owner-runtime-inventory-20260808-1510",
+      "HEAD 612e05e6e1f14004e06a2107e9f2f351b91265b6",
+      "detached",
+      "",
+      "worktree E:/Project AI/_owner_test/034-rev2",
+      "HEAD ea9521f6fe957e24e49cc5d090e275511d91141d",
+      "detached",
+      "",
+      "worktree E:/Project AI/_review/INCIDENT-RECOVERY-007E-002",
+      "HEAD 7f84cca120a7cf08ba473181b1a70525990c04a0",
+      "branch refs/heads/review/INCIDENT-RECOVERY-007E-001-evidence",
+      "",
+      "worktree E:/Project AI/_work/036-a-rev1-p1-artifact-persistence",
+      "HEAD dad85254cd1594f55e2ca858c1aa1855400198e2",
+      "detached",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-ai-settings",
+      "HEAD 0cfc80edce614fd2c59939255439528015b8b600",
+      "branch refs/heads/review/RECOVERY-007E-AI-SETTINGS-001-ai-settings",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-ai-settings-publish",
+      "HEAD c330f37a96aac7d2ba6e43d31b5c29f8de4704dd",
+      "branch refs/heads/publish/RECOVERY-007E-AI-SETTINGS-001-clean",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-ai-settings-verify",
+      "HEAD 3eb744dc271b8f411f46069457459d4d3b07752b",
+      "detached",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-ai-settings-verify-013",
+      "HEAD 4890f37180e0d4837486b101c5f7b610bc21af78",
+      "detached",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-ai-settings-verify-014",
+      "HEAD c7b756cad783f21c4168f299474d6f54e5619b9d",
+      "detached",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-ai-settings-verify-014b",
+      "HEAD d2fcb5def5c132cc69e59d001b35e812ab4f3662",
+      "detached",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-ai-settings-verify-015",
+      "HEAD eaf6d393ebc827a4968ba2c05250fd8210d34a09",
+      "detached",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-ai-settings-verify-017",
+      "HEAD 09eb0a8da11bad135ad8f1b379c99edb6a345746",
+      "detached",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-missing-modules-evidence",
+      "HEAD 679a835de542470f56af38712923f153be4e7700",
+      "branch refs/heads/review/RECOVERY-007E-SOURCE-BASELINE-002-missing-modules-evidence",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-module-closure",
+      "HEAD 7e18c04cf2483403010f237356dfb7f369dae1a8",
+      "branch refs/heads/review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-owner-retest",
+      "HEAD eaf6d393ebc827a4968ba2c05250fd8210d34a09",
+      "detached",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-owner-retest-017",
+      "HEAD 09eb0a8da11bad135ad8f1b379c99edb6a345746",
+      "detached",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-owner-retest-023",
+      "HEAD d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd",
+      "detached",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-source-baseline",
+      "HEAD 8d32226e780e8899a443cf4c480dbe95b45d0559",
+      "branch refs/heads/review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-staged-tree-evidence",
+      "HEAD aa7006e8a90afc44d5a8fedc2ec914c58a548212",
+      "branch refs/heads/review/INCIDENT-RECOVERY-007E-STAGED-TREE-001-evidence",
+      "",
+      "worktree E:/Project AI/Video-sub-remove-worktree",
+      "HEAD 2100d2bab683a43825a3e37537ed1976fe8583c4",
+      "branch refs/heads/review/INCIDENT-RECOVERY-007E-TRACKING-001-evidence",
+      "",
+      "worktree E:/Project AI/video-subtitle-remover-fix018",
+      "HEAD a136bc269b78bc2ea700bcab179fdd1f0191ae28",
+      "branch refs/heads/incident/INCIDENT-RECOVERY-007E-UNAUTHORIZED-BASE-PUSH-019-evidence",
+      "",
+      "worktree E:/Project AI/video-subtitle-remover-recovery021",
+      "HEAD cb03b20447e0a5127d66e32990427f3848ebb200",
+      "branch refs/heads/review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032",
+      ""
+    ],
+    "local_branches": [
+      "incident/INCIDENT-RECOVERY-007E-PR10-FORCE-PUSH-027-evidence a36fcda36b91361885beae4b3859b794dee959dc",
+      "incident/INCIDENT-RECOVERY-007E-UNAUTHORIZED-BASE-PUSH-019-evidence a136bc269b78bc2ea700bcab179fdd1f0191ae28",
+      "main 94f969f609040708421087aec7911bc648a0f0d1",
+      "publish/RECOVERY-007E-AI-SETTINGS-001-clean c330f37a96aac7d2ba6e43d31b5c29f8de4704dd",
+      "recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement 7e18c04cf2483403010f237356dfb7f369dae1a8",
+      "rescue/wip-20260803 d67a427f1c90a2e98da560977736ead80637db3a",
+      "review/INCIDENT-RECOVERY-007E-001-evidence 7f84cca120a7cf08ba473181b1a70525990c04a0",
+      "review/INCIDENT-RECOVERY-007E-002-targeted-restoration 7f7aad84d8eaab342882926e38a3d467fcae9265",
+      "review/INCIDENT-RECOVERY-007E-STAGED-TREE-001-evidence aa7006e8a90afc44d5a8fedc2ec914c58a548212",
+      "review/INCIDENT-RECOVERY-007E-TRACKING-001-evidence 2100d2bab683a43825a3e37537ed1976fe8583c4",
+      "review/RECOVERY-007E-AI-SETTINGS-001-ai-settings 0cfc80edce614fd2c59939255439528015b8b600",
+      "review/RECOVERY-007E-AI-SETTINGS-001-replacement 7f89fbf6cded8fd84fe81179f0e4a8b553478af0",
+      "review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032 cb03b20447e0a5127d66e32990427f3848ebb200",
+      "review/RECOVERY-007E-PIPELINE1-RUNTIME-replacement-029 7373a2f1af9926d2a06a58d8c49cb1b8fba725ff",
+      "review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline 8d32226e780e8899a443cf4c480dbe95b45d0559",
+      "review/RECOVERY-007E-SOURCE-BASELINE-002-missing-modules-evidence 679a835de542470f56af38712923f153be4e7700",
+      "review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure 7e18c04cf2483403010f237356dfb7f369dae1a8"
+    ],
+    "remote_branches": [
+      "origin 7025d3234bb246c25a932dadf3ade0e3fad1f0f9",
+      "origin/dev 7025d3234bb246c25a932dadf3ade0e3fad1f0f9",
+      "origin/governance/OWNER-COMMUNICATION-001 b855d0bfa92ccf053f24e271621c73fbba02e07c",
+      "origin/incident/INCIDENT-RECOVERY-007E-PR10-FORCE-PUSH-027-evidence a36fcda36b91361885beae4b3859b794dee959dc",
+      "origin/incident/INCIDENT-RECOVERY-007E-UNAUTHORIZED-BASE-PUSH-019-evidence f20c08436503de47fc2c02093b79de7922242323",
+      "origin/main fc39bb12f60b17f8faaaf3f26f940bf274c65a3a",
+      "origin/recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement fd880a625ba6a43acf25f5556f6c97ba20c84026",
+      "origin/rescue/wip-20260803 d67a427f1c90a2e98da560977736ead80637db3a",
+      "origin/review/INCIDENT-RECOVERY-007E-001-evidence 7f84cca120a7cf08ba473181b1a70525990c04a0",
+      "origin/review/INCIDENT-RECOVERY-007E-002-targeted-restoration 7f7aad84d8eaab342882926e38a3d467fcae9265",
+      "origin/review/INCIDENT-RECOVERY-007E-036A-EXECUTOR-CONTROL-005 40d5da246a33b30190c79f4d64b948e5ee0d2552",
+      "origin/review/INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-CONTROL-003 f1bf3e3948be05910cdacbb4acd3084de21db850",
+      "origin/review/INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-RATIFICATION-004 d579cd457132085bc7b7fd36c9d113f366738101",
+      "origin/review/INCIDENT-RECOVERY-007E-LOCAL-RUNTIME-SOURCE-MISMATCH-006 0dc81a13e2aa19f7c03b0f45eaec756302b52a49",
+      "origin/review/INCIDENT-RECOVERY-007E-STAGED-TREE-001-evidence aa7006e8a90afc44d5a8fedc2ec914c58a548212",
+      "origin/review/INCIDENT-RECOVERY-007E-TRACKING-001-evidence 2100d2bab683a43825a3e37537ed1976fe8583c4",
+      "origin/review/RECOVERY-007E-034-POST-MERGE-CANONICAL-SYNC-009 7b3fc221ce2ab04155c5d6a1e51bdd6b5e748745",
+      "origin/review/RECOVERY-007E-AI-SETTINGS-001-ai-settings 09eb0a8da11bad135ad8f1b379c99edb6a345746",
+      "origin/review/RECOVERY-007E-AI-SETTINGS-001-replacement 7f89fbf6cded8fd84fe81179f0e4a8b553478af0",
+      "origin/review/RECOVERY-007E-OWNER-RUNTIME-BASELINE-ADOPTION-007 31163c31bda3e5415d7dccb920891f30b12b3348",
+      "origin/review/RECOVERY-007E-OWNER-RUNTIME-INVENTORY-007-REV1 a0ee3f4a1f08570407ba2d403a27b259d8619975",
+      "origin/review/RECOVERY-007E-OWNER-RUNTIME-INVENTORY-007-REV2 be32b60dab5dcd134d6d453d46153eceaf5b76ca",
+      "origin/review/RECOVERY-007E-OWNER-RUNTIME-INVENTORY-007-REV3 61f54e6a750418ebb72fb7d12b8f4b4a3a872cbc",
+      "origin/review/RECOVERY-007E-OWNER-RUNTIME-INVENTORY-007-REV4 612e05e6e1f14004e06a2107e9f2f351b91265b6",
+      "origin/review/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035 71d7f91295a079005ab0a1f2d97cdc8171fdf237",
+      "origin/review/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035-PM-CLOSEOUT-002 000842e0e62332e28da857448e028fdb459e6a51",
+      "origin/review/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035-REV1 e761266ee273de9237df907292e595c20b485db2",
+      "origin/review/RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A 1d52e0f6624c6d75dd745a91d128500810959377",
+      "origin/review/RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1 4a0c8480802ceb1d0e269aaa41cdf4fa5c9bd67f",
+      "origin/review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032 d468710c74d3d373f7366c3a31ba7fc5a11229df",
+      "origin/review/RECOVERY-007E-PIPELINE1-RUNTIME-replacement-029 7373a2f1af9926d2a06a58d8c49cb1b8fba725ff",
+      "origin/review/RECOVERY-007E-SOURCE-BASELINE-001-source-baseline 8d32226e780e8899a443cf4c480dbe95b45d0559",
+      "origin/review/RECOVERY-007E-SOURCE-BASELINE-002-missing-modules-evidence 679a835de542470f56af38712923f153be4e7700",
+      "origin/review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure 73f8ed7bd425b805dfba4182bf89345f62fca953"
+    ],
+    "diff_name_status_vs_canonical_basis": [
+      "D\t.ai/api_contracts.md",
+      "M\t.ai/architecture.md",
+      "D\t.ai/audits/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035-PM-VERIFIED.md",
+      "D\t.ai/audits/recovery007e_missing_renderer_modules.md",
+      "D\t.ai/audits/recovery007e_missing_renderer_modules_manifest.txt",
+      "D\t.ai/audits/recovery007e_rebuild_preflight.md",
+      "D\t.ai/audits/recovery007e_source_baseline.md",
+      "D\t.ai/audits/recovery007e_source_baseline_verification.txt",
+      "M\t.ai/bugs.md",
+      "M\t.ai/current_state.md",
+      "M\t.ai/decisions.md",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CLOSEOUT-COLLISION-FIX-012/commands.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CLOSEOUT-COLLISION-FIX-012/recovery-matrix.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CLOSEOUT-COLLISION-FIX-012/results.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CRASH-RECOVERY-CORRECTION-009/commands.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CRASH-RECOVERY-CORRECTION-009/recovery-matrix.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-CRASH-RECOVERY-CORRECTION-009/results.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX010-CLOSEOUT-011/commands.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX010-CLOSEOUT-011/recovery-matrix.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX010-CLOSEOUT-011/results.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX012-EVIDENCE-CLOSEOUT-013/commands.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX012-EVIDENCE-CLOSEOUT-013/recovery-matrix.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX012-EVIDENCE-CLOSEOUT-013/results.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/commands.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/recovery-matrix.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FIX013-CLEAN-RUN-014/results.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FORENSIC-ROLLBACK-FIX-010/commands.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FORENSIC-ROLLBACK-FIX-010/recovery-matrix.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-FORENSIC-ROLLBACK-FIX-010/results.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-HOME-LAYOUT-REPLACEMENT-021/commands.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-HOME-LAYOUT-REPLACEMENT-021/layout-analysis.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-HOME-LAYOUT-REPLACEMENT-021/lineage.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-HOME-LAYOUT-REPLACEMENT-021/results.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-HOME-LAYOUT-REPLACEMENT-021/runtime-observations.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-OWNER-UI-FAIL-FULL-FIX-017/commands.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-OWNER-UI-FAIL-FULL-FIX-017/dom-structure.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-OWNER-UI-FAIL-FULL-FIX-017/results.txt",
+      "D\t.ai/evidence/RECOVERY-007E-AI-SETTINGS-001-OWNER-UI-FAIL-FULL-FIX-017/runtime-observations.txt",
+      "D\t.ai/evidence/RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2-OWNER-TEST-PREP/verification.txt",
+      "D\t.ai/evidence/RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2/commands.txt",
+      "D\t.ai/evidence/RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2/results.txt",
+      "M\t.ai/handoff.md",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/incident_recovery_report.md",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/memory-current.patch",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/post_restore_hashes.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/post_restore_status.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/pre_restore_hashes.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/pre_restore_status.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/restore_manifest.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/restored_files_comparison.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/safety_copies/api.js",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/safety_copies/app.js",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/safety_copies/index.html",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/safety_copies/pipeline2-remove.js",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/safety_copies/server.py",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/safety_copies/settings.js",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/scripts_report.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/source_hashes.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/symbols_report.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-002/syntax_checks.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-036A-EXECUTOR-CONTROL-005.md",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-CONTROL-003.md",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-RATIFICATION-004.md",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-AUDIT035-EXECUTOR-CONTROL-001.md",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-STAGED-TREE-001/identity.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-STAGED-TREE-001/incident_report.md",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-STAGED-TREE-001/index_metadata.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-STAGED-TREE-001/manifest.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-STAGED-TREE-001/staged_hash_matrix.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-STAGED-TREE-001/staged_name_status.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-STAGED-TREE-001/staged_stat.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-STAGED-TREE-001/status_after.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-STAGED-TREE-001/status_before.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-TRACKING-001/diff_name_status.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-TRACKING-001/hashes_and_sizes.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-TRACKING-001/identity.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-TRACKING-001/ignore_status.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-TRACKING-001/incident_report.md",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-TRACKING-001/manifest.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-TRACKING-001/status_paths.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-TRACKING-001/symbol_ownership.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-TRACKING-001/tracking_records.txt",
+      "D\t.ai/incidents/INCIDENT-RECOVERY-007E-TRACKING-001/tree_presence.txt",
+      "M\t.ai/qa_checklist.md",
+      "M\t.ai/rules.md",
+      "M\t.ai/task_current.md",
+      "D\t.ai/task_specs/ACTIVE.md",
+      "D\t.ai/task_specs/INCIDENT-RECOVERY-007E-034-CLOSEOUT-CANONICAL-FINALIZE-004.md",
+      "D\t.ai/task_specs/INCIDENT-RECOVERY-007E-034-CLOSEOUT-CANONICAL-FINALIZE-005-REV1.md",
+      "D\t.ai/task_specs/INCIDENT-RECOVERY-007E-034-CLOSEOUT-CANONICAL-FINALIZE-005.md",
+      "D\t.ai/task_specs/INCIDENT-RECOVERY-007E-034-CLOSEOUT-CHURN-CORRECTION-003.md",
+      "D\t.ai/task_specs/INCIDENT-RECOVERY-007E-034-CLOSEOUT-RECOVERY-002.md",
+      "D\t.ai/task_specs/INCIDENT-RECOVERY-007E-034-CLOSEOUT-SCOPE-001.md",
+      "D\t.ai/task_specs/INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-RATIFICATION-004.md",
+      "D\t.ai/task_specs/README.md",
+      "D\t.ai/task_specs/RECOVERY-007E-034-FINAL-MERGE-READINESS-HANDOFF-RECONCILE-008.md",
+      "D\t.ai/task_specs/RECOVERY-007E-034-MERGE-READINESS-KNOWLEDGE-RECONCILE-007-REV1.md",
+      "D\t.ai/task_specs/RECOVERY-007E-034-MERGE-READINESS-KNOWLEDGE-RECONCILE-007.md",
+      "D\t.ai/task_specs/RECOVERY-007E-034-POST-MERGE-CANONICAL-SYNC-009.md",
+      "D\t.ai/task_specs/RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2-OWNER-PASS-CLOSEOUT.md",
+      "D\t.ai/task_specs/RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2-OWNER-TEST-PREP-EVIDENCE-REV1.md",
+      "D\t.ai/task_specs/RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2-OWNER-TEST-PREP.md",
+      "D\t.ai/task_specs/RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2-PM-VERIFIED-CLOSEOUT-006-REV1.md",
+      "D\t.ai/task_specs/RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2-PM-VERIFIED-CLOSEOUT-006.md",
+      "D\t.ai/task_specs/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035-PM-CLOSEOUT-002.md",
+      "D\t.ai/task_specs/TEMPLATE.md",
+      "D\t.ai/task_specs/tools/close_audit035_pm_002.py",
+      "D\t.ai/task_specs/tools/finalize_034_pm_verified_006.py",
+      "D\t.ai/task_specs/tools/finalize_034_pm_verified_006_rev1.py",
+      "D\t.ai/task_specs/tools/finalize_034_rev2_005.py",
+      "D\t.ai/task_specs/tools/finalize_034_rev2_005_rev1.py",
+      "D\t.ai/task_specs/tools/post_merge_034_canonical_sync_009.py",
+      "D\t.ai/task_specs/tools/reconcile_034_handoff_merge_readiness_008.py",
+      "D\t.ai/task_specs/tools/reconcile_034_merge_readiness_007.py",
+      "D\t.ai/task_specs/tools/reconcile_034_merge_readiness_007_rev1.py",
+      "M\tapi/server.py",
+      "M\tsrc/main/main.js",
+      "M\tsrc/main/preload.js",
+      "M\tsrc/renderer/index.html",
+      "M\tsrc/renderer/js/api.js",
+      "M\tsrc/renderer/js/app.js",
+      "D\tsrc/renderer/js/components/prompt-manager.js",
+      "D\tsrc/renderer/js/components/settings.js",
+      "D\tsrc/renderer/js/pipelines/pipeline1-ai.js",
+      "D\tsrc/renderer/js/pipelines/pipeline2-remove.js",
+      "D\tsrc/renderer/js/pipelines/pipeline3-finalize.js",
+      "D\tsrc/renderer/js/store.js",
+      "D\tsrc/renderer/js/utils/dom.js",
+      "D\tsrc/renderer/js/utils/logger.js",
+      "M\tsrc/renderer/styles/main.css",
+      "D\ttests/test_credential_recovery.js",
+      "D\ttests/test_pipeline1_body.js",
+      "D\ttests/test_pipeline1_runtime.js",
+      "D\ttests/test_renderer_dom_structure.js"
+    ],
+    "runtime_critical": [
+      {
+        "path": "package.json",
+        "exists": true,
+        "git_blob": "c66a076bb5f574ced2e138acfdae1199c189e882"
+      },
+      {
+        "path": "src/main/main.js",
+        "exists": true,
+        "git_blob": "67d6bcdf250f111e06847c6566f45751fed93392"
+      },
+      {
+        "path": "src/main/preload.js",
+        "exists": true,
+        "git_blob": "3babcb46feb101c3d206859d7f370802e8298309"
+      },
+      {
+        "path": "src/renderer/index.html",
+        "exists": true,
+        "git_blob": "d4321c10795093718ccfb2f4319d16cb75651c65"
+      },
+      {
+        "path": "src/renderer/styles/main.css",
+        "exists": true,
+        "git_blob": "09f3e16767ed2671a9656d53f5441b34267b4d35"
+      },
+      {
+        "path": "src/renderer/js/app.js",
+        "exists": true,
+        "git_blob": "99c2cafa509ba2038b98f135156b34271da58c70"
+      },
+      {
+        "path": "src/renderer/js/components/settings.js",
+        "exists": true,
+        "git_blob": "bfac033717ae7131c437679651827677e286af1d"
+      },
+      {
+        "path": "src/renderer/js/pipelines/pipeline1-ai.js",
+        "exists": true,
+        "git_blob": "a2ba99e2871ad6771a9a18c2f6594bb807181292"
+      },
+      {
+        "path": "src/renderer/js/pipelines/pipeline2-remove.js",
+        "exists": true,
+        "git_blob": "8bd0bb02b47ad47105372e8f3a96869f3207d1ef"
+      },
+      {
+        "path": "src/renderer/js/pipelines/pipeline3-finalize.js",
+        "exists": true,
+        "git_blob": "85683b67c7a4a468fcc05fb348bad5d0ff17ff95"
+      },
+      {
+        "path": "api/server.py",
+        "exists": true,
+        "git_blob": "c87dcbf9887ea46af4dc3a281cc21441326fc7af"
+      }
+    ]
+  },
+  "top_level_directories": [
+    {
+      "name": ".tmp.drivedownload",
+      "full_path": "E:\\Project AI\\.tmp.drivedownload",
+      "last_write_utc": "2026-08-08T08:04:30.028910+00:00"
+    },
+    {
+      "name": ".tmp.driveupload",
+      "full_path": "E:\\Project AI\\.tmp.driveupload",
+      "last_write_utc": "2026-08-08T08:15:24.165707+00:00"
+    },
+    {
+      "name": "_audit",
+      "full_path": "E:\\Project AI\\_audit",
+      "last_write_utc": "2026-08-08T06:04:00.717100+00:00"
+    },
+    {
+      "name": "_closeout",
+      "full_path": "E:\\Project AI\\_closeout",
+      "last_write_utc": "2026-08-08T04:21:42.683436+00:00"
+    },
+    {
+      "name": "_evidence",
+      "full_path": "E:\\Project AI\\_evidence",
+      "last_write_utc": "2026-08-08T08:15:10.517083+00:00"
+    },
+    {
+      "name": "_owner_test",
+      "full_path": "E:\\Project AI\\_owner_test",
+      "last_write_utc": "2026-08-07T11:41:44.989808+00:00"
+    },
+    {
+      "name": "_recovery",
+      "full_path": "E:\\Project AI\\_recovery",
+      "last_write_utc": "2026-08-05T02:15:11.016021+00:00"
+    },
+    {
+      "name": "_review",
+      "full_path": "E:\\Project AI\\_review",
+      "last_write_utc": "2026-08-05T02:03:42.086738+00:00"
+    },
+    {
+      "name": "_work",
+      "full_path": "E:\\Project AI\\_work",
+      "last_write_utc": "2026-08-08T06:42:18.279853+00:00"
+    },
+    {
+      "name": "Agent File",
+      "full_path": "E:\\Project AI\\Agent File",
+      "last_write_utc": "2026-07-21T08:38:12.185627+00:00"
+    },
+    {
+      "name": "ai-video-remix-os",
+      "full_path": "E:\\Project AI\\ai-video-remix-os",
+      "last_write_utc": "2026-07-29T03:01:24.765180+00:00"
+    },
+    {
+      "name": "App sửa tem in sale work",
+      "full_path": "E:\\Project AI\\App sửa tem in sale work",
+      "last_write_utc": "2026-07-22T08:51:15.029201+00:00"
+    },
+    {
+      "name": "Back up pc",
+      "full_path": "E:\\Project AI\\Back up pc",
+      "last_write_utc": "2026-07-09T06:39:08.332000+00:00"
+    },
+    {
+      "name": "Codex Backup 2026-07-04",
+      "full_path": "E:\\Project AI\\Codex Backup 2026-07-04",
+      "last_write_utc": "2026-07-04T08:32:17.483000+00:00"
+    },
+    {
+      "name": "excel-order-dashboard",
+      "full_path": "E:\\Project AI\\excel-order-dashboard",
+      "last_write_utc": "2026-08-06T07:51:36.638488+00:00"
+    },
+    {
+      "name": "Extension tính lợi nhuận",
+      "full_path": "E:\\Project AI\\Extension tính lợi nhuận",
+      "last_write_utc": "2026-08-06T11:24:51.243367+00:00"
+    },
+    {
+      "name": "Extension tải dữ iệu sản phẩm shopee",
+      "full_path": "E:\\Project AI\\Extension tải dữ iệu sản phẩm shopee",
+      "last_write_utc": "2026-08-07T07:04:25.219193+00:00"
+    },
+    {
+      "name": "Google AI Studio",
+      "full_path": "E:\\Project AI\\Google AI Studio",
+      "last_write_utc": "2026-06-24T11:46:12.308000+00:00"
+    },
+    {
+      "name": "Live Studio",
+      "full_path": "E:\\Project AI\\Live Studio",
+      "last_write_utc": "2026-06-20T07:34:23.715000+00:00"
+    },
+    {
+      "name": "recovery-checkpoint-backup",
+      "full_path": "E:\\Project AI\\recovery-checkpoint-backup",
+      "last_write_utc": "2026-08-01T09:20:08.214897+00:00"
+    },
+    {
+      "name": "repos",
+      "full_path": "E:\\Project AI\\repos",
+      "last_write_utc": "2026-07-25T11:11:00.788926+00:00"
+    },
+    {
+      "name": "runtimes",
+      "full_path": "E:\\Project AI\\runtimes",
+      "last_write_utc": "2026-07-25T02:06:49.830261+00:00"
+    },
+    {
+      "name": "Shopee Chat",
+      "full_path": "E:\\Project AI\\Shopee Chat",
+      "last_write_utc": "2026-07-24T08:18:59.542398+00:00"
+    },
+    {
+      "name": "ShopeeLiveStudio",
+      "full_path": "E:\\Project AI\\ShopeeLiveStudio",
+      "last_write_utc": "2026-07-19T03:02:46.527381+00:00"
+    },
+    {
+      "name": "ShopeeVideoBot",
+      "full_path": "E:\\Project AI\\ShopeeVideoBot",
+      "last_write_utc": "2026-07-17T07:00:52.902323+00:00"
+    },
+    {
+      "name": "ShopeeVideoBot-Baseline-20260715",
+      "full_path": "E:\\Project AI\\ShopeeVideoBot-Baseline-20260715",
+      "last_write_utc": "2026-07-26T07:28:20.907777+00:00"
+    },
+    {
+      "name": "ShopeeVideoBot-Baseline-20260715-backup-current",
+      "full_path": "E:\\Project AI\\ShopeeVideoBot-Baseline-20260715-backup-current",
+      "last_write_utc": "2026-07-18T04:22:32.648286+00:00"
+    },
+    {
+      "name": "temp_jsdom",
+      "full_path": "E:\\Project AI\\temp_jsdom",
+      "last_write_utc": "2026-08-06T10:03:24.455319+00:00"
+    },
+    {
+      "name": "temp_pw",
+      "full_path": "E:\\Project AI\\temp_pw",
+      "last_write_utc": "2026-07-21T09:18:21.900066+00:00"
+    },
+    {
+      "name": "test",
+      "full_path": "E:\\Project AI\\test",
+      "last_write_utc": "2026-07-01T09:19:41.175000+00:00"
+    },
+    {
+      "name": "upstream",
+      "full_path": "E:\\Project AI\\upstream",
+      "last_write_utc": "2026-07-25T01:59:16.645360+00:00"
+    },
+    {
+      "name": "upvideo",
+      "full_path": "E:\\Project AI\\upvideo",
+      "last_write_utc": "2026-06-04T14:35:48.341000+00:00"
+    },
+    {
+      "name": "video-automation-hub",
+      "full_path": "E:\\Project AI\\video-automation-hub",
+      "last_write_utc": "2026-07-22T02:05:42.984372+00:00"
+    },
+    {
+      "name": "video-automation-hub-clean",
+      "full_path": "E:\\Project AI\\video-automation-hub-clean",
+      "last_write_utc": "2026-07-28T15:37:19.412686+00:00"
+    },
+    {
+      "name": "Video-sub-remove",
+      "full_path": "E:\\Project AI\\Video-sub-remove",
+      "last_write_utc": "2026-08-05T02:15:24.542019+00:00"
+    },
+    {
+      "name": "Video-sub-remove-ai-settings",
+      "full_path": "E:\\Project AI\\Video-sub-remove-ai-settings",
+      "last_write_utc": "2026-08-06T00:40:12.628221+00:00"
+    },
+    {
+      "name": "Video-sub-remove-ai-settings-publish",
+      "full_path": "E:\\Project AI\\Video-sub-remove-ai-settings-publish",
+      "last_write_utc": "2026-08-06T07:30:27.142800+00:00"
+    },
+    {
+      "name": "Video-sub-remove-ai-settings-verify",
+      "full_path": "E:\\Project AI\\Video-sub-remove-ai-settings-verify",
+      "last_write_utc": "2026-08-06T07:57:00.257027+00:00"
+    },
+    {
+      "name": "Video-sub-remove-ai-settings-verify-013",
+      "full_path": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-013",
+      "last_write_utc": "2026-08-06T08:28:09.242043+00:00"
+    },
+    {
+      "name": "Video-sub-remove-ai-settings-verify-014",
+      "full_path": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-014",
+      "last_write_utc": "2026-08-06T08:27:27.975282+00:00"
+    },
+    {
+      "name": "Video-sub-remove-ai-settings-verify-014b",
+      "full_path": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-014b",
+      "last_write_utc": "2026-08-06T08:28:17.370109+00:00"
+    },
+    {
+      "name": "Video-sub-remove-ai-settings-verify-015",
+      "full_path": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-015",
+      "last_write_utc": "2026-08-06T09:57:55.587627+00:00"
+    },
+    {
+      "name": "Video-sub-remove-ai-settings-verify-017",
+      "full_path": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-017",
+      "last_write_utc": "2026-08-06T10:06:39.686666+00:00"
+    },
+    {
+      "name": "Video-sub-remove-missing-modules-evidence",
+      "full_path": "E:\\Project AI\\Video-sub-remove-missing-modules-evidence",
+      "last_write_utc": "2026-08-05T13:59:29.230165+00:00"
+    },
+    {
+      "name": "Video-sub-remove-module-closure",
+      "full_path": "E:\\Project AI\\Video-sub-remove-module-closure",
+      "last_write_utc": "2026-08-05T15:16:29.472973+00:00"
+    },
+    {
+      "name": "Video-sub-remove-owner-retest",
+      "full_path": "E:\\Project AI\\Video-sub-remove-owner-retest",
+      "last_write_utc": "2026-08-06T09:08:04.663438+00:00"
+    },
+    {
+      "name": "Video-sub-remove-owner-retest-017",
+      "full_path": "E:\\Project AI\\Video-sub-remove-owner-retest-017",
+      "last_write_utc": "2026-08-06T10:12:39.015443+00:00"
+    },
+    {
+      "name": "Video-sub-remove-owner-retest-023",
+      "full_path": "E:\\Project AI\\Video-sub-remove-owner-retest-023",
+      "last_write_utc": "2026-08-06T13:17:21.222866+00:00"
+    },
+    {
+      "name": "Video-sub-remove-source-baseline",
+      "full_path": "E:\\Project AI\\Video-sub-remove-source-baseline",
+      "last_write_utc": "2026-08-05T07:42:22.361329+00:00"
+    },
+    {
+      "name": "Video-sub-remove-staged-tree-evidence",
+      "full_path": "E:\\Project AI\\Video-sub-remove-staged-tree-evidence",
+      "last_write_utc": "2026-08-05T14:35:51.409386+00:00"
+    },
+    {
+      "name": "Video-sub-remove-worktree",
+      "full_path": "E:\\Project AI\\Video-sub-remove-worktree",
+      "last_write_utc": "2026-08-05T04:05:57.785903+00:00"
+    },
+    {
+      "name": "video-subtitle-remover-fix018",
+      "full_path": "E:\\Project AI\\video-subtitle-remover-fix018",
+      "last_write_utc": "2026-08-06T10:42:07.833470+00:00"
+    },
+    {
+      "name": "video-subtitle-remover-recovery021",
+      "full_path": "E:\\Project AI\\video-subtitle-remover-recovery021",
+      "last_write_utc": "2026-08-07T10:25:01.333238+00:00"
+    },
+    {
+      "name": "video-text-cleaner-canvas",
+      "full_path": "E:\\Project AI\\video-text-cleaner-canvas",
+      "last_write_utc": "2026-07-26T01:54:23.824091+00:00"
+    },
+    {
+      "name": "video-text-remover",
+      "full_path": "E:\\Project AI\\video-text-remover",
+      "last_write_utc": "2026-07-21T10:08:08.522435+00:00"
+    },
+    {
+      "name": "video-text-sub-detector-clean",
+      "full_path": "E:\\Project AI\\video-text-sub-detector-clean",
+      "last_write_utc": "2026-07-29T03:02:05.405018+00:00"
+    },
+    {
+      "name": "video-uploader-adaptive-readiness",
+      "full_path": "E:\\Project AI\\video-uploader-adaptive-readiness",
+      "last_write_utc": "2026-07-29T03:18:36.309614+00:00"
+    },
+    {
+      "name": "video-uploader-close-apps-preflight",
+      "full_path": "E:\\Project AI\\video-uploader-close-apps-preflight",
+      "last_write_utc": "2026-07-28T11:52:24.831513+00:00"
+    },
+    {
+      "name": "video-uploader-main-test",
+      "full_path": "E:\\Project AI\\video-uploader-main-test",
+      "last_write_utc": "2026-07-31T11:29:57.607386+00:00"
+    },
+    {
+      "name": "video-uploader-persistent-app-data",
+      "full_path": "E:\\Project AI\\video-uploader-persistent-app-data",
+      "last_write_utc": "2026-07-28T11:38:18.832528+00:00"
+    },
+    {
+      "name": "video-uploader-phone-mirror-timeout",
+      "full_path": "E:\\Project AI\\video-uploader-phone-mirror-timeout",
+      "last_write_utc": "2026-07-28T15:15:34.561395+00:00"
+    },
+    {
+      "name": "video-uploader-recover-baseline",
+      "full_path": "E:\\Project AI\\video-uploader-recover-baseline",
+      "last_write_utc": "2026-08-01T09:24:03.713080+00:00"
+    },
+    {
+      "name": "video-uploader-release-integration",
+      "full_path": "E:\\Project AI\\video-uploader-release-integration",
+      "last_write_utc": "2026-07-30T03:00:37.747171+00:00"
+    },
+    {
+      "name": "video-uploader-release-integration-v2",
+      "full_path": "E:\\Project AI\\video-uploader-release-integration-v2",
+      "last_write_utc": "2026-07-30T03:15:56.860332+00:00"
+    },
+    {
+      "name": "video-uploader-release-integration-v3",
+      "full_path": "E:\\Project AI\\video-uploader-release-integration-v3",
+      "last_write_utc": "2026-07-30T03:57:26.329590+00:00"
+    },
+    {
+      "name": "video-uploader-release-integration-v4",
+      "full_path": "E:\\Project AI\\video-uploader-release-integration-v4",
+      "last_write_utc": "2026-07-30T07:06:43.013946+00:00"
+    },
+    {
+      "name": "video-uploader-run-now-log-fix",
+      "full_path": "E:\\Project AI\\video-uploader-run-now-log-fix",
+      "last_write_utc": "2026-07-27T08:47:37.916783+00:00"
+    },
+    {
+      "name": "video-uploader-wfl-image-detect-tap",
+      "full_path": "E:\\Project AI\\video-uploader-wfl-image-detect-tap",
+      "last_write_utc": "2026-07-30T13:14:40.733051+00:00"
+    },
+    {
+      "name": "video-uploader-wfl-optional-routes",
+      "full_path": "E:\\Project AI\\video-uploader-wfl-optional-routes",
+      "last_write_utc": "2026-07-27T14:27:31.642607+00:00"
+    },
+    {
+      "name": "voice-automation-hub-clean",
+      "full_path": "E:\\Project AI\\voice-automation-hub-clean",
+      "last_write_utc": "2026-07-18T04:14:33.399255+00:00"
+    },
+    {
+      "name": "worktrees",
+      "full_path": "E:\\Project AI\\worktrees",
+      "last_write_utc": "2026-07-25T15:00:11.971219+00:00"
+    },
+    {
+      "name": "zalo-affiliate-bot",
+      "full_path": "E:\\Project AI\\zalo-affiliate-bot",
+      "last_write_utc": "2026-07-25T13:41:13.870818+00:00"
+    },
+    {
+      "name": "ÄÄƒng Video",
+      "full_path": "E:\\Project AI\\ÄÄƒng Video",
+      "last_write_utc": "2026-08-01T14:14:11.298096+00:00"
+    },
+    {
+      "name": "Đăng Video",
+      "full_path": "E:\\Project AI\\Đăng Video",
+      "last_write_utc": "2026-08-08T06:25:05.508157+00:00"
+    }
+  ],
+  "all_package_json_files_excluding_dependency_dirs": [
+    {
+      "package_json": "E:\\Project AI\\_audit\\035-pipeline1-artifact-contract\\package.json",
+      "project_root": "E:\\Project AI\\_audit\\035-pipeline1-artifact-contract",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_audit\\035-pm-closeout-002\\package.json",
+      "project_root": "E:\\Project AI\\_audit\\035-pm-closeout-002",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_audit\\035-rev1-pipeline1-artifact-contract\\package.json",
+      "project_root": "E:\\Project AI\\_audit\\035-rev1-pipeline1-artifact-contract",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-final-merge-readiness-handoff-008\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-final-merge-readiness-handoff-008",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-merge-readiness-knowledge-007-rev1\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-merge-readiness-knowledge-007-rev1",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-merge-readiness-knowledge-007\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-merge-readiness-knowledge-007",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-owner-pass-churn-fix\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-owner-pass-churn-fix",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-004\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-004",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-005-rev1\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-005-rev1",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-005\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-005",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-owner-pass-recovery\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-owner-pass-recovery",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-pm-verified-closeout-006-rev1\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-pm-verified-closeout-006-rev1",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-pm-verified-closeout-006\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-pm-verified-closeout-006",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-post-merge-canonical-sync-009\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-post-merge-canonical-sync-009",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_evidence\\007-owner-runtime-baseline-adoption\\package.json",
+      "project_root": "E:\\Project AI\\_evidence\\007-owner-runtime-baseline-adoption",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_evidence\\007-rev1-owner-runtime-inventory\\package.json",
+      "project_root": "E:\\Project AI\\_evidence\\007-rev1-owner-runtime-inventory",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_evidence\\007-rev2-owner-runtime-inventory\\package.json",
+      "project_root": "E:\\Project AI\\_evidence\\007-rev2-owner-runtime-inventory",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_evidence\\007-rev3-owner-runtime-inventory-20260808-1500\\package.json",
+      "project_root": "E:\\Project AI\\_evidence\\007-rev3-owner-runtime-inventory-20260808-1500",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_evidence\\007-rev4-owner-runtime-inventory-20260808-1510\\package.json",
+      "project_root": "E:\\Project AI\\_evidence\\007-rev4-owner-runtime-inventory-20260808-1510",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_owner_test\\034-rev2\\package.json",
+      "project_root": "E:\\Project AI\\_owner_test\\034-rev2",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_recovery\\Video-sub-remove-20260803-212834\\package.json",
+      "project_root": "E:\\Project AI\\_recovery\\Video-sub-remove-20260803-212834",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_review\\INCIDENT-RECOVERY-007E-002\\package.json",
+      "project_root": "E:\\Project AI\\_review\\INCIDENT-RECOVERY-007E-002",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\_work\\036-a-rev1-p1-artifact-persistence\\package.json",
+      "project_root": "E:\\Project AI\\_work\\036-a-rev1-p1-artifact-persistence",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\excel-order-dashboard\\package.json",
+      "project_root": "E:\\Project AI\\excel-order-dashboard",
+      "package_name": "multi-platform-order-management",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Extension tính lợi nhuận\\assets\\package.json",
+      "project_root": "E:\\Project AI\\Extension tính lợi nhuận\\assets",
+      "package_name": "assets",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Extension tính lợi nhuận\\package.json",
+      "project_root": "E:\\Project AI\\Extension tính lợi nhuận",
+      "package_name": "profit-calculator-extension",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\repos\\video-uploader\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\repos\\video-uploader\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Shopee Chat\\package.json",
+      "project_root": "E:\\Project AI\\Shopee Chat",
+      "package_name": "shopee-multi-inbox",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Shopee Chat\\review-bundle\\package.json",
+      "project_root": "E:\\Project AI\\Shopee Chat\\review-bundle",
+      "package_name": "shopee-multi-inbox",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ShopeeLiveStudio\\package.json",
+      "project_root": "E:\\Project AI\\ShopeeLiveStudio",
+      "package_name": "live-studio-pc",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ShopeeLiveStudio\\scratch\\leveldb-reader\\package.json",
+      "project_root": "E:\\Project AI\\ShopeeLiveStudio\\scratch\\leveldb-reader",
+      "package_name": "leveldb-reader",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ShopeeVideoBot-Baseline-20260715-backup-current\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\ShopeeVideoBot-Baseline-20260715-backup-current\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ShopeeVideoBot-Baseline-20260715\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\ShopeeVideoBot-Baseline-20260715\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ShopeeVideoBot\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\ShopeeVideoBot\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\temp_jsdom\\package.json",
+      "project_root": "E:\\Project AI\\temp_jsdom",
+      "package_name": "temp_jsdom",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\temp_pw\\package.json",
+      "project_root": "E:\\Project AI\\temp_pw",
+      "package_name": "temp_pw",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-automation-hub-clean\\package.json",
+      "project_root": "E:\\Project AI\\video-automation-hub-clean",
+      "package_name": "video-automation-hub",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-automation-hub-clean\\runtime\\voice\\khanh-tts\\inference-venv\\Lib\\site-packages\\gradio\\package.json",
+      "project_root": "E:\\Project AI\\video-automation-hub-clean\\runtime\\voice\\khanh-tts\\inference-venv\\Lib\\site-packages\\gradio",
+      "package_name": "gradio",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-automation-hub-clean\\runtime\\voice\\khanh-tts\\inference-venv\\Lib\\site-packages\\gradio\\templates\\node\\build\\package.json",
+      "project_root": "E:\\Project AI\\video-automation-hub-clean\\runtime\\voice\\khanh-tts\\inference-venv\\Lib\\site-packages\\gradio\\templates\\node\\build",
+      "package_name": "gradio-server-app",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-automation-hub-clean\\runtime\\voice\\khanh-tts\\inference-venv\\Lib\\site-packages\\gradio_client\\package.json",
+      "project_root": "E:\\Project AI\\video-automation-hub-clean\\runtime\\voice\\khanh-tts\\inference-venv\\Lib\\site-packages\\gradio_client",
+      "package_name": "gradio_client",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-automation-hub\\package.json",
+      "project_root": "E:\\Project AI\\video-automation-hub",
+      "package_name": "video-automation-hub",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-publish\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-publish",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-013\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-013",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-014\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-014",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-014b\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-014b",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-015\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-015",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-017\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-017",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-missing-modules-evidence\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-missing-modules-evidence",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-module-closure\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-module-closure",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-owner-retest-017\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-owner-retest-017",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-owner-retest-023\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-owner-retest-023",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-owner-retest\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-owner-retest",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-source-baseline\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-source-baseline",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-staged-tree-evidence\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-staged-tree-evidence",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-worktree\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-worktree",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-subtitle-remover-fix018\\package.json",
+      "project_root": "E:\\Project AI\\video-subtitle-remover-fix018",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-subtitle-remover-recovery021\\package.json",
+      "project_root": "E:\\Project AI\\video-subtitle-remover-recovery021",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\accordion\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\accordion",
+      "package_name": "@gradio/accordion",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\annotatedimage\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\annotatedimage",
+      "package_name": "@gradio/annotatedimage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\atoms\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\atoms",
+      "package_name": "@gradio/atoms",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\audio\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\audio",
+      "package_name": "@gradio/audio",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\box\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\box",
+      "package_name": "@gradio/box",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\button\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\button",
+      "package_name": "@gradio/button",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\chatbot\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\chatbot",
+      "package_name": "@gradio/chatbot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\checkbox\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\checkbox",
+      "package_name": "@gradio/checkbox",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\checkboxgroup\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\checkboxgroup",
+      "package_name": "@gradio/checkboxgroup",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\client\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\client",
+      "package_name": "@gradio/client",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\code\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\code",
+      "package_name": "@gradio/code",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\colorpicker\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\colorpicker",
+      "package_name": "@gradio/colorpicker",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\column\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\column",
+      "package_name": "@gradio/column",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\dataframe\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\dataframe",
+      "package_name": "@gradio/dataframe",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\dataset\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\dataset",
+      "package_name": "@gradio/dataset",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\downloadbutton\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\downloadbutton",
+      "package_name": "@gradio/downloadbutton",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\dropdown\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\dropdown",
+      "package_name": "@gradio/dropdown",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\fallback\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\fallback",
+      "package_name": "@gradio/fallback",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\file\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\file",
+      "package_name": "@gradio/file",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\fileexplorer\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\fileexplorer",
+      "package_name": "@gradio/fileexplorer",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\form\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\form",
+      "package_name": "@gradio/form",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\gallery\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\gallery",
+      "package_name": "@gradio/gallery",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\group\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\group",
+      "package_name": "@gradio/group",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\highlightedtext\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\highlightedtext",
+      "package_name": "@gradio/highlightedtext",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\html\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\html",
+      "package_name": "@gradio/html",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\icons\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\icons",
+      "package_name": "@gradio/icons",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\image\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\image",
+      "package_name": "@gradio/image",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\imageeditor\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\imageeditor",
+      "package_name": "@gradio/imageeditor",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\json\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\json",
+      "package_name": "@gradio/json",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\label\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\label",
+      "package_name": "@gradio/label",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\lite\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\lite",
+      "package_name": "@gradio/lite",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\markdown\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\markdown",
+      "package_name": "@gradio/markdown",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\model3D\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\model3D",
+      "package_name": "@gradio/model3d",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\number\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\number",
+      "package_name": "@gradio/number",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\paramviewer\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\paramviewer",
+      "package_name": "@gradio/paramviewer",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\plot\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\plot",
+      "package_name": "@gradio/plot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\preview\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\preview",
+      "package_name": "@gradio/preview",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\preview\\test\\test\\frontend\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\preview\\test\\test\\frontend",
+      "package_name": "gradio_test",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\radio\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\radio",
+      "package_name": "@gradio/radio",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\row\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\row",
+      "package_name": "@gradio/row",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\simpledropdown\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\simpledropdown",
+      "package_name": "@gradio/simpledropdown",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\simpleimage\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\simpleimage",
+      "package_name": "@gradio/simpleimage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\simpletextbox\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\simpletextbox",
+      "package_name": "@gradio/simpletextbox",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\slider\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\slider",
+      "package_name": "@gradio/slider",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\state\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\state",
+      "package_name": "@gradio/state",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\statustracker\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\statustracker",
+      "package_name": "@gradio/statustracker",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\tabitem\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\tabitem",
+      "package_name": "@gradio/tabitem",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\tabs\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\tabs",
+      "package_name": "@gradio/tabs",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\textbox\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\textbox",
+      "package_name": "@gradio/textbox",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\theme\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\theme",
+      "package_name": "@gradio/theme",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\tooltip\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\tooltip",
+      "package_name": "@gradio/tooltip",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\tootils\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\tootils",
+      "package_name": "@gradio/tootils",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\upload\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\upload",
+      "package_name": "@gradio/upload",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\uploadbutton\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\uploadbutton",
+      "package_name": "@gradio/uploadbutton",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\utils\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\utils",
+      "package_name": "@gradio/utils",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\video\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\video",
+      "package_name": "@gradio/video",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\wasm\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\_frontend_code\\wasm",
+      "package_name": "@gradio/wasm",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\node\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\node",
+      "package_name": null,
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio",
+      "package_name": "gradio",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio_client\\package.json",
+      "project_root": "E:\\Project AI\\video-text-remover\\.venv_iopaint\\Lib\\site-packages\\gradio_client",
+      "package_name": "gradio_client",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-adaptive-readiness\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-adaptive-readiness\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-close-apps-preflight\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-close-apps-preflight\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-main-test\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-main-test\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-persistent-app-data\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-persistent-app-data\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-phone-mirror-timeout\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-phone-mirror-timeout\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-recover-baseline\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-recover-baseline\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-release-integration-v2\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-release-integration-v2\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-release-integration-v3\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-release-integration-v3\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-release-integration-v4\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-release-integration-v4\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-release-integration\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-release-integration\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-run-now-log-fix\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-run-now-log-fix\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-wfl-image-detect-tap\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-wfl-image-detect-tap\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\video-uploader-wfl-optional-routes\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\video-uploader-wfl-optional-routes\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\auth-picker-and-full-device-scan\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\auth-picker-and-full-device-scan\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\device-fleet-clean\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\device-fleet-clean\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\excel-order-dashboard-filters\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\excel-order-dashboard-filters",
+      "package_name": "excel-order-dashboard",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\excel-order-dashboard-reconciliation\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\excel-order-dashboard-reconciliation",
+      "package_name": "excel-order-dashboard",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\excel-order-dashboard-revenue-clean\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\excel-order-dashboard-revenue-clean",
+      "package_name": "excel-order-dashboard",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\google-sheet-settings-picker\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\google-sheet-settings-picker\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\governance-reset\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\governance-reset\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\runtime-details-ui\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\runtime-details-ui\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\video-uploader-queue-clean\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\video-uploader-queue-clean\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\video-uploader-runtime-picker\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\video-uploader-runtime-picker\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\worktrees\\video-uploader-settings-followup\\pc-controller\\package.json",
+      "project_root": "E:\\Project AI\\worktrees\\video-uploader-settings-followup\\pc-controller",
+      "package_name": "shopee-video-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\zalo-affiliate-bot\\package.json",
+      "project_root": "E:\\Project AI\\zalo-affiliate-bot",
+      "package_name": "zalo-affiliate-bot",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\ÄÄƒng Video\\video-uploader-v2\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-002\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-003\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-004\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-005\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-007\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-008\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-009\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-011-plan-domain-foundation\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-cs\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec-r6\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation-exec\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2-v2-012-plan-queue-foundation\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\apps\\desktop\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\apps\\desktop",
+      "package_name": "@video-uploader-v2/desktop",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\apps\\server\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\apps\\server",
+      "package_name": "@video-uploader-v2/server",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\apps\\web\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\apps\\web",
+      "package_name": "@video-uploader-v2/web",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2",
+      "package_name": "video-uploader-v2",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\contracts\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\contracts",
+      "package_name": "@video-uploader-v2/contracts",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\device-gateway\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\device-gateway",
+      "package_name": "@video-uploader-v2/device-gateway",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\observability\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\observability",
+      "package_name": "@video-uploader-v2/observability",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\plan-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\plan-engine",
+      "package_name": "@video-uploader-v2/plan-engine",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\storage\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\storage",
+      "package_name": "@video-uploader-v2/storage",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\test-kit\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\test-kit",
+      "package_name": "@video-uploader-v2/test-kit",
+      "parse_error": null
+    },
+    {
+      "package_json": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\workflow-engine\\package.json",
+      "project_root": "E:\\Project AI\\Đăng Video\\video-uploader-v2\\packages\\workflow-engine",
+      "package_name": "@video-uploader-v2/workflow-engine",
+      "parse_error": null
+    }
+  ],
+  "vsr_runnable_candidates": [
+    {
+      "package_json": "E:\\Project AI\\_audit\\035-pipeline1-artifact-contract\\package.json",
+      "project_root": "E:\\Project AI\\_audit\\035-pipeline1-artifact-contract",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_audit\\035-pm-closeout-002\\package.json",
+      "project_root": "E:\\Project AI\\_audit\\035-pm-closeout-002",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_audit\\035-rev1-pipeline1-artifact-contract\\package.json",
+      "project_root": "E:\\Project AI\\_audit\\035-rev1-pipeline1-artifact-contract",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-final-merge-readiness-handoff-008\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-final-merge-readiness-handoff-008",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-merge-readiness-knowledge-007-rev1\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-merge-readiness-knowledge-007-rev1",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-merge-readiness-knowledge-007\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-merge-readiness-knowledge-007",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-owner-pass-churn-fix\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-owner-pass-churn-fix",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-004\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-004",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-005-rev1\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-005-rev1",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-005\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-owner-pass-finalize-005",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-owner-pass-recovery\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-owner-pass-recovery",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-pm-verified-closeout-006-rev1\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-pm-verified-closeout-006-rev1",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-pm-verified-closeout-006\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-pm-verified-closeout-006",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_closeout\\034-post-merge-canonical-sync-009\\package.json",
+      "project_root": "E:\\Project AI\\_closeout\\034-post-merge-canonical-sync-009",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_evidence\\007-owner-runtime-baseline-adoption\\package.json",
+      "project_root": "E:\\Project AI\\_evidence\\007-owner-runtime-baseline-adoption",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_evidence\\007-rev1-owner-runtime-inventory\\package.json",
+      "project_root": "E:\\Project AI\\_evidence\\007-rev1-owner-runtime-inventory",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_evidence\\007-rev2-owner-runtime-inventory\\package.json",
+      "project_root": "E:\\Project AI\\_evidence\\007-rev2-owner-runtime-inventory",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_evidence\\007-rev3-owner-runtime-inventory-20260808-1500\\package.json",
+      "project_root": "E:\\Project AI\\_evidence\\007-rev3-owner-runtime-inventory-20260808-1500",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_evidence\\007-rev4-owner-runtime-inventory-20260808-1510\\package.json",
+      "project_root": "E:\\Project AI\\_evidence\\007-rev4-owner-runtime-inventory-20260808-1510",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_owner_test\\034-rev2\\package.json",
+      "project_root": "E:\\Project AI\\_owner_test\\034-rev2",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_recovery\\Video-sub-remove-20260803-212834\\package.json",
+      "project_root": "E:\\Project AI\\_recovery\\Video-sub-remove-20260803-212834",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_review\\INCIDENT-RECOVERY-007E-002\\package.json",
+      "project_root": "E:\\Project AI\\_review\\INCIDENT-RECOVERY-007E-002",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\_work\\036-a-rev1-p1-artifact-persistence\\package.json",
+      "project_root": "E:\\Project AI\\_work\\036-a-rev1-p1-artifact-persistence",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-publish\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-publish",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-013\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-013",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-014\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-014",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-014b\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-014b",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-015\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-015",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-017\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify-017",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings-verify\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings-verify",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-ai-settings\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-ai-settings",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-missing-modules-evidence\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-missing-modules-evidence",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-module-closure\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-module-closure",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-owner-retest-017\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-owner-retest-017",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-owner-retest-023\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-owner-retest-023",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-owner-retest\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-owner-retest",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-source-baseline\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-source-baseline",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-staged-tree-evidence\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-staged-tree-evidence",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove-worktree\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove-worktree",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\Video-sub-remove\\package.json",
+      "project_root": "E:\\Project AI\\Video-sub-remove",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": true
+    },
+    {
+      "package_json": "E:\\Project AI\\video-subtitle-remover-fix018\\package.json",
+      "project_root": "E:\\Project AI\\video-subtitle-remover-fix018",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    },
+    {
+      "package_json": "E:\\Project AI\\video-subtitle-remover-recovery021\\package.json",
+      "project_root": "E:\\Project AI\\video-subtitle-remover-recovery021",
+      "package_name": "video-subtitle-remover",
+      "parse_error": null,
+      "candidate_reason": "package_name",
+      "is_owner_runtime": false
+    }
+  ],
+  "safety": {
+    "cleanup_performed": false,
+    "owner_runtime_modified_by_capture": false,
+    "owner_runtime_must_not_be_deleted": true,
+    "non_vsr_projects_default": "DO_NOT_TOUCH",
+    "classification_status": "PM_REVIEW_REQUIRED"
+  }
+}
