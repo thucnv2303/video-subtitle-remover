@@ -1,12 +1,9 @@
 # Active PM Execution Spec
 
-Status: INCIDENT_HOLD
+Status: HOLD
 
 Task:
-`INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-CONTROL-003`
-
-Incident evidence:
-`.ai/incidents/INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-CONTROL-003.md`
+`NONE`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -14,14 +11,24 @@ Repository:
 Canonical branch:
 `recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement`
 
-Canonical HEAD entering incident review:
-`07e31d8a7cdd26565e6d6528f7bdc15693cc4698`
+Last incident:
+`INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-CONTROL-003`
 
-Why incident hold is active:
-- Audit 035 PM Closeout 002 executor transcript reports unlisted `Write-Output "---"` commands under a positive command whitelist;
-- PM initially missed the violation and merged PR #18;
-- PR #18 changed documentation/governance only, but its procedural closeout validity is invalidated pending recovery review;
-- briefly activated 036-A PR #19 has been frozen and closed before implementation.
+Resolution:
+`INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-RATIFICATION-004 — PM RATIFIED / RESOLVED FOR FORWARD EXECUTION`
+
+Ratification record:
+`.ai/incidents/INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-RATIFICATION-004.md`
+
+Ratification spec:
+`.ai/task_specs/INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-RATIFICATION-004.md`
+
+Canonical semantic state:
+- Audit 035: PM VERIFIED / PM RATIFIED;
+- documentation synchronization: PASS;
+- Owner app verification for Audit 035: NOT REQUIRED;
+- Closeout 002 executor command compliance: INVALIDATED and preserved as incident evidence;
+- PR #19 / original 036-A activation: CANCELLED / CLOSED / NOT MERGED / NOT REUSABLE.
 
 Anti authorization:
 NONE.
@@ -29,24 +36,20 @@ NONE.
 Application source/test/dependency authorization:
 NONE.
 
-036-A/B/C/D authorization:
+Owner app verification:
+NOT AUTHORIZED — no active product source task.
+
+Next implementation candidate:
+`RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1`
+
+036-A-REV1 authorization:
+NONE until PM publishes a fresh review branch, Draft PR, remote ACTIVE, and full versioned spec from the post-ratification canonical HEAD.
+
+036-B/C/D authorization:
 NONE.
 
-Owner app verification:
-NOT AUTHORIZED.
-
-Permitted work:
-Evidence publication/review only.
-
-Forbidden:
-- implementation;
-- source/test/dependency edits;
-- 036-A/B/C/D worktrees or commits;
-- product merge;
-- reset/revert/history rewrite/force push to erase the merged incident state.
-
 Merge permission:
-BLOCKED.
+BLOCKED for product implementation.
 
 Next permitted action:
-Project Manager reviews the incident evidence directly on GitHub, then creates a separate recovery task if warranted. This evidence task must not perform repair.
+Project Manager may create and activate a fresh versioned 036-A-REV1 source task from the post-ratification canonical HEAD. Anti must not reuse cancelled PR #19 or its branch/spec.
