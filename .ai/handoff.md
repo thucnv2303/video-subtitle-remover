@@ -20,9 +20,9 @@ ea9521f6fe957e24e49cc5d090e275511d91141d
 - 034-REV2: 398ab2cc -> 17b8d135 -> ...
 - Owner observation: Owner reported on 2026-08-07: task 34 đã oke
 
-## Status
+## Historical Status — AI Settings / PR #8 lineage
 - Owner test at abf0ee2: FAIL (see blockers in task_current.md).
-- DeepSeek API key visible in owner screenshot is COMPROMISED. Owner must rotate key.
+- Historical security note: the clear-text Settings UI defect was source-fixed. Owner clarified on 2026-08-08 that the screenshot shared with PM had key material redacted before sharing; that shared evidence does not establish usable credential exposure or a key-rotation merge blocker.
 - Corrected Architecture: safeStorage integrated (failing closed). Main process directly executes DeepSeek/Gemini requests. Python backend never receives raw credentials.
 - Source commit: 5be1d2bc728ab282914b9d99cd050cd98916a2d6 (mixed with hook-staged docs).
 - Docs follow-up: d5e40a5ed6816e1304b369013c7bbde481cc1364.
@@ -54,7 +54,7 @@ ea9521f6fe957e24e49cc5d090e275511d91141d
   - validateStoreContent(): returns {ok,data/error} (no throws).
   - Recovery matrix: 36/36 PASS. Electron launch (no --no-sandbox): OK.
 - BUG-008 and BUG-009: CANDIDATE FIX - OWNER RETEST NOT STARTED.
-- Owner manual verification: NOT STARTED.
+- Historical Owner manual verification at that earlier stage: NOT STARTED.
 
 ## PR Ancestry Facts
 - PR #8 base branch: review/RECOVERY-007E-SOURCE-BASELINE-002-module-closure
