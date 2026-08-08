@@ -3,13 +3,13 @@
 Status: ACTIVE
 
 Task:
-`RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2-PM-VERIFIED-CLOSEOUT-006-REV1`
+`RECOVERY-007E-034-MERGE-READINESS-KNOWLEDGE-RECONCILE-007`
 
 Spec:
-`.ai/task_specs/RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2-PM-VERIFIED-CLOSEOUT-006-REV1.md`
+`.ai/task_specs/RECOVERY-007E-034-MERGE-READINESS-KNOWLEDGE-RECONCILE-007.md`
 
 PM-authored helper:
-`.ai/task_specs/tools/finalize_034_pm_verified_006_rev1.py`
+`.ai/task_specs/tools/reconcile_034_merge_readiness_007.py`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -20,31 +20,40 @@ Review branch:
 Reviewed application source SHA:
 `ea9521f6fe957e24e49cc5d090e275511d91141d`
 
-Accepted documentation correction SHA:
-`7d2e108a3fe57b6cdbc55f31b966bb633894f772`
+Accepted Task 034 closeout commit:
+`ab572faccd205930e9ad7466e65436d99be17078`
 
-PM verification result:
-PASS — GitHub verifies Finalize-005-REV1 correction is narrow, docs-only, and current 034-REV2 canonical content agrees on Owner PASS.
+Task 034 gate result:
+- application execution: PASS
+- automated verification: PASS
+- code review: PASS
+- Owner manual app verification: PASS — overall Owner report on 2026-08-07: `task 34 đã oke`
+- Closeout-006-REV1 executor publication: PASS
 
-Previous Closeout-006 result:
-STOPPED SAFELY before any write. The first Closeout-006 helper incorrectly assumed both handoff Next-Permitted-Action occurrences were the same CRLF two-line block. Direct GitHub blob inspection proves they are not; the file has existing mixed newline sequences and different section bodies.
+Final PM merge-readiness audit result:
+NEEDS_REVISION — knowledge reconciliation required before merge approval.
+
+Verified blockers:
+1. `.ai/current_state.md` top says Task 034 COMPLETED, but the lower current 034-REV2 block still says `Status: WAITING_PM_VERIFICATION`.
+2. `.ai/qa_checklist.md` has an older 034 Owner Verification block that still reads as current WAITING and is not labeled historical/superseded, while the 034-REV2 block records Owner overall PASS.
+3. `.ai/bugs.md` still leaves BUG-013 in candidate/Owner-retest-not-started state although 034-REV2 directly resolved the provider/model synchronization defect and has accepted automated + overall Owner PASS evidence.
+4. BUG-010 security incident source fix is implemented, but Owner has not yet confirmed revocation/rotation of the historically exposed DeepSeek key.
 
 Purpose:
-Run only the corrected Closeout-006-REV1 helper from a brand-new isolated worktree. The helper uses section-bound exact replacements, is pinned to the unchanged canonical input blobs, validates all transformations before any write, and preserves CRLF/LF counts.
+Run the exact PM-authored byte-preserving reconciliation helper from a brand-new isolated worktree. This task reconciles canonical knowledge only and makes the remaining security rotation confirmation an explicit merge blocker.
 
-Executor must fetch GitHub, read this ACTIVE file directly from the remote review ref with `git show`, then read the full referenced Closeout-006-REV1 spec from the same remote ref.
+Executor must fetch GitHub, read this ACTIVE file directly from the remote review ref with `git show`, then read the full referenced Reconcile-007 spec from the same remote ref.
 
 Local ACTIVE/spec copies are not authority.
 No manual editing.
 No self-repair.
-No command outside the REV1 whitelist.
-Do not modify `.ai/qa_checklist.md`.
-Do not modify task specs/helper.
-Do not touch/remove/repair any prior Finalize/Closeout worktree.
+No command outside the Reconcile-007 whitelist.
+Do not touch/remove/repair prior Finalize/Closeout worktrees.
 Do not modify source/tests/dependencies.
 Do not start Task 035 or Task 036.
 Do not force push.
 Do not merge PR #14.
 
-Documentation synchronization is PM-verified PASS in review, but canonical files still require this corrected final deterministic PASS-recording commit.
-Merge remains BLOCKED pending explicit PM merge approval after Closeout-006-REV1 publication is verified.
+Documentation synchronization remains under final PM reconciliation review.
+Owner compromised-key rotation confirmation: WAITING.
+Merge remains BLOCKED.
