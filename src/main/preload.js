@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   startPython: () => ipcRenderer.invoke('python:start'),
   stopPython: () => ipcRenderer.invoke('python:stop'),
   getPythonStatus: () => ipcRenderer.invoke('python:status'),
+  openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),

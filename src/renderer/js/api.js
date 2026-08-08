@@ -58,6 +58,10 @@ class APIClient {
     return this.getBlob(`/api/frame/${frameNumber}?path=${encodeURIComponent(outputPath)}`);
   }
 
+  async getLivePreview() {
+    return this.getBlob('/api/preview');
+  }
+
   async detectText(videoPath, frameNumber) {
     return this.post('/api/detect-text', { video_path: videoPath, frame_number: frameNumber });
   }
@@ -68,6 +72,14 @@ class APIClient {
 
   async getStatus() { return this.get('/api/status'); }
   async cancelProcess() { return this.post('/api/cancel'); }
+
+  async analyzeVideo(videoPath, aiConfig, prompt) {
+    return this.post('/api/analyze-video', {
+      video_path: videoPath,
+      ai_config: aiConfig,
+      prompt: prompt
+    });
+  }
 
   // Health check with retry
   async waitForBackend(maxRetries = 60, intervalMs = 1000) {
@@ -86,7 +98,7 @@ class APIClient {
     this.ws.onopen = () => this._notify({ type: 'connected' });
     this.ws.onmessage = (e) => {
       try { this._notify({ type: 'progress', data: JSON.parse(e.data) }); }
-      catch (err) { console.warn('WS parse error:', err); }
+      catch (err) { console.warn('WS parse error:', err.stack, 'Message:', e.data); }
     };
     this.ws.onclose = () => {
       this._notify({ type: 'disconnected' });
@@ -108,11 +120,19 @@ class APIClient {
     return r.json();
   }
 
-  async generateTTS(text, refAudioPath = null, language = 'vi') {
+  /**
+   * Generate TTS audio.
+   * - voiceName: Edge TTS voice (e.g. 'vi-VN-NamMinhNeural') or 'clone:N'
+   * - refAudioPath: reference audio for OmniVoice clone voice
+   * Always sends voice_name so backend can route to Edge TTS or OmniVoice correctly.
+   */
+  async generateTTS(text, refAudioPath = null, language = 'vi', voiceName = null) {
+    const body = { text, ref_audio_path: refAudioPath, language };
+    if (voiceName) body.voice_name = voiceName;
     const r = await fetch(`${this.base}/api/tts/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, ref_audio_path: refAudioPath, language })
+      body: JSON.stringify(body)
     });
     return r.json();
   }
@@ -140,10 +160,10 @@ class APIClient {
     const r = await fetch(`${this.base}/api/burn-subtitle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        video_path: videoPath, 
-        srt_path: srtPath, 
-        output_path: outputPath, 
+      body: JSON.stringify({
+        video_path: videoPath,
+        srt_path: srtPath,
+        output_path: outputPath,
         mode,
         ...styleArgs
       })
@@ -160,12 +180,86 @@ class APIClient {
     return r.json();
   }
 
-  // generateTTS: OmniVoice clone voice (ref audio required)
-  async generateTTS(text, refAudioPath = null, language = 'vi') {
-    const r = await fetch(`${this.base}/api/tts/generate`, {
+  async removeVocal(videoPath, outputAudioPath = null) {
+    const r = await fetch(`${this.base}/api/remove-vocal`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, ref_audio_path: refAudioPath, language })
+      body: JSON.stringify({ video_path: videoPath, output_audio_path: outputAudioPath })
+    });
+    return r.json();
+  }
+
+  async adjustVideoTempo(videoPath, outputPath, audioDurationMs, maxSpeed = 1.30, minSpeed = 0.80) {
+    const r = await fetch(`${this.base}/api/adjust-video-tempo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        video_path:        videoPath,
+        output_path:       outputPath,
+        audio_duration_ms: audioDurationMs,
+        max_speed_ratio:   maxSpeed,
+        min_speed_ratio:   minSpeed,
+      })
+    });
+    return r.json();
+  }
+
+  async extractSrt(videoPath, asrFallback = true, asrLanguage = 'vi') {
+    const r = await fetch(`${this.base}/api/extract-srt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, asr_fallback: asrFallback, asr_language: asrLanguage })
+    });
+    return r.json();
+  }
+
+  async extractTextP1(jobId, videoPath, language) {
+    const r = await fetch(`${this.base}/api/p1/extract-text`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        job_id: jobId,
+        video_path: videoPath,
+        extraction_mode: 'asr',
+        language: language
+      })
+    });
+    
+    let result;
+    try {
+      result = await r.json();
+    } catch (e) {
+      throw new Error("Invalid JSON response from server");
+    }
+
+    if (!r.ok || result.status !== "ok") {
+      throw new Error(result.error || "Unknown error during ASR extraction");
+    }
+
+    return result;
+  }
+
+  async detectSubPositions(videoPath, sampleStep = 30) {
+    const r = await fetch(`${this.base}/api/detect-sub-positions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, sample_step: sampleStep })
+    });
+    return r.json();
+  }
+
+  async burnSubtitlePositioned(videoPath, srtContent, outputPath, positions = [], styleArgs = {}, karaokeAss = null) {
+    const r = await fetch(`${this.base}/api/burn-subtitle-positioned`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        video_path:   videoPath,
+        srt_content:  srtContent,
+        output_path:  outputPath,
+        positions:    positions,
+        karaoke_ass:  karaokeAss,   // ASS karaoke content nếu có
+        ...styleArgs
+      })
     });
     return r.json();
   }
@@ -173,28 +267,20 @@ class APIClient {
   // testTTS: test a voice by name (Edge TTS system voice OR clone index)
   // voiceValue can be: 'vi-VN-NamMinhNeural', 'clone:0', etc.
   async testTTS({ voice, text }) {
-    // For clone voices, look up ref audio from saved voices in localStorage
     let refAudio = null;
-    let language = 'vi';
+    const language = 'vi';
     if (voice && voice.startsWith('clone:')) {
       const idx = parseInt(voice.split(':')[1]);
       try {
         const voices = JSON.parse(localStorage.getItem('tts_voices') || '[]');
         if (voices[idx]) refAudio = voices[idx].audioPath;
-      } catch(e) {}
+      } catch (e) {}
     }
-    // Use edge-tts for system voices by passing voice name as language hint
-    // The backend generateTTS endpoint handles both OmniVoice (ref_audio_path) and edge_tts (voice param)
-    const r = await fetch(`${this.base}/api/tts/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, ref_audio_path: refAudio, language, voice_name: voice })
-    });
-    const result = await r.json();
-    // Normalize response to { audio_path } format
+    const result = await this.generateTTS(text, refAudio, language, voice);
     if (result.status === 'ok') return { audio_path: result.audio_path };
     return result;
   }
 }
 
 window.api = new APIClient();
+
