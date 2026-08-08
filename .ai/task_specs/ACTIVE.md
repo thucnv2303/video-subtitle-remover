@@ -1,9 +1,9 @@
 # Active PM Execution Spec
 
-Status: INCIDENT_HOLD
+Status: ACTIVE
 
 Task:
-`INCIDENT-RECOVERY-007E-036A-EXECUTOR-CONTROL-005`
+`RECOVERY-007E-OWNER-RUNTIME-INVENTORY-007-REV4`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -11,42 +11,38 @@ Repository:
 Canonical branch:
 `recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement`
 
-Canonical HEAD entering incident review:
-`57c037ad3cfaf400f9f6a6ffd36d8449e6a16267`
+Canonical basis:
+`fd880a625ba6a43acf25f5556f6c97ba20c84026`
 
-Incident evidence:
-`.ai/incidents/INCIDENT-RECOVERY-007E-036A-EXECUTOR-CONTROL-005.md`
+Review branch:
+`review/RECOVERY-007E-OWNER-RUNTIME-INVENTORY-007-REV4`
 
-Invalidated task:
-`RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1`
+Execution spec:
+`.ai/task_specs/RECOVERY-007E-OWNER-RUNTIME-INVENTORY-007-REV4.md`
 
-Invalidated PR:
-`#22 — CLOSED / NOT MERGED`
+Protected Owner runtime:
+`E:\Project AI\Video-sub-remove`
 
-Why incident hold is active:
-- executor violated the remote positive command whitelist and STOP rules;
-- executor continued after failed verification commands;
-- forbidden broad staging, shell-based document generation/editing and force push were used;
-- canonical documentation on the invalidated branch was broadly rewritten and incompletely synchronized;
-- no PR #22 commit was merged into canonical source.
+Execution type:
+READ-ONLY LOCAL INVENTORY + EVIDENCE PUBLICATION ONLY
 
 Anti authorization:
-NONE.
+Run only the exact positive-whitelist sequence in the REV4 spec.
 
 Application source/test/dependency authorization:
 NONE.
 
-036-A/B/C/D authorization:
+Cleanup/deletion/archive authorization:
 NONE.
 
 Owner app verification:
-NOT AUTHORIZED.
+NOT AUTHORIZED / NOT REQUIRED for inventory.
 
-Permitted work:
-Evidence publication/review only.
+036-A/B/C/D authorization:
+NONE.
 
 Merge permission:
-BLOCKED for product implementation.
+BLOCKED.
 
 Next permitted action:
-Project Manager reviews this incident evidence directly on GitHub. A separate recovery task may be created only after that review. Do not combine evidence capture and repair.
+Anti executes REV4 deterministic inventory using the fresh evidence worktree path and CR-at-EOL-safe publication gate. PM reviews exact JSON evidence, then creates a separate cleanup/adoption task with an explicit path manifest. No deletion before that review.
