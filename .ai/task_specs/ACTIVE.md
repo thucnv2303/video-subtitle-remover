@@ -3,43 +3,39 @@
 Status: HOLD
 
 Task:
-`NONE — TASK 034 COMPLETE / PR #14 FINAL MERGE APPROVED`
+`NONE — POST-MERGE CANONICAL SYNC 009 PM VERIFIED / PR #15 READY TO MERGE`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
 
+Canonical base:
+`recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement`
+
 Review branch:
-`review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032`
+`review/RECOVERY-007E-034-POST-MERGE-CANONICAL-SYNC-009`
+
+Merged product PR #14 commit:
+`edc699930f4537f5f52568e9c0aaa8aeb68fb67b`
+
+Accepted Post-Merge Canonical Sync 009 executor commit:
+`6949de804fa46fa79345d610d8334900b61ef9a5`
 
 Reviewed application source SHA:
 `ea9521f6fe957e24e49cc5d090e275511d91141d`
 
-Accepted Task 034 closeout commit:
-`ab572faccd205930e9ad7466e65436d99be17078`
+PM verification:
+PASS — GitHub verifies the 009 executor publication is exactly one commit after the approved execution basis and modifies only `.ai/current_state.md`, `.ai/task_current.md`, and `.ai/handoff.md` with narrow diffs. The three dynamic canonical files now record PR #14 as MERGED, preserve the reviewed source identity, record Owner/automation/code-review/documentation PASS, and set the active executor task to NONE.
 
-Accepted Reconcile-007-REV1 commit:
-`576cb8c84ae925570596c7ef4870033ea56fc3e6`
-
-Accepted Handoff-Reconcile-008 commit:
-`7d3412e8843501c8a333adba1ce2bcffd923078b`
-
-Final PM verification:
-PASS — GitHub verifies Handoff-Reconcile-008 is exactly one narrow docs-only commit after its approved basis and modifies only `.ai/handoff.md` (3 additions / 3 deletions). Current Task 034 state, Owner PASS, Documentation PASS, security clarification, and reviewed source identity are mutually consistent.
-
-Task 034 gates:
+Task 034 final state:
 - application execution: PASS
 - automated verification: PASS
 - code review: PASS
 - Owner manual app verification: PASS — overall Owner report on 2026-08-07: `task 34 đã oke`
 - documentation synchronization: PASS
-- confirmed credential-rotation blocker from shared screenshot: NONE
+- PR #14: MERGED at `edc699930f4537f5f52568e9c0aaa8aeb68fb67b`
+- post-merge canonical synchronization: PASS at `6949de804fa46fa79345d610d8334900b61ef9a5`
+- credential-rotation blocker from shared screenshot: NONE
 - unresolved Task 034 incident: NONE
-
-PM final merge-readiness decision:
-PASS
-
-Merge permission:
-APPROVED BY PROJECT MANAGER for PR #14 after verification of GitHub HEAD containing Handoff-Reconcile-008.
 
 Anti authorization:
 NONE
@@ -47,5 +43,8 @@ NONE
 Task 035/036 authorization:
 NONE
 
+Merge permission:
+APPROVED BY PROJECT MANAGER for documentation-only PR #15 after GitHub verification of the 009 executor commit. Project Manager performs the merge; Anti must not merge.
+
 Next permitted action:
-Project Manager merges PR #14 using the verified current PR head. Anti must not perform any further Task 034 implementation, cleanup, repair, force-push, or merge action.
+Project Manager merges PR #15. After merge, Project Manager verifies the canonical branch and selects the next product task from the merged canonical state before publishing any new remote ACTIVE spec.

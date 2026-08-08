@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-COMPLETED — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
+COMPLETED — MERGED — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 va P2).
@@ -18,15 +18,15 @@ COMPLETED — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 - RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032: HISTORICAL / SUPERSEDED BY 034-REV2
 
 ## Active Task / PR
-- Active task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
-- PR: #14
-- Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
-- Source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
+- Last completed task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
+- PR: #14 — MERGED
+- Canonical branch after merge: recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement
+- Reviewed source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
 - Owner previous result: Job Card UI PASS / AI provider-model FAIL
 - Owner observation: Owner reported on 2026-08-07: task 34 đã oke
 - Code review: PASS
 - Owner retest: PASS
-- Merge: BLOCKED
+- Merge: MERGED — edc699930f4537f5f52568e9c0aaa8aeb68fb67b
 
 ### Historical: 032/033/034 ancestry
 - Task 032 REV3: 1f5ec183ea9bf536ef70b45fc8b6d4e9d89741a1
@@ -38,7 +38,7 @@ COMPLETED — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 - Code review: PASS
 - Owner: PASS
 - Documentation: PASS
-- Merge: BLOCKED
+- Merge: PASS — PR #14 merged at edc699930f4537f5f52568e9c0aaa8aeb68fb67b
 - RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
 - RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX — WAITING_PM_REVIEW - OWNER RETEST NOT STARTED
 
@@ -359,9 +359,9 @@ Merge: BLOCKED
 ## RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 
 Task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
-Status: COMPLETED — PM VERIFIED
-PR: #14
-Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
+Status: COMPLETED — MERGED
+PR: #14 — MERGED
+Canonical branch: recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement
 Reviewed source: ea9521f6fe957e24e49cc5d090e275511d91141d
 
 Changes:
@@ -381,4 +381,4 @@ Code review: PASS
 Owner manual verification/retest: PASS
 Owner evidence: direct Owner report on 2026-08-07: task 34 đã oke
 Documentation synchronization: PASS
-Merge: BLOCKED
+Merge: MERGED — edc699930f4537f5f52568e9c0aaa8aeb68fb67b
