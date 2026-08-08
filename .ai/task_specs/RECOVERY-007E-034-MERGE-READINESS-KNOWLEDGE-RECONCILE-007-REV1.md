@@ -166,7 +166,19 @@ Read-only and forbidden to modify:
 
 Anti must not manually edit any canonical file.
 
-Run the PM helper exactly once:
+Run a syntax gate first:
+
+```powershell
+python -m py_compile .ai/task_specs/tools/reconcile_034_merge_readiness_007_rev1.py
+```
+
+If exit code is non-zero:
+
+`STOP — REV1 HELPER SYNTAX INVALID`
+
+Do not execute the helper after a syntax-gate failure.
+
+If syntax gate passes, run the PM helper exactly once:
 
 ```powershell
 python .ai/task_specs/tools/reconcile_034_merge_readiness_007_rev1.py
@@ -352,6 +364,7 @@ Return:
 - reviewed-source ancestry result
 - post-source changed paths
 - six preflight blob hashes
+- helper syntax-gate command and exit code
 - PM helper exit code and full output
 - exact modified files
 - `git diff --name-status`
