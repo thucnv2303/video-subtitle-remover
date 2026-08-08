@@ -165,6 +165,10 @@ ipcMain.handle('python:stop', () => {
 ipcMain.handle('python:status', () => {
   return pythonBridge.isRunning();
 });
+ipcMain.handle('app:openPath', async (e, p) => {
+  const { shell } = require('electron');
+  await shell.openPath(p);
+});
 
 ipcMain.handle('app:getPath', () => {
   return app.getAppPath();
