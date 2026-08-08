@@ -1,9 +1,15 @@
 # Active PM Execution Spec
 
-Status: HOLD
+Status: ACTIVE
 
 Task:
-`NONE — PM DIRECT CANONICAL FINALIZATION REVIEW`
+`INCIDENT-RECOVERY-007E-034-CLOSEOUT-CANONICAL-FINALIZE-005`
+
+Spec:
+`.ai/task_specs/INCIDENT-RECOVERY-007E-034-CLOSEOUT-CANONICAL-FINALIZE-005.md`
+
+PM-authored helper:
+`.ai/task_specs/tools/finalize_034_rev2_005.py`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -17,22 +23,25 @@ Reviewed application source SHA:
 Owner result:
 PASS — Owner reported on 2026-08-07: `task 34 đã oke`
 
-Latest executor incident:
-`INCIDENT-RECOVERY-007E-034-CLOSEOUT-CANONICAL-FINALIZE-004` stopped with `STOP — SAFE CORRECTION CANNOT CONTINUE`. The isolated local worktree was damaged during attempted edits, a forbidden whole-file rewrite command was used, and no commit or push from that execution was accepted.
-
-Current remote basis before this HOLD:
-`fc03105024c4c897f1f43bdacfd27e3a09aae57f`
+Previous failed execution:
+`INCIDENT-RECOVERY-007E-034-CLOSEOUT-CANONICAL-FINALIZE-004` is INVALIDATED/ABORTED. Its damaged local worktree is not a source, must not be repaired/removed/cleaned, and must not be reused.
 
 Purpose:
-Freeze Anti execution for Task 034 documentation closeout. Project Manager will perform or authorize a new deterministic canonical finalization only after direct GitHub verification. Do not reuse, repair, remove, clean, or publish from the failed Finalize-004 worktree.
+Run the exact PM-authored byte-preserving helper from a brand-new isolated Finalize-005 worktree. Anti must not manually edit canonical files. The helper is pinned to exact Git blob inputs, performs exact match-count checks before any write, and preserves CRLF/LF counts.
 
-Anti authorization:
-NONE.
+Executor must fetch GitHub, read this ACTIVE file directly from the remote review ref with `git show`, then read the full referenced Finalize-005 spec from the same remote ref.
 
-Do not execute Finalize-004 again.
-Do not remove or repair its damaged local worktree.
-Do not modify application source or tests.
+Local ACTIVE/spec copies are not authority.
+No manual text editing.
+No self-repair.
+No command outside the spec whitelist.
+No source/tests/dependencies changes.
+Do not modify `.ai/qa_checklist.md`.
+Do not edit PM specs/helper.
+Do not touch prior failed worktrees.
 Do not start Task 035 or Task 036.
-Do not force push or merge PR #14.
-Documentation synchronization remains BLOCKED.
+Do not force push.
+Do not merge PR #14.
+
+Documentation synchronization remains `WAITING_PM_VERIFICATION` until PM verifies the published GitHub commit.
 Merge remains BLOCKED.
