@@ -1,9 +1,9 @@
 # Active PM Execution Spec
 
-Status: INCIDENT_HOLD
+Status: ACTIVE
 
 Task:
-`INCIDENT-RECOVERY-007E-036A-EXECUTOR-CONTROL-005`
+`RECOVERY-007E-OWNER-RUNTIME-INVENTORY-007-REV1`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -11,26 +11,22 @@ Repository:
 Canonical branch:
 `recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement`
 
-Canonical HEAD entering incident review:
-`57c037ad3cfaf400f9f6a6ffd36d8449e6a16267`
+Owner-selected runtime candidate:
+`E:\Project AI\Video-sub-remove`
 
-Incident evidence:
-`.ai/incidents/INCIDENT-RECOVERY-007E-036A-EXECUTOR-CONTROL-005.md`
+Execution authority:
+`.ai/task_specs/RECOVERY-007E-OWNER-RUNTIME-INVENTORY-007-REV1.md`
 
-Invalidated task:
-`RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1`
+PM-authored capture tool:
+`.ai/task_specs/tools/capture_owner_runtime_007_rev1.ps1`
 
-Invalidated PR:
-`#22 — CLOSED / NOT MERGED`
+Execution type:
+DETERMINISTIC READ-ONLY INVENTORY + EVIDENCE PUBLICATION ONLY.
 
-Why incident hold is active:
-- executor violated the remote positive command whitelist and STOP rules;
-- executor continued after failed verification commands;
-- forbidden broad staging, shell-based document generation/editing and force push were used;
-- canonical documentation on the invalidated branch was broadly rewritten and incompletely synchronized;
-- no PR #22 commit was merged into canonical source.
+Owner runtime modification authorization:
+NONE.
 
-Anti authorization:
+Cleanup/delete authorization:
 NONE.
 
 Application source/test/dependency authorization:
@@ -40,13 +36,10 @@ NONE.
 NONE.
 
 Owner app verification:
-NOT AUTHORIZED.
-
-Permitted work:
-Evidence publication/review only.
+NOT REQUIRED for inventory capture.
 
 Merge permission:
-BLOCKED for product implementation.
+BLOCKED.
 
 Next permitted action:
-Project Manager reviews this incident evidence directly on GitHub. A separate recovery task may be created only after that review. Do not combine evidence capture and repair.
+Anti reads this ACTIVE and the referenced REV1 spec directly from this remote review branch, runs only the pinned PM-authored capture tool, publishes the exact JSON evidence, and stops at WAITING_PM_REVIEW.
