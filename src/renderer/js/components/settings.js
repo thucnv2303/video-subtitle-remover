@@ -1,7 +1,7 @@
 /**
  * Settings Component
  * Quản lý trang Cài đặt: load/save AI keys, TTS config, output directory,
- * voice clone management, TTS status check.
+ * voice clone management, TTS status check, system diagnostics.
  */
 
 import { state, saveState } from '../store.js';
@@ -15,7 +15,10 @@ export function initSettings() {
   _bindOutputDirButton();
   _bindVoiceClone();
   _bindTestTts();
+  _bindProviderToggle();
+  _bindDiagnostics();
   renderSavedVoices();
+  loadSettingsValues();
 }
 
 // ─── Load / Save Settings Values ─────────────────────────────────────────────
@@ -24,8 +27,6 @@ export function loadSettingsValues() {
   const get = (id) => document.getElementById(id);
 
   const aiProvider  = get('ai-provider');
-  const aiApiKey    = get('ai-api-key');
-  const aiEndpoint  = get('ai-endpoint');
   const aiPrompt    = get('ai-prompt');
   const ttsVoice    = get('tts-voice');
   const ttsLang     = get('tts-language');
@@ -34,9 +35,10 @@ export function loadSettingsValues() {
   const removeVocal = get('tts-remove-vocal');
   const outputDir   = get('output-dir-text');
 
-  if (aiProvider)  aiProvider.value  = localStorage.getItem('ai_provider')  || 'gemini';
-  if (aiApiKey)    aiApiKey.value    = localStorage.getItem('ai_api_key')    || '';
-  if (aiEndpoint)  aiEndpoint.value  = localStorage.getItem('ai_endpoint')   || '';
+  if (aiProvider) {
+    aiProvider.value = localStorage.getItem('ai_provider') || 'gemini';
+    _updateProviderFields(aiProvider.value);
+  }
   if (aiPrompt)    aiPrompt.value    = localStorage.getItem('ai_prompt')     || (aiPrompt?.defaultValue || '');
   if (ttsVoice)    ttsVoice.value    = localStorage.getItem('tts_voice')     || 'none';
   if (ttsLang)     ttsLang.value     = localStorage.getItem('tts_language')  || 'vi';
@@ -54,27 +56,77 @@ export function loadSettingsValues() {
   updateVoiceDropdown(getSavedVoices());
 }
 
+function _updateProviderFields(provider) {
+  const cloudFields = document.getElementById('ai-cloud-fields');
+  const ollamaFields = document.getElementById('ai-ollama-fields');
+  const apiKey = document.getElementById('ai-api-key');
+  const cloudModel = document.getElementById('ai-cloud-model');
+  const ollamaEndpoint = document.getElementById('ai-endpoint');
+  const ollamaModel = document.getElementById('ai-ollama-model');
+
+  if (provider === 'ollama') {
+    if (cloudFields) cloudFields.style.display = 'none';
+    if (ollamaFields) ollamaFields.style.display = 'block';
+    if (ollamaEndpoint) ollamaEndpoint.value = localStorage.getItem('ai_endpoint') || 'http://localhost:11434/api/chat';
+    if (ollamaModel) ollamaModel.value = localStorage.getItem('ai_model_ollama') || 'gemma4:12b';
+  } else {
+    if (cloudFields) cloudFields.style.display = 'block';
+    if (ollamaFields) ollamaFields.style.display = 'none';
+
+    // Attempt to parse provider-specific keys array
+    const storedKeys = localStorage.getItem(`ai_api_keys_${provider}`);
+    let keyValue = '';
+    if (storedKeys) {
+      try {
+        const parsed = JSON.parse(storedKeys);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          keyValue = parsed[0].key || '';
+        }
+      } catch (e) {}
+    }
+    // Fallback logic for gemini (migrate from old ai_api_key)
+    if (!keyValue && provider === 'gemini') {
+      keyValue = localStorage.getItem('ai_api_key') || '';
+    }
+
+    if (apiKey) apiKey.value = keyValue;
+    if (cloudModel) cloudModel.value = localStorage.getItem(`ai_model_${provider}`) || '';
+  }
+}
+
+function _bindProviderToggle() {
+  const aiProvider = document.getElementById('ai-provider');
+  if (aiProvider) {
+    aiProvider.addEventListener('change', (e) => {
+      _updateProviderFields(e.target.value);
+    });
+  }
+}
+
 function _saveAllSettings() {
   const get = (id) => document.getElementById(id);
-
   const val = (id) => get(id)?.value ?? '';
   const chk = (id) => get(id)?.checked ?? false;
 
-  localStorage.setItem('ai_provider',       val('ai-provider'));
-  localStorage.setItem('ai_api_key',        val('ai-api-key'));
-  localStorage.setItem('ai_endpoint',       val('ai-endpoint'));
-  localStorage.setItem('ai_prompt',         val('ai-prompt'));
-  localStorage.setItem('tts_voice',         val('tts-voice'));
-  localStorage.setItem('tts_language',      val('tts-language'));
-  localStorage.setItem('tts_bg_volume',     val('tts-bg-volume'));
-  localStorage.setItem('tts_remove_vocal',  chk('tts-remove-vocal'));
-
-  // Ghi lại provider-specific api_keys array để tương thích pipeline1
   const provider = val('ai-provider');
-  const key      = val('ai-api-key');
-  if (key) {
-    const keys = [{ key }];
-    localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify(keys));
+  localStorage.setItem('ai_provider', provider);
+  localStorage.setItem('ai_prompt', val('ai-prompt'));
+  localStorage.setItem('tts_voice', val('tts-voice'));
+  localStorage.setItem('tts_language', val('tts-language'));
+  localStorage.setItem('tts_bg_volume', val('tts-bg-volume'));
+  localStorage.setItem('tts_remove_vocal', chk('tts-remove-vocal'));
+
+  if (provider === 'ollama') {
+    localStorage.setItem('ai_endpoint', val('ai-endpoint'));
+    localStorage.setItem('ai_model_ollama', val('ai-ollama-model'));
+  } else {
+    const key = val('ai-api-key');
+    if (key) {
+      localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify([{ key }]));
+      // Keep legacy key synced for current provider just in case other parts need it loosely
+      localStorage.setItem('ai_api_key', key);
+    }
+    localStorage.setItem(`ai_model_${provider}`, val('ai-cloud-model'));
   }
 }
 
@@ -127,7 +179,6 @@ export function renderSavedVoices() {
 }
 
 export function updateVoiceDropdown(voices) {
-  // Cập nhật tất cả dropdown chọn voice trong app
   const dropdowns = [
     document.getElementById('tts-voice'),
     document.getElementById('job-tts-voice'),
@@ -135,14 +186,12 @@ export function updateVoiceDropdown(voices) {
   ].filter(Boolean);
 
   dropdowns.forEach(sel => {
-    // Xóa các option clone cũ (giữ lại các option mặc định: none, default, Edge TTS voices)
     const toRemove = [];
     for (const opt of sel.options) {
       if (opt.value.startsWith('clone:')) toRemove.push(opt);
     }
     toRemove.forEach(opt => opt.remove());
 
-    // Thêm lại từ danh sách mới
     voices.forEach((v, i) => {
       const opt = document.createElement('option');
       opt.value       = `clone:${i}`;
@@ -150,31 +199,96 @@ export function updateVoiceDropdown(voices) {
       sel.appendChild(opt);
     });
 
-    // Khôi phục giá trị đã chọn
     const saved = localStorage.getItem('tts_voice') || 'none';
     if ([...sel.options].some(o => o.value === saved)) sel.value = saved;
   });
 }
 
-// ─── TTS Status Check ─────────────────────────────────────────────────────────
+// ─── Diagnostics Check ─────────────────────────────────────────────────────────
+
+function _bindDiagnostics() {
+  const btn = document.getElementById('btn-refresh-diagnostics');
+  if (btn) {
+    btn.addEventListener('click', runAllDiagnostics);
+  }
+}
+
+export async function runAllDiagnostics() {
+  checkBackendStatus();
+  checkGpuStatus();
+  checkTTSStatus();
+}
+
+async function checkBackendStatus() {
+  const chip = document.getElementById('backend-status-chip');
+  if (!chip) return;
+  chip.textContent = '⏳ Đang kiểm tra...';
+  chip.className = 'status-chip offline';
+  try {
+    if (window.api && window.api.health) {
+      const status = await window.api.health();
+      if (status && status.status === 'ok') {
+        chip.textContent = 'Trực tuyến';
+        chip.className = 'status-chip online';
+        return;
+      }
+    }
+    chip.textContent = 'Lỗi kết nối';
+  } catch (e) {
+    chip.textContent = 'Mất kết nối';
+  }
+}
+
+async function checkGpuStatus() {
+  const chip = document.getElementById('gpu-status-chip');
+  if (!chip) return;
+  chip.textContent = '⏳ Đang kiểm tra...';
+  chip.className = 'status-chip offline';
+  try {
+    if (window.api && window.api.gpuInfo) {
+      const gpu = await window.api.gpuInfo();
+      if (gpu && gpu.gpu_available) {
+        chip.textContent = gpu.gpu_name ? `Có CUDA (${gpu.gpu_name})` : 'Có CUDA';
+        chip.className = 'status-chip online';
+      } else {
+        chip.textContent = 'CPU (Không CUDA)';
+        chip.className = 'status-chip offline';
+      }
+      return;
+    }
+    chip.textContent = 'Không khả dụng';
+  } catch (e) {
+    chip.textContent = 'Lỗi kiểm tra';
+  }
+}
 
 export async function checkTTSStatus() {
   const chip = document.getElementById('tts-status-chip');
   if (!chip) return;
+  chip.textContent = '⏳ Đang kiểm tra...';
+  chip.className = 'status-chip offline';
   try {
-    const r      = await fetch('http://localhost:8765/api/tts/status');
+    if (window.api && window.api.getTTSStatus) {
+      const status = await window.api.getTTSStatus();
+      if (status && status.available) {
+        chip.textContent = 'Sẵn sàng';
+        chip.className = 'status-chip online';
+        return;
+      }
+    }
+    // Fallback if not available via API natively
+    const r = await fetch('http://localhost:8765/api/tts/status');
     const status = await r.json();
     if (status.available) {
-      chip.textContent  = 'Sẵn sàng';
-      chip.className    = 'status-chip online';
+      chip.textContent = 'Sẵn sàng';
+      chip.className = 'status-chip online';
     } else {
-      chip.textContent  = 'Chưa cài OmniVoice';
-      chip.className    = 'status-chip offline';
+      chip.textContent = 'Chưa cài OmniVoice';
+      chip.className = 'status-chip offline';
     }
   } catch {
-    chip.textContent = 'Backend chưa kết nối';
-    chip.className   = 'status-chip offline';
-    setTimeout(checkTTSStatus, 10000);
+    chip.textContent = 'Chưa cài OmniVoice / Lỗi kết nối';
+    chip.className = 'status-chip offline';
   }
 }
 
@@ -195,7 +309,7 @@ function _bindSaveButton() {
   if (!btn) return;
   btn.addEventListener('click', () => {
     _saveAllSettings();
-    addLog('Đã lưu cấu hình AI & TTS!', 'success');
+    addLog('Đã lưu cấu hình Cài đặt!', 'success');
     _showGlobalToast('Đã lưu cài đặt!', 'success');
   });
 }
