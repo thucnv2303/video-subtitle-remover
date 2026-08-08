@@ -23,11 +23,10 @@ WAITING
 - Automated verification: NOT RUN — manual runtime baseline.
 - Owner manual app verification: PASS.
 - Feature result: FAIL/BLOCKED.
-- Existing uncommitted source changes remain preserved.
-- No source files changed by RECOVERY-006.
-- Pipeline 2 remains OWNER CONFIRMED working.
-- RECOVERY-007 approved as next task but NOT STARTED.
+- GOVERNANCE-AGENTOS-PRECOMMIT-001 executed: hook conflict verified, hook corrected.
+- RECOVERY-007E-SETTINGS-V1-001-REV2 remains BLOCKED pending PM review/merge of governance fix.
+- Owner product test remains NOT STARTED.
 - Merge permission: BLOCKED.
 
 ## Current branch
-rescue/wip-20260803
+review/GOVERNANCE-AGENTOS-PRECOMMIT-001
