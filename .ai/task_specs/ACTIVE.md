@@ -1,55 +1,105 @@
 # Active PM Execution Spec
 
-Status: HOLD
+Status: ACTIVE
 
 Task:
-`NONE`
+`RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
 
-Canonical branch:
+Canonical base branch:
 `recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement`
 
-Last incident:
-`INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-CONTROL-003`
+Canonical base SHA:
+`57c037ad3cfaf400f9f6a6ffd36d8449e6a16267`
 
-Resolution:
-`INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-RATIFICATION-004 — PM RATIFIED / RESOLVED FOR FORWARD EXECUTION`
+Review branch:
+`review/RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1`
 
-Ratification record:
-`.ai/incidents/INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-RATIFICATION-004.md`
+Primary spec:
+`.ai/task_specs/RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1.md`
 
-Ratification spec:
-`.ai/task_specs/INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-RATIFICATION-004.md`
+Mandatory base annex:
+`.ai/task_specs/RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1-BASE-ANNEX.md`
 
-Canonical semantic state:
-- Audit 035: PM VERIFIED / PM RATIFIED;
-- documentation synchronization: PASS;
-- Owner app verification for Audit 035: NOT REQUIRED;
-- Closeout 002 executor command compliance: INVALIDATED and preserved as incident evidence;
-- PR #19 / original 036-A activation: CANCELLED / CLOSED / NOT MERGED / NOT REUSABLE.
+Expected base-annex blob:
+`32c2237833ca8004fd5402d5912618460e3ed40c`
 
-Anti authorization:
+Incident recovery basis:
+`INCIDENT-RECOVERY-007E-AUDIT035-CLOSEOUT-RATIFICATION-004 — MERGED / RESOLVED FOR FORWARD EXECUTION`
+
+Why active:
+- Audit 035 technical findings are PM VERIFIED and PM RATIFIED;
+- Incident 003 is resolved for forward execution while invalid executor history remains preserved;
+- cancelled PR #19/original 036-A activation is NOT reusable;
+- source code did not change between the pre-incident base and this fresh canonical base;
+- durable P1 artifact persistence/source identity remains the first dependency-ordered implementation gap.
+
+Execution type:
+SOURCE + TEST IMPLEMENTATION, then separate canonical documentation commit.
+
+Exact source/test authorization:
+- `api/p1_artifacts.py` — NEW
+- `api/server.py`
+- `src/renderer/js/app.js`
+- `src/renderer/js/pipelines/pipeline1-ai.js`
+- `tests/test_pipeline1_artifacts.py` — NEW
+- `tests/test_pipeline1_body.js`
+
+Exact docs authorization after clean source/test commit:
+- `.ai/current_state.md`
+- `.ai/task_current.md`
+- `.ai/handoff.md`
+- `.ai/decisions.md`
+- `.ai/architecture.md`
+- `.ai/api_contracts.md`
+- `.ai/qa_checklist.md`
+- `.ai/migration_status.md`
+- `.ai/project.md`
+
+Pipeline 2 authorization:
 NONE.
 
-Application source/test/dependency authorization:
+Pipeline 3 authorization:
 NONE.
 
-Owner app verification:
-NOT AUTHORIZED — no active product source task.
-
-Next implementation candidate:
-`RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1`
-
-036-A-REV1 authorization:
-NONE until PM publishes a fresh review branch, Draft PR, remote ACTIVE, and full versioned spec from the post-ratification canonical HEAD.
+Dependencies/config authorization:
+NONE.
 
 036-B/C/D authorization:
 NONE.
 
-Merge permission:
-BLOCKED for product implementation.
+Owner app verification:
+NOT STARTED. NOT AUTHORIZED until PM code-review PASS.
+
+Current gates:
+- Execution: NOT STARTED
+- Automated verification: WAITING
+- Code review: WAITING
+- Owner manual app verification: NOT STARTED
+- Documentation synchronization: WAITING
+- Merge permission: BLOCKED
+
+Hard controls:
+- `git fetch origin` first;
+- read remote ACTIVE + complete primary REV1 spec + complete base annex from this review ref;
+- local copies are not authority;
+- capture current remote review HEAD as `EXECUTION_BASE_HEAD`;
+- use exact fresh worktree `E:\Project AI\_work\036-a-rev1-p1-artifact-persistence`;
+- verify annex blob and all annex source/docs blob gates;
+- editor/write-file edits only;
+- no shell-based generation/editing;
+- no unlisted command;
+- no decorative `Write-Output`/`echo` commands;
+- only exact exit-code diagnostic forms are allowed;
+- source/test and docs must be separate commits;
+- no reset/restore/checkout/clean/rebase/amend/force push;
+- no `git add .` / `git add -A`;
+- no `npm start` before PM code review;
+- no real provider/network calls;
+- no 036-B/C/D;
+- no merge.
 
 Next permitted action:
-Project Manager may create and activate a fresh versioned 036-A-REV1 source task from the post-ratification canonical HEAD. Anti must not reuse cancelled PR #19 or its branch/spec.
+Anti executes the exact remote REV1 primary spec plus mandatory base annex, publishes the two required commits fast-forward to this branch, and stops at WAITING_PM_REVIEW. Project Manager then reviews the source and full PR diff directly on GitHub before any Owner app test.
