@@ -3,13 +3,13 @@
 Status: ACTIVE
 
 Task:
-`RECOVERY-007E-034-MERGE-READINESS-KNOWLEDGE-RECONCILE-007-REV1`
+`RECOVERY-007E-034-FINAL-MERGE-READINESS-HANDOFF-RECONCILE-008`
 
 Spec:
-`.ai/task_specs/RECOVERY-007E-034-MERGE-READINESS-KNOWLEDGE-RECONCILE-007-REV1.md`
+`.ai/task_specs/RECOVERY-007E-034-FINAL-MERGE-READINESS-HANDOFF-RECONCILE-008.md`
 
 PM-authored helper:
-`.ai/task_specs/tools/reconcile_034_merge_readiness_007_rev1.py`
+`.ai/task_specs/tools/reconcile_034_handoff_merge_readiness_008.py`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -23,40 +23,41 @@ Reviewed application source SHA:
 Accepted Task 034 closeout commit:
 `ab572faccd205930e9ad7466e65436d99be17078`
 
-Task 034 gate result:
+Accepted Reconcile-007-REV1 commit:
+`576cb8c84ae925570596c7ef4870033ea56fc3e6`
+
+Task 034 verified gates:
 - application execution: PASS
 - automated verification: PASS
 - code review: PASS
 - Owner manual app verification: PASS — overall Owner report on 2026-08-07: `task 34 đã oke`
-- Closeout-006-REV1 executor publication: PASS
+- current_state lower 034 status: COMPLETED — PM VERIFIED
+- old 034 QA block: historical/superseded
+- BUG-013: resolved by 034-REV2 using accepted evidence
+- Owner security clarification: screenshot shared with PM was redacted before sharing; shared evidence does not establish usable credential exposure or a key-rotation blocker
 
-Owner security clarification on 2026-08-08:
-Owner states that the screenshot shared with PM had key material redacted before sharing. Therefore the shared screenshot evidence does not establish disclosure of a usable DeepSeek credential and key rotation is not a merge blocker on this evidence. Do not claim that Owner revoked or rotated a key.
-
-Previous Reconcile-007 execution result:
-STOPPED SAFELY before any write at execution basis `12199a537197e0bb63d66054391b9c48ffa02e6b`. Its PM helper had a Python syntax error before any mutation. That route is also SUPERSEDED because new Owner evidence changed the required security outcome.
-
-Remaining verified knowledge blockers:
-1. `.ai/current_state.md` top says Task 034 COMPLETED, but the lower current 034-REV2 block still says `Status: WAITING_PM_VERIFICATION`.
-2. `.ai/qa_checklist.md` has an older 034 Owner Verification block that still reads as current WAITING and is not labeled historical/superseded, while the 034-REV2 block records Owner overall PASS.
-3. `.ai/bugs.md` still leaves BUG-013 in candidate/Owner-retest-not-started state although 034-REV2 directly resolved the provider/model synchronization defect with accepted evidence.
-4. BUG-010 must be recorded as a source-fixed Owner-observed security defect; Owner confirms the shared screenshot was redacted, so no usable credential exposure is established from that evidence.
+Final PM inspection after Reconcile-007-REV1 found one remaining canonical conflict in `.ai/handoff.md`:
+- current top handoff says Task 034 is COMPLETED — PM VERIFIED, Owner PASS and Documentation PASS;
+- a lower generic `## Status` block is actually historical AI-Settings/PR-8 context but still says the screenshot key is COMPROMISED / Owner must rotate it and `Owner manual verification: NOT STARTED`;
+- that historical block must be relabeled and reconciled before final merge approval.
 
 Purpose:
-Run the exact PM-authored byte-preserving Reconcile-007-REV1 helper from a brand-new isolated worktree. The REV1 spec includes a mandatory `python -m py_compile` syntax gate before helper execution. This task reconciles canonical knowledge only. It does not change application source, tests, dependencies, Owner evidence, or merge state.
+Run only the exact PM-authored byte-preserving Handoff-Reconcile-008 helper from a brand-new isolated worktree. It modifies only `.ai/handoff.md`, preserves line endings, and does not change current Task034 evidence or application source.
 
-Executor must fetch GitHub, read this ACTIVE file directly from the remote review ref with `git show`, then read the full referenced Reconcile-007-REV1 spec from the same remote ref.
+Executor must fetch GitHub, read this ACTIVE file directly from the remote review ref with `git show`, then read the full referenced Handoff-Reconcile-008 spec from the same remote ref.
 
 Local ACTIVE/spec copies are not authority.
 No manual editing.
 No self-repair.
-No command outside the REV1 whitelist.
-Do not touch/remove/repair prior Finalize/Closeout/Reconcile worktrees.
+Mandatory `python -m py_compile` syntax gate before helper execution.
+No command outside the 008 whitelist.
+Do not touch/remove/repair any prior Finalize/Closeout/Reconcile worktree.
 Do not modify source/tests/dependencies.
+Do not modify current_state/task_current/qa/bugs.
 Do not start Task 035 or Task 036.
 Do not force push.
 Do not merge PR #14.
 
-Documentation synchronization remains under final PM reconciliation review.
+Documentation synchronization is WAITING_FINAL_PM_CONFIRMATION pending Handoff-Reconcile-008 publication and PM verification.
 Confirmed credential-rotation blocker from shared screenshot: NONE.
 Merge remains BLOCKED pending explicit PM final merge-readiness approval.
