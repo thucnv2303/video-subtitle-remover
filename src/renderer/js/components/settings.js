@@ -7,6 +7,8 @@
 import { state, saveState } from '../store.js';
 import { addLog, showToast } from '../utils/logger.js';
 
+let initialPersistedProvider = null;
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 export function initSettings() {
@@ -15,7 +17,83 @@ export function initSettings() {
   _bindOutputDirButton();
   _bindVoiceClone();
   _bindTestTts();
+  _bindProviderSelect();
+  _bindDiagnosticsRefresh();
   renderSavedVoices();
+  refreshDiagnostics();
+}
+
+// ─── Provider Isolation & Migration ──────────────────────────────────────────
+
+export function getApiKeyForProvider(provider) {
+  if (provider === 'ollama') {
+    return localStorage.getItem('ai_model_ollama') || '';
+  }
+
+  const rawSpecific = localStorage.getItem(`ai_api_keys_${provider}`);
+  if (rawSpecific) {
+    try {
+      const parsed = JSON.parse(rawSpecific);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].key) {
+        return parsed[0].key;
+      }
+    } catch {
+      if (typeof rawSpecific === 'string' && rawSpecific.trim()) {
+        return rawSpecific.trim();
+      }
+    }
+  }
+
+  // Fallback to legacy key ONLY when provider matches initialPersistedProvider
+  if (provider === initialPersistedProvider) {
+    const legacyKey = (localStorage.getItem('ai_api_key') || '').trim();
+    if (legacyKey) {
+      const keys = [{ key: legacyKey }];
+      localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify(keys));
+      return legacyKey;
+    }
+  }
+
+  return '';
+}
+
+function _updateProviderUI(provider) {
+  const get = (id) => document.getElementById(id);
+  const aiApiKey = get('ai-api-key');
+  const aiEndpoint = get('ai-endpoint');
+
+  if (provider === 'ollama') {
+    if (aiApiKey) {
+      aiApiKey.value = localStorage.getItem('ai_model_ollama') || '';
+      aiApiKey.placeholder = 'Nhập tên model Ollama (VD: gemma4:12b)...';
+    }
+    if (aiEndpoint) {
+      aiEndpoint.value = localStorage.getItem('ai_endpoint') || 'http://localhost:11434/api/chat';
+      if (aiEndpoint.parentElement) aiEndpoint.parentElement.style.display = '';
+    }
+  } else {
+    if (aiApiKey) {
+      aiApiKey.value = getApiKeyForProvider(provider);
+      aiApiKey.placeholder = `Nhập API Key cho ${provider === 'gemini' ? 'Google Gemini' : 'DeepSeek'}...`;
+    }
+    if (aiEndpoint) {
+      if (aiEndpoint.parentElement) {
+        aiEndpoint.parentElement.style.display = provider === 'deepseek' ? '' : 'none';
+      }
+      if (provider === 'deepseek') {
+        aiEndpoint.value = localStorage.getItem('ai_endpoint_deepseek') || 'https://api.deepseek.com';
+      }
+    }
+  }
+}
+
+function _bindProviderSelect() {
+  const sel = document.getElementById('ai-provider');
+  if (sel) {
+    sel.addEventListener('change', () => {
+      _updateProviderUI(sel.value);
+    });
+  }
 }
 
 // ─── Load / Save Settings Values ─────────────────────────────────────────────
@@ -24,8 +102,6 @@ export function loadSettingsValues() {
   const get = (id) => document.getElementById(id);
 
   const aiProvider  = get('ai-provider');
-  const aiApiKey    = get('ai-api-key');
-  const aiEndpoint  = get('ai-endpoint');
   const aiPrompt    = get('ai-prompt');
   const ttsVoice    = get('tts-voice');
   const ttsLang     = get('tts-language');
@@ -34,12 +110,18 @@ export function loadSettingsValues() {
   const removeVocal = get('tts-remove-vocal');
   const outputDir   = get('output-dir-text');
 
-  if (aiProvider)  aiProvider.value  = localStorage.getItem('ai_provider')  || 'gemini';
-  if (aiApiKey)    aiApiKey.value    = localStorage.getItem('ai_api_key')    || '';
-  if (aiEndpoint)  aiEndpoint.value  = localStorage.getItem('ai_endpoint')   || '';
-  if (aiPrompt)    aiPrompt.value    = localStorage.getItem('ai_prompt')     || (aiPrompt?.defaultValue || '');
-  if (ttsVoice)    ttsVoice.value    = localStorage.getItem('tts_voice')     || 'none';
-  if (ttsLang)     ttsLang.value     = localStorage.getItem('tts_language')  || 'vi';
+  const storedProvider = localStorage.getItem('ai_provider') || 'gemini';
+  initialPersistedProvider = storedProvider;
+
+  if (aiProvider) {
+    aiProvider.value = storedProvider;
+  }
+
+  _updateProviderUI(storedProvider);
+
+  if (aiPrompt)    aiPrompt.value    = localStorage.getItem('ai_prompt')    || (aiPrompt?.defaultValue || '');
+  if (ttsVoice)    ttsVoice.value    = localStorage.getItem('tts_voice')    || 'none';
+  if (ttsLang)     ttsLang.value     = localStorage.getItem('tts_language') || 'vi';
   if (removeVocal) removeVocal.checked = localStorage.getItem('tts_remove_vocal') === 'true';
   if (ttsBgVol) {
     ttsBgVol.value = localStorage.getItem('tts_bg_volume') || '10';
@@ -50,32 +132,48 @@ export function loadSettingsValues() {
     outputDir.textContent = dir || 'Mặc định (cùng thư mục video gốc)';
   }
 
-  // Đồng bộ dropdown voice với các clone đã lưu
+  const p1AiModel = get('p1-default-ai-model');
+  if (p1AiModel) p1AiModel.value = localStorage.getItem('p1_default_ai_model') || 'gemini';
+
+  const p1TtsVoice = get('p1-default-tts-voice');
+  if (p1TtsVoice) p1TtsVoice.value = localStorage.getItem('p1_default_tts_voice') || 'none';
+
   updateVoiceDropdown(getSavedVoices());
+  refreshDiagnostics();
 }
 
 function _saveAllSettings() {
   const get = (id) => document.getElementById(id);
-
   const val = (id) => get(id)?.value ?? '';
   const chk = (id) => get(id)?.checked ?? false;
 
-  localStorage.setItem('ai_provider',       val('ai-provider'));
-  localStorage.setItem('ai_api_key',        val('ai-api-key'));
-  localStorage.setItem('ai_endpoint',       val('ai-endpoint'));
-  localStorage.setItem('ai_prompt',         val('ai-prompt'));
-  localStorage.setItem('tts_voice',         val('tts-voice'));
-  localStorage.setItem('tts_language',      val('tts-language'));
-  localStorage.setItem('tts_bg_volume',     val('tts-bg-volume'));
-  localStorage.setItem('tts_remove_vocal',  chk('tts-remove-vocal'));
+  const provider = val('ai-provider') || 'gemini';
+  const keyInput = val('ai-api-key').trim();
+  const endpointInput = val('ai-endpoint').trim();
 
-  // Ghi lại provider-specific api_keys array để tương thích pipeline1
-  const provider = val('ai-provider');
-  const key      = val('ai-api-key');
-  if (key) {
-    const keys = [{ key }];
+  localStorage.setItem('ai_provider', provider);
+
+  if (provider === 'ollama') {
+    localStorage.setItem('ai_model_ollama', keyInput);
+    if (endpointInput) localStorage.setItem('ai_endpoint', endpointInput);
+  } else {
+    // Write only ai_api_keys_<provider> for provider A.
+    // Do NOT globally sync legacy ai_api_key.
+    const keys = keyInput ? [{ key: keyInput }] : [];
     localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify(keys));
+    if (provider === 'deepseek' && endpointInput) {
+      localStorage.setItem('ai_endpoint_deepseek', endpointInput);
+    }
   }
+
+  localStorage.setItem('ai_prompt', val('ai-prompt'));
+  localStorage.setItem('tts_voice', val('tts-voice'));
+  localStorage.setItem('tts_language', val('tts-language'));
+  localStorage.setItem('tts_bg_volume', val('tts-bg-volume'));
+  localStorage.setItem('tts_remove_vocal', chk('tts-remove-vocal'));
+
+  if (get('p1-default-ai-model')) localStorage.setItem('p1_default_ai_model', val('p1-default-ai-model'));
+  if (get('p1-default-tts-voice')) localStorage.setItem('p1_default_tts_voice', val('p1-default-tts-voice'));
 }
 
 // ─── Voice Clone Management ───────────────────────────────────────────────────
@@ -132,6 +230,7 @@ export function updateVoiceDropdown(voices) {
     document.getElementById('tts-voice'),
     document.getElementById('job-tts-voice'),
     document.getElementById('step1-tts-voice'),
+    document.getElementById('p1-default-tts-voice'),
   ].filter(Boolean);
 
   dropdowns.forEach(sel => {
@@ -156,25 +255,99 @@ export function updateVoiceDropdown(voices) {
   });
 }
 
-// ─── TTS Status Check ─────────────────────────────────────────────────────────
+// ─── System / Diagnostics Check Functions ─────────────────────────────────────
+
+export async function refreshDiagnostics() {
+  await Promise.all([
+    checkBackendHealth(),
+    checkGPUInfo(),
+    checkTTSStatus()
+  ]);
+}
+
+export async function checkBackendHealth() {
+  const chip = document.getElementById('backend-status-chip');
+  if (!chip) return;
+  try {
+    const res = await window.api.health();
+    if (res && (res.status === 'ok' || res.status === 'healthy' || res.health === 'ok')) {
+      chip.textContent = 'Đã kết nối';
+      chip.className = 'status-chip online';
+    } else {
+      chip.textContent = 'Phản hồi lạ';
+      chip.className = 'status-chip offline';
+    }
+  } catch {
+    chip.textContent = 'Mất kết nối';
+    chip.className = 'status-chip offline';
+  }
+}
+
+export async function checkGPUInfo() {
+  const chip = document.getElementById('gpu-status-chip');
+  const detail = document.getElementById('gpu-detail');
+  const cuda = document.getElementById('cuda-version');
+  if (!chip && !detail) return;
+
+  try {
+    const res = await window.api.gpuInfo();
+    if (res && res.gpu_available === true) {
+      if (chip) {
+        chip.textContent = 'GPU (CUDA)';
+        chip.className = 'status-chip online';
+      }
+      if (detail) detail.textContent = res.gpu_name || 'NVIDIA GPU';
+      if (cuda) cuda.textContent = res.cuda_version || 'CUDA';
+    } else if (res && res.gpu_available === false) {
+      // CPU-only is a valid NON-ERROR state!
+      if (chip) {
+        chip.textContent = 'CPU Mode';
+        chip.className = 'status-chip neutral';
+      }
+      if (detail) detail.textContent = 'CPU Mode (Không dùng GPU)';
+      if (cuda) cuda.textContent = 'N/A';
+    } else {
+      if (chip) {
+        chip.textContent = 'Lỗi GPU';
+        chip.className = 'status-chip offline';
+      }
+      if (detail) detail.textContent = 'Thông tin GPU không hợp lệ';
+      if (cuda) cuda.textContent = 'Lỗi';
+    }
+  } catch {
+    if (chip) {
+      chip.textContent = 'Lỗi GPU';
+      chip.className = 'status-chip offline';
+    }
+    if (detail) detail.textContent = 'Không thể kiểm tra GPU';
+    if (cuda) cuda.textContent = 'Lỗi';
+  }
+}
 
 export async function checkTTSStatus() {
   const chip = document.getElementById('tts-status-chip');
   if (!chip) return;
   try {
-    const r      = await fetch('http://localhost:8765/api/tts/status');
-    const status = await r.json();
-    if (status.available) {
-      chip.textContent  = 'Sẵn sàng';
-      chip.className    = 'status-chip online';
+    const status = await window.api.getTTSStatus();
+    if (status && status.available) {
+      chip.textContent = 'Sẵn sàng';
+      chip.className = 'status-chip online';
     } else {
-      chip.textContent  = 'Chưa cài OmniVoice';
-      chip.className    = 'status-chip offline';
+      chip.textContent = 'Chưa cài OmniVoice';
+      chip.className = 'status-chip offline';
     }
   } catch {
     chip.textContent = 'Backend chưa kết nối';
-    chip.className   = 'status-chip offline';
-    setTimeout(checkTTSStatus, 10000);
+    chip.className = 'status-chip offline';
+  }
+}
+
+function _bindDiagnosticsRefresh() {
+  const btn = document.getElementById('btn-refresh-diagnostics');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      refreshDiagnostics();
+    });
   }
 }
 
