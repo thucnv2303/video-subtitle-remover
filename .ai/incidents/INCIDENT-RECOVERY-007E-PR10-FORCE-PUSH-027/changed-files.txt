@@ -1,0 +1,37 @@
+M	src/renderer/index.html
+M	src/renderer/js/app.js
+M	tests/test_pipeline1_runtime.js
+ src/renderer/index.html         | 1648 +++++++++++------------
+ src/renderer/js/app.js          | 2840 ++++++++++++++++++++-------------------
+ tests/test_pipeline1_runtime.js |  139 +-
+ 3 files changed, 2350 insertions(+), 2277 deletions(-)
+---
+M	.ai/bugs.md
+M	.ai/current_state.md
+A	.ai/evidence/RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026/behavior-matrix.md
+A	.ai/evidence/RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026/changed-symbols.txt
+A	.ai/evidence/RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026/commands.txt
+A	.ai/evidence/RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026/encoding-scan.txt
+A	.ai/evidence/RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026/lineage.txt
+A	.ai/evidence/RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026/preflight.txt
+A	.ai/evidence/RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026/results.txt
+A	.ai/evidence/RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026/root-cause.md
+A	.ai/evidence/RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026/runtime-observations.txt
+A	.ai/evidence/RECOVERY-007E-PIPELINE1-SHARED-STATE-RUNTIME-CORRECTION-026/script-order.md
+M	.ai/handoff.md
+M	.ai/task_current.md
+ .ai/bugs.md                                        | 288 +++++++++++----------
+ .ai/current_state.md                               | 236 ++++++++---------
+ .../behavior-matrix.md                             |   1 +
+ .../changed-symbols.txt                            |   1 +
+ .../commands.txt                                   |   1 +
+ .../encoding-scan.txt                              |   1 +
+ .../lineage.txt                                    |   1 +
+ .../preflight.txt                                  |   1 +
+ .../results.txt                                    |   1 +
+ .../root-cause.md                                  |   1 +
+ .../runtime-observations.txt                       |   1 +
+ .../script-order.md                                |   1 +
+ .ai/handoff.md                                     |   7 +-
+ .ai/task_current.md                                | 240 ++++++++---------
+ 14 files changed, 402 insertions(+), 379 deletions(-)

@@ -1,0 +1,7 @@
+Encoding and full-file rewrite detection:
+824	824	src/renderer/index.html
+1422	1379	src/renderer/js/app.js
+111	0	tests/test_pipeline1_runtime.js
+824	824	src/renderer/index.html
+1422	1418	src/renderer/js/app.js
+104	35	tests/test_pipeline1_runtime.js

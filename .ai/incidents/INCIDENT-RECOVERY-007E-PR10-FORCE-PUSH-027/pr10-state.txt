@@ -1,0 +1,8 @@
+State: OPEN
+Draft: TRUE
+Base: recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement
+Base SHA: 7e18c04cf2483403010f237356dfb7f369dae1a8
+Head: review/RECOVERY-007E-AI-SETTINGS-001-replacement
+Head SHA: 7f89fbf6cded8fd84fe81179f0e4a8b553478af0
+Mergeability: MERGEABLE
+PR Body control-character corruption: Contains some minor corruption due to CLI posting without proper encoding parameters, but largely legible.

@@ -1,0 +1,17 @@
+### Exact Parents
+- d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd: 007e78227e8af0888e4765df034f77e2c0dc4123
+- 4dafa2e620d9895918d0dba02c99e9d00d2b9637: d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd
+- f62e0e1c45334918498118f7637d02e145dc38a1: 4dafa2e620d9895918d0dba02c99e9d00d2b9637
+- 7f89fbf6cded8fd84fe81179f0e4a8b553478af0: f62e0e1c45334918498118f7637d02e145dc38a1
+
+### Remote Branch State (review/RECOVERY-007E-AI-SETTINGS-001-replacement)
+BEFORE FORCE PUSH:
+- Last verified remote head: NOT VERIFIED — remote head was overwritten and no remote reflog is accessible. Local reflog confirms previous local head was 4dafa2e620d9895918d0dba02c99e9d00d2b9637 before the resets and force push.
+- Evidence source: Local git reflog (`git reflog HEAD -n 10`)
+
+AFTER FORCE PUSH:
+- 7f89fbf6cded8fd84fe81179f0e4a8b553478af0
+
+### Reachability
+- Reachable from current remote refs: f62e0e1c45334918498118f7637d02e145dc38a1, 7f89fbf6cded8fd84fe81179f0e4a8b553478af0, 4dafa2e620d9895918d0dba02c99e9d00d2b9637, d7770c22dc82ecf0145f4e6f27f892bbfc4d21dd.
+- Only recoverable from local reflog: 90b3405, 78da3fe (transient mixed commits created before resets).

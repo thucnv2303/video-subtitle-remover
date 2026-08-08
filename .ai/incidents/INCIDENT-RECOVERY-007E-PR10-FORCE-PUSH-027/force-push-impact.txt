@@ -1,0 +1,20 @@
+Replaced commits by force push:
+NOT VERIFIED — local reflog was rewritten or mixed commits (90b3405 / 78da3fe) were transiently created before reset. Exact dropped commit on remote is not perfectly recorded in local reflog because it was a force push after local reset.
+ .ai/bugs.md                                        |  288 +-
+ .ai/current_state.md                               |  236 +-
+ .../behavior-matrix.md                             |    1 +
+ .../changed-symbols.txt                            |    1 +
+ .../commands.txt                                   |    1 +
+ .../encoding-scan.txt                              |    1 +
+ .../lineage.txt                                    |    1 +
+ .../preflight.txt                                  |    1 +
+ .../results.txt                                    |    1 +
+ .../root-cause.md                                  |    1 +
+ .../runtime-observations.txt                       |    1 +
+ .../script-order.md                                |    1 +
+ .ai/handoff.md                                     |    7 +-
+ .ai/task_current.md                                |  240 +-
+ src/renderer/index.html                            | 1648 ++++++------
+ src/renderer/js/app.js                             | 2840 ++++++++++----------
+ tests/test_pipeline1_runtime.js                    |  139 +-
+ 17 files changed, 2752 insertions(+), 2656 deletions(-)
