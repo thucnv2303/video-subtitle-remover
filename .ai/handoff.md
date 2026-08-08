@@ -18,7 +18,7 @@ ea9521f6fe957e24e49cc5d090e275511d91141d
 - Final PR HEAD is authoritative in GitHub PR #14
 - Previous docs/evidence SHAs: 69fe35231af1d6df3feb32e0c9151b3a1aada250, b8ad1f960d14f01f076b365fe364179c41ad9fa2
 - 034-REV2: 398ab2cc -> 17b8d135 -> ...
-- Owner observation: Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong". Lịch sử source commit bd5e16f7 đã chứa .ai files.
+- Owner observation: Owner reported on 2026-08-07: task 34 đã oke
 
 ## Status
 - Owner test at abf0ee2: FAIL (see blockers in task_current.md).
@@ -83,7 +83,7 @@ PASS
 PASS - .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL / 0 NOT TESTED), node tests\test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL)
 
 ## Owner manual app verification
-PASS (direct Owner report on 2026-08-07: 	ask 34 đã oke)
+PASS (direct Owner report on 2026-08-07: task 34 đã oke)
 
 ## Documentation synchronization
 WAITING_PM_VERIFICATION

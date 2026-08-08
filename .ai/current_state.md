@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-WAITING_OWNER_VERIFICATION — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
+WAITING_PM_VERIFICATION — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 va P2).
@@ -23,9 +23,9 @@ WAITING_OWNER_VERIFICATION — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV
 - Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
 - Source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
 - Owner previous result: Job Card UI PASS / AI provider-model FAIL
-- Owner observation: Owner ngày 2026-08-07 báo phần UI vừa kiểm tra "đã xong". Lịch sử source commit bd5e16f7 đã chứa .ai files.
+- Owner observation: Owner reported on 2026-08-07: task 34 đã oke
 - Code review: PASS
-- Owner retest: WAITING
+- Owner retest: PASS
 - Merge: BLOCKED
 
 ### Historical: 032/033/034 ancestry
@@ -36,8 +36,8 @@ WAITING_OWNER_VERIFICATION — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV
 ## Verification Gates
 - Automated verification: .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL / 0 NOT TESTED), node tests\test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL), node --check src\renderer\js\app.js exit 0, node --check src\renderer\js\pipelines\pipeline1-ai.js exit 0
 - Code review: PASS
-- Owner: WAITING
-- Documentation: PASS
+- Owner: PASS
+- Documentation: WAITING_PM_VERIFICATION
 - Merge: BLOCKED
 - RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
 - RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX — WAITING_PM_REVIEW - OWNER RETEST NOT STARTED
@@ -379,6 +379,6 @@ Verification:
 Automated verification: PASS
 Code review: PASS
 Owner manual verification/retest: PASS
-Owner evidence: direct Owner report on 2026-08-07: 	ask 34 đã oke
+Owner evidence: direct Owner report on 2026-08-07: task 34 đã oke
 Documentation synchronization: WAITING_PM_VERIFICATION
 Merge: BLOCKED
