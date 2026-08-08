@@ -18,7 +18,7 @@ COMPLETED
 - Automated verification: PASS
 - Code review: PASS
 - Owner manual verification: PASS
-- Documentation synchronization: WAITING_PM_VERIFICATION
+- Documentation synchronization: PASS
 - Merge: BLOCKED
 
 ## Historical: 032 / 033 ancestry
@@ -97,7 +97,7 @@ COMPLETED
 - Automated verification: PASS
 - Code review: PASS
 - Owner manual verification: PASS
-- Documentation synchronization: WAITING_PM_VERIFICATION
+- Documentation synchronization: PASS
 - Merge permission: BLOCKED
 
 ## PR Tracking Facts
