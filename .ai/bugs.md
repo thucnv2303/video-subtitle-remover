@@ -11,10 +11,10 @@
 | BUG-007 | Manual Pipeline 1 recovery controls produced no action during owner testing | Runtime baseline | NOT YET VERIFIED | OPEN | RUNTIME VERIFIED |
 | BUG-008 | AI settings ambiguous combined API key/model field and no model scan/select UX | Owner screenshot at abf0ee2 | Combined key/model UI and shared legacy storage | CANDIDATE FIX IN DRAFT PR #8 - OWNER RETEST NOT STARTED | OWNER OBSERVED |
 | BUG-009 | Ollama rewrite contract treated model like API key entry | Code inspection | Ollama model inserted into API-key array | CANDIDATE FIX IN DRAFT PR #8 - OWNER RETEST NOT STARTED | CODE OBSERVED |
-| BUG-010 | DeepSeek API key visible in clear text in Settings UI | Owner screenshot at abf0ee2 | Keys stored in localStorage without encryption | CANDIDATE FIX IN DRAFT PR #8 - OWNER RETEST NOT STARTED | SECURITY INCIDENT |
+| BUG-010 | DeepSeek API key visible in clear text in Settings UI | Owner screenshot at abf0ee2; Owner clarified 2026-08-08 that the screenshot shared with PM was redacted before sharing | Keys stored in localStorage without encryption | RESOLVED IN SOURCE; SHARED EVIDENCE DOES NOT ESTABLISH USABLE KEY EXPOSURE; NO KEY-ROTATION MERGE BLOCKER | OWNER OBSERVED SECURITY DEFECT |
 | BUG-011 | Kiểm tra kết nối did not call DeepSeek; only validated local input | Owner test at abf0ee2 | No real provider validation IPC | CANDIDATE FIX IN DRAFT PR #8 - OWNER RETEST NOT STARTED | OWNER OBSERVED |
 | BUG-012 | Home page / Pipeline 1 layout visually broken | Owner test at abf0ee2 | Duplicated three-col wrapper in index.html | CANDIDATE FIX IN DRAFT PR #8 - OWNER RETEST NOT STARTED | OWNER OBSERVED |
-| BUG-013 | Pipeline 1 AI selector did not offer or synchronize DeepSeek with Settings | Owner test at abf0ee2 | No aiModelChanged event or sync mechanism | CANDIDATE FIX IN DRAFT PR #8 - OWNER RETEST NOT STARTED | OWNER OBSERVED |
+| BUG-013 | Pipeline 1 AI selector did not offer or synchronize DeepSeek with Settings | Owner test at abf0ee2 | No aiModelChanged event or sync mechanism | RESOLVED BY 034-REV2 — AUTOMATED PASS + OWNER OVERALL PASS 2026-08-07 | OWNER OBSERVED |
 
 ## RECOVERY-007E-AI-SETTINGS-001 candidate resolution
 - Cloud API keys encrypted via safeStorage; fails closed if unavailable.

@@ -44,8 +44,8 @@ COMPLETED — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 
 ## Security Incident
 - Owner test at abf0ee2 was FAIL.
-- DeepSeek API key visible in owner screenshot is COMPROMISED. Key must be rotated by owner.
-- The compromised key value is not stored, logged, or referenced in this implementation.
+- Owner clarification on 2026-08-08: the screenshot shared with PM had key material redacted before sharing. The shared evidence does not establish exposure of a usable DeepSeek credential; key rotation is not a merge blocker on this evidence.
+- No raw key value from that screenshot is stored, logged, or referenced in this implementation.
 
 ## Credential Architecture (IMPLEMENTED - NOT YET OWNER-RETESTED)
 - Raw provider credentials (DeepSeek, Gemini) no longer stored in localStorage.
@@ -359,7 +359,7 @@ Merge: BLOCKED
 ## RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 
 Task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
-Status: WAITING_PM_VERIFICATION
+Status: COMPLETED — PM VERIFIED
 PR: #14
 Branch: review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032
 Reviewed source: ea9521f6fe957e24e49cc5d090e275511d91141d
