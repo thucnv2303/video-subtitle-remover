@@ -1,14 +1,14 @@
 # AgentOS Handoff Status
 
 ## Last completed task
-RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2: COMPLETED — PM VERIFIED — MERGED
+RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035: COMPLETED — PM VERIFIED
 
 ## Active Task
-NONE — Task 034 merged in PR #14
+NONE — PM is preparing the exact implementation spec for RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A
 
 ## Next permitted action
-No active executor task. Project Manager selects the next task from the merged canonical base. Task 035/036 remain NOT AUTHORIZED until a new remote ACTIVE spec is published.
-PR #14 merged at edc699930f4537f5f52568e9c0aaa8aeb68fb67b after explicit PM approval.
+Project Manager publishes the exact remote ACTIVE/spec for RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A. Anti must not implement it before that publication.
+Audit 035 evidence is PM-verified from canonical source; executor PR #16 and PR #17 were invalidated and closed without merge.
 
 ## Source SHA
 ea9521f6fe957e24e49cc5d090e275511d91141d
@@ -71,25 +71,25 @@ ea9521f6fe957e24e49cc5d090e275511d91141d
 - Legacy keys deleted (ai_api_key, ai_api_keys_gemini, ai_api_keys_deepseek, ai_api_keys_ollama).
 
 ## Next Permitted Action
-No active executor task. Project Manager selects the next task from the merged canonical base. Task 035/036 remain NOT AUTHORIZED until a new remote ACTIVE spec is published.
+Project Manager publishes the exact remote ACTIVE/spec for RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A. No implementation is authorized before that.
 
 ## Execution
-PASS (static checks and runtime tests)
+PASS — PM direct source audit; no product code changed
 
 ## Code review
-PASS
+PASS — PM direct source review
 
 ## Automated verification
-PASS - .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL / 0 NOT TESTED), node tests\test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL)
+N/A — read-only audit; no app/tests executed for Audit 035
 
 ## Owner manual app verification
-PASS (direct Owner report on 2026-08-07: task 34 đã oke)
+NOT REQUIRED — read-only audit
 
 ## Documentation synchronization
 PASS
 
 ## Merge permission
-USED — PR #14 merged at edc699930f4537f5f52568e9c0aaa8aeb68fb67b
+BLOCKED — no product implementation merge is authorized until RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A completes all gates
 
 ## PR Tracking Facts
 - Source commit: e3db5fcb74ec45ed48b949a42d6786adc151ccaa
