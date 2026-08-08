@@ -1,25 +1,25 @@
 # Current Task
 
 ## Task ID
-RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
+RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035
 
 ## Name
-Pipeline 1 Per-Job AI Provider + Model Selector (REV2)
+Pipeline 1 Artifact Contract Read-Only Audit
 
 ## Status
-COMPLETED — MERGED
+WAITING_PM_REVIEW
 
 ## Current PR / Branch / SHA
-- PR: #14 — MERGED
-- Canonical branch: recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement
-- Reviewed source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
-- Owner previous result (033 + 034): Job Card UI PASS / AI provider-model FAIL
-- Owner observation: direct Owner report on 2026-08-07: task 34 đã oke
-- Automated verification: PASS
-- Code review: PASS
-- Owner manual verification: PASS
-- Documentation synchronization: PASS
-- Merge: MERGED — edc699930f4537f5f52568e9c0aaa8aeb68fb67b
+- Task type: READ-ONLY AUDIT
+- Review branch: review/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035
+- Application source basis: ea9521f6fe957e24e49cc5d090e275511d91141d
+- Audit report: .ai/audits/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035.md
+- Owner verification: NOT REQUIRED — read-only audit
+- Automated verification: N/A — no source changes
+- PM review: WAITING
+- Documentation synchronization: WAITING_PM_REVIEW
+- Source/tests/dependencies changed: NO
+- Merge: BLOCKED
 
 ## Historical: 032 / 033 ancestry
 - Task 032 REV3: 1f5ec183 | Task 033: 268613ae | 033-REV1: 5db68bc6 | Task 034: 1b66a10d

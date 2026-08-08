@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-COMPLETED — MERGED — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
+WAITING_PM_REVIEW — RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 va P2).
@@ -18,15 +18,15 @@ COMPLETED — MERGED — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 - RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032: HISTORICAL / SUPERSEDED BY 034-REV2
 
 ## Active Task / PR
-- Last completed task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
-- PR: #14 — MERGED
-- Canonical branch after merge: recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement
-- Reviewed source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
-- Owner previous result: Job Card UI PASS / AI provider-model FAIL
-- Owner observation: Owner reported on 2026-08-07: task 34 đã oke
-- Code review: PASS
-- Owner retest: PASS
-- Merge: MERGED — edc699930f4537f5f52568e9c0aaa8aeb68fb67b
+- Active task: RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035
+- Task type: READ-ONLY AUDIT — no application source changes
+- Review branch: review/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035
+- Application source basis: ea9521f6fe957e24e49cc5d090e275511d91141d
+- Audit report: .ai/audits/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035.md
+- Owner verification: NOT REQUIRED — read-only audit
+- PM review: WAITING
+- Documentation synchronization: WAITING_PM_REVIEW
+- Merge: BLOCKED
 
 ### Historical: 032/033/034 ancestry
 - Task 032 REV3: 1f5ec183ea9bf536ef70b45fc8b6d4e9d89741a1
