@@ -1,51 +1,58 @@
 # Active PM Execution Spec
 
-Status: HOLD
+Status: ACTIVE
 
 Task:
-`NONE — TASK 034 COMPLETE / PR #14 FINAL MERGE APPROVED`
+`RECOVERY-007E-034-POST-MERGE-CANONICAL-SYNC-009`
+
+Spec:
+`.ai/task_specs/RECOVERY-007E-034-POST-MERGE-CANONICAL-SYNC-009.md`
+
+PM-authored helper:
+`.ai/task_specs/tools/post_merge_034_canonical_sync_009.py`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
 
+Canonical base:
+`recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement`
+
 Review branch:
-`review/RECOVERY-007E-PIPELINE1-RUNTIME-clean-fix-032`
+`review/RECOVERY-007E-034-POST-MERGE-CANONICAL-SYNC-009`
+
+Merged PR #14 commit:
+`edc699930f4537f5f52568e9c0aaa8aeb68fb67b`
 
 Reviewed application source SHA:
 `ea9521f6fe957e24e49cc5d090e275511d91141d`
 
-Accepted Task 034 closeout commit:
-`ab572faccd205930e9ad7466e65436d99be17078`
-
-Accepted Reconcile-007-REV1 commit:
-`576cb8c84ae925570596c7ef4870033ea56fc3e6`
-
-Accepted Handoff-Reconcile-008 commit:
-`7d3412e8843501c8a333adba1ce2bcffd923078b`
-
-Final PM verification:
-PASS — GitHub verifies Handoff-Reconcile-008 is exactly one narrow docs-only commit after its approved basis and modifies only `.ai/handoff.md` (3 additions / 3 deletions). Current Task 034 state, Owner PASS, Documentation PASS, security clarification, and reviewed source identity are mutually consistent.
-
-Task 034 gates:
+Task 034 verified result:
 - application execution: PASS
 - automated verification: PASS
 - code review: PASS
 - Owner manual app verification: PASS — overall Owner report on 2026-08-07: `task 34 đã oke`
-- documentation synchronization: PASS
-- confirmed credential-rotation blocker from shared screenshot: NONE
-- unresolved Task 034 incident: NONE
+- pre-merge documentation synchronization: PASS
+- PR #14: MERGED
+- credential-rotation blocker from shared screenshot: NONE
 
-PM final merge-readiness decision:
-PASS
+Purpose:
+Synchronize the three dynamic canonical files with the already-completed PR #14 merge. This is knowledge-only; no product source/test/dependency work is authorized.
 
-Merge permission:
-APPROVED BY PROJECT MANAGER for PR #14 after verification of GitHub HEAD containing Handoff-Reconcile-008.
+Executor authority:
+Anti must fetch GitHub, read this ACTIVE file directly from `origin/review/RECOVERY-007E-034-POST-MERGE-CANONICAL-SYNC-009`, then read the full referenced spec from the same remote ref.
 
-Anti authorization:
-NONE
+Local ACTIVE/spec copies are not authority.
+No manual editing.
+No self-repair.
+Mandatory `python -m py_compile` syntax gate before helper execution.
+Only `.ai/current_state.md`, `.ai/task_current.md`, and `.ai/handoff.md` may be modified by the executor.
+Do not modify source/tests/dependencies.
+Do not start Task 035/036.
+Do not force push.
+Do not merge the post-merge docs PR.
 
 Task 035/036 authorization:
 NONE
 
 Next permitted action:
-Project Manager merges PR #14 using the verified current PR head. Anti must not perform any further Task 034 implementation, cleanup, repair, force-push, or merge action.
+Anti executes Post-Merge Canonical Sync 009 exactly. Project Manager then verifies the publication and merges the documentation-only PR if it passes.
