@@ -33,8 +33,8 @@ Task 034 gate result:
 Owner security clarification on 2026-08-08:
 Owner states that the screenshot shared with PM had key material redacted before sharing. Therefore the shared screenshot evidence does not establish disclosure of a usable DeepSeek credential and key rotation is not a merge blocker on this evidence. Do not claim that Owner revoked or rotated a key.
 
-Previous Reconcile-007:
-SUPERSEDED before accepted execution because its required outcome treated key rotation as an unresolved merge blocker. New Owner evidence changes that requirement.
+Previous Reconcile-007 execution result:
+STOPPED SAFELY before any write at execution basis `12199a537197e0bb63d66054391b9c48ffa02e6b`. Its PM helper had a Python syntax error before any mutation. That route is also SUPERSEDED because new Owner evidence changed the required security outcome.
 
 Remaining verified knowledge blockers:
 1. `.ai/current_state.md` top says Task 034 COMPLETED, but the lower current 034-REV2 block still says `Status: WAITING_PM_VERIFICATION`.
@@ -43,7 +43,7 @@ Remaining verified knowledge blockers:
 4. BUG-010 must be recorded as a source-fixed Owner-observed security defect; Owner confirms the shared screenshot was redacted, so no usable credential exposure is established from that evidence.
 
 Purpose:
-Run the exact PM-authored byte-preserving Reconcile-007-REV1 helper from a brand-new isolated worktree. This task reconciles canonical knowledge only. It does not change application source, tests, dependencies, Owner evidence, or merge state.
+Run the exact PM-authored byte-preserving Reconcile-007-REV1 helper from a brand-new isolated worktree. The REV1 spec includes a mandatory `python -m py_compile` syntax gate before helper execution. This task reconciles canonical knowledge only. It does not change application source, tests, dependencies, Owner evidence, or merge state.
 
 Executor must fetch GitHub, read this ACTIVE file directly from the remote review ref with `git show`, then read the full referenced Reconcile-007-REV1 spec from the same remote ref.
 
