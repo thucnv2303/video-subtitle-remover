@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-COMPLETED — MERGED — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
+COMPLETED — PM VERIFIED — RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 va P2).
@@ -18,15 +18,15 @@ COMPLETED — MERGED — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 - RECOVERY-007E-PIPELINE1-RUNTIME-CLEAN-FIX-032: HISTORICAL / SUPERSEDED BY 034-REV2
 
 ## Active Task / PR
-- Last completed task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
-- PR: #14 — MERGED
-- Canonical branch after merge: recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement
-- Reviewed source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
-- Owner previous result: Job Card UI PASS / AI provider-model FAIL
-- Owner observation: Owner reported on 2026-08-07: task 34 đã oke
-- Code review: PASS
-- Owner retest: PASS
-- Merge: MERGED — edc699930f4537f5f52568e9c0aaa8aeb68fb67b
+- Last completed product task: RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2 — MERGED
+- Last completed audit: RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035 — PM VERIFIED
+- Accepted PM evidence: .ai/audits/RECOVERY-007E-PIPELINE1-ARTIFACT-CONTRACT-AUDIT-035-PM-VERIFIED.md
+- Reviewed application source SHA: ea9521f6fe957e24e49cc5d090e275511d91141d
+- Executor PR #16: INVALIDATED / CLOSED / NOT MERGED
+- Executor PR #17: INVALIDATED / CLOSED / NOT MERGED
+- Owner verification: NOT REQUIRED — read-only audit
+- Documentation synchronization: PASS
+- Next implementation candidate: RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A — NOT AUTHORIZED until a new remote ACTIVE spec is published
 
 ### Historical: 032/033/034 ancestry
 - Task 032 REV3: 1f5ec183ea9bf536ef70b45fc8b6d4e9d89741a1
@@ -34,13 +34,13 @@ COMPLETED — MERGED — RECOVERY-007E-PIPELINE1-AI-PROVIDER-MODEL-034-REV2
 - Task 034: 1b66a10d / 034-REV1: see Source SHA above
 
 ## Verification Gates
-- Automated verification: .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js exit 0 (115 PASS / 0 FAIL / 0 NOT TESTED), node tests\test_renderer_dom_structure.js exit 0 (35 PASS / 0 FAIL), node --check src\renderer\js\app.js exit 0, node --check src\renderer\js\pipelines\pipeline1-ai.js exit 0
-- Code review: PASS
-- Owner: PASS
+- Audit execution: PASS — PM independently verified canonical GitHub source; executor audit publications were not accepted as proof
+- Automated verification: N/A — read-only source audit; no product code changed
+- Code review: PASS — PM direct source review
+- Owner: NOT REQUIRED — read-only audit
 - Documentation: PASS
-- Merge: PASS — PR #14 merged at edc699930f4537f5f52568e9c0aaa8aeb68fb67b
-- RECOVERY-007E-SOURCE-BASELINE-002: COMPLETED - PASS WITH GIT-NORMALIZED LF
-- RECOVERY-007E-AI-SETTINGS-001: CANDIDATE_FIX — WAITING_PM_REVIEW - OWNER RETEST NOT STARTED
+- Product merge permission: BLOCKED until an implementation task is separately reviewed and approved
+- Next task authority: RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A is selected as candidate only; execution requires a separate PM-authored ACTIVE spec
 
 ## Security Incident
 - Owner test at abf0ee2 was FAIL.
