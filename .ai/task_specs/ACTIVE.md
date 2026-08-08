@@ -1,12 +1,9 @@
 # Active PM Execution Spec
 
-Status: ACTIVE
+Status: HOLD
 
 Task:
-`INCIDENT-RECOVERY-007E-034-CLOSEOUT-CANONICAL-FINALIZE-004`
-
-Spec:
-`.ai/task_specs/INCIDENT-RECOVERY-007E-034-CLOSEOUT-CANONICAL-FINALIZE-004.md`
+`NONE — PM DIRECT CANONICAL FINALIZATION REVIEW`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -20,22 +17,22 @@ Reviewed application source SHA:
 Owner result:
 PASS — Owner reported on 2026-08-07: `task 34 đã oke`
 
-Current GitHub correction basis:
-`c5376def7c79cd0df68b90da24a0ada52986d862`
+Latest executor incident:
+`INCIDENT-RECOVERY-007E-034-CLOSEOUT-CANONICAL-FINALIZE-004` stopped with `STOP — SAFE CORRECTION CANNOT CONTINUE`. The isolated local worktree was damaged during attempted edits, a forbidden whole-file rewrite command was used, and no commit or push from that execution was accepted.
 
-Task 003 execution finding:
-INVALIDATED as final documentation-sync proof. GitHub cumulative diff is narrow, but the executor used forbidden reset/restore/checkout, line-ending conversion and force-push commands; its reported commit SHA was also incorrect, and `.ai/current_state.md` still contains contradictory current Owner WAITING state.
+Current remote basis before this HOLD:
+`fc03105024c4c897f1f43bdacfd27e3a09aae57f`
 
 Purpose:
-Use a new isolated clean worktree and targeted editor-level changes only to make current_state, task_current, and handoff agree on the accepted 034-REV2 Owner PASS, while preserving source/test state and existing narrow cumulative history.
+Freeze Anti execution for Task 034 documentation closeout. Project Manager will perform or authorize a new deterministic canonical finalization only after direct GitHub verification. Do not reuse, repair, remove, clean, or publish from the failed Finalize-004 worktree.
 
-Executor must fetch GitHub and read this ACTIVE file directly from the remote review ref with `git show`, then read the full referenced spec from the same remote ref. Local ACTIVE/spec copies are not authority.
+Anti authorization:
+NONE.
 
+Do not execute Finalize-004 again.
+Do not remove or repair its damaged local worktree.
 Do not modify application source or tests.
-Do not use reset/restore/checkout/revert/clean/rebase/amend.
-Do not run line-ending conversion or whole-file rewrite scripts.
-Do not force push.
 Do not start Task 035 or Task 036.
-Do not merge PR #14.
-Documentation synchronization remains BLOCKED pending this finalization and PM verification.
+Do not force push or merge PR #14.
+Documentation synchronization remains BLOCKED.
 Merge remains BLOCKED.
