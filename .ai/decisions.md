@@ -69,3 +69,18 @@ Rules:
 - Whole-file rewrite tools, wildcard file loops, and line-ending conversion are forbidden for narrow documentation edits unless the active spec explicitly requires them.
 - For deterministic governance/spec/knowledge-only updates, the Project Manager may write directly through the GitHub API to avoid local dirty-tree and line-ending risk. This exception does not authorize PM application-source edits and does not bypass required review/gate recording.
 - Long specs may retain rationale/evidence, but the execution contract at the top must state hard rules, allowed commands/files, STOP behavior, and push gates compactly and unambiguously.
+
+## D-014 — Owner Communication Contract
+
+The Owner is product/idea owner, not the technical executor.
+
+Project Manager communication to the Owner must be concise and non-technical by default. Report only:
+- what task is currently being done;
+- how far it has progressed;
+- what remains before the task is complete;
+- whether Owner action is needed;
+- when code review is complete and the Owner should run the real app to verify the requested behavior.
+
+Technical implementation details, Git/GitHub mechanics, test internals, incident mechanics, exact patches, command whitelists and Anti troubleshooting are handled by Project Manager and Anti unless the Owner explicitly asks for technical detail.
+
+For source-code tasks, do not ask the Owner to test the app before Project Manager code review PASS. When code is ready for manual verification, tell the Owner clearly that code is ready and provide only the shortest practical app-test steps and expected visible behavior.
