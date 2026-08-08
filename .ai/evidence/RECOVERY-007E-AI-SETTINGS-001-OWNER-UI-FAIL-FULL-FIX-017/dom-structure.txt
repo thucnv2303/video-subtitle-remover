@@ -1,0 +1,13 @@
+EXACT PRODUCTION FILE TESTED: src/renderer/index.html
+
+--- BEFORE ANCESTRY (HEAD = eaf6d39) ---
+Ancestry for #page-home: HTML > BODY > DIV.app-container > MAIN.main-area > SECTION#page-home.page.active
+Ancestry for #page-settings: HTML > BODY > SECTION#page-settings.page
+Containment checks: #page-settings inside .main-area? false. Siblings? false.
+
+--- AFTER ANCESTRY (FIXED) ---
+Ancestry for #page-home: HTML > BODY > DIV.app-container > MAIN.main-area > SECTION#page-home.page.active
+Ancestry for #page-settings: HTML > BODY > DIV.app-container > MAIN.main-area > SECTION#page-settings.page
+Containment checks: #page-settings inside .main-area? true. Siblings? true.
+
+Duplicate-ID result: 0 duplicates.

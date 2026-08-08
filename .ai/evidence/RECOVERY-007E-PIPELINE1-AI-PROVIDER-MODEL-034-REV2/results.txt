@@ -1,0 +1,189 @@
+Command: .\node_modules\.bin\electron.cmd tests\test_pipeline1_runtime.js
+Output:
+[Renderer] %cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+[Renderer] Uncaught (in promise) TypeError: window.electronAPI.hasProviderKeys is not a function
+
+TEST-HARNESS WARNING:
+window.electronAPI.hasProviderKeys is not a function.
+Observed only in Electron test harness mock environment.
+Not proven to be a production application regression.
+Runtime assertions still completed 115 PASS / 0 FAIL / 0 NOT TESTED,
+EXIT CODE 0.
+PASS: window._appState is non-null object
+PASS: pipeline1SelectedJobId field exists
+PASS: state.jobs is array
+PASS: step1-ai-provider exists in Pipeline 1 sidebar
+PASS: gemini option in step1-ai-provider. Opts: gemini,deepseek,ollama
+PASS: deepseek option in step1-ai-provider
+PASS: ollama option in step1-ai-provider
+PASS: step1-ai-model exists
+PASS: loadStep1Models exposed on window
+PASS: step1-tts-voice exists
+PASS: step1-tts-voice has none
+PASS: step1-tts-voice has vi-VN-HoaiMyNeural
+PASS: [STARTUP] provider=gemini
+PASS: [STARTUP] model=gemini-2.5-pro (không được ra flash)
+PASS: [SETTINGS NO-JOB] provider=deepseek
+PASS: [SETTINGS NO-JOB] model=deepseek-coder
+PASS: [SETTINGS EXISTING-JOB] job.aiProvider=gemini
+PASS: [SETTINGS EXISTING-JOB] job.aiModel=gemini-2.5-flash
+PASS: [SETTINGS EXISTING-JOB] visible provider=gemini
+PASS: [SETTINGS EXISTING-JOB] visible model=gemini-2.5-flash
+PASS: job.aiProvider field exists
+PASS: job.aiModel field exists
+PASS: renderJobList exposed on window
+PASS: step1-job-list exists
+PASS: Two .job-card elements. Found: 2
+PASS: step1-detail-title exists
+PASS: step1-detail-status exists
+PASS: Empty state title exact Vietnamese. Got: "Vui lòng chọn 1 Job"
+PASS: Empty state status exact Vietnamese. Got: "Trống"
+PASS: No mojibake "Ã" in detail-title (empty)
+PASS: No mojibake "Ä¹" in detail-title (empty)
+PASS: No mojibake "Æ" in detail-title (empty)
+PASS: No mojibake "â" in detail-title (empty)
+PASS: No mojibake "ðŸ" in detail-title (empty)
+PASS: No mojibake "ï¿½" in detail-title (empty)
+PASS: No mojibake "á»" in detail-title (empty)
+PASS: No mojibake "áº" in detail-title (empty)
+PASS: No mojibake "™" in detail-title (empty)
+PASS: No mojibake "‘" in detail-title (empty)
+PASS: No mojibake "Ã" in detail-status (empty)
+PASS: No mojibake "Ä¹" in detail-status (empty)
+PASS: No mojibake "Æ" in detail-status (empty)
+PASS: No mojibake "â" in detail-status (empty)
+PASS: No mojibake "ðŸ" in detail-status (empty)
+PASS: No mojibake "ï¿½" in detail-status (empty)
+PASS: No mojibake "á»" in detail-status (empty)
+PASS: No mojibake "áº" in detail-status (empty)
+PASS: No mojibake "™" in detail-status (empty)
+PASS: No mojibake "‘" in detail-status (empty)
+PASS: [CLICK A] pipeline1SelectedJobId === jobA. Got: jobA
+PASS: [CLICK A] detail title === VideoA.mp4. Got: "VideoA.mp4"
+PASS: [CLICK A] provider restored to gemini. Got: gemini
+PASS: [CLICK A] model restored to gemini-2.5-flash. Got: gemini-2.5-flash
+PASS: [CLICK A] Card A has active class. Classes: job-card active
+PASS: [CLICK A] Card B does NOT have active class
+PASS: [CLICK B] pipeline1SelectedJobId === jobB. Got: jobB
+PASS: [CLICK B] detail title === VideoB.mp4. Got: "VideoB.mp4"
+PASS: [CLICK B] provider restored to ollama. Got: ollama
+PASS: [CLICK B] model restored to qwen3-coder:30b. Got: qwen3-coder:30b
+PASS: [CLICK B] qwen3-coder:30b in model list. Opts: qwen3-coder:30b,llama3
+PASS: [CLICK B] Card A not active
+PASS: [CLICK B] Card B active
+PASS: [A->B->A] pipeline1SelectedJobId restored to jobA. Got: jobA
+PASS: [A->B->A] detail title restored to VideoA.mp4. Got: "VideoA.mp4"
+PASS: [A->B->A] provider restored to gemini. Got: gemini
+PASS: [A->B->A] model restored to gemini-2.5-flash. Got: gemini-2.5-flash
+PASS: [A->B->A] Card A active
+PASS: [A->B->A] Card B not active
+PASS: [RACE A] After rapid A->B click, selected job === jobB. Got: jobB
+PASS: [RACE A] Provider === ollama (not stale gemini). Got: ollama
+PASS: [RACE A] Stale Gemini model NOT in dropdown. Opts: qwen3-coder:30b,llama3
+PASS: [RACE A] Ollama model qwen3-coder:30b IS in dropdown. Opts: qwen3-coder:30b,llama3
+PASS: [RACE A] Model === qwen3-coder:30b (not stale gemini). Got: qwen3-coder:30b
+PASS: [RACE B] Stale Gemini model NOT in dropdown after rapid gemini->deepseek. Opts: deepseek-chat,deepseek-coder
+PASS: [RACE B] DeepSeek model IS in dropdown. Opts: deepseek-chat,deepseek-coder
+PASS: [RACE B] Provider === deepseek (not stale gemini). Got: deepseek
+PASS: [NEW JOB] Pipeline 1 provider = deepseek before add
+PASS: [NEW JOB] Pipeline 1 model = deepseek-chat before add
+PASS: [NEW JOB] One job created via upload. Count: 1
+PASS: [NEW JOB] createdJob.aiProvider === deepseek. Got: deepseek
+PASS: [NEW JOB] createdJob.aiModel === deepseek-chat. Got: deepseek-chat
+PASS: EXEC Cloud: payload.provider === gemini (job.aiProvider). Got: gemini
+PASS: EXEC Cloud: payload.model === gemini-2.5-flash (job.aiModel). Got: gemini-2.5-flash
+PASS: EXEC Ollama: ollamaChat.model === qwen3-coder:30b (job.aiModel). Got: qwen3-coder:30b
+PASS: TTS payload.tts_voice === vi-VN-HoaiMyNeural. Got: vi-VN-HoaiMyNeural
+PASS: TTS payload.tts_speed === 1.5 (150/100). Got: 1.5
+PASS: UI 100 => 1.0x
+PASS: UI 150 => 1.5x
+PASS: UI 50 => 0.5x
+PASS: UI 200 => 2.0x
+PASS: No "Đang tải..." when provider has no key. Opts: Chưa lưu API key nào.
+PASS: Controlled message shown when no API key. Opts: Chưa lưu API key nào.
+PASS: step1-tts-speed exists
+PASS: Speed min=50
+PASS: Speed max=200
+PASS: No mojibake "Ã" in step1-detail-title (final)
+PASS: No mojibake "Ä¹" in step1-detail-title (final)
+PASS: No mojibake "Æ" in step1-detail-title (final)
+PASS: No mojibake "â" in step1-detail-title (final)
+PASS: No mojibake "ðŸ" in step1-detail-title (final)
+PASS: No mojibake "ï¿½" in step1-detail-title (final)
+PASS: No mojibake "á»" in step1-detail-title (final)
+PASS: No mojibake "áº" in step1-detail-title (final)
+PASS: No mojibake "™" in step1-detail-title (final)
+PASS: No mojibake "‘" in step1-detail-title (final)
+PASS: No mojibake "Ã" in step1-detail-status (final)
+PASS: No mojibake "Ä¹" in step1-detail-status (final)
+PASS: No mojibake "Æ" in step1-detail-status (final)
+PASS: No mojibake "â" in step1-detail-status (final)
+PASS: No mojibake "ðŸ" in step1-detail-status (final)
+PASS: No mojibake "ï¿½" in step1-detail-status (final)
+PASS: No mojibake "á»" in step1-detail-status (final)
+PASS: No mojibake "áº" in step1-detail-status (final)
+PASS: No mojibake "™" in step1-detail-status (final)
+PASS: No mojibake "‘" in step1-detail-status (final)
+
+SUMMARY: 115 PASS / 0 FAIL / 0 NOT TESTED
+All Runtime Tests PASSED
+EXIT CODE: 0
+
+Command: node tests\test_renderer_dom_structure.js
+Output:
+PASS: .pipeline-container exists
+PASS: display:flex
+PASS: flex-direction:column
+PASS: flex:1
+PASS: width:100%
+PASS: .pipeline-content-area display:flex
+PASS: .pipeline-content-area flex:1
+PASS: .pipeline-pane.active display:flex
+PASS: .toolkit-layout-3col display:flex
+PASS: .toolkit-layout-3col flex:1
+PASS: #page-home inside .main-area
+PASS: #page-settings inside .main-area
+PASS: Home and Settings siblings
+PASS: toolkit wrapper under pipeline container
+PASS: toolkit wrapper not under narrow sidebar
+PASS: Visual selector .pipeline-bar-v2 exists in CSS
+PASS: Visual selector .step-chevron exists in CSS
+PASS: Visual selector .step-chevron.active exists in CSS
+PASS: Visual selector .step-title exists in CSS
+PASS: Visual selector .step-sub exists in CSS
+PASS: Visual selector .tk-group exists in CSS
+PASS: Visual selector .tk-input exists in CSS
+PASS: Visual selector .tk-slider exists in CSS
+PASS: Visual selector .tk-btn exists in CSS
+PASS: Visual selector .tk-btn-primary exists in CSS
+PASS: Visual selector .tk-btn-danger exists in CSS
+PASS: Visual selector .tk-btn-sm exists in CSS
+PASS: Visual selector .tk-prompt-box exists in CSS
+PASS: Visual selector .tk-prompt-list exists in CSS
+PASS: Visual selector .tk-prompt-item exists in CSS
+PASS: Visual selector .tk-prompt-item.active exists in CSS
+PASS: Visual selector .tk-job-list exists in CSS
+PASS: Visual selector .tk-log-console exists in CSS
+PASS: Visual selector .tk-log-header exists in CSS
+PASS: no duplicate IDs
+TOTAL: 35 PASS / 0 FAIL
+EXIT CODE: 0
+
+Command: node --check src\renderer\js\app.js
+Output:
+EXIT CODE: 0
+
+Command: node --check src\renderer\js\pipelines\pipeline1-ai.js
+Output:
+EXIT CODE: 0
+
+Command: git diff --check
+Output:
+EXIT CODE: 0

@@ -1,0 +1,69 @@
+FORENSIC RECOVERY MATRIX - CLOSEOUT-COLLISION-FIX-012
+Platform: Windows 10 Pro  Node: v24.18.0
+
+TC: TC1
+  Input:  keys(corrupt)+bak+c.pri
+  Branch: caseA-blocked
+  After:  keys+bak+c.pri
+  Error:  [RECOVERY_REQUIRED] Tồn tại tệp pháp y; không thể tự động khôi phục an toàn.
+
+TC: TC2
+  Input:  keys+c.new
+  Branch: post-write-blocked
+  After:  keys+c.new
+  Error:  [RECOVERY_REQUIRED] Tồn tại tệp pháp y của lần ghi trước; không thể ghi an toàn.
+
+TC: TC3
+  Input:  keys(corrupt)+bak(corrupt)
+  Branch: windowsSafeRestore-fail
+  After:  keys+c.res
+  Error:  [RESTORE_FAILED] Khôi phục thành công nhưng tệp đã khôi phục không hợp lệ (đã ho
+
+TC: TC4
+  Input:  keys(corrupt)+bak(corrupt)+c.res
+  Branch: windowsSafeRestore-blocked
+  After:  keys+bak+c.res
+  Error:  [RECOVERY_REQUIRED] Tồn tại tệp pháp y; không thể tự động khôi phục an toàn.
+
+TC: TC5
+  Input:  keys(corrupt)+bak(corrupt)
+  Branch: restore-original-fail
+  After:  c.pri+c.res
+  Error:  [RESTORE_FAILED] Khôi phục không hợp lệ, đã chuyển pháp y, nhưng lỗi hoàn tác tệ
+
+TC: TC6
+  Input:  keys+bak+c.res (write invalid)
+  Branch: post-write-rollback-blocked
+  After:  bak+c.new+c.res
+  Error:  [RECOVERY_REQUIRED] Tồn tại tệp pháp y; không thể tự động khôi phục an toàn.
+
+TC: TC7
+  Input:  keys(corrupt)+bak+tmp(dir)
+  Branch: caseE-unlink-fail
+  After:  keys+tmp
+  Error:  [STORE_CORRUPT] Khôi phục thành công nhưng không thể xóa tệp tạm: EPERM: operati
+
+TC: TC8
+  Input:  bak+tmp(dir)
+  Branch: caseB-unlink-fail
+  After:  keys+tmp
+  Error:  [STORE_CORRUPT] Khôi phục thành công nhưng không xóa được tệp tạm: EPERM: operat
+
+TC: TC9
+  Input:  keys(corrupt)+bak
+  Branch: restore-cleanup-fail
+  After:  keys+tmp+c.pri
+  Error:  [STORE_CORRUPT] Khôi phục thành công nhưng không thể xóa tệp pháp y: EPERM
+
+TC: TC10
+  Input:  keys(odd)+bak(odd)
+  Branch: STORE_CORRUPT
+  After:  keys+tmp+bak
+  Error:  [STORE_CORRUPT] Trạng thái ba tệp: cả keys và bak đều hỏng. Bảo tồn tất cả.
+
+TC: TC11
+  Input:  keys+bak(dir)
+  Branch: caseA-cleanup-fail
+  After:  keys+tmp+bak
+  Error:  [STORE_CORRUPT] Không thể xóa tệp thừa (ai_keys.json.tmp): EPERM: operation not 
+

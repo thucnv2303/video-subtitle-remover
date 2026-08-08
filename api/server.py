@@ -1312,6 +1312,7 @@ class TTSRetryReq(BaseModel):
     tts_voice: str
     video_path: str
     tts_ref_audio: Optional[str] = None
+    tts_speed: Optional[float] = None  # UI slider 0.5-2.0, 1.0=normal -> edge_tts rate
 
 @app.post("/api/tts-retry")
 def api_tts_retry(req: TTSRetryReq):
@@ -1426,10 +1427,16 @@ def api_tts_retry(req: TTSRetryReq):
         out_dir = tempfile.gettempdir()
         dubbed_path = os.path.join(out_dir, f'tts_retry_{abs(hash(req.srt_content[:80]))}.mp3')
 
+        # Compute edge-tts rate string from tts_speed (multiplier 0.5-2.0, 1.0=normal)
+        _speed = req.tts_speed if req.tts_speed is not None else 1.0
+        _speed = max(0.5, min(2.0, float(_speed)))  # defensive clamp: reject out-of-range
+        _rate_pct = int(round((_speed - 1.0) * 100))
+        rate_str = f'{_rate_pct:+d}%'
+
         # ── Tạo từng clip TTS + thu thập word boundaries cho karaoke ──────
         clips = []  # list of (AudioSegment, text, orig_start_ms, orig_end_ms, word_boundaries)
 
-        def _edge_tts_with_words(text_str: str, voice_str: str, out_path: str):
+        def _edge_tts_with_words(text_str: str, voice_str: str, out_path: str, rate_str: str = '+0%'):
             """
             Chạy edge_tts với WordBoundary, thu thập timing từng từ.
             Trả về (success: bool, word_timings: list of {offset_ms, duration_ms, word})
@@ -1446,6 +1453,7 @@ def api_tts_retry(req: TTSRetryReq):
                         words = []
                         comm = edge_tts.Communicate(
                             text_str, voice_str,
+                            rate=rate_str,
                             boundary='WordBoundary'
                         )
                         async for chunk in comm.stream():
@@ -1502,7 +1510,7 @@ def api_tts_retry(req: TTSRetryReq):
 
             if not cur_voice.startswith("clone:"):
                 try:
-                    ok, word_timings = _edge_tts_with_words(text, cur_voice, tmp)
+                    ok, word_timings = _edge_tts_with_words(text, cur_voice, tmp, rate_str)
                     if not ok:
                         # fallback không có word timing
                         from edge_tts import Communicate as _C
@@ -1511,7 +1519,7 @@ def api_tts_retry(req: TTSRetryReq):
                             loop2 = asyncio.new_event_loop()
                             asyncio.set_event_loop(loop2)
                             try:
-                                loop2.run_until_complete(_C(text, cur_voice).save(tmp))
+                                loop2.run_until_complete(_C(text, cur_voice, rate=rate_str).save(tmp))
                             except Exception as e2:
                                 err2.append(str(e2))
                             finally:

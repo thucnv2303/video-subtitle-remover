@@ -1,0 +1,16 @@
+TASK: RECOVERY-007E-AI-SETTINGS-001-CRASH-RECOVERY-CORRECTION-009
+Platform: Windows 10 Pro
+Node: v24.18.0
+HEAD: (git rev-parse HEAD)
+
+TEST COMMAND:
+  ="test"; node test_recovery_009.js
+
+STATIC CHECKS:
+  node --check src/main/main.js
+  git diff --check 99005232e259496a3d422f13e26987bcdd27a999..HEAD
+  git diff --check
+
+ELECTRON LAUNCH:
+  npx electron .
+  (no --no-sandbox; no sandbox weakening)

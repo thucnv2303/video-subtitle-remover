@@ -71,10 +71,18 @@
                    </div>
                    
                    <div class="tk-group">
-                      <label>AI Model Selection</label>
+                      <label>Nguồn AI</label>
+                      <select id="step1-ai-provider" class="tk-input">
+                         <option value="gemini">Google Gemini</option>
+                         <option value="deepseek">DeepSeek</option>
+                         <option value="ollama">Ollama (Local)</option>
+                      </select>
+                   </div>
+
+                   <div class="tk-group">
+                      <label>AI Model</label>
                       <select id="step1-ai-model" class="tk-input">
-                         <option>Ollama (Llama 3.2 Vision)</option>
-                         <option>Google Gemini</option>
+                         <option value="">Chọn nguồn AI để tải model...</option>
                       </select>
                    </div>
                    
@@ -94,15 +102,20 @@
                    <div class="tk-group">
                       <label>Voice Settings</label>
                       <select id="step1-tts-voice" class="tk-input">
-                         <option>Không lồng tiếng</option>
-                         <option>Hoài My (Nữ, Miền Nam)</option>
-                         <option>Nam Minh (Nam, Miền Bắc)</option>
+                         <option value="none">Không lồng tiếng</option>
+                         <option value="default">Giọng mặc định (OmniVoice)</option>
+                         <option value="vi-VN-HoaiMyNeural">Hoài My (Nữ, Miền Nam)</option>
+                         <option value="vi-VN-NamMinhNeural">Nam Minh (Nam, Miền Bắc)</option>
+                         <option value="zh-CN-XiaoxiaoNeural">Xiaoxiao (Nữ, Tiếng Trung)</option>
+                         <option value="zh-CN-YunxiNeural">Yunxi (Nam, Tiếng Trung)</option>
+                         <option value="en-US-JennyNeural">Jenny (Nữ, Tiếng Anh)</option>
+                         <option value="en-US-GuyNeural">Guy (Nam, Tiếng Anh)</option>
                       </select>
                    </div>
                    
                    <div class="tk-group">
-                      <label>Speed (1.0x)</label>
-                      <input type="range" class="tk-slider" min="0" max="100" value="50">
+                      <label id="step1-tts-speed-label">Speed (1.0x)</label>
+                      <input type="range" id="step1-tts-speed" class="tk-slider" min="50" max="200" value="100" step="5">
                    </div>
                    
                    <div class="tk-group" style="margin-top: 20px;">
@@ -186,9 +199,6 @@
             <div id="step-2-content" class="pipeline-pane" style="display: none;">
               <!-- INJECT OLD 3-COL CONTENT HERE, BUT STRIPPED -->
               <div class="three-col" id="step2-three-col">
-                
-        <!-- 3-Column Layout -->
-        <div class="three-col">
 
           <!-- COL 1: Controls -->
           <div class="col-controls">
@@ -537,8 +547,6 @@
               <div class="job-empty">Chưa có video nào.<br>Hãy kéo thả hoặc bấm "Chọn Video".</div>
             </div>
           </div>
-
-        </div>
       
               </div>
             </div>
@@ -791,8 +799,6 @@
   
   <!-- Non-module scripts (loaded first, expose window.api) -->
   <script src="js/api.js"></script>
-  <script src="js/pipeline.js"></script>
-
   <!--
     ES6 Module bridge: load các module và expose hàm lên window.*
     để app.js (non-module IIFE) có thể gọi được.
