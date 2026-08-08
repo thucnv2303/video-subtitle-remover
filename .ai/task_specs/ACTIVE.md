@@ -1,9 +1,9 @@
 # Active PM Execution Spec
 
-Status: INCIDENT_HOLD
+Status: INCIDENT_CAPTURE_ACTIVE
 
 Task:
-`INCIDENT-RECOVERY-007E-036A-EXECUTOR-CONTROL-005`
+`INCIDENT-RECOVERY-007E-LOCAL-RUNTIME-SOURCE-MISMATCH-006`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -11,42 +11,35 @@ Repository:
 Canonical branch:
 `recovery/RECOVERY-007E-SOURCE-BASELINE-002-replacement`
 
-Canonical HEAD entering incident review:
-`57c037ad3cfaf400f9f6a6ffd36d8449e6a16267`
+Canonical HEAD entering capture:
+`2d39a184d125a6df153d59863e484c6ad240c41c`
 
-Incident evidence:
-`.ai/incidents/INCIDENT-RECOVERY-007E-036A-EXECUTOR-CONTROL-005.md`
+Spec:
+`.ai/task_specs/INCIDENT-RECOVERY-007E-LOCAL-RUNTIME-SOURCE-MISMATCH-006.md`
 
-Invalidated task:
-`RECOVERY-007E-PIPELINE1-ARTIFACT-PERSISTENCE-SOURCE-IDENTITY-036-A-REV1`
+Reason:
+Owner reports that launching the app from `E:\Project AI\Video-sub-remove` shows a Settings UI different from the recently approved Task 034 UI.
 
-Invalidated PR:
-`#22 — CLOSED / NOT MERGED`
-
-Why incident hold is active:
-- executor violated the remote positive command whitelist and STOP rules;
-- executor continued after failed verification commands;
-- forbidden broad staging, shell-based document generation/editing and force push were used;
-- canonical documentation on the invalidated branch was broadly rewritten and incompletely synchronized;
-- no PR #22 commit was merged into canonical source.
+Verified GitHub fact:
+Current canonical `src/renderer/index.html` and `src/renderer/js/components/settings.js` are byte-identical to the approved Task 034 source versions. Therefore canonical GitHub UI source has not reverted; local runtime source/state must be verified before any further implementation or Owner testing.
 
 Anti authorization:
-NONE.
+READ-ONLY LOCAL SOURCE CAPTURE ONLY under the exact incident spec.
 
 Application source/test/dependency authorization:
+NONE.
+
+Repair authorization:
 NONE.
 
 036-A/B/C/D authorization:
 NONE.
 
 Owner app verification:
-NOT AUTHORIZED.
-
-Permitted work:
-Evidence publication/review only.
+NOT AUTHORIZED while runtime source identity is unresolved.
 
 Merge permission:
 BLOCKED for product implementation.
 
 Next permitted action:
-Project Manager reviews this incident evidence directly on GitHub. A separate recovery task may be created only after that review. Do not combine evidence capture and repair.
+Anti performs the exact read-only capture in the active incident spec and reports evidence. No file modification, app launch, repair, commit or push is allowed.
