@@ -20,13 +20,15 @@ WAITING
 - RECOVERY-006 project-manager review: PASS.
 - RECOVERY-006 baseline report:
   .ai/audits/pipeline1_baseline_runtime.md
-- Automated verification: NOT RUN — manual runtime baseline.
-- Owner manual app verification: PASS.
-- Feature result: FAIL/BLOCKED.
-- GOVERNANCE-AGENTOS-PRECOMMIT-001 executed: hook conflict verified, hook corrected.
-- RECOVERY-007E-SETTINGS-V1-001-REV2 remains BLOCKED pending PM review/merge of governance fix.
+- GOVERNANCE-AGENTOS-PRECOMMIT-001 hook implementation commit: `286eeea1661d7a0736b74c07c40c1ea343ad2848`.
+- PM independent GitHub code review: PASS.
+- PM independently reproduced all 7 required hook scenarios from the GitHub HEAD hook: PASS.
+- Executor fixture verification is not accepted as authoritative evidence because its disposable-repo setup used `--no-verify`; no project-repository commit was bypassed by that fixture action.
+- GitHub CI/checks for PR #34: NONE.
+- RECOVERY-007E-SETTINGS-V1-001-REV2 remains BLOCKED until the governance correction is merged/adopted and a fresh remote continuation spec is issued.
 - Owner product test remains NOT STARTED.
-- Merge permission: BLOCKED.
+- Governance merge permission: BLOCKED pending explicit merge instruction.
+- Product merge permission: BLOCKED.
 
 ## Current branch
 review/GOVERNANCE-AGENTOS-PRECOMMIT-001
