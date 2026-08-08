@@ -1,40 +1,44 @@
 # AgentOS Handoff Status
 
-## Last completed task
-GOVERNANCE-AGENTOS-PRECOMMIT-001 — Governance AgentOS Pre-commit Hook Correction.
+## Last completed governance task
+GOVERNANCE-AGENTOS-PRECOMMIT-001 — PASS / MERGED via PR #34.
 
-## Result
-PASS — PM CODE REVIEW
+## Canonical baseline
+`recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
 
-## Hook implementation commit
-`286eeea1661d7a0736b74c07c40c1ea343ad2848`
+Current canonical HEAD:
+`cf20a02f1e7491fddf7f05dab98fae12050460bb`
 
-## Executor documentation commit
-`44ebc922725da87205d5bafcfa17b9a671be7470`
+## Invalidated product execution
+RECOVERY-007E-SETTINGS-V1-001-REV3 — INVALIDATED by PM review.
 
-## PM verification
-- Reviewed PR #34 directly on GitHub.
-- Verified exact hook logic matches Cases A-D in the execution spec.
-- Independently reproduced all 7 required hook scenarios from the GitHub HEAD hook: PASS.
-- Executor disposable-fixture setup used `--no-verify`; that executor fixture evidence is therefore not accepted as authoritative. No bypassed project-repository commit is evidenced by GitHub.
+Verified REV3 blockers:
+- forbidden Python patch scripts / EOL manipulation during execution;
+- broad `settings.js` churn;
+- duplicate Settings DOM IDs caused by new General/System cards plus retained legacy Storage/Hardware cards;
+- provider legacy-key migration/isolation contract not satisfied;
+- CPU-only GPU state shown as offline/error-style;
+- TTS diagnostic direct-fetch fallback outside required renderer API contract;
+- required Draft PR not opened.
 
-## GitHub checks
-No CI/status checks are configured/reported for PR #34.
+REV3 commits `2494cc2a85293565303e00a3afcd728f42bd65d8` and `866a3a86655f81ea964b50e8c84a61698092e41d` must not be reused as implementation source.
 
-## Code review
-PASS
+## Active task
+`RECOVERY-007E-SETTINGS-V1-001-REV4`
 
-## Owner manual app verification
-NOT APPLICABLE (Governance-only hook correction)
+## Review branch
+`review/RECOVERY-007E-SETTINGS-V1-001-REV4`
 
-## Documentation synchronization
-PASS after PM knowledge-only correction.
+## Execution authority
+Read remote ACTIVE and exact REV4 spec before editing. Start only from canonical baseline content on REV4. Do not use REV3/REV2 stashes, patches, scratch scripts, normalized files, or copied invalidated hunks.
 
-## Merge permission
-BLOCKED pending explicit merge instruction.
+## Gates
+- Execution: AUTHORIZED / WAITING EXECUTOR REPORT
+- Automated/static verification: WAITING
+- Code review: WAITING
+- Owner manual app verification: NOT STARTED — WAITING FOR PM CODE REVIEW
+- Documentation synchronization: WAITING
+- Merge permission: BLOCKED
 
-## Next task
-After governance correction is merged/adopted, publish a fresh remote continuation spec/ref for `RECOVERY-007E-SETTINGS-V1-001-REV2`.
-
-## Product task status
-BLOCKED / NOT RESUMED. Owner product test remains NOT STARTED.
+## Next action
+Anti executes only the exact remote REV4 spec and must open a Draft PR to the canonical baseline before reporting implementation complete.

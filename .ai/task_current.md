@@ -1,28 +1,43 @@
 # Current Task
 
 ## Task ID
-GOVERNANCE-AGENTOS-PRECOMMIT-001
+RECOVERY-007E-SETTINGS-V1-001-REV4
 
 ## Name
-Governance AgentOS Pre-commit Hook Correction
+Settings V1 — Clean Retry After REV3 Invalidation
 
 ## Goal
-Correct the tracked `.githooks/pre-commit` so repository enforcement matches the active GitHub review workflow: source and documentation commits remain separate, while the three dynamic project-state files remain synchronized when documentation is committed.
+Implement the approved Settings V1 UI and renderer logic from canonical baseline `cf20a02f1e7491fddf7f05dab98fae12050460bb` without reusing invalidated REV3 or earlier Settings implementation sources.
 
 ## Status
-IMPLEMENTED — PM CODE REVIEW PASS — WAITING EXPLICIT MERGE DECISION
+AUTHORIZED — WAITING EXECUTOR REPORT
 
-## Single objective
-Implement a 4-case logic in `.githooks/pre-commit` to allow isolated source commits, block mixed commits, require all 3 dynamic docs in docs-only commits, and allow unrelated docs/governance commits.
+## Review branch
+`review/RECOVERY-007E-SETTINGS-V1-001-REV4`
+
+## Required behavior
+- Exactly five Settings sections: General, AI Provider, Pipeline 1 Defaults, Voice Cloning, System/Diagnostics.
+- No duplicate legacy Storage/Hardware controls with conflicting IDs.
+- Strict provider-specific key/model isolation.
+- Legacy `ai_api_key` migration only for the provider that was persisted at initial Settings load.
+- Switching to another cloud provider with no provider-specific key shows blank.
+- Normal save must not globally synchronize legacy `ai_api_key`.
+- Ollama uses `ai_endpoint` and `ai_model_ollama`, no API key authority.
+- Output directory path row is narrow-window safe and uniquely bound.
+- Diagnostics use only `window.api.health()`, `window.api.gpuInfo()`, and `window.api.getTTSStatus()`.
+- CPU-only GPU state is valid non-error.
+- Preserve current working TTS/voice-clone and Pipeline boundaries.
+
+## REV3 status
+INVALIDATED. Commits `2494cc2a85293565303e00a3afcd728f42bd65d8` and `866a3a86655f81ea964b50e8c84a61698092e41d` are not implementation authority.
 
 ## Verification gates
+- Execution: AUTHORIZED.
+- Automated/static verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: NOT STARTED — WAITING FOR PM CODE REVIEW.
+- Documentation synchronization: WAITING FOR EXECUTION RESULT.
+- Merge permission: BLOCKED.
 
-- Automated verification: PASS — PM independently reproduced all 7 required hook scenarios from the GitHub HEAD hook.
-- Executor fixture evidence: NOT AUTHORITATIVE because fixture setup used `--no-verify`; no product-repository commit bypass is evidenced.
-- Code review: PASS.
-- Owner manual app verification: NOT APPLICABLE.
-- Documentation synchronization: PASS after PM knowledge-only correction.
-- Merge permission: BLOCKED pending explicit Project Manager/Owner merge instruction.
-
-## Product task dependency
-`RECOVERY-007E-SETTINGS-V1-001-REV2` remains BLOCKED until this governance correction is merged/adopted and PM publishes a fresh remote continuation spec/ref.
+## Authority
+Remote `.ai/task_specs/ACTIVE.md` and `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV4.md` on this branch are authoritative.
