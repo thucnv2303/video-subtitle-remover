@@ -413,26 +413,63 @@
   } else { notTested('triggerAutoAiRewrite not exposed for ollama'); }
   window.electronAPI.ollamaChat = _origOllamaChat;
 
-  // === 17. TTS execution contract (speed multiplier) ===================
+  // === 17. TTS execution contract (speed multiplier & P1 identity) ===================
   var capturedTtsBody = null;
   var _origFetch = window.fetch;
   window.fetch = function(url, opts) {
     if (typeof url === 'string' && url.indexOf('tts-retry') !== -1) {
       try { capturedTtsBody = JSON.parse(opts.body); } catch(ex) {}
       return Promise.resolve({ ok: true, json: function() {
-        return Promise.resolve({ status: 'ok', audio_path: '/tmp/x.mp3', srt_content: '' });
+        return Promise.resolve({
+          status: 'ok',
+          audio_path: '/tmp/x.mp3',
+          srt_content: 'tts-timed-srt',
+          artifact_dir: '/fake/p1/dir',
+          manifest_path: '/fake/p1/dir/manifest.json',
+          tts_srt_path: '/fake/p1/dir/tts.srt',
+          karaoke_ass_path: '/fake/p1/dir/karaoke.ass'
+        });
       }});
     }
     return _origFetch ? _origFetch(url, opts) : Promise.reject(new Error('no fetch'));
   };
+  
   if (typeof window.triggerAutoTts === 'function') {
+    // Add deterministic identity for positive test
+    execJobA.pipeline = 1;
+    execJobA.sourceFingerprint = 'sha256:0000aaaa';
+    
     try { await window.triggerAutoTts(execJobA, testSrt); } catch(ex) {}
     if (capturedTtsBody !== null) {
+      assert(capturedTtsBody.job_id === execJobA.id, 'TTS payload job_id === job.id');
+      assert(capturedTtsBody.source_fingerprint === 'sha256:0000aaaa', 'TTS payload source_fingerprint === job.sourceFingerprint');
       assert(capturedTtsBody.tts_voice === 'vi-VN-HoaiMyNeural',
         'TTS payload.tts_voice === vi-VN-HoaiMyNeural. Got: ' + capturedTtsBody.tts_voice);
       assert(Math.abs(capturedTtsBody.tts_speed - 1.5) < 0.01,
         'TTS payload.tts_speed === 1.5 (150/100). Got: ' + capturedTtsBody.tts_speed);
+      
+      // Check assignments
+      assert(execJobA.p1ArtifactDir === '/fake/p1/dir', 'job.p1ArtifactDir assigned');
+      assert(execJobA.p1ManifestPath === '/fake/p1/dir/manifest.json', 'job.p1ManifestPath assigned');
+      assert(execJobA.ttsTimedSrtPath === '/fake/p1/dir/tts.srt', 'job.ttsTimedSrtPath assigned');
+      assert(execJobA.karaokeAssPath === '/fake/p1/dir/karaoke.ass', 'job.karaokeAssPath assigned');
+      assert(execJobA.ttsAudioPath === '/tmp/x.mp3', 'job.ttsAudioPath remains intact');
+      assert(execJobA.ttsTimedSrt === 'tts-timed-srt', 'job.ttsTimedSrt remains intact');
     } else { notTested('TTS fetch body not captured'); }
+
+    // Negative test: missing identity
+    var execJobNegative = Object.assign({}, execJobA);
+    execJobNegative.sourceFingerprint = null; // missing identity
+    var fetchCalled = false;
+    window.fetch = function(url, opts) {
+      if (typeof url === 'string' && url.indexOf('tts-retry') !== -1) fetchCalled = true;
+      return Promise.resolve({ok: true, json: function() { return Promise.resolve({status: 'ok'}); }});
+    };
+    try { await window.triggerAutoTts(execJobNegative, testSrt); } catch(ex) {
+      log.push('UNEXPECTED THROW in negative TTS test: ' + ex.message);
+    }
+    assert(fetchCalled === false, 'Negative identity: fetch not called');
+
   } else { notTested('triggerAutoTts not exposed'); }
   window.fetch = _origFetch;
 

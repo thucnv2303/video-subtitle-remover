@@ -1015,15 +1015,51 @@ def api_p1_extract_text(req: ExtractTextP1Req):
             "warnings": []
         }
         
-    return {
-        "job_id": req.job_id,
-        "status": "ok",
-        "extraction_mode_requested": req.extraction_mode,
-        "extraction_mode_used": "asr",
-        "srt_content": result.get("srt_content", ""),
-        "plain_text": "", # Omitted for now, can be parsed from SRT later if needed
-        "warnings": []
-    }
+    try:
+        from p1_artifacts import init_p1_job, save_raw_srt, get_p1_dir, get_manifest_path, P1ArtifactError
+        import cv2
+        import os
+        
+        if not os.path.exists(req.video_path):
+            raise P1ArtifactError("P1_ARTIFACT_PERSISTENCE_FAILED", "Video file not found")
+            
+        cap = cv2.VideoCapture(req.video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
+        
+        manifest = init_p1_job(req.job_id, req.video_path, fps, total_frames)
+        raw_srt_path = save_raw_srt(req.job_id, result.get("srt_content", ""))
+        
+        return {
+            "job_id": req.job_id,
+            "status": "ok",
+            "extraction_mode_requested": req.extraction_mode,
+            "extraction_mode_used": "asr",
+            "srt_content": result.get("srt_content", ""),
+            "plain_text": "",
+            "warnings": [],
+            "artifact_version": manifest["artifact_version"],
+            "artifact_dir": get_p1_dir(req.job_id),
+            "manifest_path": get_manifest_path(req.job_id),
+            "raw_srt_path": raw_srt_path,
+            "source_fingerprint": manifest["source_fingerprint"],
+            "source_duration": manifest["source_duration"],
+            "fps": manifest["fps"],
+            "frame_count": manifest["frame_count"],
+            "timebase": manifest["timebase"],
+            "timebase_source": manifest["timebase_source"]
+        }
+    except Exception as e:
+        error_code = getattr(e, 'code', 'P1_ARTIFACT_PERSISTENCE_FAILED')
+        if error_code not in ('P1_INVALID_JOB_ID', 'P1_SOURCE_IDENTITY_MISMATCH'):
+            error_code = 'P1_ARTIFACT_PERSISTENCE_FAILED'
+        return {
+            "job_id": req.job_id,
+            "status": "error",
+            "error_code": error_code,
+            "error": "Pipeline 1 artifact persistence failed"
+        }
 
 # ─── AI Rewrite Endpoint ────────────
 class ExtractSrtReq(BaseModel):
@@ -1313,6 +1349,8 @@ class TTSRetryReq(BaseModel):
     video_path: str
     tts_ref_audio: Optional[str] = None
     tts_speed: Optional[float] = None  # UI slider 0.5-2.0, 1.0=normal -> edge_tts rate
+    job_id: Optional[str] = None
+    source_fingerprint: Optional[str] = None
 
 @app.post("/api/tts-retry")
 def api_tts_retry(req: TTSRetryReq):
@@ -1327,6 +1365,27 @@ def api_tts_retry(req: TTSRetryReq):
     """
     import tempfile, os, asyncio, threading, re
     try:
+        from p1_artifacts import load_manifest, get_p1_dir, get_manifest_path, validate_job_id
+        
+        is_p1_dedicated = False
+        manifest = None
+        artifact_dir = None
+        manifest_path = None
+        
+        if bool(req.job_id) != bool(req.source_fingerprint):
+            return {"status": "error", "error_code": "P1_ARTIFACT_IDENTITY_INCOMPLETE", "error": "Both job_id and source_fingerprint must be provided together"}
+            
+        if req.job_id and req.source_fingerprint:
+            validate_job_id(req.job_id)
+            manifest = load_manifest(req.job_id)
+            if not manifest:
+                return {"status": "error", "error_code": "P1_SOURCE_IDENTITY_MISMATCH", "error": "Manifest not found"}
+            if manifest.get('source_fingerprint') != req.source_fingerprint:
+                return {"status": "error", "error_code": "P1_SOURCE_IDENTITY_MISMATCH", "error": "Source fingerprint mismatch"}
+            is_p1_dedicated = True
+            artifact_dir = get_p1_dir(req.job_id)
+            manifest_path = get_manifest_path(req.job_id)
+
         # ── Parse SRT gốc ────────────────────────────────────────────────
         def time_to_ms(t: str) -> int:
             t = t.strip()
@@ -1424,8 +1483,11 @@ def api_tts_retry(req: TTSRetryReq):
             return {"status": "error", "error": "pydub not installed. Run: pip install pydub"}
 
         voice   = req.tts_voice
-        out_dir = tempfile.gettempdir()
-        dubbed_path = os.path.join(out_dir, f'tts_retry_{abs(hash(req.srt_content[:80]))}.mp3')
+        if is_p1_dedicated:
+            dubbed_path = os.path.join(artifact_dir, 'tts.mp3')
+        else:
+            out_dir = os.path.dirname(req.video_path)
+            dubbed_path = os.path.join(out_dir, f'tts_retry_{abs(hash(req.srt_content[:80]))}.mp3')
 
         # Compute edge-tts rate string from tts_speed (multiplier 0.5-2.0, 1.0=normal)
         _speed = req.tts_speed if req.tts_speed is not None else 1.0
@@ -1747,7 +1809,7 @@ def api_tts_retry(req: TTSRetryReq):
 
         print(f'[TTS] Done: {len(clips)} segs, audio={dubbed_path}', flush=True)
 
-        return {
+        response = {
             "status":          "ok",
             "audio_path":      dubbed_path,
             "srt_content":     new_srt_content,       # SRT thuần, timing từ TTS thực
@@ -1759,6 +1821,29 @@ def api_tts_retry(req: TTSRetryReq):
             # Tổng duration audio TTS (ms) — dùng để tính video tempo adjustment
             "audio_duration_ms": timed_segments[-1][1] if timed_segments else 0,
         }
+        
+        if is_p1_dedicated:
+            tts_srt_path = os.path.join(artifact_dir, 'tts.srt')
+            _atomic_write_text(tts_srt_path, new_srt_content)
+            
+            karaoke_ass_path = None
+            if karaoke_ass_content:
+                karaoke_ass_path = os.path.join(artifact_dir, 'karaoke.ass')
+                _atomic_write_text(karaoke_ass_path, karaoke_ass_content)
+                manifest['artifacts']['karaoke_ass'] = 'karaoke.ass'
+                
+            update_tts_artifacts(req.job_id, 'tts.mp3', new_srt_content)
+            
+            response.update({
+                "artifact_version": manifest["artifact_version"],
+                "artifact_dir": artifact_dir,
+                "manifest_path": manifest_path,
+                "source_fingerprint": manifest["source_fingerprint"],
+                "tts_srt_path": tts_srt_path,
+                "karaoke_ass_path": karaoke_ass_path
+            })
+
+        return response
 
     except Exception as e:
         traceback.print_exc()

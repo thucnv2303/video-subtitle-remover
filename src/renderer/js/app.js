@@ -60,6 +60,10 @@
       srtContent: '', aiContent: '', voiceSubContent: '', voiceSegments: [],
       ttsAudioPath: null, ttsTimedSrt: null, ttsAudioDurMs: 0,
       karaokeAss: null, finalOutputPath: null,
+      p1ArtifactVersion: null, p1ArtifactDir: null, p1ManifestPath: null,
+      p1RawSrtPath: null, sourceFingerprint: null, sourceDuration: null,
+      sourceFps: null, sourceFrameCount: null, sourceTimebase: null,
+      sourceTimebaseSource: null, ttsTimedSrtPath: null, karaokeAssPath: null,
       // Prefer current Pipeline 1 UI selection; fall back to localStorage/defaults
       aiProvider: (() => {
         const uiProvider = document.getElementById('step1-ai-provider')?.value;
@@ -808,14 +812,14 @@
     }
     renderJobList();
 
-    // Náº¿u lÃ  inpaint job (khÃ´ng pháº£i pipeline1), má»›i gá»i onJobFinished
+    // Nếu là inpaint job (không phải pipeline1), mới gọi onJobFinished
     if (!state.pipeline1JobId && (d.is_finished || pct >= 100)) onJobFinished(job);
 
-    // Handle srt_content tá»« backend WS (OCR káº¿t quáº£)
+    // Handle srt_content từ backend WS (OCR kết quả)
     if (d.srt_content && !job.srtContent) {
       job.srtContent = d.srt_content;
       if (el.srtContent) el.srtContent.value = d.srt_content;
-      addLog('[ASR] âœ… SRT Ä‘Ã£ Ä‘Æ°á»£c trÃ­ch xuáº¥t.', 'success');
+      addLog('[ASR] ✅ SRT đã được trích xuất.', 'success');
     }
   }
 
@@ -934,8 +938,26 @@
       }
 
       if (asrRes.status !== 'ok' || asrRes.job_id !== nextJob.id) {
-        throw new Error('Job ID mismatch or response parsing failed.');
+        throw new Error(asrRes.error || 'Job ID mismatch or response parsing failed.');
       }
+
+      const reqFields = ['artifact_version', 'artifact_dir', 'manifest_path', 'raw_srt_path', 'source_fingerprint', 'source_duration', 'fps', 'frame_count', 'timebase', 'timebase_source'];
+      for (const field of reqFields) {
+        if (asrRes[field] === undefined || asrRes[field] === null || asrRes[field] === '') {
+          throw new Error('Pipeline 1 artifact-contract error: missing field ' + field);
+        }
+      }
+
+      nextJob.p1ArtifactVersion = asrRes.artifact_version;
+      nextJob.p1ArtifactDir = asrRes.artifact_dir;
+      nextJob.p1ManifestPath = asrRes.manifest_path;
+      nextJob.p1RawSrtPath = asrRes.raw_srt_path;
+      nextJob.sourceFingerprint = asrRes.source_fingerprint;
+      nextJob.sourceDuration = asrRes.source_duration;
+      nextJob.sourceFps = asrRes.fps;
+      nextJob.sourceFrameCount = asrRes.frame_count;
+      nextJob.sourceTimebase = asrRes.timebase;
+      nextJob.sourceTimebaseSource = asrRes.timebase_source;
 
       if (!asrRes.srt_content || asrRes.srt_content.trim() === '') {
         throw new Error('KhÃ´ng phÃ¡t hiá»‡n Ä‘Æ°á»£c vÄƒn báº£n trong video.');

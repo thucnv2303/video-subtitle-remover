@@ -93,16 +93,30 @@ export async function triggerAutoTts(job, srtText) {
     // job.ttsSpeed is slider value 50-200 (100=1.0x). Convert to multiplier for backend.
     const speedPercent = Number(job.ttsSpeed ?? 100);
     const speedMultiplier = speedPercent / 100;
+    
+    if (job.pipeline === 1) {
+      if (!job.id || !job.sourceFingerprint) {
+        throw new Error('Pipeline 1 artifact identity missing or incomplete (controlled TTS error)');
+      }
+    }
+    
+    const requestBody = {
+      srt_content: srtText,
+      tts_voice: voice,
+      video_path: job.filePath,
+      tts_ref_audio: refAudio,
+      tts_speed: speedMultiplier,
+    };
+    
+    if (job.id && job.sourceFingerprint) {
+      requestBody.job_id = job.id;
+      requestBody.source_fingerprint = job.sourceFingerprint;
+    }
+
     const response = await fetch(`${window.api.base}/api/tts-retry`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        srt_content: srtText,
-        tts_voice: voice,
-        video_path: job.filePath,
-        tts_ref_audio: refAudio,
-        tts_speed: speedMultiplier,
-      }),
+      body: JSON.stringify(requestBody),
     });
     const result = await response.json();
     if (!response.ok || result.status !== 'ok') throw new Error(result.error || `HTTP ${response.status}`);
@@ -112,6 +126,14 @@ export async function triggerAutoTts(job, srtText) {
     job.ttsAudioDurMs = result.audio_duration_ms || 0;
     job.ttsSegmentsTiming = result.segments_timing || [];
     job.karaokeAss = result.karaoke_ass || null;
+    
+    if (result.artifact_version !== undefined) job.p1ArtifactVersion = result.artifact_version;
+    if (result.artifact_dir !== undefined) job.p1ArtifactDir = result.artifact_dir;
+    if (result.manifest_path !== undefined) job.p1ManifestPath = result.manifest_path;
+    if (result.source_fingerprint !== undefined) job.sourceFingerprint = result.source_fingerprint;
+    if (result.tts_srt_path !== undefined) job.ttsTimedSrtPath = result.tts_srt_path;
+    if (result.karaoke_ass_path !== undefined) job.karaokeAssPath = result.karaoke_ass_path;
+
     _addLog(`[TTS] ✅ Tạo ${job.ttsSegmentsTiming.length} segments thành công!`, 'success');
   } catch (error) {
     _addLog(`[TTS] ❌ ${error.message}`, 'error');
