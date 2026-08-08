@@ -84,3 +84,17 @@ Project Manager communication to the Owner must be concise and non-technical by 
 Technical implementation details, Git/GitHub mechanics, test internals, incident mechanics, exact patches, command whitelists and Anti troubleshooting are handled by Project Manager and Anti unless the Owner explicitly asks for technical detail.
 
 For source-code tasks, do not ask the Owner to test the app before Project Manager code review PASS. When code is ready for manual verification, tell the Owner clearly that code is ready and provide only the shortest practical app-test steps and expected visible behavior.
+
+## D-015 — Single Owner Runtime Baseline
+
+Owner-selected forward baseline starts from the app currently launched from `E:\Project AI\Video-sub-remove`, subject to a read-only capture and PM review before promotion.
+
+Forward rules:
+- The Owner has exactly one runtime directory: `E:\Project AI\Video-sub-remove`.
+- The Owner launches the app only from that directory.
+- Review, audit, recovery and test worktrees are executor-only and must never be used as Owner runtime copies.
+- One canonical product branch is designated after the Owner runtime candidate is captured and promoted.
+- Obsolete test/recovery copies may be archived or deleted only from an explicit reviewed cleanup manifest. No wildcard or blind deletion is allowed.
+- Historical Git commits and closed PRs remain immutable history; they are not runtime versions and are not rewritten to simulate cleanup.
+- No task may silently switch the Owner runtime directory or canonical product branch.
+- Before any future Owner app test, PM must identify the exact runtime directory and approved source state to be tested.
