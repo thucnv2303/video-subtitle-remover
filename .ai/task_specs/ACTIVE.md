@@ -3,13 +3,13 @@
 Status: ACTIVE
 
 Task:
-`RECOVERY-007E-034-MERGE-READINESS-KNOWLEDGE-RECONCILE-007`
+`RECOVERY-007E-034-MERGE-READINESS-KNOWLEDGE-RECONCILE-007-REV1`
 
 Spec:
-`.ai/task_specs/RECOVERY-007E-034-MERGE-READINESS-KNOWLEDGE-RECONCILE-007.md`
+`.ai/task_specs/RECOVERY-007E-034-MERGE-READINESS-KNOWLEDGE-RECONCILE-007-REV1.md`
 
 PM-authored helper:
-`.ai/task_specs/tools/reconcile_034_merge_readiness_007.py`
+`.ai/task_specs/tools/reconcile_034_merge_readiness_007_rev1.py`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -30,30 +30,33 @@ Task 034 gate result:
 - Owner manual app verification: PASS — overall Owner report on 2026-08-07: `task 34 đã oke`
 - Closeout-006-REV1 executor publication: PASS
 
-Final PM merge-readiness audit result:
-NEEDS_REVISION — knowledge reconciliation required before merge approval.
+Owner security clarification on 2026-08-08:
+Owner states that the screenshot shared with PM had key material redacted before sharing. Therefore the shared screenshot evidence does not establish disclosure of a usable DeepSeek credential and key rotation is not a merge blocker on this evidence. Do not claim that Owner revoked or rotated a key.
 
-Verified blockers:
+Previous Reconcile-007:
+SUPERSEDED before accepted execution because its required outcome treated key rotation as an unresolved merge blocker. New Owner evidence changes that requirement.
+
+Remaining verified knowledge blockers:
 1. `.ai/current_state.md` top says Task 034 COMPLETED, but the lower current 034-REV2 block still says `Status: WAITING_PM_VERIFICATION`.
 2. `.ai/qa_checklist.md` has an older 034 Owner Verification block that still reads as current WAITING and is not labeled historical/superseded, while the 034-REV2 block records Owner overall PASS.
-3. `.ai/bugs.md` still leaves BUG-013 in candidate/Owner-retest-not-started state although 034-REV2 directly resolved the provider/model synchronization defect and has accepted automated + overall Owner PASS evidence.
-4. BUG-010 security incident source fix is implemented, but Owner has not yet confirmed revocation/rotation of the historically exposed DeepSeek key.
+3. `.ai/bugs.md` still leaves BUG-013 in candidate/Owner-retest-not-started state although 034-REV2 directly resolved the provider/model synchronization defect with accepted evidence.
+4. BUG-010 must be recorded as a source-fixed Owner-observed security defect; Owner confirms the shared screenshot was redacted, so no usable credential exposure is established from that evidence.
 
 Purpose:
-Run the exact PM-authored byte-preserving reconciliation helper from a brand-new isolated worktree. This task reconciles canonical knowledge only and makes the remaining security rotation confirmation an explicit merge blocker.
+Run the exact PM-authored byte-preserving Reconcile-007-REV1 helper from a brand-new isolated worktree. This task reconciles canonical knowledge only. It does not change application source, tests, dependencies, Owner evidence, or merge state.
 
-Executor must fetch GitHub, read this ACTIVE file directly from the remote review ref with `git show`, then read the full referenced Reconcile-007 spec from the same remote ref.
+Executor must fetch GitHub, read this ACTIVE file directly from the remote review ref with `git show`, then read the full referenced Reconcile-007-REV1 spec from the same remote ref.
 
 Local ACTIVE/spec copies are not authority.
 No manual editing.
 No self-repair.
-No command outside the Reconcile-007 whitelist.
-Do not touch/remove/repair prior Finalize/Closeout worktrees.
+No command outside the REV1 whitelist.
+Do not touch/remove/repair prior Finalize/Closeout/Reconcile worktrees.
 Do not modify source/tests/dependencies.
 Do not start Task 035 or Task 036.
 Do not force push.
 Do not merge PR #14.
 
 Documentation synchronization remains under final PM reconciliation review.
-Owner compromised-key rotation confirmation: WAITING.
-Merge remains BLOCKED.
+Confirmed credential-rotation blocker from shared screenshot: NONE.
+Merge remains BLOCKED pending explicit PM final merge-readiness approval.
