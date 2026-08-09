@@ -7,7 +7,7 @@ PIPELINE1-APPROVED-UI-001
 Pipeline 1 — Owner-Approved Functional-Zone UI Rebuild
 
 ## Status
-WAITING_OWNER_TEST
+WAITING_CODE_REVIEW_AFTER_OWNER_UI_FAIL
 
 ## Base
 `e578e48c22a79c69005f2d3373599addfc412ecf`
@@ -25,29 +25,39 @@ Six functional zones matching the Owner-approved demo:
 5. Actions.
 6. Console / Log.
 
+## Owner runtime result
+First candidate: NEEDS_REVISION.
+
+Required UI corrections from Owner:
+- remove duplicate Pipeline 1 left-nav item;
+- remove add-file/drop UI from Job Queue and keep add-file in Actions;
+- make Job selection explicit in Job Queue;
+- expand Console / Log vertically;
+- remove per-job action/delete button from Job rows;
+- make full-screen layout consume available width instead of leaving large blank margins.
+
+Separate deferred functional defect:
+- `Bắt đầu chạy` does not execute the intended Pipeline 1 flow. Track under BUG-005 after UI acceptance; do not mix into this visual correction pass.
+
+## Revised source
+- `src/renderer/js/pipeline.js` blob: `d7199ee277a3b791d29c385b5b90736d92c68554`.
+- `src/renderer/styles/pipeline1-approved.css` blob: `7686bb48cc47336e6602a07c635958c333dec118`.
+- Source correction commits: `d4c21c7a2553f788e656afa6abb42687920071a6`, `e99f7042387e82552cd4616536d2d6fea12ebf6f`.
+
 ## Scope
-Product source changed only:
+Product source remains limited to:
 - `src/renderer/js/pipeline.js`
 - `src/renderer/styles/pipeline1-approved.css`
 
-Settings, Pipeline 2, Pipeline 3, backend, dependencies and package source are unchanged.
-
-## Review findings
-- Current Pipeline 1 JS blob: `41b6f844d9af6f31df6e34af171b58a256d70a1a`.
-- Add-video forwarding is preserved.
-- Console Copy/Xóa handlers are preserved.
-- Voice preview uses existing TTS generation and selected clone/system voice.
-- Selected Job content/audio detail uses existing ASR/AI/TTS/file-dialog contracts.
-- PM GitHub code review: PASS for runtime testing.
-- GitHub CI: none configured.
+Settings, Pipeline 2, Pipeline 3, backend, dependencies and package source remain out of scope.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS for available static gates; runtime verification still required.
-- Code review: PASS.
-- Owner manual app verification: AUTHORIZED / NOT STARTED.
-- Documentation synchronization: PASS for Owner-test state.
-- Merge permission: BLOCKED until Owner PASS and explicit merge approval.
+- Execution: PASS for revised UI publication.
+- Automated/static verification: WAITING for revised exact-head gate.
+- Code review: WAITING for revised candidate.
+- Owner manual app verification: FAIL on first candidate; revised retest NOT YET AUTHORIZED.
+- Documentation synchronization: PASS for current revision state.
+- Merge permission: BLOCKED.
 
-## Owner test focus
-Compare directly with the approved demo, then verify: add video, Job selection/detail, prompt/provider/model controls, `Nghe thử giọng`, extract/rewrite/update text, TTS/upload audio, start/stop queue, Console Copy/Xóa, and switching between Pipeline steps/Settings.
+## Next review focus
+Verify revised GitHub source and static safety, then authorize Owner UI retest only. Processing-flow repair remains a separate next task after visual acceptance.
