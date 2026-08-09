@@ -652,6 +652,10 @@
               <label class="form-label">Tên Model (Mặc định)</label>
               <input type="text" id="ai-model" class="form-input" placeholder="VD: gemini-1.5-pro, deepseek-chat...">
             </div>
+            <div class="form-group" id="ai-model-group">
+              <label class="form-label">Tên Model (Mặc định)</label>
+              <input type="text" id="ai-model" class="form-input" placeholder="VD: gemini-1.5-pro, deepseek-chat...">
+            </div>
             <div class="form-group">
               <label class="form-label">Endpoint URL (Ollama)</label>
               <input type="text" id="ai-endpoint" class="form-input" placeholder="VD: http://localhost:11434/api/chat">
@@ -699,7 +703,6 @@
                 <span>Xóa giọng gốc (Chỉ giữ nhạc nền - AI UVR)</span>
               </label>
             </div>
-
           </div>
 
           <!-- Card 4: Voice Cloning -->
@@ -752,6 +755,10 @@
             <div class="setting-row" style="display:flex; justify-content:space-between; align-items:center;">
               <div><span class="form-label">Backend Status</span></div>
               <div><span class="status-chip" id="backend-status-chip">⏳ Đang kiểm tra...</span></div>
+            </div>
+            <div class="setting-row" style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+              <div><span class="form-label">Trạng thái TTS</span></div>
+              <div><span class="status-chip" id="tts-status-chip">⏳ Đang kiểm tra...</span></div>
             </div>
             <div class="setting-row" style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
               <div><span class="form-label">Trạng thái TTS</span></div>

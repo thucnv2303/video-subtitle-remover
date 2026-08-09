@@ -26,10 +26,6 @@ export function initSettings() {
 // ─── Provider Isolation & Migration ──────────────────────────────────────────
 
 export function getApiKeyForProvider(provider) {
-  if (provider === 'ollama') {
-    return localStorage.getItem('ai_model_ollama') || '';
-  }
-
   const rawSpecific = localStorage.getItem(`ai_api_keys_${provider}`);
   if (rawSpecific) {
     try {
@@ -43,17 +39,6 @@ export function getApiKeyForProvider(provider) {
       }
     }
   }
-
-  // Fallback to legacy key ONLY when provider matches initialPersistedProvider
-  if (provider === initialPersistedProvider) {
-    const legacyKey = (localStorage.getItem('ai_api_key') || '').trim();
-    if (legacyKey) {
-      const keys = [{ key: legacyKey }];
-      localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify(keys));
-      return legacyKey;
-    }
-  }
-
   return '';
 }
 
@@ -117,6 +102,14 @@ export function loadSettingsValues() {
 
   const storedProvider = localStorage.getItem('ai_provider') || 'gemini';
   initialPersistedProvider = storedProvider;
+
+  if (storedProvider !== 'ollama' && !localStorage.getItem('ai_api_keys_' + storedProvider)) {
+    const legacyKey = (localStorage.getItem('ai_api_key') || '').trim();
+    if (legacyKey) {
+      const keys = [{ key: legacyKey }];
+      localStorage.setItem('ai_api_keys_' + storedProvider, JSON.stringify(keys));
+    }
+  }
 
   if (aiProvider) {
     aiProvider.value = storedProvider;
