@@ -9,6 +9,7 @@
 
   const appState = () => window._appState || null;
   const isBusy = value => value === 'queued' || value === 'processing';
+  const activeStep = () => document.querySelector('.step-chevron.active')?.dataset?.step || '1';
 
   function p1Label(status) {
     return ({ idle:'Chờ xử lý', queued:'Đang chờ', processing:'Đang xử lý', finished:'Phân tích xong', error:'Lỗi' })[status] || status;
@@ -149,6 +150,11 @@
     const list = document.getElementById('job-list');
     if (!state || !list) return;
 
+    // Pipeline 2 is handoff-only: direct upload stays hidden from this step.
+    const directUpload = document.getElementById('btn-open-file');
+    if (directUpload) directUpload.style.display = 'none';
+    document.getElementById('drop-zone')?.classList.add('hidden');
+
     const cards = [...list.querySelectorAll('.job-card')];
     cards.forEach((card, index) => {
       if (!card.dataset.pipelineJobId && state.jobs[index]) card.dataset.pipelineJobId = state.jobs[index].id;
@@ -187,6 +193,25 @@
     }
   }
 
+  function clearP2View() {
+    const state = appState();
+    if (state) state.activeJobId = null;
+    ['meta-name','meta-res','meta-fps','meta-dur'].forEach(id => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = '—';
+    });
+    const original = document.getElementById('canvas-original');
+    const result = document.getElementById('canvas-result');
+    original?.getContext?.('2d')?.clearRect(0, 0, original.width, original.height);
+    result?.getContext?.('2d')?.clearRect(0, 0, result.width, result.height);
+    document.getElementById('subtitle-overlay')?.replaceChildren();
+    document.getElementById('result-placeholder')?.classList.remove('hidden');
+    ['timeline-orig','timeline-result','btn-play-orig','btn-prev-orig','btn-next-orig','btn-play-result','btn-prev-result','btn-next-result'].forEach(id => {
+      const element = document.getElementById(id);
+      if (element) element.disabled = true;
+    });
+  }
+
   function scheduleSync() {
     if (syncScheduled) return;
     syncScheduled = true;
@@ -212,45 +237,83 @@
     return true;
   }
 
-  function clearP2SelectionIfLocked() {
+  function selectEligibleP2Job() {
     const state = appState();
     if (!state) return;
     const active = state.jobs.find(job => job.id === state.activeJobId);
     if (active && p2Eligible(active)) return;
     const first = state.jobs.find(p2Eligible);
     if (first && typeof window.selectJob === 'function') window.selectJob(first.id);
-    else state.activeJobId = null;
+    else clearP2View();
+  }
+
+  function startP2(job) {
+    const state = appState();
+    if (!state || !job || !p2Eligible(job)) return;
+    if (state.jobs.some(item => isBusy(item.p1Status))) {
+      notify('Pipeline 2 đang khóa trong khi hàng đợi Pipeline 1 còn chạy.', 'warning');
+      return;
+    }
+    if (![P2.READY, P2.ERROR].includes(job.p2Status)) {
+      notify(job.p2Status === P2.FINISHED ? 'Job này đã hoàn tất Pipeline 2.' : 'Job Pipeline 2 chưa sẵn sàng.', 'info');
+      return;
+    }
+
+    // Pipeline 2 strict boundary: original video in, subtitle removal only.
+    job.pipeline = 2;
+    job.algorithm = document.getElementById('algo-select')?.value || job.algorithm || 'sttn-auto';
+    job.maskMode = document.getElementById('mask-mode')?.value || job.maskMode || 'box';
+    job.extractSrt = false;
+    job.asrFallback = false;
+    job.aiRewrite = false;
+    job.ttsGenerate = false;
+    job.status = 'queued';
+    job.progress = 0;
+    job.p2Status = P2.QUEUED;
+    job.p2Progress = 0;
+    window.renderJobList?.();
+
+    if (typeof window.processNextJob === 'function') window.processNextJob();
+    else {
+      job.status = 'error';
+      job.p2Status = P2.ERROR;
+      notify('Pipeline 2 runner chưa sẵn sàng.', 'error');
+    }
   }
 
   function bindGuards() {
     document.addEventListener('click', event => {
       const step = event.target.closest?.('.step-chevron');
       if (step?.dataset?.step === '2') {
-        setTimeout(() => { clearP2SelectionIfLocked(); scheduleSync(); }, 0);
+        setTimeout(() => { selectEligibleP2Job(); scheduleSync(); }, 0);
+      }
+
+      const directUpload = event.target.closest?.('#btn-open-file');
+      if (directUpload && activeStep() === '2') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        notify('Hãy thêm video từ Pipeline 1. Pipeline 2 chỉ nhận Job đã hoàn tất Pipeline 1.', 'warning');
+        return;
       }
 
       const p2Start = event.target.closest?.('#btn-start');
       if (!p2Start) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
       const state = appState();
       const job = state?.jobs?.find(item => item.id === state.activeJobId);
       if (!job || !p2Eligible(job)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
         notify('Job phải hoàn tất Pipeline 1 trước khi chạy Pipeline 2.', 'warning');
         return;
       }
-      if (state.jobs.some(item => isBusy(item.p1Status))) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        notify('Pipeline 2 đang khóa trong khi hàng đợi Pipeline 1 còn chạy.', 'warning');
-        return;
-      }
-      // The legacy P2 click handler only accepts idle/error semantics.
-      job.status = 'idle';
-      job.progress = 0;
-      job.pipeline = 2;
-      job.p2Status = P2.QUEUED;
-      job.p2Progress = 0;
+      startP2(job);
+    }, true);
+
+    document.addEventListener('drop', event => {
+      if (activeStep() !== '2') return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      notify('Pipeline 2 không nhận video trực tiếp. Hãy thêm video ở Pipeline 1.', 'warning');
     }, true);
   }
 
