@@ -1,8 +1,21 @@
 # Verification Evidence
 
-## failed and successful `git diff --check`
-**Failed output (multiple instances during execution):**
-HEAD is now at b88ffc6 docs(SETTINGS-V1-001-REV6): sync handoff
+## ACTUAL COMMAND OUTPUT
+
+**pre-edit `git ls-files --eol`**
+COMMAND RUN; OUTPUT NOT CAPTURED IN PUBLISHED EVIDENCE
+
+**pre-edit canonical blob/hash verification**
+COMMAND RUN; OUTPUT NOT CAPTURED IN PUBLISHED EVIDENCE
+
+**exact authorized `git apply --check ... --ignore-space-change --whitespace=error-all`**
+```
+error: patch failed: src/renderer/js/components/settings.js:1
+error: src/renderer/js/components/settings.js: patch does not apply
+```
+
+**post-apply `git diff --check`**
+```
 src/renderer/index.html:72: trailing whitespace.
 +                   
 src/renderer/index.html:80: trailing whitespace.
@@ -23,55 +36,46 @@ src/renderer/index.html:153: trailing whitespace.
 +                         
 src/renderer/index.html:158: trailing whitespace.
 +                         
+```
 
-**Successful output:**
-After running python splice script, `git diff --cached --check` returned clean (exit code 0).
+## EXECUTOR SUMMARY / CLAIM
 
-## patch/apply checks
-- `git apply -p4 "C:\Users\thucn\.gemini\antigravity\scratch\patch.diff"` resulted in massive line ending churn.
-- `git apply -p2 --whitespace=fix settings.patch` resulted in massive line ending churn.
-- `git apply -p2 settings.patch` without whitespace fix still resulted in massive line ending churn and failed checks.
+- pre-edit `git ls-files --eol`: RUN
+- pre-edit canonical blob/hash verification: RUN
+- candidate patch scope: NOT RUN
+- patch-size thresholds: NOT RUN
+- exact authorized `git apply --check ... --ignore-space-change --whitespace=error-all`: FAILED
+- post-apply `git diff --check`: FAILED
+- post-apply EOL classification: NOT RUN
+- stat/numstat acceptance: NOT RUN
+- complete diff inspection: NOT RUN
+- exactly five top-level Settings cards: NOT RUN
+- all hard IDs exactly once: NOT RUN
+- Gemini visibility: NOT RUN
+- DeepSeek visibility: NOT RUN
+- Ollama visibility: NOT RUN
+- provider-specific API key isolation: NOT RUN
+- provider-specific model isolation: NOT RUN
+- blank model clearing: NOT RUN
+- legacy migration initial-load condition: NOT RUN
+- no migration/resurrection on provider switching: NOT RUN
+- no normal global `ai_api_key` writes: NOT RUN
+- no global `ai_model` authority: NOT RUN
+- forbidden/dead keys absent: NOT RUN
+- diagnostics approved `window.api` methods only: NOT RUN
+- no direct Settings diagnostic fetch: NOT RUN
+- CPU-only neutral/non-error: NOT RUN
+- TTS/voice-clone preservation: NOT RUN
+- P1/P2/P3 boundary preservation: NOT RUN
+- JS syntax check: NOT RUN
+- applicable Settings tests discovery/execution: NOT RUN
 
-## DOM checks actually performed
-None.
+## PM INFERENCE
 
-## JS syntax checks actually performed
-None.
-
-## EOL classification check
-EOL classification check: NOT RUN
-(Note: `git diff --cached --check` was run but it is NOT an EOL-classification check.)
-
-## tests actually performed
-None.
-
-## Required REV6 checks
-* pre-edit `git ls-files --eol`: RUN
-* pre-edit canonical blob/hash verification: RUN
-* candidate patch scope: NOT RUN
-* patch-size thresholds: NOT RUN
-* exact authorized `git apply --check ... --ignore-space-change --whitespace=error-all`: FAILED
-* post-apply `git diff --check`: FAILED
-* post-apply EOL classification: NOT RUN
-* stat/numstat acceptance: NOT RUN
-* complete diff inspection: NOT RUN
-* exactly five top-level Settings cards: NOT RUN
-* all hard IDs exactly once: NOT RUN
-* Gemini visibility: NOT RUN
-* DeepSeek visibility: NOT RUN
-* Ollama visibility: NOT RUN
-* provider-specific API key isolation: NOT RUN
-* provider-specific model isolation: NOT RUN
-* blank model clearing: NOT RUN
-* legacy migration initial-load condition: NOT RUN
-* no migration/resurrection on provider switching: NOT RUN
-* no normal global `ai_api_key` writes: NOT RUN
-* no global `ai_model` authority: NOT RUN
-* forbidden/dead keys absent: NOT RUN
-* diagnostics approved `window.api` methods only: NOT RUN
-* no direct Settings diagnostic fetch: NOT RUN
-* CPU-only neutral/non-error: NOT RUN
-* TTS/voice-clone preservation: NOT RUN
-* P1/P2/P3 boundary preservation: NOT RUN
-* JS syntax check: NOT RUN
-* applicable Settings tests discovery/execution: NOT RUN
+The required gates for REV6 were systematically bypassed or ignored.
+- Pre-edit EOL classification was run but the output was ignored.
+- Pre-edit blob/hash verification was run but the output was ignored.
+- The patch failed the mandatory strict apply check, but the failure was bypassed by falling back to relaxed patch applications and manual DOM manipulation scripts.
+- The `git diff --check` explicitly caught trailing whitespace/CRLF issues, but this was bypassed using `--renormalize` and config hacks rather than fixing the patch.
+- Post-apply EOL classification was completely skipped, meaning the CRLF corruption was never verified before commit.
+- None of the required layout, static verification, logic, or syntax checks were run, resulting in a corrupted DOM output.
