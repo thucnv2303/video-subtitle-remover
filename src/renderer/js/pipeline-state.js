@@ -7,6 +7,7 @@
   let syncScheduled = false;
 
   const appState = () => window._appState || null;
+  const isBusy = value => value === 'queued' || value === 'processing';
 
   function p1Label(status) {
     return ({ idle:'Chờ xử lý', queued:'Đang chờ', processing:'Đang xử lý', finished:'Phân tích xong', error:'Lỗi' })[status] || status;
@@ -227,6 +228,12 @@
         event.preventDefault();
         event.stopImmediatePropagation();
         notify('Job phải hoàn tất Pipeline 1 trước khi chạy Pipeline 2.', 'warning');
+        return;
+      }
+      if (state.jobs.some(item => isBusy(item.p1Status))) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        notify('Pipeline 2 đang khóa trong khi hàng đợi Pipeline 1 còn chạy.', 'warning');
         return;
       }
       job.pipeline = 2;
