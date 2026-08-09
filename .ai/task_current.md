@@ -1,64 +1,49 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-APPROVED-UI-001
+PIPELINE1-HANDOFF-001
 
 ## Name
-Pipeline 1 — Owner-Approved Functional-Zone UI Rebuild
+Pipeline 1 → Pipeline 2 State/Handoff Gate
 
 ## Status
-WAITING_OWNER_UI_RETEST
+WAITING_CODE_REVIEW
 
 ## Base
-`e578e48c22a79c69005f2d3373599addfc412ecf`
+`2324d922de4874af1eb33f5dec2ea2d63a2bb968`
 
-## Review branch / PR
-- Branch: `review/PIPELINE1-APPROVED-UI-001`
-- Draft PR: #39
+## Review branch
+`review/PIPELINE1-HANDOFF-001`
 
-## Approved outcome
-Six functional zones matching the Owner-approved demo:
-1. AI & Prompt.
-2. Giọng đọc & Voice with `Nghe thử giọng`.
-3. Job Queue.
-4. Selected Job detail with content/audio tabs.
-5. Actions.
-6. Console / Log.
+## Problem
+A video added to Pipeline 1 currently appears immediately in Pipeline 2 because both views render the same shared `state.jobs` and legacy `job.status` is reused across pipelines.
 
-## Owner first runtime result
-NEEDS_REVISION for UI acceptance.
+## Required behavior
+- Upload creates a P1 job only.
+- P2 remains locked/hidden for that job while P1 is idle, queued, processing, cancelled, or error.
+- P1 success performs the handoff and makes that exact job ready in P2.
+- P2 still processes the original source video; P1 does not render or modify video.
+- P2 must not run while any P1 job remains queued/processing because the legacy P2 runner selects shared `status === queued` jobs.
+- P2 success opens P3; P1 success alone must not expose P3.
 
-Required corrections were:
-- remove duplicate Pipeline 1 left-nav item;
-- remove add-file/drop UI from Job Queue and keep add-file in Actions;
-- make Job selection explicit;
-- expand Console / Log vertically;
-- remove per-job action/delete controls;
-- make fullscreen layout consume available width.
+## Current implementation
+- New compatibility controller: `src/renderer/js/pipeline-state.js`.
+- Separate `p1Status/p1Progress`, `p2Status/p2Progress`, and `p3Status` fields.
+- P2 list is filtered by P1 completion gate.
+- P2 start button is guarded by P1 completion and P1 queue inactivity.
+- P1 and P2 legacy statuses are mapped into pipeline-specific status fields.
+- `pipeline1-ai.js` loads the state gate and corrects the obsolete direct-P1-to-P3 completion message.
 
-Separate deferred functional defect:
-- `Bắt đầu chạy` does not execute the intended Pipeline 1 flow. Tracked under BUG-005 and intentionally excluded from this visual correction pass.
-
-## Revised source
-- `src/renderer/js/pipeline.js` blob: `d7199ee277a3b791d29c385b5b90736d92c68554`.
-- `src/renderer/styles/pipeline1-approved.css` blob: `7686bb48cc47336e6602a07c635958c333dec118`.
-- Source correction commits: `d4c21c7a2553f788e656afa6abb42687920071a6`, `e99f7042387e82552cd4616536d2d6fea12ebf6f`.
-
-## Verification
-- Exact reconstructed JS Git blob equality: PASS.
-- Exact revised JS `node --check`: PASS.
-- Static assertions for removed sidebar injection/drop-zone/per-job delete and retained Actions add/Job selector: PASS.
-- Net product source scope remains exactly `pipeline.js` + `pipeline1-approved.css`.
-- PM revised code review: PASS for UI retest.
-- GitHub CI: none configured.
+## Non-goals
+- Do not implement scene/keyframe/multimodal analysis in this task.
+- Do not redesign the approved Pipeline 1 UI.
+- Do not rewrite Pipeline 2 inpainting logic.
+- Do not merge until runtime handoff behavior is Owner verified.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS for revised UI source.
-- Code review: PASS for revised UI source.
-- Owner manual app verification: FIRST CANDIDATE FAIL; REVISED UI RETEST AUTHORIZED / NOT STARTED.
-- Documentation synchronization: PASS.
+- Execution: PASS for current candidate publication.
+- Automated/static verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: NOT STARTED.
+- Documentation synchronization: IN PROGRESS.
 - Merge permission: BLOCKED.
-
-## Owner retest focus
-Verify only the revised UI/interaction acceptance points: no duplicate sidebar Pipeline 1 item; no add/drop zone in #3; selecting a Job is obvious; #5 remains the action zone; no far-right per-job delete; #6 reaches the lower app area; fullscreen uses available width. BUG-005 processing flow is a separate follow-up after UI acceptance.
