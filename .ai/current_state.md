@@ -1,26 +1,27 @@
 # Current State
 
 ## Status
-WAITING_OWNER_RETEST — RECOVERY-007E-SETTINGS-V1-001-REV7
+WAITING_OWNER_RETEST — APPROVED DESIGN REBUILD — RECOVERY-007E-SETTINGS-V1-001-REV7
 
 ## Documentation & Task State
 - Canonical product baseline HEAD: `cf20a02f1e7491fddf7f05dab98fae12050460bb`.
 - INCIDENT-REV6-004 evidence publication: PASS / RESOLVED; PR #37 closed unmerged.
 - Active task: `RECOVERY-007E-SETTINGS-V1-001-REV7`.
-- Draft PR: #38.
-- Review branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV7`.
-- Owner runtime test on 2026-08-09: FAIL.
-- Owner screenshot showed empty `Pipeline 1 Defaults`, missing Voice Cloning controls, and runtime presentation below the intended Settings design.
-- Root cause verified in `settings.js`: original code detached the combined AI/TTS card with `aiCard.replaceChildren()` before resolving the TTS and voice-clone nodes, causing later DOM lookups to return null.
-- Previous PM code-review PASS comment `5230629750` is invalidated by owner runtime evidence.
-- FAIL disposition recorded on PR #38 comment `5230662730`.
-- Direct PM repair commit: `e556fa5ae9420a858d7c5f2eddcfdec07375f619`.
-- Current Settings blob: `a47ca49f6fb7fdec5b5546cc5034d71f6f896084`.
-- Repair captures all required controls before any detach/recomposition, restores populated Pipeline 1 Defaults and Voice Cloning cards, keeps exactly five top-level Settings cards, and places the save action after the cards.
-- Product source diff remains limited to `src/renderer/js/components/settings.js`.
-- Code review status: WAITING RUNTIME CONFIRMATION; static inspection confirms the confirmed detach-order root cause is corrected.
-- Owner product retest: AUTHORIZED for the repaired REV7 branch.
-- Documentation synchronization: PASS for owner-FAIL / retest handoff.
+- Draft PR: #38 on `review/RECOVERY-007E-SETTINGS-V1-001-REV7`.
+- Owner runtime/design verification on 2026-08-09: FAIL for the previous stacked-card implementation.
+- Owner-approved visual reference is now authoritative for Settings information architecture: overview 2x2 plus dedicated AI & Model, TTS & Giọng đọc, Lưu trữ, and Trạng thái hệ thống views.
+- Prior five-stacked-card acceptance was incorrect and is invalidated.
+- PR design-fail disposition: comment `5230793631`.
+- Approved-design visual-system commit: `248ec0043c35010888590c995d23dea7fd0f8a72`.
+- Approved-design controller source commit: `279d59f8d430856214b235d26c1cd15e9d403d4e`.
+- Current Settings source blob: `cbe10df807aad311e1f982ebe4cb8793435bf5ab`.
+- Current Settings CSS blob: `5e83a866c9b4d39fd79d225238a0fa4f21b575c7`.
+- Product files for the rebuild: `src/renderer/js/components/settings.js` and `src/renderer/styles/settings-approved.css`.
+- Static verification: JavaScript syntax PASS; approved five-view architecture present; required provider/TTS/storage/diagnostic contracts checked; no direct Settings fetch; no normal global `ai_api_key` or `ai_model` writes; no dead P1 settings keys.
+- OpenAI appears only as a disabled visual option because current runtime contract does not authorize OpenAI provider support.
+- Runtime visual parity with the approved screenshots: WAITING OWNER RETEST.
+- Code review: WAITING FINAL RUNTIME VISUAL EVIDENCE.
+- Owner product retest: AUTHORIZED for the approved-design rebuild.
 - Product merge permission: BLOCKED.
 
 ## Current branch
