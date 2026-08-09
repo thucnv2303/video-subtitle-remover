@@ -24,11 +24,15 @@ ACTIVE — RECOVERY-007E-SETTINGS-V1-001-REV7
 - Active task: `RECOVERY-007E-SETTINGS-V1-001-REV7`.
 - Active review branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV7`.
 - Active execution spec: `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7.md`.
-- Execution: WAITING.
+- Active amendment: `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7-AMENDMENT-01.md`.
+- First REV7 pre-edit attempt: STOPPED correctly before source editing due a Windows CRLF working-tree hash false positive.
+- GitHub verified both remote REV7 source blobs exactly match canonical source.
+- Failed local worktree `E:\Project AI\Video-sub-remove-clean-REV7` must not be reused.
+- Execution: WAITING FOR FRESH RETRY UNDER AMENDMENT 01.
 - Automated verification: WAITING.
 - Code review: WAITING.
 - Owner product test: NOT STARTED / NOT AUTHORIZED.
-- Documentation synchronization: PASS for REV7 authority setup.
+- Documentation synchronization: PASS for REV7 Amendment 01 authority.
 - Product merge permission: BLOCKED.
 
 ## Current branch
