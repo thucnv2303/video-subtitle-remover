@@ -10,28 +10,29 @@ Canonical source HEAD:
 `RECOVERY-007E-SETTINGS-V1-001-REV7`
 
 ## Status
-WAITING_OWNER_TEST
+WAITING_OWNER_RETEST
 
 ## Review branch / PR
 - Branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV7`
 - Draft PR: #38
-- Current Settings source blob: `805e58278e75b00ee10b1c47cdc2afff774e567e`
+- Repair source commit: `e556fa5ae9420a858d7c5f2eddcfdec07375f619`
+- Current Settings source blob: `a47ca49f6fb7fdec5b5546cc5034d71f6f896084`
 
-## Verified review result
-- Net product source diff: `src/renderer/js/components/settings.js` only.
-- JavaScript syntax: PASS.
-- Targeted Settings assertions: PASS.
-- GitHub code review: PASS; PR #38 comment `5230629750`.
-- No GitHub CI/status checks reported.
-- Intermediate GitHub-tool transport/EOL corrections leave zero net source difference from the reviewed Settings tree.
+## Owner FAIL and repair
+- Owner runtime screenshot on 2026-08-09: FAIL.
+- `Pipeline 1 Defaults` was empty and Voice Cloning controls were missing.
+- Runtime presentation was not acceptable compared with the intended Settings design.
+- Previous PM code-review PASS was invalidated on PR #38 comment `5230662730`.
+- Verified root cause: TTS / voice-clone nodes were queried after their original card had already been detached.
+- Repair now captures all controls first, then composes the five cards.
 
-## Gates
-- Execution: PASS for current net implementation.
-- Automated/static verification: PASS for available checks.
-- Code review: PASS.
-- Owner manual app verification: NOT STARTED — AUTHORIZED.
+## Current gates
+- Execution: PASS for repair publication.
+- Automated/static verification: WAITING fresh runtime confirmation.
+- Code review: WAITING RUNTIME CONFIRMATION.
+- Owner manual app verification: RETEST AUTHORIZED.
 - Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
 
 ## Next action
-Owner runs the real app and verifies the Settings tab: five cards; Gemini/DeepSeek/Ollama visibility; provider-specific key/model persistence and blank model clearing; output directory; diagnostics including CPU-only; existing voice clone/TTS behavior. Report observed PASS/FAIL. Merge remains blocked until owner PASS is recorded and explicit merge approval is given.
+Owner refreshes the dedicated REV7 test worktree to the latest remote branch, launches the real app, and visually verifies the Settings tab. Required runtime proof: no empty cards; all Pipeline 1 Defaults and Voice Cloning controls visible; five-card hierarchy usable; provider switching/persistence, output directory, diagnostics and existing TTS/voice clone behavior intact. Report PASS/FAIL with screenshot if visual defects remain.
