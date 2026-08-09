@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-ACTIVE — RECOVERY-007E-SETTINGS-V1-001-REV5
+ACTIVE — RECOVERY-007E-SETTINGS-V1-001-REV6
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 và P2).
@@ -14,21 +14,24 @@ ACTIVE — RECOVERY-007E-SETTINGS-V1-001-REV5
 ## Documentation & Task State
 - RECOVERY-004 complete at commit 1808076.
 - RECOVERY-005 PASS.
-- RECOVERY-005 audit report: `.ai/audits/pipeline1_readonly_audit.md`.
 - RECOVERY-006 execution: COMPLETED; PM review: PASS.
-- RECOVERY-006 baseline report: `.ai/audits/pipeline1_baseline_runtime.md`.
 - GOVERNANCE-AGENTOS-PRECOMMIT-001: PASS / MERGED via PR #34.
 - Canonical product baseline HEAD: `cf20a02f1e7491fddf7f05dab98fae12050460bb`.
-- RECOVERY-007E-SETTINGS-V1-001-REV3: INVALIDATED.
-- RECOVERY-007E-SETTINGS-V1-001-REV4 / PR #35: INVALIDATED and closed unmerged after executor continued past a required verification warning and final GitHub source contradicted PASS claims.
-- Active clean retry: `RECOVERY-007E-SETTINGS-V1-001-REV5`.
-- Active review branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV5`.
-- REV5 source basis: canonical `cf20a02f1e7491fddf7f05dab98fae12050460bb`; no invalidated Settings implementation may be reused.
+- REV3: INVALIDATED.
+- REV4 / PR #35: INVALIDATED and closed unmerged.
+- REV5 implementation: INVALIDATED after INCIDENT-REV5-003 review.
+- INCIDENT-REV5-003 evidence publication: PASS; PR #36 closed unmerged.
+- Active clean retry: `RECOVERY-007E-SETTINGS-V1-001-REV6`.
+- Active review branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV6`.
+- REV6 canonical source basis: `cf20a02f1e7491fddf7f05dab98fae12050460bb`.
+- First local REV6 attempt: INVALIDATED; remote GitHub branch remained unchanged by implementation.
+- Active execution amendment: `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV6-AMENDMENT-01.md`.
+- Execution: WAITING FOR FRESH RETRY.
 - Automated verification: WAITING.
 - Code review: WAITING.
 - Owner product test: NOT STARTED — WAITING FOR PM CODE REVIEW.
-- Documentation synchronization: PASS for REV5 task activation.
+- Documentation synchronization: PASS for REV6 retry authority.
 - Product merge permission: BLOCKED.
 
 ## Current branch
-review/RECOVERY-007E-SETTINGS-V1-001-REV5
+review/RECOVERY-007E-SETTINGS-V1-001-REV6
