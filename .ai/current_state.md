@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-WAITING_OWNER_TEST — PIPELINE1-APPROVED-UI-001
+WAITING_CODE_REVIEW_AFTER_OWNER_UI_FAIL — PIPELINE1-APPROVED-UI-001
 
 ## Canonical baseline
 - Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`.
@@ -14,28 +14,33 @@ WAITING_OWNER_TEST — PIPELINE1-APPROVED-UI-001
 - Draft PR: #39.
 - Visual authority: Owner-approved Pipeline 1 demo dated 2026-08-09, including explicit `Nghe thử giọng` control.
 
-## Verified implementation
-- Net product scope remains exactly `src/renderer/js/pipeline.js` and `src/renderer/styles/pipeline1-approved.css`.
-- Current Pipeline 1 JS blob: `41b6f844d9af6f31df6e34af171b58a256d70a1a`.
-- Six functional zones implemented: AI & Prompt, Giọng đọc & Voice, Job Queue, selected Job detail, actions, Console/Log.
-- `Nghe thử giọng` uses the existing TTS generation contract and the speed slider affects preview playback rate.
-- Review correction restored the existing add-video file-picker forwarding and Console Copy/Xóa handlers that had initially been lost during the layout replacement.
-- Selected Job detail uses safe `window._appState` rendering and existing ASR/AI/TTS/file-dialog contracts.
-- Settings source is unchanged after merge.
-- Pipeline 2 and Pipeline 3 source are unchanged.
+## Owner runtime result — first P1 candidate
+Owner runtime verification on 2026-08-09: NEEDS_REVISION for UI acceptance.
 
-## Verification
-- Previous exact-blob syntax/static gate before the final narrow event-handler correction: PASS.
-- Final correction was reviewed directly in the GitHub patch and adds only bounded event-handler logic; no broad source change.
-- Required runtime DOM IDs remain present in the mounted template.
-- PR #39 is mergeable and has no GitHub CI checks configured.
-- PM GitHub code review: PASS for Owner runtime testing.
-- Runtime visual/function verification: WAITING OWNER TEST.
+Verified runtime observations:
+1. Remove the duplicate `Pipeline 1` item from the left sidebar; top pipeline steps already provide pipeline navigation.
+2. Remove the add-file/drop zone from Job Queue (#3); `+ Thêm Video` belongs in Actions (#5). Job selection must be explicit in the queue for actions targeting the selected Job.
+3. Console / Log (#6) must expand vertically to use the remaining right-column height.
+4. Remove the per-job delete/action control from the far right of Job rows and eliminate large unused margins in fullscreen by making the workspace responsive.
+5. Separate functional blocker: `Bắt đầu chạy` does not execute the intended Pipeline 1 flow. This remains BUG-005 and is explicitly deferred until the UI correction pass is accepted.
+
+## Revised implementation published
+- UI correction source commit: `d4c21c7a2553f788e656afa6abb42687920071a6`.
+- Responsive CSS correction commit: `e99f7042387e82552cd4616536d2d6fea12ebf6f`.
+- Current Pipeline 1 JS blob after UI correction: `d7199ee277a3b791d29c385b5b90736d92c68554`.
+- Current Pipeline 1 CSS blob after UI correction: `7686bb48cc47336e6602a07c635958c333dec118`.
+- Extra Pipeline 1 sidebar item is no longer injected.
+- Job Queue now focuses on selectable jobs and directs file addition to Actions (#5).
+- Per-job action/delete controls are no longer rendered by the P1 adapter.
+- Selected Job receives an explicit selection indicator and existing `pipeline1SelectedJobId` behavior is preserved.
+- Console / Log and the three-column workspace now use available viewport space instead of a fixed 1500px content cap.
+- No processing-flow repair was included in this UI correction pass.
+- Settings, Pipeline 2 and Pipeline 3 source remain unchanged.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS for prior exact-blob gate; final runtime verification required before merge.
-- Code review: PASS.
-- Owner manual app verification: AUTHORIZED / NOT STARTED.
-- Documentation synchronization: PASS for Owner-test state.
-- Merge permission: BLOCKED until Owner PASS and explicit merge approval.
+- Execution: PASS for UI correction publication.
+- Automated/static verification: WAITING for revised exact-head verification.
+- Code review: WAITING for revised source review.
+- Owner manual app verification: FAIL on first candidate; RETEST NOT YET AUTHORIZED for revised candidate.
+- Documentation synchronization: PASS for owner-failure/revision recording.
+- Merge permission: BLOCKED.
