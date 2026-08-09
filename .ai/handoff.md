@@ -25,7 +25,7 @@ Canonical source HEAD:
 `RECOVERY-007E-SETTINGS-V1-001-REV7`
 
 ## Status
-ACTIVE — WAITING
+ACTIVE — WAITING FOR FRESH RETRY UNDER AMENDMENT 01
 
 ## Review branch
 `review/RECOVERY-007E-SETTINGS-V1-001-REV7`
@@ -33,9 +33,17 @@ ACTIVE — WAITING
 ## Execution authority
 - `.ai/task_specs/ACTIVE.md`
 - `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7.md`
+- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7-AMENDMENT-01.md`
 
-## REV7 execution rule
-Use a NEW isolated clean worktree from exact current remote REV7 authority. Allowed source is only `src/renderer/index.html` and `src/renderer/js/components/settings.js`.
+## First REV7 attempt disposition
+The first pre-edit attempt STOPPED before source editing because raw working-tree hashes differed under Windows CRLF checkout. GitHub independently verified the committed remote source blobs exactly match canonical source, so this was a false-positive identity gate rather than source contamination.
+
+The local worktree `E:\Project AI\Video-sub-remove-clean-REV7` is not reusable.
+
+## REV7 corrected execution rule
+Use a NEW isolated clean worktree from exact current remote REV7 authority. Allowed source remains only `src/renderer/index.html` and `src/renderer/js/components/settings.js`.
+
+Canonical identity must be checked using clean status, committed `HEAD:<path>` blob SHAs, and `git diff --quiet`, per Amendment 01. `git ls-files --eol` is recorded as EOL baseline; raw working-tree `git hash-object` equality is no longer the source-identity gate.
 
 Edit tracked source directly with the normal editor, one file at a time. No external candidate/baseline-copy, no generated patch, no `git apply`, no rewrite script, and no line-ending normalization. Complete the per-file hard gate before touching the next source file. First required gate failure => STOP without self-repair.
 
@@ -44,8 +52,8 @@ Edit tracked source directly with the normal editor, one file at a time. No exte
 - Automated/static verification: WAITING.
 - Code review: WAITING.
 - Owner manual app verification: NOT STARTED / NOT AUTHORIZED.
-- Documentation synchronization: PASS for REV7 authority setup.
+- Documentation synchronization: PASS for REV7 Amendment 01 authority.
 - Merge permission: BLOCKED.
 
 ## Next action
-Executor fetches `origin/review/RECOVERY-007E-SETTINGS-V1-001-REV7`, reads remote ACTIVE + REV7 spec, records exact remote HEAD, creates a new isolated clean worktree from that HEAD, verifies source blobs, then executes REV7 exactly.
+Executor fetches `origin/review/RECOVERY-007E-SETTINGS-V1-001-REV7`, reads remote ACTIVE + REV7 spec + Amendment 01, records exact remote HEAD, creates a new isolated clean worktree from that HEAD, passes the corrected identity/EOL gate, then executes REV7 exactly.
