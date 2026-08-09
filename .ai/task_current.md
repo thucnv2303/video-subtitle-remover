@@ -10,7 +10,7 @@ Settings V1 — Fresh Clean Retry After INCIDENT-REV6-004
 Implement the approved Settings V1 UI and renderer logic from canonical source `cf20a02f1e7491fddf7f05dab98fae12050460bb` without reusing any invalidated REV2/REV3/REV4/REV5/REV6 source, patch, candidate, stash, scratch artifact, or worktree.
 
 ## Status
-ACTIVE — WAITING
+ACTIVE — WAITING FOR FRESH RETRY UNDER AMENDMENT 01
 
 ## Review branch
 `review/RECOVERY-007E-SETTINGS-V1-001-REV7`
@@ -22,12 +22,21 @@ ACTIVE — WAITING
 ## Authority
 - `.ai/task_specs/ACTIVE.md`
 - `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7.md`
+- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7-AMENDMENT-01.md`
 
-## Incident disposition
-- REV6 implementation: INVALIDATED.
-- INCIDENT-REV6-004 evidence: PASS / RESOLVED.
-- PR #37: closed unmerged.
-- REV6 implementation commits/artifacts are forbidden as implementation input.
+## Prior REV7 attempt
+- First REV7 pre-edit attempt STOPPED correctly before source editing because raw working-tree `git hash-object` values differed under Windows CRLF checkout.
+- GitHub verification proved both remote REV7 source blobs exactly match canonical source.
+- This was a gate-design false positive, not source contamination.
+- `E:\Project AI\Video-sub-remove-clean-REV7` must not be reused.
+
+## Corrected pre-edit gate
+- New isolated clean worktree from exact current remote REV7 authority.
+- `git status --short` must be empty.
+- Verify committed blobs using `git rev-parse HEAD:<path>` against canonical blob SHAs from Amendment 01.
+- `git diff --quiet -- <two target paths>` must exit 0.
+- Record `git ls-files --eol` as EOL baseline; do not use raw working-tree hash equality as canonical identity.
+- Any `mixed` EOL classification before edit is a hard STOP.
 
 ## Required behavior
 - Exactly five top-level Settings cards: General, AI Provider, Pipeline 1 Defaults, Voice Cloning, System / Diagnostics.
@@ -43,18 +52,10 @@ ACTIVE — WAITING
 - CPU-only GPU state valid/non-error.
 - Preserve TTS/voice-clone contracts and P1/P2/P3 boundaries.
 
-## Execution method
-- New isolated clean worktree from exact remote REV7 authority.
-- Allowed source: only `src/renderer/index.html` and `src/renderer/js/components/settings.js`.
-- Direct normal-editor edits only; one file at a time.
-- No external candidate/patch workflow and no source rewrite scripts.
-- Per-file hard gate before proceeding to the next file.
-- First required gate failure => STOP without self-repair.
-
 ## Verification gates
 - Execution: WAITING.
 - Automated/static verification: WAITING.
 - Code review: WAITING.
 - Owner manual app verification: NOT STARTED / NOT AUTHORIZED.
-- Documentation synchronization: PASS for REV7 authority setup.
+- Documentation synchronization: PASS for REV7 Amendment 01 authority.
 - Merge permission: BLOCKED.
