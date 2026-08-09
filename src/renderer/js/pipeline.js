@@ -1,4 +1,4 @@
-(function () {
+(function mountApprovedPipeline1() {
   const pane = document.getElementById('step-1-content');
   if (!pane) return;
 
@@ -98,10 +98,17 @@ function bindUiState() {
   voice?.addEventListener('change', () => localStorage.setItem('tts_voice', voice.value));
   speed?.addEventListener('input', () => { document.getElementById('step1-speed-value').textContent = `${Number(speed.value).toFixed(2)}x`; localStorage.setItem('tts_speed', speed.value); });
 
+  document.getElementById('btn-upload-step1')?.addEventListener('click', () => document.getElementById('btn-open-file')?.click());
+  document.getElementById('p1-action-add')?.addEventListener('click', () => document.getElementById('btn-upload-step1')?.click());
+  document.getElementById('step1-btn-copy-log')?.addEventListener('click', async () => {
+    const text = document.getElementById('step1-log-output')?.innerText || '';
+    if (!text) return;
+    try { await navigator.clipboard.writeText(text); } catch { notify('Không thể copy log.', 'error'); }
+  });
+  document.getElementById('step1-btn-clear-log')?.addEventListener('click', () => { const log = document.getElementById('step1-log-output'); if (log) log.innerHTML = ''; });
   document.getElementById('step1-btn-preview-voice')?.addEventListener('click', previewVoice);
   document.getElementById('step1-btn-check-ai')?.addEventListener('click', checkAi);
   document.getElementById('step1-btn-refresh-queue')?.addEventListener('click', () => window.renderJobList?.());
-  document.getElementById('p1-action-add')?.addEventListener('click', () => document.getElementById('btn-upload-step1')?.click());
   document.getElementById('p1-delete-selected')?.addEventListener('click', deleteSelected);
   document.getElementById('p1-delete-all')?.addEventListener('click', deleteAllIdle);
   syncFromSettings();
@@ -151,7 +158,7 @@ async function previewVoice() {
   let ref=null;
   if (selected.startsWith('clone:')) { try { ref=JSON.parse(localStorage.getItem('tts_voices') || '[]')[Number(selected.split(':')[1])]?.audioPath || null; } catch { ref=null; } }
   button.disabled=true; button.textContent='Đang tạo giọng thử...';
-  try { const result=await window.api.generateTTS('Xin chào, đây là giọng đọc bạn đang chọn.',ref,localStorage.getItem('tts_language') || 'vi',selected); if (result?.status !== 'ok' || !result.audio_path) throw new Error(result?.error || 'Không tạo được audio thử.'); audio.src='file:///' + result.audio_path.replace(/\\/g,'/'); audio.style.display='block'; await audio.play(); }
+  try { const result=await window.api.generateTTS('Xin chào, đây là giọng đọc bạn đang chọn.',ref,localStorage.getItem('tts_language') || 'vi',selected); if (result?.status !== 'ok' || !result.audio_path) throw new Error(result?.error || 'Không tạo được audio thử.'); audio.src='file:///' + result.audio_path.replace(/\\/g,'/'); audio.style.display='block'; audio.playbackRate = Number(document.getElementById('step1-tts-speed')?.value || 1); await audio.play(); }
   catch (error) { notify(error?.message || 'Không thể nghe thử giọng.','error'); }
   finally { button.disabled=false; button.textContent='▶ Nghe thử giọng'; }
 }
@@ -203,8 +210,8 @@ function escapeAttr(value) { return String(value ?? '').replace(/&/g,'&amp;').re
 function selectedJob() { const state=window._appState; return state?.jobs?.find(job => job.id === state.pipeline1SelectedJobId) || null; }
 function safeRenderDetail() {
   const job=selectedJob();
-  const title=document.getElementById('step1-detail-title'), status=document.getElementById('step1-detail-status'), text=document.getElementById('step1-detail-text'), audio=document.getElementById('step1-detail-audio'), empty=document.getElementById('step1-audio-empty');
-  if (title) title.textContent=job?.fileName || 'Vui lòng chọn 1 Job';
+  const heading=document.getElementById('step1-detail-title'), status=document.getElementById('step1-detail-status'), text=document.getElementById('step1-detail-text'), audio=document.getElementById('step1-detail-audio'), empty=document.getElementById('step1-audio-empty');
+  if (heading) heading.textContent=job?.fileName || 'Vui lòng chọn 1 Job';
   if (status) { status.textContent=job ? statusLabel(job.status) : 'Chờ xử lý'; status.dataset.state=job?.status || 'idle'; }
   if (text) text.value=job ? (job.aiContent || job.srtContent || '') : '';
   if (audio) { if (job?.ttsAudioPath) { audio.src='file:///' + job.ttsAudioPath.replace(/\\/g,'/'); audio.style.display='block'; } else { audio.removeAttribute('src'); audio.style.display='none'; } }
@@ -215,8 +222,8 @@ function safeRenderDetail() {
 function bindSafeDetailActions() {
   window.renderJobDetail1=safeRenderDetail;
 
-  const saveOld=document.getElementById('step1-btn-save-text');
-  if (saveOld) { const save=saveOld.cloneNode(true); saveOld.replaceWith(save); save.addEventListener('click',() => { const job=selectedJob(); const text=document.getElementById('step1-detail-text'); if (!job || !text) return; job.aiContent=text.value; window.addLog?.(`[AI] Đã cập nhật nội dung: ${job.fileName}`,'info'); }); }
+  const oldSave=document.getElementById('step1-btn-save-text');
+  if (oldSave) { const save=oldSave.cloneNode(true); oldSave.replaceWith(save); save.addEventListener('click',() => { const job=selectedJob(); const text=document.getElementById('step1-detail-text'); if (!job || !text) return; job.aiContent=text.value; window.addLog?.(`[AI] Đã cập nhật nội dung: ${job.fileName}`,'info'); }); }
 
   document.getElementById('step1-btn-extract')?.addEventListener('click',async() => {
     const job=selectedJob(); if (!job) return notify('Hãy chọn một Job.','warn');
