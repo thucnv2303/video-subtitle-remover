@@ -20,15 +20,31 @@ Review branch:
 Execution spec:
 `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV4.md`
 
-Active amendment:
-`.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV4-AMENDMENT-01.md`
+Active amendments:
+- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV4-AMENDMENT-01.md`
+- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV4-AMENDMENT-02.md`
 
-Amendment authority:
-- The normal editor repeatedly damaged repetitive HTML while attempting the PM-requested PR #35 revision.
-- A one-time deterministic `git apply --check` + `git apply` workflow is authorized by Amendment 01.
-- Python/Node.js/PowerShell/sed/perl source rewrite or string-replacement scripts remain forbidden.
-- Any patch file must stay outside the repository and must never be staged or committed.
-- Continue only from a new isolated clean worktree based on the current remote REV4 head; preserve the stopped dirty worktree unchanged.
+Current review basis:
+- Draft PR #35
+- Reviewed head: `ec63fc8b861cf37c7a8595c7a776a87010222e9f`
+- Amendment 01 source commit: `150ca386fe709ee089ec3439165bd275fadc8a4e`
+- Amendment 01 docs commit: `ec63fc8b861cf37c7a8595c7a776a87010222e9f`
+- PM decision: NEEDS_REVISION
+
+Current PM blockers are defined by Amendment 02:
+1. Ollama API-key field hidden, but `ai-model` must remain visible/editable and persist `ai_model_ollama`; endpoint remains visible via `ai_endpoint`.
+2. Legacy `ai_api_key` migration must be truly one-time initial-load compatibility; later provider switching cannot resurrect it.
+3. Saving a blank model must clear/write blank to `ai_model_<provider>` rather than preserve stale model state.
+4. Repair exactly `.ai/current_state.md`, `.ai/task_current.md`, `.ai/handoff.md`: preserve canonical history/context, remove control-character corruption, record exact verification/gates, and do not whole-file replace them with `Set-Content`.
+5. Required verification evidence must be actually executed and recorded before reporting automated/static PASS.
+
+Editing authority:
+- Amendment 01 unified-diff workflow remains authorized.
+- Inspect full patch before application.
+- `git apply --check` must pass before `git apply`.
+- Patch files stay outside repository.
+- Python/Node.js/PowerShell/sed/perl source/doc rewrite or string-replacement scripts remain forbidden.
+- `Set-Content` or equivalent whole-file replacement of canonical `.ai` files is forbidden.
 
 Invalidated execution authority:
 - REV3 source commit `2494cc2a85293565303e00a3afcd728f42bd65d8`
@@ -36,32 +52,24 @@ Invalidated execution authority:
 - local stopped-retry commits/work `2ead767`, `a126aa9`, and generated patch/script work
 - all earlier Settings attempts, stashes, local patches, scratch scripts, normalized files, copied source hunks, PR #32 and PR #33
 
-Current PM code-review blockers on Draft PR #35:
-1. implement canonical provider model persistence `ai_model_<provider>` for Gemini, DeepSeek, and Ollama;
-2. remove unused parallel state `p1_default_ai_model` and `p1_default_tts_voice`;
-3. remove noncanonical `ai_endpoint_deepseek`;
-4. preserve strict provider-key isolation / one-time legacy migration;
-5. preserve five-section Settings structure, unique hard-gate DOM IDs, API-only diagnostics, CPU-only non-error state, TTS/voice-clone contracts, and Pipeline boundaries.
-
-Owner product baseline remains accepted. Do not ask Owner to reconfirm baseline.
-
 Required startup:
 1. `git fetch origin`
 2. Read this ACTIVE file from `origin/review/RECOVERY-007E-SETTINGS-V1-001-REV4`.
 3. Read the exact REV4 spec from the same remote ref.
-4. Read Amendment 01 from the same remote ref.
+4. Read Amendment 01 and Amendment 02 from the same remote ref.
 5. Record exact current remote HEAD from `git rev-parse origin/review/RECOVERY-007E-SETTINGS-V1-001-REV4`.
 6. Verify merge-base with `cf20a02f1e7491fddf7f05dab98fae12050460bb` equals that canonical source basis.
-7. Create/use a new isolated clean git worktree from the CURRENT remote REV4 head; do not overwrite or clean the stopped dirty worktree.
+7. Use a new isolated clean git worktree from the CURRENT remote REV4 head; preserve existing stopped/dirty worktrees unchanged.
 
 Hard STOP:
 - no stash apply/pop or reuse of invalidated Settings work;
-- no Python/Node.js/PowerShell/sed/perl source rewrite or string-replacement scripts;
+- no Python/Node.js/PowerShell/sed/perl rewrite or string-replacement scripts;
 - no generated patch scripts;
 - no line-ending conversion/normalization or mixed-EOL manipulation;
 - no reset --hard / clean / destructive restore / rebase / amend / force push;
 - no git add . / git add -A;
 - no --no-verify / hook bypass;
+- no whole-file `Set-Content` replacement of canonical dynamic docs;
 - first unexpected required command/test/hook failure => STOP and report;
 - patch-check failure, patch-application mismatch, remote-head movement after startup, broad/full-file churn, or EOL churn => STOP; no self-repair.
 
