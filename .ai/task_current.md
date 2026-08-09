@@ -7,35 +7,27 @@ RECOVERY-007E-SETTINGS-V1-001-REV7
 Settings V1 — Approved UI + Ollama Model Discovery
 
 ## Status
-WAITING_OWNER_RETEST
+PASS — READY TO MERGE
 
 ## Review branch
 `review/RECOVERY-007E-SETTINGS-V1-001-REV7`
 
 ## Review state
 - Draft PR: #38.
-- Owner-approved Settings visual architecture is implemented and runtime screenshot is acceptable.
-- Remaining owner-reported issue: Ollama model list was not discoverable from the Settings AI page.
-- Ollama official list-model endpoint is `GET /api/tags`.
-- Fix published through `src/main/main.js` and `src/main/preload.js` only; approved Settings layout is unchanged.
-
-## Ollama discovery behavior
-- When provider is Ollama, a `Quét model Ollama` control appears below the Model field.
-- Scan uses Electron main-process IPC; renderer does not perform direct Ollama fetch.
-- The saved Ollama chat endpoint is normalized to `/api/tags` for discovery.
-- Only local loopback Ollama endpoints are accepted.
-- Installed model names populate a selectable dropdown and the existing model datalist.
-- Selecting a scanned model copies its exact name into the existing `ai-model` field.
+- Approved Settings UI and information architecture are implemented.
+- Ollama local model discovery is implemented through Electron IPC and `GET /api/tags`.
 - Manual model entry remains supported.
-- Existing `ai_model_ollama` persistence and Pipeline 1 contracts remain unchanged.
+- Provider-specific model/key persistence remains isolated.
+- Owner runtime verification on 2026-08-09: PASS.
+- Owner explicitly authorized merging Settings in the current interaction.
 
 ## Gates
-- Approved UI runtime review: PASS for visual direction based on owner screenshot.
-- Ollama discovery implementation: PUBLISHED / WAITING OWNER RUNTIME RETEST.
-- Code review: WAITING final Ollama runtime proof.
-- Owner manual app verification: RETEST AUTHORIZED.
-- Documentation synchronization: PASS.
-- Merge permission: BLOCKED.
+- Execution: PASS.
+- Automated/static verification: PASS for available required static checks; no GitHub CI configured.
+- Code review: PASS.
+- Owner manual app verification: PASS.
+- Documentation synchronization: PASS after closeout update.
+- Merge permission: APPROVED for PR #38 only, provided GitHub head/source remains unchanged except closeout docs.
 
-## Owner retest focus
-Select Ollama, click `Quét model Ollama`, confirm locally installed models appear, select one, save, reopen Settings, and confirm the exact model remains selected. Also confirm manual entry still works if scanning fails.
+## Next task after merge
+Rebuild Pipeline 1 UI using the Owner-approved demo dated 2026-08-09. The approved Pipeline 1 demo keeps existing functional contracts while reorganizing the screen into functional zones: AI & Prompt, Giọng đọc & Voice with `Nghe thử giọng`, Job Queue, selected-job detail, actions, and Console/Log. Implementation must start from the merged Settings canonical baseline, not from pre-merge branches.
