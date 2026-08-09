@@ -645,8 +645,12 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">API Key / Tên Model (Ollama)</label>
+              <label class="form-label" id="ai-api-key-label">API Key</label>
               <input type="password" id="ai-api-key" class="form-input" placeholder="Nhập API Key hoặc tên model (VD: gemma4:12b)...">
+            </div>
+            <div class="form-group" id="ai-model-group">
+              <label class="form-label">Tên Model (Mặc định)</label>
+              <input type="text" id="ai-model" class="form-input" placeholder="VD: gemini-1.5-pro, deepseek-chat...">
             </div>
             <div class="form-group">
               <label class="form-label">Endpoint URL (Ollama)</label>
@@ -659,34 +663,6 @@
           <!-- Card 3: Pipeline 1 Defaults -->
           <div class="settings-card">
             <h3>⚡ Pipeline 1 Defaults</h3>
-            <div class="form-group">
-              <label class="form-label">AI Model Mặc Định (Pipeline 1)</label>
-              <select id="p1-default-ai-model" class="dropdown form-input">
-                <option value="gemini">Google Gemini</option>
-                <option value="deepseek">DeepSeek</option>
-                <option value="ollama">Ollama (Llama 3.2 Vision)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Giọng TTS Mặc Định (Pipeline 1)</label>
-              <select id="p1-default-tts-voice" class="dropdown form-input">
-                <option value="none">Không lồng tiếng</option>
-                <option value="vi-VN-HoaiMyNeural">Hoài My (Nữ, Miền Nam)</option>
-                <option value="vi-VN-NamMinhNeural">Nam Minh (Nam, Miền Bắc)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Card 4: Voice Cloning -->
-          <div class="settings-card">
-            <h3>🎤 Voice Cloning & TTS</h3>
-            <div class="form-group">
-              <label class="form-label">Trạng thái TTS</label>
-              <div class="tts-status-row">
-                <span class="status-chip" id="tts-status-chip">⏳ Đang kiểm tra...</span>
-              </div>
-            </div>
-
             <div class="form-group">
               <label class="form-label">Chọn giọng đọc</label>
               <select id="tts-voice" class="dropdown form-input">
@@ -724,8 +700,10 @@
               </label>
             </div>
 
-            <div class="form-divider"></div>
+          </div>
 
+          <!-- Card 4: Voice Cloning -->
+          <div class="settings-card">
             <!-- Voice Clone Section -->
             <h3>🧬 Clone giọng mới</h3>
             <p class="form-desc" style="margin-bottom:8px">Upload audio mẫu (3-15 giây) để clone giọng nói bất kỳ</p>
@@ -774,6 +752,10 @@
             <div class="setting-row" style="display:flex; justify-content:space-between; align-items:center;">
               <div><span class="form-label">Backend Status</span></div>
               <div><span class="status-chip" id="backend-status-chip">⏳ Đang kiểm tra...</span></div>
+            </div>
+            <div class="setting-row" style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+              <div><span class="form-label">Trạng thái TTS</span></div>
+              <div><span class="status-chip" id="tts-status-chip">⏳ Đang kiểm tra...</span></div>
             </div>
             <div class="setting-row" style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
               <div>

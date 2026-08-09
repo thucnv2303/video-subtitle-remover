@@ -60,28 +60,33 @@ export function getApiKeyForProvider(provider) {
 function _updateProviderUI(provider) {
   const get = (id) => document.getElementById(id);
   const aiApiKey = get('ai-api-key');
+  const aiModel = get('ai-model');
   const aiEndpoint = get('ai-endpoint');
+  const keyLabel = get('ai-api-key-label');
+  const modelGroup = get('ai-model-group');
+
+  if (aiModel) {
+    aiModel.value = localStorage.getItem('ai_model_' + provider) || '';
+  }
 
   if (provider === 'ollama') {
-    if (aiApiKey) {
-      aiApiKey.value = localStorage.getItem('ai_model_ollama') || '';
-      aiApiKey.placeholder = 'Nhập tên model Ollama (VD: gemma4:12b)...';
-    }
+    if (aiApiKey && aiApiKey.parentElement) aiApiKey.parentElement.style.display = 'none';
+    if (modelGroup) modelGroup.style.display = 'none';
     if (aiEndpoint) {
       aiEndpoint.value = localStorage.getItem('ai_endpoint') || 'http://localhost:11434/api/chat';
       if (aiEndpoint.parentElement) aiEndpoint.parentElement.style.display = '';
     }
   } else {
     if (aiApiKey) {
+      if (aiApiKey.parentElement) aiApiKey.parentElement.style.display = '';
+      if (keyLabel) keyLabel.textContent = 'API Key';
       aiApiKey.value = getApiKeyForProvider(provider);
       aiApiKey.placeholder = `Nhập API Key cho ${provider === 'gemini' ? 'Google Gemini' : 'DeepSeek'}...`;
     }
+    if (modelGroup) modelGroup.style.display = '';
     if (aiEndpoint) {
       if (aiEndpoint.parentElement) {
-        aiEndpoint.parentElement.style.display = provider === 'deepseek' ? '' : 'none';
-      }
-      if (provider === 'deepseek') {
-        aiEndpoint.value = localStorage.getItem('ai_endpoint_deepseek') || 'https://api.deepseek.com';
+        aiEndpoint.parentElement.style.display = 'none';
       }
     }
   }
@@ -132,11 +137,7 @@ export function loadSettingsValues() {
     outputDir.textContent = dir || 'Mặc định (cùng thư mục video gốc)';
   }
 
-  const p1AiModel = get('p1-default-ai-model');
-  if (p1AiModel) p1AiModel.value = localStorage.getItem('p1_default_ai_model') || 'gemini';
 
-  const p1TtsVoice = get('p1-default-tts-voice');
-  if (p1TtsVoice) p1TtsVoice.value = localStorage.getItem('p1_default_tts_voice') || 'none';
 
   updateVoiceDropdown(getSavedVoices());
   refreshDiagnostics();
@@ -149,21 +150,19 @@ function _saveAllSettings() {
 
   const provider = val('ai-provider') || 'gemini';
   const keyInput = val('ai-api-key').trim();
+  const modelInput = val('ai-model').trim();
   const endpointInput = val('ai-endpoint').trim();
 
   localStorage.setItem('ai_provider', provider);
+  if (modelInput) {
+    localStorage.setItem('ai_model_' + provider, modelInput);
+  }
 
   if (provider === 'ollama') {
-    localStorage.setItem('ai_model_ollama', keyInput);
     if (endpointInput) localStorage.setItem('ai_endpoint', endpointInput);
   } else {
-    // Write only ai_api_keys_<provider> for provider A.
-    // Do NOT globally sync legacy ai_api_key.
     const keys = keyInput ? [{ key: keyInput }] : [];
     localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify(keys));
-    if (provider === 'deepseek' && endpointInput) {
-      localStorage.setItem('ai_endpoint_deepseek', endpointInput);
-    }
   }
 
   localStorage.setItem('ai_prompt', val('ai-prompt'));
@@ -171,9 +170,6 @@ function _saveAllSettings() {
   localStorage.setItem('tts_language', val('tts-language'));
   localStorage.setItem('tts_bg_volume', val('tts-bg-volume'));
   localStorage.setItem('tts_remove_vocal', chk('tts-remove-vocal'));
-
-  if (get('p1-default-ai-model')) localStorage.setItem('p1_default_ai_model', val('p1-default-ai-model'));
-  if (get('p1-default-tts-voice')) localStorage.setItem('p1_default_tts_voice', val('p1-default-tts-voice'));
 }
 
 // ─── Voice Clone Management ───────────────────────────────────────────────────
@@ -230,7 +226,6 @@ export function updateVoiceDropdown(voices) {
     document.getElementById('tts-voice'),
     document.getElementById('job-tts-voice'),
     document.getElementById('step1-tts-voice'),
-    document.getElementById('p1-default-tts-voice'),
   ].filter(Boolean);
 
   dropdowns.forEach(sel => {
