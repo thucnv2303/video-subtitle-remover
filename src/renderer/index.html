@@ -621,9 +621,18 @@
         <div class="settings-scroll">
           <div class="settings-header"><h2>⚙️ Cài đặt</h2></div>
 
-          <!-- AI Settings -->
+          <!-- General -->
           <div class="settings-card">
-            <h3>🤖 AI & Lồng tiếng</h3>
+            <h3>⚙️ General</h3>
+            <div class="setting-row">
+              <div><span class="form-label">Thư mục đầu ra</span><br><span class="form-desc" id="output-dir-text">Mặc định (cùng thư mục video gốc)</span></div>
+              <button class="btn btn-outline" id="btn-output-dir">Chọn thư mục</button>
+            </div>
+          </div>
+
+          <!-- AI Provider -->
+          <div class="settings-card">
+            <h3>🤖 AI Provider</h3>
             <div class="form-group">
               <label class="form-label">Nhà cung cấp AI</label>
               <select id="ai-provider" class="dropdown form-input">
@@ -633,8 +642,12 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">API Key / Tên Model (Ollama)</label>
+              <label class="form-label" id="ai-api-key-label">API Key</label>
               <input type="password" id="ai-api-key" class="form-input" placeholder="Nhập API Key hoặc tên model (VD: gemma4:12b)...">
+            </div>
+            <div class="form-group" id="ai-model-group">
+              <label class="form-label">Tên Model</label>
+              <input type="text" id="ai-model" class="form-input" placeholder="VD: gemini-1.5-pro, deepseek-chat...">
             </div>
             <div class="form-group">
               <label class="form-label">Endpoint URL (Ollama)</label>
@@ -642,8 +655,8 @@
             </div>
             <div class="form-divider"></div>
 
-            <!-- OmniVoice TTS Section -->
-            <h3 style="margin-top:8px">🎤 Lồng tiếng AI (OmniVoice TTS)</h3>
+            <!-- Pipeline 1 Defaults -->
+            <h3 style="margin-top:8px">🎤 Pipeline 1 Defaults</h3>
             <div class="form-group">
               <label class="form-label">Trạng thái TTS</label>
               <div class="tts-status-row">
@@ -690,8 +703,8 @@
 
             <div class="form-divider"></div>
 
-            <!-- Voice Clone Section -->
-            <h3>🧬 Clone giọng mới</h3>
+            <!-- Voice Cloning -->
+            <h3>🧬 Voice Cloning</h3>
             <p class="form-desc" style="margin-bottom:8px">Upload audio mẫu (3-15 giây) để clone giọng nói bất kỳ</p>
 
             <div class="form-group">
@@ -734,24 +747,26 @@
             <button id="btn-save-ai" class="btn btn-primary" style="margin-top:12px;">💾 Lưu cài đặt AI</button>
           </div>
 
-          <!-- Storage -->
+          <!-- System / Diagnostics -->
           <div class="settings-card">
-            <h3>📁 Lưu trữ & Xuất file</h3>
-            <div class="setting-row">
-              <div><span class="form-label">Thư mục đầu ra</span><br><span class="form-desc" id="output-dir-text">Mặc định (cùng thư mục video gốc)</span></div>
-              <button class="btn btn-outline" id="btn-output-dir">Chọn thư mục</button>
+            <h3>🖥 System / Diagnostics</h3>
+            <div class="setting-row" style="display:flex; justify-content:space-between; align-items:center;">
+              <div><span class="form-label">Backend Status</span></div>
+              <div><span class="status-chip" id="backend-status-chip">⏳ Đang kiểm tra...</span></div>
             </div>
-          </div>
-
-          <!-- Hardware -->
-          <div class="settings-card">
-            <h3>🖥 Phần cứng</h3>
-            <div class="setting-row">
-              <div><span class="form-label">GPU</span><br><span class="form-desc" id="gpu-detail">Đang phát hiện...</span></div>
-              <div class="gpu-chip" id="gpu-chip"><span class="status-dot"></span><span>—</span></div>
+            <div class="setting-row" style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+              <div>
+                <span class="form-label">GPU</span><br>
+                <span class="form-desc" id="gpu-detail">Đang phát hiện...</span>
+              </div>
+              <div><span class="status-chip" id="gpu-status-chip">⏳ Đang kiểm tra...</span></div>
             </div>
-            <div class="setting-row">
-              <div><span class="form-label">CUDA</span><br><span class="form-desc" id="cuda-version">—</span></div>
+            <div class="setting-row" style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+              <div>
+                <span class="form-label">CUDA</span><br>
+                <span class="form-desc" id="cuda-version">—</span>
+              </div>
+              <button class="btn btn-outline" id="btn-refresh-diagnostics" style="padding: 4px 12px; height: auto;">Làm mới</button>
             </div>
           </div>
         </div>
@@ -826,5 +841,3 @@
   <script src="js/app.js" defer></script>
 </body>
 </html>
-
-
