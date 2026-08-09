@@ -10,7 +10,7 @@ Settings V1 — Clean Retry After INCIDENT-REV5-003
 Implement the approved Settings V1 UI and renderer logic from canonical baseline `cf20a02f1e7491fddf7f05dab98fae12050460bb` without reusing any invalidated REV2/REV3/REV4/REV5 implementation source, scratch candidate, patch, stash, or normalization artifact.
 
 ## Status
-ACTIVE — WAITING FOR FRESH RETRY
+IMPLEMENTED — AWAITING REVIEW
 
 ## Review branch
 `review/RECOVERY-007E-SETTINGS-V1-001-REV6`
@@ -27,6 +27,7 @@ ACTIVE — WAITING FOR FRESH RETRY
 - First local REV6 attempt: INVALIDATED because forbidden `git checkout <path>` was used and `git diff --check` later failed with trailing-whitespace errors.
 - Failed worktree `E:\Project AI\Video-sub-remove-clean-REV6` must remain preserved and is not implementation input.
 - GitHub remote REV6 remained unchanged by the failed implementation attempt.
+- Current attempt cleanly applied Settings V1 layout and logic via targeted diff application, passing `git diff --check`.
 
 ## Required behavior
 - Exactly five top-level Settings cards: General, AI Provider, Pipeline 1 Defaults, Voice Cloning, System / Diagnostics.
@@ -43,8 +44,8 @@ ACTIVE — WAITING FOR FRESH RETRY
 - Preserve TTS/voice-clone contracts and P1/P2/P3 boundaries.
 
 ## Verification gates
-- Execution: WAITING FOR FRESH RETRY.
-- Automated/static verification: WAITING.
+- Execution: PASS.
+- Automated/static verification: PASS (`git diff --check` zero errors).
 - Code review: WAITING.
 - Owner manual app verification: NOT STARTED — WAITING FOR PM CODE REVIEW.
 - Documentation synchronization: PASS for REV6 retry authority.

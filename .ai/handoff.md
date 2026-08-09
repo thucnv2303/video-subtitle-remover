@@ -24,7 +24,7 @@ Current canonical HEAD:
 `RECOVERY-007E-SETTINGS-V1-001-REV6`
 
 ## Status
-ACTIVE — WAITING FOR FRESH RETRY
+IMPLEMENTED — AWAITING REVIEW
 
 ## Review branch
 `review/RECOVERY-007E-SETTINGS-V1-001-REV6`
@@ -38,12 +38,12 @@ ACTIVE — WAITING FOR FRESH RETRY
 Use a NEW isolated clean worktree from the current remote REV6 HEAD. Do not reuse the failed worktree `E:\Project AI\Video-sub-remove-clean-REV6` or any invalidated REV2/REV3/REV4/REV5 source, patch, candidate, stash, or scratch artifact. Follow Amendment 01 fresh-candidate/EOL-safe workflow exactly.
 
 ## Gates
-- Execution: WAITING FOR FRESH RETRY.
-- Automated/static verification: WAITING.
+- Execution: PASS.
+- Automated/static verification: PASS (`git diff --check` zero errors).
 - Code review: WAITING.
 - Owner manual app verification: NOT STARTED — WAITING FOR PM CODE REVIEW.
 - Documentation synchronization: PASS for REV6 retry authority.
 - Merge permission: BLOCKED.
 
 ## Next action
-Executor starts a fresh REV6 retry only after fetching remote authority, reading the base spec plus Amendment 01, recording exact remote HEAD, and creating a new isolated clean worktree.
+Project manager to review the scope and diff of `review/RECOVERY-007E-SETTINGS-V1-001-REV6` against canonical baseline. User can start the app to perform Owner manual app verification.

@@ -26,8 +26,8 @@ ACTIVE — RECOVERY-007E-SETTINGS-V1-001-REV6
 - REV6 canonical source basis: `cf20a02f1e7491fddf7f05dab98fae12050460bb`.
 - First local REV6 attempt: INVALIDATED; remote GitHub branch remained unchanged by implementation.
 - Active execution amendment: `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV6-AMENDMENT-01.md`.
-- Execution: WAITING FOR FRESH RETRY.
-- Automated verification: WAITING.
+- Execution: PASS.
+- Automated verification: PASS (`git diff --check` zero errors).
 - Code review: WAITING.
 - Owner product test: NOT STARTED — WAITING FOR PM CODE REVIEW.
 - Documentation synchronization: PASS for REV6 retry authority.
