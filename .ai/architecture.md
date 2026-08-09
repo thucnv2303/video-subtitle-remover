@@ -16,9 +16,12 @@ src/renderer/
     ├── app.js               (Main entry point — IIFE non-module. Điều phối toàn bộ:
     │                         job queue, pipeline 2 inpaint, navigation, UI events.
     │                         Gọi window.triggerAutoAiRewrite, window.finalizeVideo, v.v.)
+    ├── pipeline-state.js    (Compatibility state/handoff gate introduced by PIPELINE1-HANDOFF-001.
+    │                         Adds p1Status/p1Progress, p2Status/p2Progress, p3Status;
+    │                         hides/blocks P2 until P1 success; P2 success opens P3.)
     ├── store.js             (Global state: state object, loadState, saveState)
     ├── api.js               (APIClient: fetch/WebSocket với backend. Expose window.api)
-    ├── pipeline.js          (Step chevron navigation — 40 lines)
+    ├── pipeline.js          (Pipeline 1 approved UI adapter + step navigation)
     ├── utils/
     │   ├── logger.js        (addLog(msg, type), showToast(msg, type, dur), getLogCategory.
     │   │                     Hỗ trợ cả 2 dạng gọi: simple và legacy el-based)
@@ -50,6 +53,24 @@ src/renderer/
 ```
 
 Vì `index.html` load `app.js` dạng `<script src="...">` (non-module), các ES6 module được bridge qua `<script type="module">` inline trong HTML để expose hàm lên `window.*`. `app.js` gọi các hàm module qua `window.*`. Các module tự gọi `window.addLog` và `window.showToast`.
+
+### Current compatibility handoff state
+Until the legacy shared-job runner is fully refactored, `pipeline-state.js` separates pipeline lifecycle state on each shared job:
+
+```text
+p1Status: idle | queued | processing | finished | error
+p2Status: locked | ready | queued | processing | finished | error
+p3Status: locked | ready
+```
+
+Rules in the current handoff candidate:
+- a newly uploaded job belongs to P1 and is P2/P3 locked;
+- P1 queued/processing/error/cancel never unlocks P2;
+- P1 success maps to `p1Status=finished`, `p2Status=ready`, `p3Status=locked`;
+- P2 does not accept direct upload and is guarded from starting while any P1 job is queued/processing;
+- P2 start forces subtitle-removal-only behavior: no ASR extraction, AI rewrite, or TTS chaining;
+- P2 success maps to `p2Status=finished`, `p3Status=ready`;
+- this is a compatibility layer around legacy `state.jobs` / `job.status`, not the final artifact-store architecture.
 
 ## 2. TARGET PRODUCT ARCHITECTURE — OWNER CONFIRMED / PROPOSED
 
