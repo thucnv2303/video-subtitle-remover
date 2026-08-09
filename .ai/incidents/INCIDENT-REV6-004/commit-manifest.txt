@@ -1,0 +1,15 @@
+SHA: 129a7f3ca5fb7441cc5781c6dde36e81ae7593c7
+Parent: b88ffc62aec35cb28de7adf7ce70750f478b29f5
+Message: feat(settings): reimplement 5-card layout and diagnostics
+
+38	35	src/renderer/index.html
+175	33	src/renderer/js/components/settings.js
+
+---
+SHA: b672f215524e8694e4108daff7e13011940bff38
+Parent: 129a7f3ca5fb7441cc5781c6dde36e81ae7593c7
+Message: docs: sync handoff
+
+2	2	.ai/current_state.md
+4	4	.ai/handoff.md
+4	3	.ai/task_current.md

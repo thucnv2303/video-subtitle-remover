@@ -1,0 +1,54 @@
+# Local Artifact Manifest
+
+FullName      : E:\Project AI\Video-sub-remove-clean-REV6-2\fix.patch
+Length        : 117308
+LastWriteTime : 2026-08-09T11:30:27
+Hash          : 998C61549F1378B8D9771A270D5D1B2398ECFB42CD4511C811A8F2ADC760BB8A
+Exclusion     : Left as evidence. Do not publish repair source.
+
+FullName      : E:\Project AI\Video-sub-remove-clean-REV6-2\index.diff
+Length        : 23802
+LastWriteTime : 2026-08-09T11:32:23
+Hash          : 7A86A6DCBBB8ED46F7C3FD5CE6E795B08A45EF6CF01F8F5121B422B10DCB2A78
+Exclusion     : Left as evidence. Do not publish repair source.
+
+FullName      : E:\Project AI\Video-sub-remove-clean-REV6-2\index.patch
+Length        : 24004
+LastWriteTime : 2026-08-09T11:32:07
+Hash          : 35DE2F2FF9C788AD0D241D248A8B0EE650107DA587C26327E29662443AC5E215
+Exclusion     : Left as evidence. Do not publish repair source.
+
+FullName      : E:\Project AI\Video-sub-remove-clean-REV6-2\patch_index.py
+Length        : 858
+LastWriteTime : 2026-08-09T11:41:12
+Hash          : 6DB45F64821AF9C9FACDFFD2877385105406EE3393C1736BF88C9C851B90D8E3
+Exclusion     : Left as evidence. Do not publish repair source.
+
+FullName      : E:\Project AI\Video-sub-remove-clean-REV6-2\settings.patch
+Length        : 16294
+LastWriteTime : 2026-08-09T11:38:05
+Hash          : EA342D82C222E1A1F1DEE705B77D9EFB80EEAD0E29791E58C6D3C41DEDDFF144
+Exclusion     : Left as evidence. Do not publish repair source.
+
+FullName      : E:\Project AI\candidate\.gitattributes
+Length        : 22
+LastWriteTime : 2026-08-09T11:31:08
+Hash          : F511A20600AD29D7F10A389BEB284B758255E871B6048BA3BFDF249BD1636619
+Exclusion     : Left as evidence. Do not publish repair source.
+
+FullName      : C:\Users\thucn\.gemini\antigravity\brain\c78cf939-8d1d-4cc0-8294-cb1d8c72c387\scratch\patch.py
+Length        : 2106
+LastWriteTime : 2026-08-09T08:05:01
+Hash          : 57F619F42CF9544B6E8DA854BBA7323E1102D67F283D4BEC4466ED6A8502CFE0
+Exclusion     : Left as evidence. Do not publish repair source.
+
+## Excluded Directories
+
+FullName      : E:\Project AI\baseline-copy
+Exclusion     : Working directory. Do not publish repair source.
+
+FullName      : E:\Project AI\candidate
+Exclusion     : Working directory. Do not publish repair source.
+
+FullName      : E:\Project AI\Video-sub-remove-clean-REV6
+Exclusion     : Invalidated worktree from previous attempt. Do not publish repair source.

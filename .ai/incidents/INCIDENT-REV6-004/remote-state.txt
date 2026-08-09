@@ -1,0 +1,4 @@
+Current contaminated REV6 HEAD: b672f215524e8694e4108daff7e13011940bff38
+Incident branch HEAD: f15800c37ff7a2aae6a4c38815a9d6e437ae2934
+Trusted PM basis: b88ffc62aec35cb28de7adf7ce70750f478b29f5
+Merge-base / ancestry evidence: b88ffc62aec35cb28de7adf7ce70750f478b29f5

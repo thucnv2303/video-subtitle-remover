@@ -1,0 +1,53 @@
+# Verification Evidence
+
+## failed and successful `git diff --check`
+**Failed output (multiple instances during execution):**
+HEAD is now at b88ffc6 docs(SETTINGS-V1-001-REV6): sync handoff
+src/renderer/index.html:72: trailing whitespace.
++                   
+src/renderer/index.html:80: trailing whitespace.
++                   
+src/renderer/index.html:93: trailing whitespace.
++                   
+src/renderer/index.html:102: trailing whitespace.
++                   
+src/renderer/index.html:107: trailing whitespace.
++                   
+src/renderer/index.html:116: trailing whitespace.
++                
+src/renderer/index.html:129: trailing whitespace.
++                   
+src/renderer/index.html:138: trailing whitespace.
++                      
+src/renderer/index.html:153: trailing whitespace.
++                         
+src/renderer/index.html:158: trailing whitespace.
++                         
+
+**Successful output:**
+After running python splice script, `git diff --cached --check` returned clean (exit code 0).
+
+## patch/apply checks
+- `git apply -p4 "C:\Users\thucn\.gemini\antigravity\scratch\patch.diff"` resulted in massive line ending churn.
+- `git apply -p2 --whitespace=fix settings.patch` resulted in massive line ending churn.
+- `git apply -p2 settings.patch` without whitespace fix still resulted in massive line ending churn and failed checks.
+
+## DOM checks actually performed
+None.
+
+## JS syntax checks actually performed
+None.
+
+## EOL checks actually performed
+`git diff --cached --check`
+
+## tests actually performed
+None.
+
+## Required REV6 checks that were NEVER run
+- DOM uniqueness check (to verify no duplicate DOM IDs).
+- Layout verification (to check for orphaned General/output-directory markup or duplicate tail structure).
+- JS syntax checks.
+- Diagnostic chips logic rendering checks.
+- Static verification of provider-specific API key logic.
+- Owner manual app verification.

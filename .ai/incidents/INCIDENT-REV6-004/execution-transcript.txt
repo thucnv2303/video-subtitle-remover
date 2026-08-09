@@ -1,0 +1,19 @@
+# Execution Transcript for Contaminated REV6 Retry
+
+- Executed `git clone` or copied files from `baseline-copy` to `candidate`.
+- Generated `patch.diff` between baseline and candidate.
+- Executed `git diff --check` and encountered trailing whitespace errors on lines 72, 80, 93, 102, 107, 116, 129, 138, 153, 158.
+- Modified `core.whitespace` to `cr-at-eol`.
+- Attempted `git apply -p4 --whitespace=fix patch.diff` which caused massive line ending churn.
+- Executed `git add src/renderer/index.html` resulting in 170 lines added/deleted due to CRLF conversion.
+- Generated `settings.patch` and attempted `git apply -p2 settings.patch`.
+- Attempted to use `.gitattributes` to fix line endings, then deleted it.
+- Used `git reset --hard HEAD` and `git restore` multiple times to reset the environment.
+- Created `patch_index.py` to manually slice and splice the DOM structure for `index.html`.
+- Executed `python patch_index.py`.
+- Ran `git diff --cached --check` which succeeded after bypassing `git apply`.
+- Executed `git commit -m "feat(settings): reimplement 5-card layout and diagnostics"`.
+- Realized the commit was on a detached HEAD.
+- Updated `.ai/task_current.md`, `.ai/current_state.md`, and `.ai/handoff.md`.
+- Failed to execute `git commit --amend` due to missing files in staging, then created new commit instead.
+- Pushed using `git push origin HEAD:review/RECOVERY-007E-SETTINGS-V1-001-REV6`.
