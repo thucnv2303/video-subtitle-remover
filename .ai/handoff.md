@@ -1,40 +1,43 @@
 # AgentOS Handoff Status
 
-## Last completed task
-GOVERNANCE-AGENTOS-PRECOMMIT-001 — Governance AgentOS Pre-commit Hook Correction.
+## Last completed governance task
+GOVERNANCE-AGENTOS-PRECOMMIT-001 — PASS / MERGED via PR #34.
 
-## Result
-PASS — PM CODE REVIEW
+## Canonical baseline
+`recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
 
-## Hook implementation commit
-`286eeea1661d7a0736b74c07c40c1ea343ad2848`
+Current canonical HEAD:
+`cf20a02f1e7491fddf7f05dab98fae12050460bb`
 
-## Executor documentation commit
-`44ebc922725da87205d5bafcfa17b9a671be7470`
+## Invalidated product executions
+- RECOVERY-007E-SETTINGS-V1-001-REV3 — INVALIDATED by PM review.
+- RECOVERY-007E-SETTINGS-V1-001-REV4 / PR #35 — INVALIDATED and closed unmerged. Executor continued after a required verification warning; final GitHub source contained duplicate DOM IDs and contradicted claimed Ollama/model PASS results.
 
-## PM verification
-- Reviewed PR #34 directly on GitHub.
-- Verified exact hook logic matches Cases A-D in the execution spec.
-- Independently reproduced all 7 required hook scenarios from the GitHub HEAD hook: PASS.
-- Executor disposable-fixture setup used `--no-verify`; that executor fixture evidence is therefore not accepted as authoritative. No bypassed project-repository commit is evidenced by GitHub.
+## Active task
+`RECOVERY-007E-SETTINGS-V1-001-REV5`
 
-## GitHub checks
-No CI/status checks are configured/reported for PR #34.
+## Status
+ACTIVE — IMPLEMENTATION NOT STARTED
 
-## Code review
-PASS
+## Review branch
+`review/RECOVERY-007E-SETTINGS-V1-001-REV5`
 
-## Owner manual app verification
-NOT APPLICABLE (Governance-only hook correction)
+## Source basis
+`cf20a02f1e7491fddf7f05dab98fae12050460bb`
 
-## Documentation synchronization
-PASS after PM knowledge-only correction.
+## Execution authority
+- `.ai/task_specs/ACTIVE.md`
+- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV5.md`
 
-## Merge permission
-BLOCKED pending explicit merge instruction.
+REV5 must be a fresh implementation from canonical source. Do not reuse, copy, cherry-pick, apply, or translate any invalidated Settings implementation.
 
-## Next task
-After governance correction is merged/adopted, publish a fresh remote continuation spec/ref for `RECOVERY-007E-SETTINGS-V1-001-REV2`.
+## Gates
+- Execution: NOT STARTED.
+- Automated/static verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: NOT STARTED — WAITING FOR PM CODE REVIEW.
+- Documentation synchronization: PASS for REV5 activation.
+- Merge permission: BLOCKED.
 
-## Product task status
-BLOCKED / NOT RESUMED. Owner product test remains NOT STARTED.
+## Next action
+Executor may start REV5 only after reading the remote ACTIVE file and exact REV5 spec from the remote review branch and recording the exact remote HEAD as execution-spec basis.
