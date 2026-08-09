@@ -7,7 +7,6 @@
   let syncScheduled = false;
 
   const appState = () => window._appState || null;
-  const isBusy = value => value === 'queued' || value === 'processing';
 
   function p1Label(status) {
     return ({ idle:'Chờ xử lý', queued:'Đang chờ', processing:'Đang xử lý', finished:'Phân tích xong', error:'Lỗi' })[status] || status;
@@ -75,14 +74,14 @@
           job.p2Status = P2.READY;
           job.p2Progress = 0;
           job.p3Status = 'locked';
-          // Keep legacy P2 runner compatible: idle means ready for P2.
+          // Legacy P2 runner expects idle before user starts P2.
           job.status = 'idle';
           job.progress = 0;
           log(`[P1→P2] ${job.fileName} đã hoàn tất Pipeline 1 và được mở khóa cho Pipeline 2.`, 'success');
         }
       }
 
-      // Once P2 starts, its legacy status drives p2Status only.
+      // Once P2 starts, legacy job.status is mapped only to Pipeline 2 state.
       if (job.pipeline === 2) {
         if (job.status === 'queued') {
           job.p2Status = P2.QUEUED;
@@ -108,7 +107,8 @@
     if (!state) return;
     const cards = [...document.querySelectorAll('#step1-job-list .tk-job-card')];
     cards.forEach((card, index) => {
-      const job = state.jobs[index];
+      if (!card.dataset.pipelineJobId && state.jobs[index]) card.dataset.pipelineJobId = state.jobs[index].id;
+      const job = state.jobs.find(item => item.id === card.dataset.pipelineJobId) || state.jobs[index];
       if (!job) return;
       const status = card.querySelector('.p1-job-state');
       if (status) {
@@ -141,7 +141,8 @@
 
     const cards = [...list.querySelectorAll('.job-card')];
     cards.forEach((card, index) => {
-      const job = state.jobs[index];
+      if (!card.dataset.pipelineJobId && state.jobs[index]) card.dataset.pipelineJobId = state.jobs[index].id;
+      const job = state.jobs.find(item => item.id === card.dataset.pipelineJobId) || state.jobs[index];
       if (!job) return;
       if (!p2Eligible(job)) {
         card.remove();
@@ -156,8 +157,8 @@
       if (bar) bar.style.width = progressText;
     });
 
-    if (!state.jobs.some(p2Eligible)) {
-      list.innerHTML = '<div class="job-empty">Chưa có Job từ Pipeline 1.<br>Hãy hoàn tất Pipeline 1 trước.</div>';
+    if (!state.jobs.some(p2Eligible) && !list.querySelector('[data-pipeline-gate="p2-empty"]')) {
+      list.innerHTML = '<div class="job-empty" data-pipeline-gate="p2-empty">Chưa có Job từ Pipeline 1.<br>Hãy hoàn tất Pipeline 1 trước.</div>';
     }
   }
 
@@ -167,11 +168,12 @@
     if (!state || !list) return;
     const legacyFinished = state.jobs.filter(job => job.status === 'finished');
     [...list.querySelectorAll('.job-card')].forEach((card, index) => {
-      const job = legacyFinished[index];
+      if (!card.dataset.pipelineJobId && legacyFinished[index]) card.dataset.pipelineJobId = legacyFinished[index].id;
+      const job = state.jobs.find(item => item.id === card.dataset.pipelineJobId) || legacyFinished[index];
       if (!job || job.p3Status !== 'ready') card.remove();
     });
-    if (!state.jobs.some(job => job.p3Status === 'ready')) {
-      list.innerHTML = '<div class="job-empty" style="text-align:center;color:var(--text-muted);margin-top:40px">Chưa có Job hoàn tất Pipeline 1 và Pipeline 2.</div>';
+    if (!state.jobs.some(job => job.p3Status === 'ready') && !list.querySelector('[data-pipeline-gate="p3-empty"]')) {
+      list.innerHTML = '<div class="job-empty" data-pipeline-gate="p3-empty" style="text-align:center;color:var(--text-muted);margin-top:40px">Chưa có Job hoàn tất Pipeline 1 và Pipeline 2.</div>';
     }
   }
 
