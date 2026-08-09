@@ -154,3 +154,10 @@
   #step-1-content .p1-queue-head { grid-template-columns:58px minmax(120px,1fr) 90px 64px; }
   #step-1-content .p1-job-list .tk-job-card-header { grid-template-columns:25px 34px minmax(105px,1fr) 90px 64px; }
 }
+
+/* Fit Pipeline 1 to the actual app content box instead of the OS viewport. */
+#step-1-content { height:100%; min-height:0; overflow:hidden; }
+#step-1-content .p1-approved-shell { height:100%; min-height:0; display:flex; flex-direction:column; padding-bottom:12px; }
+#step-1-content .p1-page-header { flex:0 0 auto; }
+#step-1-content .p1-workspace-grid { flex:1 1 auto; height:auto; min-height:0; max-height:none; }
+#step-1-content .p1-log-output { font-size:11px; line-height:1.6; padding:10px 12px; }
