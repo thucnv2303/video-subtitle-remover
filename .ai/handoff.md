@@ -10,29 +10,38 @@ Canonical source HEAD:
 `RECOVERY-007E-SETTINGS-V1-001-REV7`
 
 ## Status
-WAITING_OWNER_RETEST
+WAITING_OWNER_RETEST — APPROVED DESIGN REBUILD
 
 ## Review branch / PR
 - Branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV7`
 - Draft PR: #38
-- Repair source commit: `e556fa5ae9420a858d7c5f2eddcfdec07375f619`
-- Current Settings source blob: `a47ca49f6fb7fdec5b5546cc5034d71f6f896084`
+- Previous owner design/runtime result: FAIL.
+- Design-fail PR comment: `5230793631`.
+- Approved-design visual-system commit: `248ec0043c35010888590c995d23dea7fd0f8a72`.
+- Approved-design controller commit: `279d59f8d430856214b235d26c1cd15e9d403d4e`.
+- Current Settings JS blob: `cbe10df807aad311e1f982ebe4cb8793435bf5ab`.
+- Current Settings CSS blob: `5e83a866c9b4d39fd79d225238a0fa4f21b575c7`.
 
-## Owner FAIL and repair
-- Owner runtime screenshot on 2026-08-09: FAIL.
-- `Pipeline 1 Defaults` was empty and Voice Cloning controls were missing.
-- Runtime presentation was not acceptable compared with the intended Settings design.
-- Previous PM code-review PASS was invalidated on PR #38 comment `5230662730`.
-- Verified root cause: TTS / voice-clone nodes were queried after their original card had already been detached.
-- Repair now captures all controls first, then composes the five cards.
+## Current implementation
+- Previous stacked-card layout is not accepted and is no longer the target.
+- Settings now mounts one overview page with four 2x2 modules and four dedicated detail views matching the Owner-approved information architecture.
+- AI & Model, TTS & Giọng đọc, Lưu trữ, and Trạng thái hệ thống each have dedicated content and navigation.
+- Settings-active sidebar expands to the approved desktop shell treatment.
+- Existing provider-specific storage, output-directory persistence, TTS/voice clone APIs, and diagnostic API wrappers are preserved.
+- OpenAI remains visually disabled because current runtime contracts do not authorize OpenAI support.
 
-## Current gates
-- Execution: PASS for repair publication.
-- Automated/static verification: WAITING fresh runtime confirmation.
-- Code review: WAITING RUNTIME CONFIRMATION.
+## Verification
+- JavaScript syntax: PASS.
+- Available static contract checks: PASS.
+- Runtime visual parity: NOT YET VERIFIED after rebuild.
+
+## Gates
+- Execution: PASS for rebuild publication.
+- Automated/static verification: PASS for available checks.
+- Code review: WAITING FINAL RUNTIME VISUAL EVIDENCE.
 - Owner manual app verification: RETEST AUTHORIZED.
 - Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
 
 ## Next action
-Owner refreshes the dedicated REV7 test worktree to the latest remote branch, launches the real app, and visually verifies the Settings tab. Required runtime proof: no empty cards; all Pipeline 1 Defaults and Voice Cloning controls visible; five-card hierarchy usable; provider switching/persistence, output directory, diagnostics and existing TTS/voice clone behavior intact. Report PASS/FAIL with screenshot if visual defects remain.
+Owner refreshes the dedicated REV7 owner-test worktree to the current remote head, runs the app, opens Settings, and compares the overview plus all four detail views directly against the approved screenshots. Report PASS/FAIL and screenshots for any remaining visual mismatch. Do not test from the dirty main folder. Merge remains blocked.
