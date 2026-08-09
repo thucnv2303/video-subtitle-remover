@@ -621,9 +621,13 @@
         <div class="settings-scroll">
           <div class="settings-header"><h2>⚙️ Cài đặt</h2></div>
 
-          <!-- AI Settings -->
+              <button class="btn btn-outline" id="btn-output-dir">Chọn thư mục</button>
+            </div>
+          </div>
+
+          <!-- AI Provider -->
           <div class="settings-card">
-            <h3>🤖 AI & Lồng tiếng</h3>
+            <h3>🤖 AI Provider</h3>
             <div class="form-group">
               <label class="form-label">Nhà cung cấp AI</label>
               <select id="ai-provider" class="dropdown form-input">
@@ -632,18 +636,26 @@
                 <option value="ollama">Local (Ollama)</option>
               </select>
             </div>
-            <div class="form-group">
-              <label class="form-label">API Key / Tên Model (Ollama)</label>
-              <input type="password" id="ai-api-key" class="form-input" placeholder="Nhập API Key hoặc tên model (VD: gemma4:12b)...">
+            <div class="form-group" id="ai-api-key-group">
+              <label class="form-label">API Key</label>
+              <input type="password" id="ai-api-key" class="form-input" placeholder="Nhập API Key...">
             </div>
-            <div class="form-group">
+            <div class="form-group" id="ai-model-group">
+              <label class="form-label">Tên Model</label>
+              <input type="text" id="ai-model" class="form-input" placeholder="VD: gemini-1.5-pro, deepseek-chat...">
+            </div>
+            <div class="form-group" id="ai-endpoint-group" style="display: none;">
               <label class="form-label">Endpoint URL (Ollama)</label>
               <input type="text" id="ai-endpoint" class="form-input" placeholder="VD: http://localhost:11434/api/chat">
             </div>
-            <div class="form-divider"></div>
+            <div style="margin-top:12px;">
+              <button id="btn-save-ai" class="btn btn-primary">💾 Lưu cài đặt AI</button>
+            </div>
+          </div>
 
-            <!-- OmniVoice TTS Section -->
-            <h3 style="margin-top:8px">🎤 Lồng tiếng AI (OmniVoice TTS)</h3>
+          <!-- Pipeline 1 Defaults -->
+          <div class="settings-card">
+            <h3>🎤 Pipeline 1 Defaults</h3>
             <div class="form-group">
               <label class="form-label">Trạng thái TTS</label>
               <div class="tts-status-row">
@@ -687,11 +699,11 @@
                 <span>Xóa giọng gốc (Chỉ giữ nhạc nền - AI UVR)</span>
               </label>
             </div>
+          </div>
 
-            <div class="form-divider"></div>
-
-            <!-- Voice Clone Section -->
-            <h3>🧬 Clone giọng mới</h3>
+          <!-- Voice Cloning -->
+          <div class="settings-card">
+            <h3>🧬 Voice Cloning</h3>
             <p class="form-desc" style="margin-bottom:8px">Upload audio mẫu (3-15 giây) để clone giọng nói bất kỳ</p>
 
             <div class="form-group">
@@ -712,32 +724,10 @@
 
             <div class="form-divider"></div>
 
-            <!-- Saved Voices List -->
             <h3>📋 Giọng đã lưu</h3>
             <div id="saved-voices-list" class="saved-voices-list">
               <div class="voice-empty">Chưa có giọng clone nào.</div>
             </div>
-
-            <div class="form-divider"></div>
-
-            <!-- Test TTS -->
-            <h3>🔊 Thử giọng</h3>
-            <div class="form-group">
-              <textarea id="tts-test-text" class="form-input" rows="2" placeholder="Nhập text để thử giọng...">Xin chào, đây là giọng đọc được tạo bởi OmniVoice.</textarea>
-            </div>
-            <div class="tts-test-row">
-              <button id="btn-test-tts" class="btn btn-primary">▶ Thử phát</button>
-              <audio id="tts-test-audio" controls style="flex:1;display:none"></audio>
-            </div>
-
-            <div class="form-divider"></div>
-            <button id="btn-save-ai" class="btn btn-primary" style="margin-top:12px;">💾 Lưu cài đặt AI</button>
-          </div>
-
-          <!-- Storage -->
-          <div class="settings-card">
-            <h3>📁 Lưu trữ & Xuất file</h3>
-            <div class="setting-row">
               <div><span class="form-label">Thư mục đầu ra</span><br><span class="form-desc" id="output-dir-text">Mặc định (cùng thư mục video gốc)</span></div>
               <button class="btn btn-outline" id="btn-output-dir">Chọn thư mục</button>
             </div>
@@ -754,6 +744,19 @@
               <div><span class="form-label">CUDA</span><br><span class="form-desc" id="cuda-version">—</span></div>
             </div>
           </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <!-- Prompt Management Modal -->
+  <div id="prompt-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Quản lý Prompt AI</h3>
+        <button id="btn-close-prompt-modal" class="btn-close">×</button>
         </div>
       </section>
 

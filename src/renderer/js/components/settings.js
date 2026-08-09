@@ -15,7 +15,83 @@ export function initSettings() {
   _bindOutputDirButton();
   _bindVoiceClone();
   _bindTestTts();
+  _bindProviderSwitch();
+  _bindDiagnostics();
   renderSavedVoices();
+  _migrateLegacyKey();
+  _runDiagnostics();
+}
+
+// ─── Legacy Migration ─────────────────────────────────────────────────────────
+
+function _migrateLegacyKey() {
+  const legacyKey = localStorage.getItem('ai_api_key');
+  if (!legacyKey) return;
+
+  const provider = localStorage.getItem('ai_provider') || 'gemini';
+  if (provider !== 'gemini' && provider !== 'deepseek') return;
+
+  const keysStr = localStorage.getItem(`ai_api_keys_${provider}`);
+  let keys = [];
+  if (keysStr) {
+    try { keys = JSON.parse(keysStr); } catch (e) {}
+  }
+
+  if (keys.length === 0) {
+    keys = [{ key: legacyKey }];
+    localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify(keys));
+    addLog(`Đã chuyển đổi legacy API key cho ${provider}`, 'info');
+  }
+}
+
+// ─── Provider Visibility & Load/Save ──────────────────────────────────────────
+
+function _bindProviderSwitch() {
+  const providerSelect = document.getElementById('ai-provider');
+  if (providerSelect) {
+    providerSelect.addEventListener('change', (e) => {
+      const provider = e.target.value;
+      _updateProviderVisibility(provider);
+      _loadProviderValues(provider);
+    });
+  }
+}
+
+function _updateProviderVisibility(provider) {
+  const apiKeyGroup = document.getElementById('ai-api-key-group');
+  const endpointGroup = document.getElementById('ai-endpoint-group');
+
+  if (provider === 'ollama') {
+    if (apiKeyGroup) apiKeyGroup.style.display = 'none';
+    if (endpointGroup) endpointGroup.style.display = '';
+  } else {
+    if (apiKeyGroup) apiKeyGroup.style.display = '';
+    if (endpointGroup) endpointGroup.style.display = 'none';
+  }
+}
+
+function _loadProviderValues(provider) {
+  const aiApiKey = document.getElementById('ai-api-key');
+  const aiModel = document.getElementById('ai-model');
+  const aiEndpoint = document.getElementById('ai-endpoint');
+
+  const keysStr = localStorage.getItem(`ai_api_keys_${provider}`);
+  let keys = [];
+  if (keysStr) {
+    try { keys = JSON.parse(keysStr); } catch (e) {}
+  }
+
+  if (aiApiKey) {
+    aiApiKey.value = keys.length > 0 ? keys[0].key : '';
+  }
+
+  if (aiModel) {
+    aiModel.value = localStorage.getItem(`ai_model_${provider}`) || '';
+  }
+
+  if (aiEndpoint) {
+    aiEndpoint.value = localStorage.getItem('ai_endpoint') || '';
+  }
 }
 
 // ─── Load / Save Settings Values ─────────────────────────────────────────────
@@ -24,9 +100,6 @@ export function loadSettingsValues() {
   const get = (id) => document.getElementById(id);
 
   const aiProvider  = get('ai-provider');
-  const aiApiKey    = get('ai-api-key');
-  const aiEndpoint  = get('ai-endpoint');
-  const aiPrompt    = get('ai-prompt');
   const ttsVoice    = get('tts-voice');
   const ttsLang     = get('tts-language');
   const ttsBgVol    = get('tts-bg-volume');
@@ -34,10 +107,13 @@ export function loadSettingsValues() {
   const removeVocal = get('tts-remove-vocal');
   const outputDir   = get('output-dir-text');
 
-  if (aiProvider)  aiProvider.value  = localStorage.getItem('ai_provider')  || 'gemini';
-  if (aiApiKey)    aiApiKey.value    = localStorage.getItem('ai_api_key')    || '';
-  if (aiEndpoint)  aiEndpoint.value  = localStorage.getItem('ai_endpoint')   || '';
-  if (aiPrompt)    aiPrompt.value    = localStorage.getItem('ai_prompt')     || (aiPrompt?.defaultValue || '');
+  const provider = localStorage.getItem('ai_provider') || 'gemini';
+  if (aiProvider) {
+    aiProvider.value = provider;
+    _updateProviderVisibility(provider);
+    _loadProviderValues(provider);
+  }
+
   if (ttsVoice)    ttsVoice.value    = localStorage.getItem('tts_voice')     || 'none';
   if (ttsLang)     ttsLang.value     = localStorage.getItem('tts_language')  || 'vi';
   if (removeVocal) removeVocal.checked = localStorage.getItem('tts_remove_vocal') === 'true';
@@ -60,22 +136,26 @@ function _saveAllSettings() {
   const val = (id) => get(id)?.value ?? '';
   const chk = (id) => get(id)?.checked ?? false;
 
-  localStorage.setItem('ai_provider',       val('ai-provider'));
-  localStorage.setItem('ai_api_key',        val('ai-api-key'));
-  localStorage.setItem('ai_endpoint',       val('ai-endpoint'));
-  localStorage.setItem('ai_prompt',         val('ai-prompt'));
+  const provider = val('ai-provider');
+  localStorage.setItem('ai_provider', provider);
+
+  const key = val('ai-api-key');
+  if (key) {
+    localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify([{ key }]));
+  } else {
+    localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify([]));
+  }
+
+  localStorage.setItem(`ai_model_${provider}`, val('ai-model'));
+
+  if (provider === 'ollama') {
+    localStorage.setItem('ai_endpoint', val('ai-endpoint'));
+  }
+
   localStorage.setItem('tts_voice',         val('tts-voice'));
   localStorage.setItem('tts_language',      val('tts-language'));
   localStorage.setItem('tts_bg_volume',     val('tts-bg-volume'));
   localStorage.setItem('tts_remove_vocal',  chk('tts-remove-vocal'));
-
-  // Ghi lại provider-specific api_keys array để tương thích pipeline1
-  const provider = val('ai-provider');
-  const key      = val('ai-api-key');
-  if (key) {
-    const keys = [{ key }];
-    localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify(keys));
-  }
 }
 
 // ─── Voice Clone Management ───────────────────────────────────────────────────
@@ -156,25 +236,87 @@ export function updateVoiceDropdown(voices) {
   });
 }
 
-// ─── TTS Status Check ─────────────────────────────────────────────────────────
+// ─── Diagnostics ─────────────────────────────────────────────────────────────
+
+function _bindDiagnostics() {
+  const btn = document.getElementById('btn-refresh-diagnostics');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      _runDiagnostics();
+      _showGlobalToast('Đã làm mới thông tin phần cứng!', 'info');
+    });
+  }
+}
+
+async function _runDiagnostics() {
+  const backendChip = document.getElementById('backend-status-chip');
+  if (backendChip) {
+    if (window.api && window.api.health) {
+      try {
+        const res = await window.api.health();
+        if (res && res.status === 'ok') {
+          backendChip.textContent = 'Sẵn sàng';
+          backendChip.className = 'status-chip online';
+        } else {
+          backendChip.textContent = 'Lỗi';
+          backendChip.className = 'status-chip offline';
+        }
+      } catch {
+        backendChip.textContent = 'Backend chưa kết nối';
+        backendChip.className = 'status-chip offline';
+      }
+    } else {
+      backendChip.textContent = 'API chưa sẵn sàng';
+      backendChip.className = 'status-chip offline';
+    }
+  }
+
+  const gpuDetail = document.getElementById('gpu-detail');
+  const gpuChip = document.getElementById('gpu-status-chip');
+  const cudaVersion = document.getElementById('cuda-version');
+
+  if (window.api && window.api.gpuInfo) {
+    try {
+      const info = await window.api.gpuInfo();
+      if (info && info.cuda_available) {
+        if (gpuDetail) gpuDetail.textContent = info.gpu_name || 'NVIDIA GPU';
+        if (gpuChip) { gpuChip.textContent = 'CUDA Sẵn sàng'; gpuChip.className = 'status-chip online'; }
+        if (cudaVersion) cudaVersion.textContent = info.cuda_version || 'Có';
+      } else {
+        if (gpuDetail) gpuDetail.textContent = info?.gpu_name || 'CPU (Không có GPU)';
+        if (gpuChip) { gpuChip.textContent = 'Không có CUDA'; gpuChip.className = 'status-chip offline'; }
+        if (cudaVersion) cudaVersion.textContent = 'Không khả dụng';
+      }
+    } catch {
+      if (gpuDetail) gpuDetail.textContent = 'Lỗi kiểm tra GPU';
+      if (gpuChip) { gpuChip.textContent = 'Lỗi'; gpuChip.className = 'status-chip offline'; }
+    }
+  }
+
+  checkTTSStatus();
+}
 
 export async function checkTTSStatus() {
   const chip = document.getElementById('tts-status-chip');
   if (!chip) return;
-  try {
-    const r      = await fetch('http://localhost:8765/api/tts/status');
-    const status = await r.json();
-    if (status.available) {
-      chip.textContent  = 'Sẵn sàng';
-      chip.className    = 'status-chip online';
-    } else {
-      chip.textContent  = 'Chưa cài OmniVoice';
-      chip.className    = 'status-chip offline';
+
+  if (window.api && window.api.getTTSStatus) {
+    try {
+      const status = await window.api.getTTSStatus();
+      if (status && status.available) {
+        chip.textContent = 'Sẵn sàng';
+        chip.className = 'status-chip online';
+      } else {
+        chip.textContent = 'Chưa cài OmniVoice';
+        chip.className = 'status-chip offline';
+      }
+    } catch {
+      chip.textContent = 'Backend chưa kết nối';
+      chip.className = 'status-chip offline';
     }
-  } catch {
-    chip.textContent = 'Backend chưa kết nối';
-    chip.className   = 'status-chip offline';
-    setTimeout(checkTTSStatus, 10000);
+  } else {
+    chip.textContent = 'API chưa sẵn sàng';
+    chip.className = 'status-chip offline';
   }
 }
 
