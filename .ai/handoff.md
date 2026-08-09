@@ -9,58 +9,48 @@ Post-Settings canonical source HEAD:
 Settings V1:
 MERGED / OWNER PASS — PR #38.
 
+## Pipeline 1 UI foundation
+- Branch: `review/PIPELINE1-APPROVED-UI-001`
+- Draft PR #39
+- Owner runtime UI verification: PASS on 2026-08-09.
+- Approved UI HEAD used by current task: `2324d922de4874af1eb33f5dec2ea2d63a2bb968`.
+
 ## Active task
-`PIPELINE1-APPROVED-UI-001`
+`PIPELINE1-HANDOFF-001`
 
 ## Status
-WAITING_OWNER_UI_RETEST
+WAITING_CODE_REVIEW
 
-## Review branch / PR
-- `review/PIPELINE1-APPROVED-UI-001`
-- Draft PR #39
+## Review branch
+`review/PIPELINE1-HANDOFF-001`
 
-## First Owner runtime result
-NEEDS_REVISION for UI acceptance.
+## Verified defect
+P1 and P2 share `state.jobs` and legacy `job.status`. Step 2 renders all shared jobs, therefore an uploaded P1 video appears in P2 before P1 completion. The legacy P2 runner also selects generic queued jobs, creating risk that it can consume a P1 queue item.
 
-Owner requested:
-- remove duplicate Pipeline 1 sidebar item;
-- keep add-file only in Actions (#5), not Job Queue (#3);
-- make Job selection explicit;
-- expand Console / Log vertically;
-- remove per-job action/delete controls;
-- make fullscreen layout responsive instead of leaving large blank margins.
+## Current candidate
+- Added `src/renderer/js/pipeline-state.js`.
+- Added pipeline-specific state fields for P1/P2/P3.
+- P2 hides/blocks a job until P1 has finished successfully.
+- P1 finish maps to P2 ready; it does not open P3.
+- P2 start is blocked while any P1 job is queued/processing.
+- P2 finish maps to P3 ready.
+- P1 UI status labels are derived from `p1Status`; P2 labels/progress are derived from `p2Status`.
+- `pipeline1-ai.js` imports the state gate and its TTS completion log now reflects P1→P2 instead of direct P1→P3.
 
-Owner also reported that `Bắt đầu chạy` does not execute the intended P1 processing flow. This remains BUG-005 and is intentionally deferred until the UI is accepted.
-
-## Revised UI publication
-- `pipeline.js` correction commit: `d4c21c7a2553f788e656afa6abb42687920071a6`.
-- `pipeline1-approved.css` correction commit: `e99f7042387e82552cd4616536d2d6fea12ebf6f`.
-- JS blob: `d7199ee277a3b791d29c385b5b90736d92c68554`.
-- CSS blob: `7686bb48cc47336e6602a07c635958c333dec118`.
-- No Pipeline 1 sidebar item is injected.
-- Job Queue is now a selectable list with a visible selected indicator.
-- Job Queue no longer contains add-file/drop UI.
-- Legacy per-job process/stop/delete controls are not copied into the revised Job-row presentation.
-- Actions (#5) remains the single add/delete/run control zone.
-- Console / Log flexes to the remaining right-column height.
-- Workspace max-width caps were removed so fullscreen uses available width.
-- Start-flow processing logic was not changed.
-
-## Verification
-- Exact reconstructed JS Git blob equality: PASS.
-- Exact revised JS `node --check`: PASS.
-- Static UI assertions for requested removals/presence: PASS.
-- GitHub compare confirms only `src/renderer/js/pipeline.js` and `src/renderer/styles/pipeline1-approved.css` are product-source changes from canonical base.
-- PM revised code review: PASS for Owner UI retest.
-- GitHub CI: none configured.
+## Remaining review points
+- Verify exact GitHub diff and syntax on final head.
+- Verify no unintended P2/P3 source changes.
+- Runtime owner test must prove:
+  1. upload in P1 does not appear in P2;
+  2. P1 error/cancel remains hidden from P2;
+  3. P1 success makes only that job visible/ready in P2;
+  4. P2 start cannot pick a P1 queued job;
+  5. P2 success is what opens P3.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS for revised UI source.
-- Code review: PASS for revised UI source.
-- Owner manual app verification: FIRST CANDIDATE FAIL; REVISED UI RETEST AUTHORIZED / NOT STARTED.
-- Documentation synchronization: PASS.
+- Execution: PASS for current candidate publication.
+- Automated/static verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: NOT STARTED / NOT AUTHORIZED.
+- Documentation synchronization: PASS for current review handoff.
 - Merge permission: BLOCKED.
-
-## Next action
-Owner retests the revised UI only. After visual/UI PASS is recorded, open a separate focused follow-up for BUG-005 (`Bắt đầu chạy` processing flow). Do not merge PR #39 before Owner UI PASS is recorded in canonical project-state files.
