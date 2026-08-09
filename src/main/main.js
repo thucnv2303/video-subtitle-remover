@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, net } = require('electron');
 const path = require('path');
 const { PythonBridge } = require('./python-bridge');
 
@@ -144,6 +144,51 @@ ipcMain.handle('dialog:saveFile', async (event, defaultPath) => {
     return null;
   } else {
     return filePath;
+  }
+});
+
+ipcMain.handle('ollama:listModels', async (event, endpoint) => {
+  const raw = typeof endpoint === 'string' && endpoint.trim()
+    ? endpoint.trim()
+    : 'http://localhost:11434/api/chat';
+
+  try {
+    const url = new URL(raw.includes('://') ? raw : `http://${raw}`);
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return { ok: false, error: 'Endpoint Ollama phải dùng HTTP hoặc HTTPS.' };
+    }
+
+    const host = url.hostname.toLowerCase();
+    if (!['localhost', '127.0.0.1', '::1'].includes(host)) {
+      return { ok: false, error: 'Quét model chỉ hỗ trợ Ollama local (localhost/127.0.0.1).' };
+    }
+
+    url.pathname = '/api/tags';
+    url.search = '';
+    url.hash = '';
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    try {
+      const response = await net.fetch(url.toString(), { signal: controller.signal });
+      if (!response.ok) {
+        return { ok: false, error: `Ollama trả về HTTP ${response.status}.` };
+      }
+      const body = await response.json();
+      const models = Array.isArray(body?.models)
+        ? body.models
+            .map(item => item?.name || item?.model)
+            .filter(name => typeof name === 'string' && name.trim())
+        : [];
+      return { ok: true, models: [...new Set(models)] };
+    } finally {
+      clearTimeout(timeout);
+    }
+  } catch (err) {
+    const message = err?.name === 'AbortError'
+      ? 'Ollama không phản hồi trong 6 giây.'
+      : (err?.message || 'Không thể kết nối Ollama.');
+    return { ok: false, error: message };
   }
 });
 

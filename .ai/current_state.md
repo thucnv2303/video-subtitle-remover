@@ -1,34 +1,24 @@
 # Current State
 
 ## Status
-WAITING
-
-## Primary Input (OWNER CONFIRMED)
-- Chinese product-review videos (Original source cho P1 và P2).
-
-## Current Working Capabilities (OWNER CONFIRMED)
-- Voice cloning currently works.
-- TTS generation currently works.
-- Hard-subtitle removal (Pipeline 2) currently works.
+PASS — SETTINGS V1 OWNER VERIFIED — RECOVERY-007E-SETTINGS-V1-001-REV7
 
 ## Documentation & Task State
-- RECOVERY-004 complete at commit 1808076.
-- RECOVERY-005 PASS.
-- RECOVERY-005 audit report:
-  .ai/audits/pipeline1_readonly_audit.md
-- RECOVERY-006 execution: COMPLETED.
-- RECOVERY-006 project-manager review: PASS.
-- RECOVERY-006 baseline report:
-  .ai/audits/pipeline1_baseline_runtime.md
-- GOVERNANCE-AGENTOS-PRECOMMIT-001 hook implementation commit: `286eeea1661d7a0736b74c07c40c1ea343ad2848`.
-- PM independent GitHub code review: PASS.
-- PM independently reproduced all 7 required hook scenarios from the GitHub HEAD hook: PASS.
-- Executor fixture verification is not accepted as authoritative evidence because its disposable-repo setup used `--no-verify`; no project-repository commit was bypassed by that fixture action.
-- GitHub CI/checks for PR #34: NONE.
-- RECOVERY-007E-SETTINGS-V1-001-REV2 remains BLOCKED until the governance correction is merged/adopted and a fresh remote continuation spec is issued.
-- Owner product test remains NOT STARTED.
-- Governance merge permission: BLOCKED pending explicit merge instruction.
-- Product merge permission: BLOCKED.
+- Canonical product baseline before merge: `cf20a02f1e7491fddf7f05dab98fae12050460bb`.
+- Active task: `RECOVERY-007E-SETTINGS-V1-001-REV7`.
+- Draft PR: #38 on `review/RECOVERY-007E-SETTINGS-V1-001-REV7`.
+- Final reviewed source head before documentation closeout: `954f9b8662ebc5de5c01bbe8c36ab2596a404028`.
+- Owner runtime verification on 2026-08-09: PASS.
+- Owner confirmed the approved Settings UI is complete and the remaining Ollama model-scan defect is resolved in the running app.
+- Approved Settings architecture: overview 2x2 plus dedicated AI & Model, TTS & Giọng đọc, Lưu trữ, and Trạng thái hệ thống views.
+- Ollama model discovery uses Electron main-process IPC and local `GET /api/tags`; manual model entry remains available.
+- Provider-specific key/model persistence remains isolated and Pipeline 1/2/3 boundaries remain unchanged.
+- GitHub code review: PASS for the final Settings implementation.
+- Automated/static verification: PASS for available required static checks; GitHub CI is not configured for this head.
+- Owner manual app verification: PASS.
+- Documentation synchronization: PASS after this closeout update.
+- Owner explicitly authorized merge of Settings in the current interaction on 2026-08-09.
+- Merge permission: APPROVED for PR #38 only, subject to unchanged product source and mergeable GitHub state.
 
 ## Current branch
-review/GOVERNANCE-AGENTOS-PRECOMMIT-001
+review/RECOVERY-007E-SETTINGS-V1-001-REV7

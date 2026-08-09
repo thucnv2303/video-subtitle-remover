@@ -1,28 +1,33 @@
 # Current Task
 
 ## Task ID
-GOVERNANCE-AGENTOS-PRECOMMIT-001
+RECOVERY-007E-SETTINGS-V1-001-REV7
 
 ## Name
-Governance AgentOS Pre-commit Hook Correction
-
-## Goal
-Correct the tracked `.githooks/pre-commit` so repository enforcement matches the active GitHub review workflow: source and documentation commits remain separate, while the three dynamic project-state files remain synchronized when documentation is committed.
+Settings V1 — Approved UI + Ollama Model Discovery
 
 ## Status
-IMPLEMENTED — PM CODE REVIEW PASS — WAITING EXPLICIT MERGE DECISION
+PASS — READY TO MERGE
 
-## Single objective
-Implement a 4-case logic in `.githooks/pre-commit` to allow isolated source commits, block mixed commits, require all 3 dynamic docs in docs-only commits, and allow unrelated docs/governance commits.
+## Review branch
+`review/RECOVERY-007E-SETTINGS-V1-001-REV7`
 
-## Verification gates
+## Review state
+- Draft PR: #38.
+- Approved Settings UI and information architecture are implemented.
+- Ollama local model discovery is implemented through Electron IPC and `GET /api/tags`.
+- Manual model entry remains supported.
+- Provider-specific model/key persistence remains isolated.
+- Owner runtime verification on 2026-08-09: PASS.
+- Owner explicitly authorized merging Settings in the current interaction.
 
-- Automated verification: PASS — PM independently reproduced all 7 required hook scenarios from the GitHub HEAD hook.
-- Executor fixture evidence: NOT AUTHORITATIVE because fixture setup used `--no-verify`; no product-repository commit bypass is evidenced.
+## Gates
+- Execution: PASS.
+- Automated/static verification: PASS for available required static checks; no GitHub CI configured.
 - Code review: PASS.
-- Owner manual app verification: NOT APPLICABLE.
-- Documentation synchronization: PASS after PM knowledge-only correction.
-- Merge permission: BLOCKED pending explicit Project Manager/Owner merge instruction.
+- Owner manual app verification: PASS.
+- Documentation synchronization: PASS after closeout update.
+- Merge permission: APPROVED for PR #38 only, provided GitHub head/source remains unchanged except closeout docs.
 
-## Product task dependency
-`RECOVERY-007E-SETTINGS-V1-001-REV2` remains BLOCKED until this governance correction is merged/adopted and PM publishes a fresh remote continuation spec/ref.
+## Next task after merge
+Rebuild Pipeline 1 UI using the Owner-approved demo dated 2026-08-09. The approved Pipeline 1 demo keeps existing functional contracts while reorganizing the screen into functional zones: AI & Prompt, Giọng đọc & Voice with `Nghe thử giọng`, Job Queue, selected-job detail, actions, and Console/Log. Implementation must start from the merged Settings canonical baseline, not from pre-merge branches.

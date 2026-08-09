@@ -3,48 +3,51 @@
 Status: ACTIVE
 
 Task:
-`GOVERNANCE-AGENTOS-PRECOMMIT-001`
+`RECOVERY-007E-SETTINGS-V1-001-REV7`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
 
-Base branch:
+Canonical base:
 `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
 
-Source basis SHA:
-`14807ee8f716a131a0565c0c77e5cb8f8e8cca29`
+Canonical source basis:
+`cf20a02f1e7491fddf7f05dab98fae12050460bb`
+
+Trusted project-state basis:
+`b88ffc62aec35cb28de7adf7ce70750f478b29f5`
 
 Review branch:
-`review/GOVERNANCE-AGENTOS-PRECOMMIT-001`
+`review/RECOVERY-007E-SETTINGS-V1-001-REV7`
 
 Execution spec:
-`.ai/task_specs/GOVERNANCE-AGENTOS-PRECOMMIT-001.md`
+`.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7.md`
 
-Reason:
-The tracked `.githooks/pre-commit` requires the three dynamic `.ai` files to be staged in the same commit as source code, while the active project workflow requires source and documentation commits to be separate. This is a verified governance conflict.
+Active amendment:
+`.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7-AMENDMENT-01.md`
 
-Product task state:
-`RECOVERY-007E-SETTINGS-V1-001-REV2` remains BLOCKED. Do not continue Settings implementation during this governance task.
-
-Owner app verification:
-NOT APPLICABLE to this governance-only hook correction. Product Owner test remains NOT STARTED.
-
-Merge permission:
-BLOCKED until PM review and explicit merge approval.
+Current authority basis:
+- INCIDENT-REV6-004 evidence publication: PASS / RESOLVED; PR #37 closed unmerged.
+- REV6 published implementation remains INVALIDATED and forbidden as implementation input.
+- First REV7 pre-edit attempt STOPPED correctly before source editing because raw working-tree hashes differed under Windows CRLF checkout.
+- GitHub verification proved both remote REV7 source blobs exactly match canonical `cf20a02...`; the failed gate was a local working-tree/EOL false positive, not source contamination.
+- Failed local worktree `E:\Project AI\Video-sub-remove-clean-REV7` is not reusable.
 
 Required startup:
 1. `git fetch origin`
-2. Read this file from `origin/review/GOVERNANCE-AGENTOS-PRECOMMIT-001`.
-3. Read the exact execution spec from the same remote ref.
-4. Record exact remote HEAD as execution-spec basis.
-5. Verify ancestry reaches `14807ee8f716a131a0565c0c77e5cb8f8e8cca29`.
-6. Verify clean worktree before editing.
+2. Read this ACTIVE file from `origin/review/RECOVERY-007E-SETTINGS-V1-001-REV7`.
+3. Read `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7.md` from the same remote ref.
+4. Read `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7-AMENDMENT-01.md` from the same remote ref.
+5. Record exact remote REV7 HEAD as execution authority.
+6. Verify merge-base with `cf20a02f1e7491fddf7f05dab98fae12050460bb` equals the canonical source basis.
+7. Use a NEW isolated clean worktree from that exact remote REV7 HEAD.
+8. Apply the corrected pre-edit identity gate from Amendment 01: committed HEAD blob SHAs + clean status + `git diff --quiet`; record EOL separately.
+9. Follow all remaining REV7 execution, verification, publication, and STOP rules exactly.
 
-Hard STOP:
-- no reset/restore/clean/rebase/amend/force push/history rewrite;
-- no `git add .` or `git add -A`;
-- no `--no-verify` or hook bypass;
-- no product source edits;
-- no Settings edits;
-- no broad rewrite/line-ending normalization;
-- first unexpected command/hook/test failure => STOP and report.
+First unexpected required warning/error/nonzero gate => STOP. Do not self-repair after a failed required gate.
+
+Owner app verification:
+NOT STARTED / NOT AUTHORIZED until PM GitHub code-review PASS.
+
+Merge permission:
+BLOCKED.

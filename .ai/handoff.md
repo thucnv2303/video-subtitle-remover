@@ -1,40 +1,38 @@
 # AgentOS Handoff Status
 
-## Last completed task
-GOVERNANCE-AGENTOS-PRECOMMIT-001 — Governance AgentOS Pre-commit Hook Correction.
+## Canonical baseline
+`recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
 
-## Result
-PASS — PM CODE REVIEW
+Canonical source HEAD before Settings merge:
+`cf20a02f1e7491fddf7f05dab98fae12050460bb`
 
-## Hook implementation commit
-`286eeea1661d7a0736b74c07c40c1ea343ad2848`
+## Active task
+`RECOVERY-007E-SETTINGS-V1-001-REV7`
 
-## Executor documentation commit
-`44ebc922725da87205d5bafcfa17b9a671be7470`
+## Status
+PASS — READY TO MERGE
 
-## PM verification
-- Reviewed PR #34 directly on GitHub.
-- Verified exact hook logic matches Cases A-D in the execution spec.
-- Independently reproduced all 7 required hook scenarios from the GitHub HEAD hook: PASS.
-- Executor disposable-fixture setup used `--no-verify`; that executor fixture evidence is therefore not accepted as authoritative. No bypassed project-repository commit is evidenced by GitHub.
+## Review branch / PR
+- Branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV7`
+- Draft PR: #38
+- Final Settings runtime/UI: PASS by Owner on 2026-08-09.
+- Ollama model discovery: PASS by Owner in the running app.
+- Owner explicitly authorized merge in the current interaction.
 
-## GitHub checks
-No CI/status checks are configured/reported for PR #34.
+## Current implementation
+- Settings overview 2x2 plus dedicated AI & Model, TTS & Giọng đọc, Lưu trữ, and Trạng thái hệ thống views.
+- Ollama model discovery through Electron main-process IPC using local `GET /api/tags`.
+- Provider-specific key/model persistence preserved.
+- Existing TTS/voice clone/output-directory/diagnostic contracts preserved.
+- Pipeline 1/2/3 boundaries unchanged.
 
-## Code review
-PASS
+## Gates
+- Execution: PASS.
+- Automated/static verification: PASS for available static checks; GitHub CI not configured.
+- Code review: PASS.
+- Owner manual app verification: PASS.
+- Documentation synchronization: PASS.
+- Merge permission: APPROVED for PR #38 only.
 
-## Owner manual app verification
-NOT APPLICABLE (Governance-only hook correction)
-
-## Documentation synchronization
-PASS after PM knowledge-only correction.
-
-## Merge permission
-BLOCKED pending explicit merge instruction.
-
-## Next task
-After governance correction is merged/adopted, publish a fresh remote continuation spec/ref for `RECOVERY-007E-SETTINGS-V1-001-REV2`.
-
-## Product task status
-BLOCKED / NOT RESUMED. Owner product test remains NOT STARTED.
+## Next action after merge
+Start a new Pipeline 1 UI rebuild task from the post-merge canonical HEAD. The Owner-approved demo is authoritative for the new Pipeline 1 information architecture and visual layout, including a dedicated `Nghe thử giọng` action for the selected voice. Do not implement Pipeline 1 on the Settings review branch.
