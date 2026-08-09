@@ -33,18 +33,51 @@ function _ensureSettingsLayout() {
   const cards = Array.from(scroll.children).filter(el => el.classList?.contains('settings-card'));
   if (cards.length < 3) return;
 
+  const header = scroll.querySelector('.settings-header');
   const aiCard = cards[0];
   const generalCard = cards[1];
   const diagnosticsCard = cards[2];
   const get = (id) => document.getElementById(id);
   const group = (id) => get(id)?.closest('.form-group');
 
+  // Capture every node BEFORE detaching anything from the original AI/TTS card.
   const providerGroup = group('ai-provider');
   const apiKeyGroup = group('ai-api-key');
   const endpointGroup = group('ai-endpoint');
+  const ttsStatusGroup = group('tts-status-chip');
+  const voiceGroup = group('tts-voice');
+  const languageGroup = group('tts-language');
+  const bgVolumeGroup = group('tts-bg-volume');
+  const removeVocalGroup = get('tts-remove-vocal')?.closest('.form-group');
+  const cloneNameGroup = group('clone-voice-name');
+  const refAudioGroup = get('btn-upload-ref-audio')?.closest('.form-group');
+  const cloneButton = get('btn-clone-voice');
+  const savedVoices = get('saved-voices-list');
+  const testTextGroup = get('tts-test-text')?.closest('.form-group');
+  const testRow = get('btn-test-tts')?.closest('.tts-test-row');
   const saveButton = get('btn-save-ai');
 
-  if (!providerGroup || !apiKeyGroup || !endpointGroup || !saveButton) return;
+  const requiredNodes = [
+    providerGroup,
+    apiKeyGroup,
+    endpointGroup,
+    ttsStatusGroup,
+    voiceGroup,
+    languageGroup,
+    bgVolumeGroup,
+    removeVocalGroup,
+    cloneNameGroup,
+    refAudioGroup,
+    cloneButton,
+    savedVoices,
+    testTextGroup,
+    testRow,
+    saveButton,
+  ];
+  if (requiredNodes.some(node => !node)) {
+    console.error('[Settings] Không đủ DOM controls để dựng Settings V1.');
+    return;
+  }
 
   const modelGroup = document.createElement('div');
   modelGroup.className = 'form-group';
@@ -56,58 +89,62 @@ function _ensureSettingsLayout() {
 
   apiKeyGroup.id = 'ai-api-key-group';
   endpointGroup.id = 'ai-endpoint-group';
-  get('ai-api-key').placeholder = 'Nhập API key cho nhà cung cấp cloud...';
+  get('ai-api-key').placeholder = 'Nhập API key cho Gemini / DeepSeek...';
   get('ai-endpoint').placeholder = 'VD: http://localhost:11434/api/chat';
-
-  aiCard.replaceChildren();
-  aiCard.dataset.settingsRole = 'ai-provider';
-  aiCard.append(
-    _heading('🤖 AI Provider'),
-    providerGroup,
-    apiKeyGroup,
-    modelGroup,
-    endpointGroup,
-    saveButton,
-  );
-
-  const ttsStatusGroup = group('tts-status-chip');
-  const voiceGroup = group('tts-voice');
-  const languageGroup = group('tts-language');
-  const bgVolumeGroup = group('tts-bg-volume');
-  const removeVocalGroup = get('tts-remove-vocal')?.closest('.form-group');
 
   const pipelineCard = document.createElement('div');
   pipelineCard.className = 'settings-card';
   pipelineCard.dataset.settingsRole = 'pipeline1-defaults';
-  pipelineCard.append(_heading('🎤 Pipeline 1 Defaults'));
-  [ttsStatusGroup, voiceGroup, languageGroup, bgVolumeGroup, removeVocalGroup]
-    .filter(Boolean)
-    .forEach(node => pipelineCard.append(node));
-
-  const cloneNameGroup = group('clone-voice-name');
-  const refAudioGroup = get('btn-upload-ref-audio')?.closest('.form-group');
-  const cloneButton = get('btn-clone-voice');
-  const savedVoices = get('saved-voices-list');
-  const testTextGroup = get('tts-test-text')?.closest('.form-group');
-  const testRow = get('btn-test-tts')?.closest('.tts-test-row');
 
   const voiceCard = document.createElement('div');
   voiceCard.className = 'settings-card';
   voiceCard.dataset.settingsRole = 'voice-cloning';
-  voiceCard.append(
-    _heading('🧬 Voice Cloning'),
-    _desc('Upload audio mẫu 3–15 giây để tạo và thử giọng clone.'),
-  );
-  [cloneNameGroup, refAudioGroup, cloneButton].filter(Boolean).forEach(node => voiceCard.append(node));
-  voiceCard.append(_divider(), _subheading('📋 Giọng đã lưu'));
-  if (savedVoices) voiceCard.append(savedVoices);
-  voiceCard.append(_divider(), _subheading('🔊 Thử giọng'));
-  [testTextGroup, testRow].filter(Boolean).forEach(node => voiceCard.append(node));
 
+  // General
   const generalHeading = generalCard.querySelector('h3');
   if (generalHeading) generalHeading.textContent = '⚙️ General';
   generalCard.dataset.settingsRole = 'general';
+  generalCard.prepend(_desc('Thiết lập thư mục đầu ra dùng chung cho các file kết quả.'));
 
+  // AI Provider
+  aiCard.replaceChildren(
+    _heading('🤖 AI Provider'),
+    _desc('Chọn provider và lưu API key / model độc lập cho từng provider.'),
+    providerGroup,
+    apiKeyGroup,
+    modelGroup,
+    endpointGroup,
+  );
+  aiCard.dataset.settingsRole = 'ai-provider';
+
+  // Pipeline 1 defaults
+  pipelineCard.append(
+    _heading('🎤 Pipeline 1 Defaults'),
+    _desc('Thiết lập mặc định cho TTS của Pipeline 1. Các job hiện có không bị thay đổi.'),
+    ttsStatusGroup,
+    voiceGroup,
+    languageGroup,
+    bgVolumeGroup,
+    removeVocalGroup,
+  );
+
+  // Voice cloning
+  voiceCard.append(
+    _heading('🧬 Voice Cloning'),
+    _desc('Tạo giọng clone từ audio mẫu 3–15 giây, quản lý giọng đã lưu và thử phát.'),
+    cloneNameGroup,
+    refAudioGroup,
+    cloneButton,
+    _divider(),
+    _subheading('📋 Giọng đã lưu'),
+    savedVoices,
+    _divider(),
+    _subheading('🔊 Thử giọng'),
+    testTextGroup,
+    testRow,
+  );
+
+  // System / Diagnostics
   const diagnosticsHeading = diagnosticsCard.querySelector('h3');
   if (diagnosticsHeading) diagnosticsHeading.textContent = '🖥 System / Diagnostics';
   diagnosticsCard.dataset.settingsRole = 'system-diagnostics';
@@ -131,6 +168,7 @@ function _ensureSettingsLayout() {
   refreshButton.className = 'btn btn-outline';
   refreshButton.textContent = '↻ Làm mới chẩn đoán';
   refreshButton.style.marginTop = '12px';
+  refreshButton.style.width = '100%';
 
   const firstHardwareRow = diagnosticsCard.querySelector('.setting-row');
   if (firstHardwareRow) {
@@ -141,7 +179,17 @@ function _ensureSettingsLayout() {
   }
   diagnosticsCard.append(refreshButton);
 
-  scroll.append(generalCard, aiCard, pipelineCard, voiceCard, diagnosticsCard);
+  saveButton.textContent = '💾 Lưu tất cả cài đặt';
+  saveButton.className = 'btn btn-primary';
+  saveButton.style.width = '100%';
+  saveButton.style.padding = '12px';
+  saveButton.style.margin = '0 0 24px';
+  saveButton.style.fontWeight = '600';
+
+  // Keep the intended five-card order. The save action is outside the cards.
+  if (header) scroll.replaceChildren(header);
+  else scroll.replaceChildren();
+  scroll.append(generalCard, aiCard, pipelineCard, voiceCard, diagnosticsCard, saveButton);
   scroll.dataset.settingsV1Ready = 'true';
 }
 
@@ -152,7 +200,8 @@ function _heading(text) {
 }
 
 function _subheading(text) {
-  const h = document.createElement('h3');
+  const h = document.createElement('h4');
+  h.style.margin = '0 0 8px';
   h.textContent = text;
   return h;
 }
@@ -160,7 +209,7 @@ function _subheading(text) {
 function _desc(text) {
   const p = document.createElement('p');
   p.className = 'form-desc';
-  p.style.marginBottom = '8px';
+  p.style.margin = '0 0 14px';
   p.textContent = text;
   return p;
 }
@@ -240,12 +289,13 @@ function _migrateLegacyApiKeyOnce(provider) {
     providerKeys = [];
   }
 
-  if (providerKeys.length > 0) return;
-
   const legacy = (localStorage.getItem('ai_api_key') || '').trim();
-  if (legacy) {
+  if (providerKeys.length === 0 && legacy) {
     localStorage.setItem(`ai_api_keys_${provider}`, JSON.stringify([{ key: legacy }]));
   }
+
+  // Retire the legacy global key after the one allowed initial-load migration.
+  if (legacy) localStorage.removeItem('ai_api_key');
 }
 
 function _saveAllSettings() {
