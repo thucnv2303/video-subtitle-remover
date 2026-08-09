@@ -1,55 +1,53 @@
 # Current State
 
 ## Status
-WAITING_OWNER_UI_RETEST — PIPELINE1-APPROVED-UI-001
+WAITING_CODE_REVIEW — PIPELINE1-HANDOFF-001
 
 ## Canonical baseline
 - Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`.
 - Settings V1 PR #38: MERGED / Owner PASS.
 - Post-Settings canonical source HEAD: `e578e48c22a79c69005f2d3373599addfc412ecf`.
 
-## Active task
-- Task: `PIPELINE1-APPROVED-UI-001`.
-- Branch: `review/PIPELINE1-APPROVED-UI-001`.
+## Pipeline 1 UI foundation
+- UI branch: `review/PIPELINE1-APPROVED-UI-001`.
 - Draft PR: #39.
-- Visual authority: Owner-approved Pipeline 1 demo dated 2026-08-09, including explicit `Nghe thử giọng` control.
+- Owner runtime UI verification on 2026-08-09: PASS.
+- Approved UI HEAD used as handoff base: `2324d922de4874af1eb33f5dec2ea2d63a2bb968`.
+- Remaining processing defect BUG-005 is not considered resolved by the UI PASS.
 
-## Owner runtime result — first P1 candidate
-Owner runtime verification on 2026-08-09: NEEDS_REVISION for UI acceptance.
+## Active task
+- Task: `PIPELINE1-HANDOFF-001`.
+- Branch: `review/PIPELINE1-HANDOFF-001`.
+- Base: approved Pipeline 1 UI HEAD `2324d922de4874af1eb33f5dec2ea2d63a2bb968`.
+- Goal: stop newly uploaded Pipeline 1 jobs from appearing/running in Pipeline 2 until Pipeline 1 finishes successfully.
 
-Requested corrections:
-1. Remove duplicate `Pipeline 1` item from the left sidebar.
-2. Remove add-file/drop UI from Job Queue (#3); file addition belongs in Actions (#5), while Job selection must be explicit.
-3. Expand Console / Log (#6) vertically.
-4. Remove per-job delete/action controls and make fullscreen layout consume available width.
-5. Keep the `Bắt đầu chạy` processing-flow defect separate and deferred until UI acceptance.
+## Verified defect
+- `app.js` stores P1 and P2 jobs in one shared `state.jobs` array.
+- Legacy Step 2 rendering iterates all `state.jobs`, so a newly uploaded P1 job appears in P2 immediately.
+- Legacy `job.status` is shared by P1 and P2, which creates cross-pipeline state ambiguity.
+- `processNextJob()` selects any shared job with `status === queued`, so P2 must not be allowed to start while P1 still has queued/processing jobs.
 
-## Revised implementation
-- UI correction commit: `d4c21c7a2553f788e656afa6abb42687920071a6`.
-- Responsive CSS correction commit: `e99f7042387e82552cd4616536d2d6fea12ebf6f`.
-- Pipeline 1 JS blob: `d7199ee277a3b791d29c385b5b90736d92c68554`.
-- Pipeline 1 CSS blob: `7686bb48cc47336e6602a07c635958c333dec118`.
-- No extra Pipeline 1 sidebar item is injected.
-- Job Queue is now a selectable list and no longer contains add-file/drop UI.
-- Per-job legacy controls are not rendered in the revised Job row.
-- Selected Job has a visible selection indicator while preserving existing `pipeline1SelectedJobId` state behavior.
-- Actions (#5) is the single add/delete/run action zone.
-- Console / Log flexes into remaining right-column height.
-- Fixed 1500px content caps were removed; workspace expands with the viewport.
-- Start-flow processing logic was intentionally not modified.
+## Current implementation
+- Added `src/renderer/js/pipeline-state.js` as a compatibility state/handoff gate.
+- Added separate state fields: `p1Status`, `p1Progress`, `p2Status`, `p2Progress`, `p3Status`.
+- New jobs default to P1 idle / P2 locked / P3 locked.
+- P2 UI hides jobs until `p1Status === finished` and `p2Status` becomes ready.
+- Legacy P1 completion is mapped to a P1→P2 handoff: P1 finished, P2 ready, P3 locked.
+- P2 start is blocked for jobs that have not completed P1.
+- P2 start is also blocked while any P1 job remains queued/processing, preventing legacy `processNextJob()` from picking a P1 queue item.
+- P2 completion maps to P2 finished / P3 ready.
+- `pipeline1-ai.js` imports the handoff gate and no longer logs an incorrect direct P1→P3 transition after TTS.
 
-## Verification
-- Exact reconstructed JS hash equals GitHub blob `d7199ee277a3b791d29c385b5b90736d92c68554`.
-- `node --check` on that exact JS blob: PASS.
-- Static assertions: no Pipeline 1 sidebar injection, no Job Queue drop area, no per-job delete control, one Actions add button, and explicit Job selection indicator: PASS.
-- GitHub compare from canonical base shows product source remains exactly `src/renderer/js/pipeline.js` plus `src/renderer/styles/pipeline1-approved.css`; other changes are canonical `.ai` task/bug documentation.
-- PM code review of revised UI source: PASS for Owner UI retest.
+## Verification status
+- GitHub compare from approved UI base shows handoff work limited to `src/renderer/js/pipeline-state.js` and `src/renderer/js/pipelines/pipeline1-ai.js` before documentation updates.
 - GitHub CI: not configured.
+- Runtime owner test: NOT STARTED.
+- Code review: WAITING.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS for revised UI source.
-- Code review: PASS for revised UI source.
-- Owner manual app verification: FIRST CANDIDATE FAIL; REVISED UI RETEST AUTHORIZED / NOT STARTED.
-- Documentation synchronization: PASS.
+- Execution: PASS for publication of current handoff candidate.
+- Automated/static verification: WAITING final exact-head verification.
+- Code review: WAITING.
+- Owner manual app verification: NOT STARTED / NOT AUTHORIZED until code review PASS.
+- Documentation synchronization: IN PROGRESS.
 - Merge permission: BLOCKED.
