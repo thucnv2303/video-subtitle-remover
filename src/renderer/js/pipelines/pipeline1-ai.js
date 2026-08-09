@@ -27,10 +27,10 @@ export async function triggerAutoAiRewrite(job, srtText) {
     try { api_keys = JSON.parse(localStorage.getItem(`ai_api_keys_${provider}`) || '[]'); } catch { api_keys = []; }
     const selectedModel = localStorage.getItem(`ai_model_${provider}`) || '';
 
-    // Fallback key sources
-    if (api_keys.length === 0) {
-      if (provider === 'ollama' && selectedModel) api_keys = [selectedModel];
-      else if (localStorage.getItem('ai_api_key')) api_keys = [{ key: localStorage.getItem('ai_api_key') }];
+    // Provider-specific settings are authoritative. Legacy ai_api_key migration
+    // is handled once by the Settings module and must not be resurrected here.
+    if (api_keys.length === 0 && provider === 'ollama' && selectedModel) {
+      api_keys = [selectedModel];
     }
 
     // Lấy nội dung prompt đang chọn
