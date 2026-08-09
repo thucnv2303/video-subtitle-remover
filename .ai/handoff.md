@@ -17,7 +17,7 @@ Current canonical HEAD:
 `RECOVERY-007E-SETTINGS-V1-001-REV5`
 
 ## Status
-ACTIVE — IMPLEMENTATION NOT STARTED
+ACTIVE — IMPLEMENTATION COMPLETED
 
 ## Review branch
 `review/RECOVERY-007E-SETTINGS-V1-001-REV5`
@@ -32,12 +32,12 @@ ACTIVE — IMPLEMENTATION NOT STARTED
 REV5 must be a fresh implementation from canonical source. Do not reuse, copy, cherry-pick, apply, or translate any invalidated Settings implementation.
 
 ## Gates
-- Execution: NOT STARTED.
-- Automated/static verification: WAITING.
+- Execution: COMPLETED.
+- Automated/static verification: PASS.
 - Code review: WAITING.
-- Owner manual app verification: NOT STARTED — WAITING FOR PM CODE REVIEW.
+- Owner manual app verification: WAITING FOR PM CODE REVIEW.
 - Documentation synchronization: PASS for REV5 activation.
 - Merge permission: BLOCKED.
 
 ## Next action
-Executor may start REV5 only after reading the remote ACTIVE file and exact REV5 spec from the remote review branch and recording the exact remote HEAD as execution-spec basis.
+PM to review the PR diff. Wait for OWNER to manually run and verify the app.

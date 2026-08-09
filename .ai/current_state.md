@@ -24,9 +24,9 @@ ACTIVE — RECOVERY-007E-SETTINGS-V1-001-REV5
 - Active clean retry: `RECOVERY-007E-SETTINGS-V1-001-REV5`.
 - Active review branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV5`.
 - REV5 source basis: canonical `cf20a02f1e7491fddf7f05dab98fae12050460bb`; no invalidated Settings implementation may be reused.
-- Automated verification: WAITING.
+- Automated verification: PASS.
 - Code review: WAITING.
-- Owner product test: NOT STARTED — WAITING FOR PM CODE REVIEW.
+- Owner product test: WAITING FOR PM CODE REVIEW.
 - Documentation synchronization: PASS for REV5 task activation.
 - Product merge permission: BLOCKED.
 
