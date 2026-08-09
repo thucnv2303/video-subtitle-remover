@@ -1,24 +1,40 @@
 # Current State
 
 ## Status
-PASS — SETTINGS V1 OWNER VERIFIED — RECOVERY-007E-SETTINGS-V1-001-REV7
+WAITING_REVIEW — PIPELINE1-APPROVED-UI-001
 
-## Documentation & Task State
-- Canonical product baseline before merge: `cf20a02f1e7491fddf7f05dab98fae12050460bb`.
-- Active task: `RECOVERY-007E-SETTINGS-V1-001-REV7`.
-- Draft PR: #38 on `review/RECOVERY-007E-SETTINGS-V1-001-REV7`.
-- Final reviewed source head before documentation closeout: `954f9b8662ebc5de5c01bbe8c36ab2596a404028`.
-- Owner runtime verification on 2026-08-09: PASS.
-- Owner confirmed the approved Settings UI is complete and the remaining Ollama model-scan defect is resolved in the running app.
-- Approved Settings architecture: overview 2x2 plus dedicated AI & Model, TTS & Giọng đọc, Lưu trữ, and Trạng thái hệ thống views.
-- Ollama model discovery uses Electron main-process IPC and local `GET /api/tags`; manual model entry remains available.
-- Provider-specific key/model persistence remains isolated and Pipeline 1/2/3 boundaries remain unchanged.
-- GitHub code review: PASS for the final Settings implementation.
-- Automated/static verification: PASS for available required static checks; GitHub CI is not configured for this head.
-- Owner manual app verification: PASS.
-- Documentation synchronization: PASS after this closeout update.
-- Owner explicitly authorized merge of Settings in the current interaction on 2026-08-09.
-- Merge permission: APPROVED for PR #38 only, subject to unchanged product source and mergeable GitHub state.
+## Canonical baseline
+- Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`.
+- Settings V1 PR #38: MERGED / Owner PASS.
+- Post-Settings canonical source HEAD: `e578e48c22a79c69005f2d3373599addfc412ecf`.
 
-## Current branch
-review/RECOVERY-007E-SETTINGS-V1-001-REV7
+## Active task
+- Task: `PIPELINE1-APPROVED-UI-001`.
+- Branch: `review/PIPELINE1-APPROVED-UI-001`.
+- Visual authority: Owner-approved Pipeline 1 demo dated 2026-08-09, including explicit `Nghe thử giọng` control.
+- Product source scope: `src/renderer/js/pipeline.js` and `src/renderer/styles/pipeline1-approved.css` only.
+
+## Implementation state
+- Pipeline 1 UI is rebuilt into six functional zones: AI & Prompt, Giọng đọc & Voice, Job Queue, selected Job detail, actions, and Console/Log.
+- The approved UI mounts synchronously before `app.js` captures DOM references, preserving legacy event wiring.
+- Selected voice preview uses the existing TTS API wrapper; no new backend endpoint.
+- Selected Job detail actions are rebound safely through existing Pipeline 1 ASR/AI/TTS/file-dialog contracts.
+- Settings source is unchanged after merge.
+- Pipeline 2 and Pipeline 3 source are unchanged.
+
+## Verification
+- GitHub compare from `e578e48...` shows exactly two product source files changed.
+- Exact GitHub `pipeline.js` blob: `913cbb3312545f0c6f3176451a8a094f56a5a61c`.
+- Local verification copy hash matches that exact GitHub blob.
+- `node --check` on the exact blob: PASS.
+- Required Pipeline 1 runtime IDs: PASS, exactly once in the mounted template.
+- No Pipeline 2/inpaint implementation added to the new Pipeline 1 UI layer.
+- Runtime visual/function verification: NOT STARTED.
+
+## Gates
+- Execution: PASS for current implementation publication.
+- Automated/static verification: PASS for available checks.
+- Code review: WAITING.
+- Owner manual app verification: NOT STARTED / NOT YET AUTHORIZED.
+- Documentation synchronization: PASS for review state.
+- Merge permission: BLOCKED.
