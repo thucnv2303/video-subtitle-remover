@@ -44,11 +44,19 @@ Exclusion     : Left as evidence. Do not publish repair source.
 
 ## Excluded Directories
 
+FullName      : E:\Project AI\Video-sub-remove-clean-REV6-2
+Type          : Invalidated worktree/directory
+LastWriteTime : 2026-08-09T11:41:12
+Exclusion     : Invalidated worktree from previous attempt. Do not publish repair source.
+
 FullName      : E:\Project AI\baseline-copy
+Type          : Invalidated worktree/directory
 Exclusion     : Working directory. Do not publish repair source.
 
 FullName      : E:\Project AI\candidate
+Type          : Invalidated worktree/directory
 Exclusion     : Working directory. Do not publish repair source.
 
 FullName      : E:\Project AI\Video-sub-remove-clean-REV6
+Type          : Invalidated worktree/directory
 Exclusion     : Invalidated worktree from previous attempt. Do not publish repair source.

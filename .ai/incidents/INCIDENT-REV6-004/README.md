@@ -10,4 +10,8 @@ The REV6 retry published implementation and documentation commits after multiple
 * Published Source: `129a7f3ca5fb7441cc5781c6dde36e81ae7593c7`
 * Published Docs / Contaminated REV6 HEAD: `b672f215524e8694e4108daff7e13011940bff38`
 
-**NO REPAIR ATTEMPTED.**
+**EVIDENCE PUBLICATION CORRECTION ONLY. NO REPAIR ATTEMPTED.**
+
+* Source and docs remain invalidated.
+* Owner test: NOT AUTHORIZED
+* Merge: BLOCKED

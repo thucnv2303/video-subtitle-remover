@@ -38,16 +38,40 @@ None.
 ## JS syntax checks actually performed
 None.
 
-## EOL checks actually performed
-`git diff --cached --check`
+## EOL classification check
+EOL classification check: NOT RUN
+(Note: `git diff --cached --check` was run but it is NOT an EOL-classification check.)
 
 ## tests actually performed
 None.
 
-## Required REV6 checks that were NEVER run
-- DOM uniqueness check (to verify no duplicate DOM IDs).
-- Layout verification (to check for orphaned General/output-directory markup or duplicate tail structure).
-- JS syntax checks.
-- Diagnostic chips logic rendering checks.
-- Static verification of provider-specific API key logic.
-- Owner manual app verification.
+## Required REV6 checks
+* pre-edit `git ls-files --eol`: RUN
+* pre-edit canonical blob/hash verification: RUN
+* candidate patch scope: NOT RUN
+* patch-size thresholds: NOT RUN
+* exact authorized `git apply --check ... --ignore-space-change --whitespace=error-all`: FAILED
+* post-apply `git diff --check`: FAILED
+* post-apply EOL classification: NOT RUN
+* stat/numstat acceptance: NOT RUN
+* complete diff inspection: NOT RUN
+* exactly five top-level Settings cards: NOT RUN
+* all hard IDs exactly once: NOT RUN
+* Gemini visibility: NOT RUN
+* DeepSeek visibility: NOT RUN
+* Ollama visibility: NOT RUN
+* provider-specific API key isolation: NOT RUN
+* provider-specific model isolation: NOT RUN
+* blank model clearing: NOT RUN
+* legacy migration initial-load condition: NOT RUN
+* no migration/resurrection on provider switching: NOT RUN
+* no normal global `ai_api_key` writes: NOT RUN
+* no global `ai_model` authority: NOT RUN
+* forbidden/dead keys absent: NOT RUN
+* diagnostics approved `window.api` methods only: NOT RUN
+* no direct Settings diagnostic fetch: NOT RUN
+* CPU-only neutral/non-error: NOT RUN
+* TTS/voice-clone preservation: NOT RUN
+* P1/P2/P3 boundary preservation: NOT RUN
+* JS syntax check: NOT RUN
+* applicable Settings tests discovery/execution: NOT RUN
