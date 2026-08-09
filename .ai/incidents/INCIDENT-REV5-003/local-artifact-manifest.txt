@@ -1,0 +1,48 @@
+# Local Artifact Manifest
+
+The following artifacts were created locally during the execution of REV5 and are recorded here for evidence.
+None of these artifacts are checked into the repository.
+
+**Exclusion Reason for all files:** Local candidate construction / intermediary artifacts. Do not copy into GitHub as repair source.
+
+1. **index_orig.html**
+   - **Path:** `C:\Users\thucn\.gemini\antigravity\scratch\rev5_candidate\index_orig.html`
+   - **Size:** 48059 bytes
+   - **SHA256:** 15653AF95D50006040DD9A3571F359D1BBBAA24F839071CB4CDE684453105A2B
+   - **Timestamp:** 08/09/2026 10:17:43 AM
+
+2. **index.html**
+   - **Path:** `C:\Users\thucn\.gemini\antigravity\scratch\rev5_candidate\index.html`
+   - **Size:** 48289 bytes
+   - **SHA256:** B495F6ABF83DC9AE497217A81A9205BD8BCD91100B0F4D97B85444D0FFDBF1A8
+   - **Timestamp:** 08/09/2026 10:26:25 AM
+
+3. **patch_index.diff**
+   - **Path:** `C:\Users\thucn\.gemini\antigravity\scratch\rev5_candidate\patch_index.diff`
+   - **Size:** 5459 bytes
+   - **SHA256:** DECD8B4946222A87AEE5101803D84CCDFB7C081AF7064A3E949B8F918B1AEBA9
+   - **Timestamp:** 08/09/2026 10:28:36 AM
+
+4. **patch_settings.diff**
+   - **Path:** `C:\Users\thucn\.gemini\antigravity\scratch\rev5_candidate\patch_settings.diff`
+   - **Size:** 7943 bytes
+   - **SHA256:** 3B095342D766C1640F53FE37FBA9043D98E65650D2723D48039CE99912D36899
+   - **Timestamp:** 08/09/2026 10:28:45 AM
+
+5. **patch1.diff**
+   - **Path:** `C:\Users\thucn\.gemini\antigravity\scratch\rev5_candidate\patch1.diff`
+   - **Size:** 740 bytes
+   - **SHA256:** BA0044C9FB752A21981213F89CE5DD1A24B1FB25D5E2A60EAA1B38F9EADDB6AA
+   - **Timestamp:** 08/09/2026 10:24:27 AM
+
+6. **settings_orig.js**
+   - **Path:** `C:\Users\thucn\.gemini\antigravity\scratch\rev5_candidate\settings_orig.js`
+   - **Size:** 15377 bytes
+   - **SHA256:** 40D845884D896A58A4D9D89EF7A755D53DC8373361D5604F645C7BDCD9DCC130
+   - **Timestamp:** 08/09/2026 10:17:43 AM
+
+7. **settings.js**
+   - **Path:** `C:\Users\thucn\.gemini\antigravity\scratch\rev5_candidate\settings.js`
+   - **Size:** 18169 bytes
+   - **SHA256:** 9346BEF9282452FAC94861CA55CE2184406D4F7ABE276F9B29A65782C3721A21
+   - **Timestamp:** 08/09/2026 10:27:59 AM

@@ -1,0 +1,23 @@
+# Remote State Evidence
+
+## Current REV5 Remote HEAD
+```bash
+git log --oneline origin/review/RECOVERY-007E-SETTINGS-V1-001-REV5 -n 2
+```
+f852446 RECOVERY-007E-SETTINGS-V1-001-REV5: Update memory files
+0b3a81e RECOVERY-007E-SETTINGS-V1-001-REV5: Reimplement Settings Tab Configuration
+
+## Current Incident Branch HEAD
+```bash
+git log --oneline origin/incident/RECOVERY-007E-SETTINGS-V1-001-REV5-003 -n 2
+```
+1f10e32 docs(INCIDENT-REV5-003): open evidence-only incident task
+b772a7a docs(SETTINGS-V1-001-REV5): activate Amendment 02
+
+## Ancestry relative to Trusted Basis (b772a7ad132fd0c3e591a632843a7b56a45eba8e)
+```bash
+git merge-base origin/review/RECOVERY-007E-SETTINGS-V1-001-REV5 b772a7ad132fd0c3e591a632843a7b56a45eba8e
+```
+b772a7ad132fd0c3e591a632843a7b56a45eba8e
+
+**Conclusion:** The REV5 review branch (`origin/review/RECOVERY-007E-SETTINGS-V1-001-REV5`) is exactly 2 commits (`f852446` and `0b3a81e`) ahead of the trusted source basis (`b772a7a`).

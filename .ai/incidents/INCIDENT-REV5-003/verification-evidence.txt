@@ -1,0 +1,69 @@
+# Verification Evidence
+
+## DOM Checks
+Command run via PowerShell in `C:\Users\thucn\.gemini\antigravity\scratch\rev5_candidate`:
+```powershell
+$ids = @('btn-output-dir', 'output-dir-text', 'ai-provider', 'ai-api-key', 'ai-model', 'ai-endpoint', 'btn-save-ai', 'gpu-detail', 'cuda-version', 'btn-refresh-diagnostics', 'backend-status-chip', 'tts-status-chip')
+foreach ($id in $ids) {
+    $count = (Select-String -Path 'index.html' -Pattern "id=`"$id`"").Count
+    Write-Host "$id : $count"
+}
+```
+Output:
+```text
+btn-output-dir : 1
+output-dir-text : 1
+ai-provider : 1
+ai-api-key : 1
+ai-model : 1
+ai-endpoint : 1
+btn-save-ai : 1
+gpu-detail : 1
+cuda-version : 1
+btn-refresh-diagnostics : 1
+backend-status-chip : 1
+tts-status-chip : 1
+```
+
+## Failed Git Apply Check
+Command: `git apply --check "C:\Users\thucn\.gemini\antigravity\scratch\rev5_candidate\patch_index.diff"` and patch_settings.diff
+Output:
+```text
+error: patch failed: src/renderer/index.html:621
+error: src/renderer/index.html: patch does not apply
+error: patch failed: src/renderer/js/components/settings.js:1
+error: src/renderer/js/components/settings.js: patch does not apply
+```
+
+## First `git diff --check`
+Command: `git diff --check`
+Output (Failed with Exit Code 1):
+```text
+src/renderer/js/components/settings.js:59: trailing whitespace.
++  
+src/renderer/js/components/settings.js:65: trailing whitespace.
++  
+src/renderer/js/components/settings.js:108: trailing whitespace.
++  
+src/renderer/js/components/settings.js:126: trailing whitespace.
++      
+src/renderer/js/components/settings.js:130: trailing whitespace.
++      
+src/renderer/js/components/settings.js:159: trailing whitespace.
++  
+src/renderer/js/components/settings.js:161: trailing whitespace.
++  
+```
+
+## Final `git diff --check`
+Command: `git diff --check`
+Output (Exit Code 0):
+```text
+(No output)
+```
+
+## Omitted / Not Run Checks
+- JS syntax checks (e.g. `node -c`) were NOT run.
+- Linting checks (if any exist) were NOT run.
+- HTML formatting validations were NOT run.
+- App launch / UI visual verification was NOT run (Owner test skipped).
