@@ -4,7 +4,7 @@
 RECOVERY-007E-SETTINGS-V1-001-REV7
 
 ## Name
-Settings V1 — Owner Runtime Correction
+Settings V1 — Approved Demo Rebuild
 
 ## Status
 WAITING_OWNER_RETEST
@@ -13,38 +13,42 @@ WAITING_OWNER_RETEST
 `review/RECOVERY-007E-SETTINGS-V1-001-REV7`
 
 ## Review state
-- Draft PR: #38
-- Owner runtime test on 2026-08-09: FAIL.
-- Owner screenshot evidence: `Pipeline 1 Defaults` empty; Voice Cloning controls missing; visual result did not match intended Settings design quality.
-- Root cause: `aiCard.replaceChildren()` detached TTS / voice-clone controls before those nodes were captured.
-- Previous PM code-review PASS is invalidated.
-- PR FAIL comment: `5230662730`.
-- Repair source commit: `e556fa5ae9420a858d7c5f2eddcfdec07375f619`.
-- Current Settings blob: `a47ca49f6fb7fdec5b5546cc5034d71f6f896084`.
-- Product source diff: `src/renderer/js/components/settings.js` only.
+- Draft PR: #38.
+- Previous owner runtime/design result: FAIL.
+- Previous stacked five-card implementation is invalidated.
+- Authoritative visual acceptance: the five Owner-approved screenshots supplied on 2026-08-09.
+- Required IA: one 2x2 Settings overview plus four dedicated detail views: AI & Model, TTS & Giọng đọc, Lưu trữ, Trạng thái hệ thống.
+- Design-fail PR comment: `5230793631`.
+- Visual-system commit: `248ec0043c35010888590c995d23dea7fd0f8a72`.
+- Controller rebuild commit: `279d59f8d430856214b235d26c1cd15e9d403d4e`.
+- Settings JS blob: `cbe10df807aad311e1f982ebe4cb8793435bf5ab`.
+- Settings CSS blob: `5e83a866c9b4d39fd79d225238a0fa4f21b575c7`.
 
-## Repaired behavior
-- Capture all required original controls before modifying the combined legacy AI/TTS card.
-- Exactly five top-level Settings cards remain: General, AI Provider, Pipeline 1 Defaults, Voice Cloning, System / Diagnostics.
-- Pipeline 1 Defaults contains TTS status, voice, language, background volume, and remove-vocal control.
-- Voice Cloning contains name, sample-audio chooser, clone button, saved voices, and test-voice controls.
-- AI Provider preserves provider-specific key/model behavior and Ollama endpoint visibility.
-- Save action is a single full-width action after the five cards.
-- Diagnostics remain via approved `window.api` wrappers.
+## Rebuilt UI acceptance
+- Settings landing view uses a balanced 2x2 module grid.
+- AI & Model is a dedicated view with provider selector, API key, model, Ollama endpoint, default prompt, prompt-management shortcut and connectivity actions.
+- TTS & Giọng đọc is a dedicated view with TTS toggle, language, default voice, cloned-voice list/editor, preview, background volume and remove-vocal setting.
+- Lưu trữ is a dedicated view with output-directory selection/current path and explicit output-file list.
+- Trạng thái hệ thống is a dedicated view with Backend/GPU/TTS service rows, overall health summary and refresh action.
+- Settings sidebar expands to match the approved design shell while Settings is active.
+- OpenAI is displayed disabled only; runtime provider support remains Gemini / DeepSeek / Ollama.
+
+## Verification
+- JavaScript syntax: PASS.
+- Static architecture/contract assertions: PASS for available checks.
+- Settings diagnostics use `window.api.health()`, `window.api.gpuInfo()`, `window.api.getTTSStatus()`.
+- No direct Settings `fetch()`.
+- No normal global `ai_api_key` or global `ai_model` writes.
+- No `p1_default_ai_model`, `p1_default_tts_voice`, or `ai_endpoint_deepseek`.
+- Runtime screenshot parity: WAITING OWNER RETEST.
 
 ## Gates
-- Execution: PASS for repair publication.
-- Automated/static verification: WAITING fresh runtime confirmation; source inspection confirms the known detach-order defect is corrected.
-- Code review: WAITING RUNTIME CONFIRMATION.
+- Execution: PASS for approved-design rebuild publication.
+- Automated/static verification: PASS for available static checks.
+- Code review: WAITING FINAL RUNTIME VISUAL EVIDENCE.
 - Owner manual app verification: RETEST AUTHORIZED.
-- Documentation synchronization: PASS for current correction state.
+- Documentation synchronization: PASS after current_state/handoff synchronization.
 - Merge permission: BLOCKED.
 
 ## Owner retest focus
-- No empty Settings cards.
-- All Pipeline 1 Defaults controls visible.
-- All Voice Cloning controls visible.
-- Five-card visual hierarchy is coherent and usable.
-- Gemini / DeepSeek / Ollama field visibility works.
-- Provider-specific key/model persistence and blank clearing work.
-- Output directory, diagnostics, voice clone and TTS still work.
+Compare the running Settings UI directly with the approved screenshots: overview 2x2, all four detail views, sidebar/shell, hierarchy, spacing, content density, provider switching/persistence, output directory, diagnostics, and existing TTS/voice-clone behavior.
