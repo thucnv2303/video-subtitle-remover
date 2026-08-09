@@ -10,38 +10,30 @@ Canonical source HEAD:
 `RECOVERY-007E-SETTINGS-V1-001-REV7`
 
 ## Status
-WAITING_OWNER_RETEST — APPROVED DESIGN REBUILD
+WAITING_OWNER_RETEST — OLLAMA MODEL DISCOVERY
 
 ## Review branch / PR
 - Branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV7`
 - Draft PR: #38
-- Previous owner design/runtime result: FAIL.
-- Design-fail PR comment: `5230793631`.
-- Approved-design visual-system commit: `248ec0043c35010888590c995d23dea7fd0f8a72`.
-- Approved-design controller commit: `279d59f8d430856214b235d26c1cd15e9d403d4e`.
-- Current Settings JS blob: `cbe10df807aad311e1f982ebe4cb8793435bf5ab`.
-- Current Settings CSS blob: `5e83a866c9b4d39fd79d225238a0fa4f21b575c7`.
+- Owner runtime screenshot confirms approved Settings UI direction is acceptable.
+- Remaining defect is local Ollama model discovery.
 
 ## Current implementation
-- Previous stacked-card layout is not accepted and is no longer the target.
-- Settings now mounts one overview page with four 2x2 modules and four dedicated detail views matching the Owner-approved information architecture.
-- AI & Model, TTS & Giọng đọc, Lưu trữ, and Trạng thái hệ thống each have dedicated content and navigation.
-- Settings-active sidebar expands to the approved desktop shell treatment.
-- Existing provider-specific storage, output-directory persistence, TTS/voice clone APIs, and diagnostic API wrappers are preserved.
-- OpenAI remains visually disabled because current runtime contracts do not authorize OpenAI support.
+- Settings approved 2x2 overview + four detail views remain unchanged.
+- Electron main process now exposes local Ollama model discovery using `GET /api/tags` via `net.fetch()`.
+- Preload injects a small Ollama-only scan control under the existing Model field.
+- Scanned models populate a select/datalist and can be copied into the existing `ai-model` field.
+- Manual model input remains available.
+- Discovery accepts loopback Ollama endpoints only.
+- Provider-specific model storage, AI/TTS/storage/diagnostics behavior, and Pipeline 1/2/3 boundaries are preserved.
 
-## Verification
-- JavaScript syntax: PASS.
-- Available static contract checks: PASS.
-- Runtime visual parity: NOT YET VERIFIED after rebuild.
-
-## Gates
-- Execution: PASS for rebuild publication.
-- Automated/static verification: PASS for available checks.
-- Code review: WAITING FINAL RUNTIME VISUAL EVIDENCE.
+## Current gates
+- UI visual acceptance: PASS for current direction based on owner runtime screenshot.
+- Ollama scan runtime verification: WAITING OWNER RETEST.
+- Code review: WAITING final Ollama runtime evidence.
 - Owner manual app verification: RETEST AUTHORIZED.
 - Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
 
 ## Next action
-Owner refreshes the dedicated REV7 owner-test worktree to the current remote head, runs the app, opens Settings, and compares the overview plus all four detail views directly against the approved screenshots. Report PASS/FAIL and screenshots for any remaining visual mismatch. Do not test from the dirty main folder. Merge remains blocked.
+Owner refreshes the dedicated REV7 owner-test worktree to the latest remote head, launches the app, opens AI & Model, selects Ollama, clicks `Quét model Ollama`, selects a discovered local model, saves, reopens Settings, and confirms persistence. Report PASS/FAIL. Do not test from the dirty main folder. Merge remains blocked.
