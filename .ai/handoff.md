@@ -10,34 +10,40 @@ Current canonical HEAD:
 `cf20a02f1e7491fddf7f05dab98fae12050460bb`
 
 ## Invalidated product executions
-- RECOVERY-007E-SETTINGS-V1-001-REV3 — INVALIDATED by PM review.
-- RECOVERY-007E-SETTINGS-V1-001-REV4 / PR #35 — INVALIDATED and closed unmerged. Executor continued after a required verification warning; final GitHub source contained duplicate DOM IDs and contradicted claimed Ollama/model PASS results.
+- REV3 — INVALIDATED by PM review.
+- REV4 / PR #35 — INVALIDATED and closed unmerged.
+- REV5 implementation — INVALIDATED after INCIDENT-REV5-003 review.
+- First local REV6 attempt — INVALIDATED; forbidden `git checkout <path>` used and required `git diff --check` failed.
+
+## Incident disposition
+- INCIDENT-REV5-003 evidence publication: PASS.
+- Evidence PR #36: closed unmerged.
+- Trusted recovery source remains canonical `cf20a02f1e7491fddf7f05dab98fae12050460bb`.
 
 ## Active task
-`RECOVERY-007E-SETTINGS-V1-001-REV5`
+`RECOVERY-007E-SETTINGS-V1-001-REV6`
 
 ## Status
-ACTIVE — IMPLEMENTATION NOT STARTED
+ACTIVE — WAITING FOR FRESH RETRY
 
 ## Review branch
-`review/RECOVERY-007E-SETTINGS-V1-001-REV5`
-
-## Source basis
-`cf20a02f1e7491fddf7f05dab98fae12050460bb`
+`review/RECOVERY-007E-SETTINGS-V1-001-REV6`
 
 ## Execution authority
 - `.ai/task_specs/ACTIVE.md`
-- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV5.md`
+- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV6.md`
+- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV6-AMENDMENT-01.md`
 
-REV5 must be a fresh implementation from canonical source. Do not reuse, copy, cherry-pick, apply, or translate any invalidated Settings implementation.
+## Retry rule
+Use a NEW isolated clean worktree from the current remote REV6 HEAD. Do not reuse the failed worktree `E:\Project AI\Video-sub-remove-clean-REV6` or any invalidated REV2/REV3/REV4/REV5 source, patch, candidate, stash, or scratch artifact. Follow Amendment 01 fresh-candidate/EOL-safe workflow exactly.
 
 ## Gates
-- Execution: NOT STARTED.
+- Execution: WAITING FOR FRESH RETRY.
 - Automated/static verification: WAITING.
 - Code review: WAITING.
 - Owner manual app verification: NOT STARTED — WAITING FOR PM CODE REVIEW.
-- Documentation synchronization: PASS for REV5 activation.
+- Documentation synchronization: PASS for REV6 retry authority.
 - Merge permission: BLOCKED.
 
 ## Next action
-Executor may start REV5 only after reading the remote ACTIVE file and exact REV5 spec from the remote review branch and recording the exact remote HEAD as execution-spec basis.
+Executor starts a fresh REV6 retry only after fetching remote authority, reading the base spec plus Amendment 01, recording exact remote HEAD, and creating a new isolated clean worktree.
