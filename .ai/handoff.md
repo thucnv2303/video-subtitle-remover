@@ -13,34 +13,51 @@ MERGED / OWNER PASS — PR #38.
 `PIPELINE1-APPROVED-UI-001`
 
 ## Status
-WAITING_REVIEW
+WAITING_CODE_REVIEW_AFTER_OWNER_UI_FAIL
 
-## Review branch
-`review/PIPELINE1-APPROVED-UI-001`
+## Review branch / PR
+- `review/PIPELINE1-APPROVED-UI-001`
+- Draft PR #39
 
-## Implementation
-- Pipeline 1 visual architecture rebuilt to the Owner-approved demo.
-- Six functional zones: AI & Prompt; Giọng đọc & Voice; Job Queue; selected Job detail; Actions; Console/Log.
-- Dedicated `Nghe thử giọng` action uses the existing TTS generation contract.
-- Job detail content/audio tabs and existing extract/rewrite/update/TTS/import actions are exposed in the approved layout.
-- UI mounts before `app.js` DOM binding to preserve existing runtime event contracts.
-- Legacy broken selected-Job detail helper is safely replaced in the Pipeline 1 UI layer using `window._appState` rather than broad changes to `app.js`.
-- Settings, Pipeline 2 and Pipeline 3 source remain unchanged.
+## Owner runtime result
+First P1 UI candidate ran successfully and was broadly aligned with the approved demo, but Owner returned NEEDS_REVISION for UI acceptance:
+- remove duplicate Pipeline 1 sidebar navigation;
+- move all file-add affordance to Actions (#5);
+- make Job Queue selection explicit;
+- expand Console / Log to the app bottom;
+- remove per-job action/delete controls;
+- make the workspace expand responsively in fullscreen.
 
-## Verification
-- Net product scope: exactly `src/renderer/js/pipeline.js` and `src/renderer/styles/pipeline1-approved.css`.
-- Exact `pipeline.js` GitHub blob: `913cbb3312545f0c6f3176451a8a094f56a5a61c`.
-- Exact-blob JavaScript syntax: PASS.
-- Required runtime IDs uniqueness: PASS.
-- Runtime owner test: NOT STARTED.
+Owner also confirmed a separate functional blocker: `Bắt đầu chạy` does not execute the intended P1 processing flow. This remains BUG-005 and is deferred until UI acceptance.
+
+## Revised UI publication
+- `pipeline.js` correction commit: `d4c21c7a2553f788e656afa6abb42687920071a6`.
+- `pipeline1-approved.css` correction commit: `e99f7042387e82552cd4616536d2d6fea12ebf6f`.
+- JS blob: `d7199ee277a3b791d29c385b5b90736d92c68554`.
+- CSS blob: `7686bb48cc47336e6602a07c635958c333dec118`.
+- No Pipeline 1 sidebar item is injected.
+- Job Queue is now a selectable list; selected state remains backed by existing `window._appState.pipeline1SelectedJobId`.
+- Job Queue no longer contains the drop/add-file area.
+- Existing legacy per-job control nodes are intentionally not copied into the new row presentation.
+- Actions (#5) remains the single add/delete/run control zone.
+- Console / Log uses flexible remaining right-column height.
+- Fixed page/workspace max-width caps were removed so fullscreen uses available space.
+- Start-flow logic was not changed in this correction pass.
+
+## Scope
+Product source remains exactly:
+- `src/renderer/js/pipeline.js`
+- `src/renderer/styles/pipeline1-approved.css`
+
+Settings, Pipeline 2, Pipeline 3 and backend are unchanged by this pass.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS for available checks.
+- Execution: PASS for revised UI publication.
+- Automated/static verification: WAITING for revised exact-head verification.
 - Code review: WAITING.
-- Owner manual app verification: NOT AUTHORIZED until code review PASS.
-- Documentation synchronization: PASS for review state.
+- Owner manual app verification: FAIL on first candidate; revised retest NOT AUTHORIZED yet.
+- Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
 
 ## Next action
-PM opens/reviews the Draft PR directly on GitHub. If code review passes, Owner runs the dedicated Pipeline 1 candidate and compares it to the approved demo, with special focus on Job selection/detail actions and `Nghe thử giọng`.
+Review the revised PR #39 source and static gates. If PASS, authorize Owner to retest visual/responsive behavior only. Handle BUG-005 start-flow failure in a separate follow-up after the UI is accepted.
