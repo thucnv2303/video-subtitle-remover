@@ -37,9 +37,9 @@
       <main class="p1-center-column">
         <section class="p1-card p1-queue-card">
           <div class="p1-card-head">${title('3','Job Queue','QUEUE')}<button id="step1-btn-refresh-queue" class="p1-ghost-action" type="button">↻ Làm mới</button></div>
-          <div class="p1-queue-head"><span>#</span><span>Tên video</span><span>Trạng thái</span><span>Thời gian</span><span>Thao tác</span></div>
-          <div id="step1-job-list" class="tk-job-list p1-job-list"><div class="job-empty">Chưa có video nào.</div></div>
-          <div class="p1-drop-area"><div class="p1-drop-icon">▶</div><strong>Kéo &amp; thả video vào đây</strong><span>Hỗ trợ MP4, MOV, MKV, AVI, WEBM</span><small>hoặc</small><button id="btn-upload-step1" class="p1-btn p1-btn-primary p1-add-video" type="button">＋ Thêm Video</button></div>
+          <div class="p1-queue-hint">Chọn một Job trong danh sách để dùng các hành động ở mục 5.</div>
+          <div class="p1-queue-head"><span>Chọn</span><span>Tên video</span><span>Trạng thái</span><span>Thời gian</span></div>
+          <div id="step1-job-list" class="tk-job-list p1-job-list"><div class="job-empty">Chưa có video. Dùng “+ Thêm Video” tại mục 5.</div></div>
           <div class="p1-queue-footer"><span>Tổng: <strong id="job-count">0 video</strong></span><span id="p1-complete-count">Đã hoàn thành: 0/0</span></div><div class="p1-total-progress"><span id="p1-total-progress-fill"></span></div>
         </section>
         <section class="p1-card p1-actions-card">${title('5','Hành động','ACTION')}<div class="p1-action-grid"><button id="btn-start-all" class="p1-btn p1-btn-run" type="button">▶ Bắt đầu chạy</button><button id="p1-action-add" class="p1-btn p1-btn-primary" type="button">＋ Thêm Video</button><button id="btn-stop-all" class="p1-btn p1-btn-secondary" type="button">⏹ Dừng xử lý</button><button id="p1-delete-selected" class="p1-btn p1-btn-danger-ghost" type="button">🗑 Xóa đã chọn</button><button id="p1-delete-all" class="p1-btn p1-btn-secondary" type="button">× Xóa tất cả</button></div></section>
@@ -58,20 +58,12 @@
   </div>`;
 
   pane.dataset.approvedMounted = 'true';
-  mountPipelineNav();
+  applyPipelineShell();
   bindUiState();
   watchQueue();
 })();
 
-function mountPipelineNav() {
-  const nav = document.querySelector('.nav-menu');
-  const settings = nav?.querySelector('[data-page="settings"]');
-  if (nav && !nav.querySelector('[data-pipeline1-nav]')) {
-    const item = document.createElement('a');
-    item.href = '#'; item.className = 'nav-item active'; item.dataset.page = 'home'; item.dataset.pipeline1Nav = 'true';
-    item.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Pipeline 1</span>';
-    settings ? nav.insertBefore(item, settings) : nav.appendChild(item);
-  }
+function applyPipelineShell() {
   const brand = document.querySelector('.brand h2');
   if (brand) { brand.dataset.shortBrand = brand.textContent.trim() || 'VSR'; brand.textContent = 'Video Subtitle Remover'; }
   document.querySelector('.app-container')?.classList.add('pipeline1-shell-active');
@@ -98,8 +90,7 @@ function bindUiState() {
   voice?.addEventListener('change', () => localStorage.setItem('tts_voice', voice.value));
   speed?.addEventListener('input', () => { document.getElementById('step1-speed-value').textContent = `${Number(speed.value).toFixed(2)}x`; localStorage.setItem('tts_speed', speed.value); });
 
-  document.getElementById('btn-upload-step1')?.addEventListener('click', () => document.getElementById('btn-open-file')?.click());
-  document.getElementById('p1-action-add')?.addEventListener('click', () => document.getElementById('btn-upload-step1')?.click());
+  document.getElementById('p1-action-add')?.addEventListener('click', () => document.getElementById('btn-open-file')?.click());
   document.getElementById('step1-btn-copy-log')?.addEventListener('click', async () => {
     const text = document.getElementById('step1-log-output')?.innerText || '';
     if (!text) return;
@@ -187,9 +178,8 @@ function decorateJobs() {
   [...document.querySelectorAll('#step1-job-list .tk-job-card')].forEach((card,index) => {
     if (card.dataset.approvedDecorated === 'true') return;
     const job=state.jobs[index], header=card.querySelector('.tk-job-card-header'); if (!job || !header) return;
-    const controls=header.querySelector('div:last-child');
-    header.innerHTML=`<span class="p1-job-index">${index+1}</span><span class="p1-job-thumb">▶</span><span class="p1-job-name-wrap"><strong title="${escapeAttr(job.fileName)}">${escapeHtml(job.fileName)}</strong><small>Video nguồn · Pipeline 1</small></span><span class="p1-job-state status-${job.status}">${statusLabel(job.status)}</span><span class="p1-job-time">${job._elapsedTimeString || '—'}</span><span class="p1-job-actions"></span>`;
-    const slot=header.querySelector('.p1-job-actions'); if (controls && slot) { [...controls.querySelectorAll('button')].forEach(button => slot.appendChild(button)); controls.remove(); }
+    const selected=state.pipeline1SelectedJobId === job.id;
+    header.innerHTML=`<span class="p1-job-selector${selected ? ' selected' : ''}">${selected ? '✓' : ''}</span><span class="p1-job-thumb">▶</span><span class="p1-job-name-wrap"><strong title="${escapeAttr(job.fileName)}">${escapeHtml(job.fileName)}</strong><small>${selected ? 'Đang chọn · dùng hành động ở mục 5' : 'Click để chọn Job'}</small></span><span class="p1-job-state status-${job.status}">${statusLabel(job.status)}</span><span class="p1-job-time">${job._elapsedTimeString || '—'}</span>`;
     card.dataset.approvedDecorated='true';
   });
 }
