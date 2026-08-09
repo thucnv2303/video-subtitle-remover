@@ -7,9 +7,125 @@ contextBridge.exposeInMainWorld('electronAPI', {
   startPython: () => ipcRenderer.invoke('python:start'),
   stopPython: () => ipcRenderer.invoke('python:stop'),
   getPythonStatus: () => ipcRenderer.invoke('python:status'),
+  listOllamaModels: (endpoint) => ipcRenderer.invoke('ollama:listModels', endpoint),
   openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   platform: process.platform
+});
+
+function installOllamaModelScanner() {
+  const provider = document.getElementById('ai-provider');
+  const model = document.getElementById('ai-model');
+  const group = document.getElementById('ai-model-group');
+  const endpoint = document.getElementById('ai-endpoint');
+  if (!provider || !model || !group || !endpoint) return false;
+  if (document.getElementById('ollama-model-scan-row')) return true;
+
+  const row = document.createElement('div');
+  row.id = 'ollama-model-scan-row';
+  row.style.cssText = 'display:none;grid-template-columns:auto minmax(0,1fr);gap:8px;margin-top:8px;align-items:center;';
+
+  const scan = document.createElement('button');
+  scan.id = 'btn-scan-ollama-models';
+  scan.type = 'button';
+  scan.className = 'approved-secondary-btn compact';
+  scan.textContent = '↻ Quét model Ollama';
+
+  const select = document.createElement('select');
+  select.id = 'ollama-model-select';
+  select.className = 'approved-input';
+  select.disabled = true;
+  select.innerHTML = '<option value="">Chưa quét model</option>';
+
+  const status = document.createElement('p');
+  status.id = 'ollama-model-scan-status';
+  status.className = 'field-help';
+  status.style.marginTop = '6px';
+
+  row.append(scan, select);
+  group.append(row, status);
+
+  const syncVisibility = () => {
+    const active = provider.value === 'ollama';
+    row.style.display = active ? 'grid' : 'none';
+    status.style.display = active ? 'block' : 'none';
+  };
+
+  const renderModels = (models) => {
+    const current = model.value;
+    select.innerHTML = '';
+    if (!models.length) {
+      select.innerHTML = '<option value="">Không có model local</option>';
+      select.disabled = true;
+      return;
+    }
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Chọn model Ollama đã cài';
+    select.appendChild(placeholder);
+    models.forEach((name) => {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      select.appendChild(option);
+    });
+    select.disabled = false;
+    if (models.includes(current)) select.value = current;
+
+    const suggestions = document.getElementById('ai-model-suggestions');
+    if (suggestions) {
+      suggestions.querySelectorAll('option[data-ollama-scanned="true"]').forEach((option) => option.remove());
+      models.forEach((name) => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.dataset.ollamaScanned = 'true';
+        suggestions.appendChild(option);
+      });
+    }
+  };
+
+  scan.addEventListener('click', async () => {
+    scan.disabled = true;
+    select.disabled = true;
+    status.textContent = 'Đang quét model từ Ollama local...';
+    try {
+      const result = await ipcRenderer.invoke('ollama:listModels', endpoint.value);
+      if (!result?.ok) {
+        renderModels([]);
+        status.textContent = result?.error || 'Không thể quét model Ollama.';
+        return;
+      }
+      renderModels(result.models || []);
+      status.textContent = result.models?.length
+        ? `Đã tìm thấy ${result.models.length} model local.`
+        : 'Ollama đang chạy nhưng chưa có model nào được cài.';
+    } catch (err) {
+      renderModels([]);
+      status.textContent = err?.message || 'Không thể quét model Ollama.';
+    } finally {
+      scan.disabled = false;
+    }
+  });
+
+  select.addEventListener('change', () => {
+    if (!select.value) return;
+    model.value = select.value;
+    model.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  document.querySelectorAll('.provider-btn[data-provider]').forEach((button) => {
+    button.addEventListener('click', () => setTimeout(syncVisibility, 0));
+  });
+  syncVisibility();
+  return true;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  let attempts = 0;
+  const timer = setInterval(() => {
+    attempts += 1;
+    if (installOllamaModelScanner() || attempts >= 40) clearInterval(timer);
+  }, 100);
 });
