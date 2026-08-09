@@ -3,6 +3,7 @@
 
   const P1 = { IDLE:'idle', QUEUED:'queued', PROCESSING:'processing', FINISHED:'finished', ERROR:'error' };
   const P2 = { LOCKED:'locked', READY:'ready', QUEUED:'queued', PROCESSING:'processing', FINISHED:'finished', ERROR:'error' };
+  const LEGACY_P2_READY = 'p2-ready';
   let renderPatched = false;
   let syncScheduled = false;
 
@@ -69,14 +70,22 @@
           job.p1Status = P1.ERROR;
           job.p1Progress = Number(job.progress) || 0;
           job.p2Status = P2.LOCKED;
+          // Allow the legacy P1 Start All handler to retry this job later.
+          job.status = 'idle';
+          job.progress = 0;
+        } else if (job.status === 'idle' && isBusy(job.p1Status)) {
+          // Legacy cancel returns status to idle. Keep P2 locked and reset P1 state.
+          job.p1Status = P1.IDLE;
+          job.p1Progress = 0;
+          job.p2Status = P2.LOCKED;
         } else if (job.status === 'finished' && job.p1Status !== P1.FINISHED) {
           job.p1Status = P1.FINISHED;
           job.p1Progress = 100;
           job.p2Status = P2.READY;
           job.p2Progress = 0;
           job.p3Status = 'locked';
-          // Legacy P2 runner expects idle before user starts P2.
-          job.status = 'idle';
+          // Do not use idle here: legacy P1 Start All queues every idle job.
+          job.status = LEGACY_P2_READY;
           job.progress = 0;
           log(`[P1→P2] ${job.fileName} đã hoàn tất Pipeline 1 và được mở khóa cho Pipeline 2.`, 'success');
         }
@@ -236,6 +245,9 @@
         notify('Pipeline 2 đang khóa trong khi hàng đợi Pipeline 1 còn chạy.', 'warning');
         return;
       }
+      // The legacy P2 click handler only accepts idle/error semantics.
+      job.status = 'idle';
+      job.progress = 0;
       job.pipeline = 2;
       job.p2Status = P2.QUEUED;
       job.p2Progress = 0;
