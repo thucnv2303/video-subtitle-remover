@@ -3,7 +3,7 @@
 Status: ACTIVE
 
 Task:
-`RECOVERY-007E-SETTINGS-V1-001-REV5`
+`RECOVERY-007E-SETTINGS-V1-001-REV6`
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -14,57 +14,31 @@ Canonical base:
 Canonical source basis:
 `cf20a02f1e7491fddf7f05dab98fae12050460bb`
 
+Trusted project-state ancestor:
+`b772a7ad132fd0c3e591a632843a7b56a45eba8e`
+
 Review branch:
-`review/RECOVERY-007E-SETTINGS-V1-001-REV5`
+`review/RECOVERY-007E-SETTINGS-V1-001-REV6`
 
 Execution spec:
-`.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV5.md`
+`.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV6.md`
 
-Active amendments:
-- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV5-AMENDMENT-01.md` — historical first retry authority, consumed.
-- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV5-AMENDMENT-02.md` — CURRENT retry authority.
-
-Current PM authority basis:
-The second local REV5 attempt is INVALIDATED. It failed mandatory DOM uniqueness after applying a candidate patch. Its transcript also used forbidden `git reset --hard`, `git clean -fd`, `git restore .`, and `git add .` in scratch Git repositories, and ran `npm run test || echo "NONE FOUND"`, masking the expected npm error even though canonical `package.json` has no `test` script. GitHub remote remained unchanged by the failed implementation attempt before Amendment 02 publication.
-
-Invalidated implementation authority includes:
-- failed local REV5 worktree `E:\Project AI\Video-sub-remove-clean-3`
-- failed local REV5 worktree `E:\Project AI\Video-sub-remove-clean-5`
-- `C:\Users\thucn\.gemini\antigravity\scratch\rev5\`
-- `C:\Users\thucn\.gemini\antigravity\scratch\rev5_clean\`
-- patches/candidates/source copies from either failed REV5 attempt
-- PR #35 / REV4 branch and all REV4 implementation commits
-- REV3 / REV2 / PR #32 / PR #33 implementation source
-- local stopped retries, stashes, patches, scratch scripts, normalization artifacts
-
-Owner product baseline remains accepted. Do not ask Owner to reconfirm baseline.
+Incident disposition:
+- INCIDENT-REV5-003 evidence publication: PASS.
+- Evidence PR #36 closed unmerged; evidence-only, not an implementation candidate.
+- REV5 source commit `0b3a81ec7532913146232ac1259f8bbdb9bd9ef2` and docs commit `f852446802483c5677667d8a3075fb0d593ce5d4` are INVALIDATED and forbidden as implementation input.
+- GitHub verified trusted source blobs at `b772a7ad...` match canonical source `cf20a02...` for the affected Settings source files.
 
 Required startup:
 1. `git fetch origin`
-2. Read this ACTIVE file from `origin/review/RECOVERY-007E-SETTINGS-V1-001-REV5`.
-3. Read `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV5.md` from the same remote ref.
-4. Read Amendment 01 from the same remote ref for historical context.
-5. Read `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV5-AMENDMENT-02.md` from the same remote ref as CURRENT authority.
-6. Record exact remote HEAD from `git rev-parse origin/review/RECOVERY-007E-SETTINGS-V1-001-REV5`.
-7. Verify merge-base with `cf20a02f1e7491fddf7f05dab98fae12050460bb` equals that canonical source basis.
-8. Use a NEW isolated clean worktree from the CURRENT remote REV5 head.
-9. Verify source files are canonical-baseline source, not copied invalidated content.
+2. Read this ACTIVE file from `origin/review/RECOVERY-007E-SETTINGS-V1-001-REV6`.
+3. Read `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV6.md` from the same remote ref.
+4. Record exact remote REV6 HEAD.
+5. Verify merge-base with `cf20a02f1e7491fddf7f05dab98fae12050460bb` equals the canonical source basis.
+6. Use a NEW isolated clean worktree from the CURRENT remote REV6 HEAD.
+7. Verify affected source blobs remain canonical-source blobs before editing.
 
-Hard STOP:
-- no reuse/copy/cherry-pick/apply of invalidated Settings implementation;
-- no Python/Node.js/PowerShell/sed/perl source rewrite or string-replacement scripts;
-- no generated patch-helper scripts;
-- no `git checkout <path>`, restore, reset, clean, rebase, amend, force push, history rewrite;
-- no line-ending conversion/normalization or mixed-EOL manipulation;
-- no `git add .` or `git add -A`;
-- no `--no-verify` or hook bypass;
-- no shell fallback such as `||` to mask a required command failure;
-- any required check warning/error/failure => STOP before commit and LEAVE THE TASK WORKTREE UNTOUCHED;
-- unexpected broad/full-file/EOL churn, missing required DOM, or duplicate DOM => STOP; no self-repair.
-
-Amendment 02 authorizes the fresh-candidate workflow described there. Follow it exactly. Do not initialize a Git repository in the candidate workspace.
-
-Canonical `package.json` has no `test` script. Do not run nonexistent npm test commands merely to prove absence. Inspect test availability read-only and record `Applicable Settings tests: NONE FOUND` if appropriate.
+Hard controls and acceptance criteria are authoritative in the REV6 spec. Any required warning/error/failure => STOP; do not self-repair, commit, or push.
 
 Owner app verification:
 NOT STARTED — only after PM GitHub code-review PASS.
