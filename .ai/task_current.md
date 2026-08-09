@@ -6,35 +6,28 @@ RECOVERY-007E-SETTINGS-V1-001-REV7
 ## Name
 Settings V1 — Fresh Clean Retry After INCIDENT-REV6-004
 
-## Goal
-Implement the approved Settings V1 UI and renderer logic from canonical source `cf20a02f1e7491fddf7f05dab98fae12050460bb` without reusing invalidated implementation artifacts.
-
 ## Status
-WAITING_REVIEW
+WAITING_OWNER_TEST
 
 ## Review branch
 `review/RECOVERY-007E-SETTINGS-V1-001-REV7`
 
-## Source basis
-- Canonical source: `cf20a02f1e7491fddf7f05dab98fae12050460bb`
-- Trusted project-state basis: `b88ffc62aec35cb28de7adf7ce70750f478b29f5`
+## Review state
+- Draft PR: #38
+- Current reviewed HEAD: `9db8aa9859b472365be42bf0a72a7b95f29bbe34`
+- Product source diff: `src/renderer/js/components/settings.js` only.
+- Current Settings blob: `805e58278e75b00ee10b1c47cdc2afff774e567e`.
+- JavaScript syntax: PASS.
+- Targeted Settings assertions: PASS.
+- PM GitHub code review: PASS; PR #38 comment `5230629750`.
+- Owner manual app verification: NOT STARTED — AUTHORIZED.
+- Documentation synchronization: PASS for owner-test handoff after current_state/handoff are synchronized.
+- Merge permission: BLOCKED until owner PASS is recorded and explicit merge approval is given.
 
-## Implementation
-- Source commit: `58ad057b43c802fbbc9a1aebc6a86734def4fee1`.
-- Source changed: `src/renderer/js/components/settings.js` only.
-- Runtime layout: General, AI Provider, Pipeline 1 Defaults, Voice Cloning, System / Diagnostics.
-- Provider persistence: `ai_api_keys_<provider>` and `ai_model_<provider>`.
-- Blank model clearing persists.
-- Legacy `ai_api_key` migration restricted to initial persisted cloud-provider load when provider list is empty.
-- No normal writes to global `ai_api_key` or global `ai_model`.
-- Diagnostics use `window.api.health()`, `window.api.gpuInfo()`, and `window.api.getTTSStatus()` only.
-- CPU-only is neutral/non-error.
-- Existing TTS/voice-clone behavior preserved.
-
-## Verification
-- `node --check` on implemented Settings module: PASS.
-- Targeted assertions for forbidden keys/direct fetch/provider storage/diagnostic wrappers: PASS.
-- GitHub final code review: WAITING.
-- Owner manual app verification: NOT STARTED / NOT AUTHORIZED until PM code-review PASS.
-- Documentation synchronization: PASS for review state.
-- Merge permission: BLOCKED.
+## Owner test focus
+- Exactly five Settings cards.
+- Gemini/DeepSeek/Ollama field visibility.
+- Provider-specific API-key/model persistence and blank model clearing.
+- Output-directory control.
+- Diagnostics including CPU-only state.
+- Existing voice-clone/TTS behavior.
