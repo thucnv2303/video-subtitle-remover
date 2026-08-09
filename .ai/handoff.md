@@ -1,49 +1,51 @@
 # AgentOS Handoff Status
 
-## Last completed governance task
-GOVERNANCE-AGENTOS-PRECOMMIT-001 — PASS / MERGED via PR #34.
-
 ## Canonical baseline
 `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
 
-Current canonical HEAD:
+Canonical source HEAD:
 `cf20a02f1e7491fddf7f05dab98fae12050460bb`
 
 ## Invalidated product executions
-- REV3 — INVALIDATED by PM review.
+- REV3 — INVALIDATED.
 - REV4 / PR #35 — INVALIDATED and closed unmerged.
-- REV5 implementation — INVALIDATED after INCIDENT-REV5-003 review.
-- First local REV6 attempt — INVALIDATED; forbidden `git checkout <path>` used and required `git diff --check` failed.
+- REV5 implementation — INVALIDATED; INCIDENT-REV5-003 evidence PASS; PR #36 closed unmerged.
+- REV6 implementation — INVALIDATED.
 
-## Incident disposition
-- INCIDENT-REV5-003 evidence publication: PASS.
-- Evidence PR #36: closed unmerged.
-- Trusted recovery source remains canonical `cf20a02f1e7491fddf7f05dab98fae12050460bb`.
+## Latest incident disposition
+- INCIDENT-REV6-004 evidence publication: PASS / RESOLVED.
+- Evidence PR #37: closed unmerged.
+- REV6 source/docs commits remain untrusted and forbidden as recovery/implementation input.
+
+## Trusted REV7 basis
+- Trusted project-state basis: `b88ffc62aec35cb28de7adf7ce70750f478b29f5`.
+- GitHub comparison verifies no source changes between canonical `cf20a02...` and trusted `b88ffc62...`; differences are `.ai` only.
 
 ## Active task
-`RECOVERY-007E-SETTINGS-V1-001-REV6`
+`RECOVERY-007E-SETTINGS-V1-001-REV7`
 
 ## Status
-ACTIVE — WAITING FOR FRESH RETRY
+ACTIVE — WAITING
 
 ## Review branch
-`review/RECOVERY-007E-SETTINGS-V1-001-REV6`
+`review/RECOVERY-007E-SETTINGS-V1-001-REV7`
 
 ## Execution authority
 - `.ai/task_specs/ACTIVE.md`
-- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV6.md`
-- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV6-AMENDMENT-01.md`
+- `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7.md`
 
-## Retry rule
-Use a NEW isolated clean worktree from the current remote REV6 HEAD. Do not reuse the failed worktree `E:\Project AI\Video-sub-remove-clean-REV6` or any invalidated REV2/REV3/REV4/REV5 source, patch, candidate, stash, or scratch artifact. Follow Amendment 01 fresh-candidate/EOL-safe workflow exactly.
+## REV7 execution rule
+Use a NEW isolated clean worktree from exact current remote REV7 authority. Allowed source is only `src/renderer/index.html` and `src/renderer/js/components/settings.js`.
+
+Edit tracked source directly with the normal editor, one file at a time. No external candidate/baseline-copy, no generated patch, no `git apply`, no rewrite script, and no line-ending normalization. Complete the per-file hard gate before touching the next source file. First required gate failure => STOP without self-repair.
 
 ## Gates
-- Execution: WAITING FOR FRESH RETRY.
+- Execution: WAITING.
 - Automated/static verification: WAITING.
 - Code review: WAITING.
-- Owner manual app verification: NOT STARTED — WAITING FOR PM CODE REVIEW.
-- Documentation synchronization: PASS for REV6 retry authority.
+- Owner manual app verification: NOT STARTED / NOT AUTHORIZED.
+- Documentation synchronization: PASS for REV7 authority setup.
 - Merge permission: BLOCKED.
 
 ## Next action
-Executor starts a fresh REV6 retry only after fetching remote authority, reading the base spec plus Amendment 01, recording exact remote HEAD, and creating a new isolated clean worktree.
+Executor fetches `origin/review/RECOVERY-007E-SETTINGS-V1-001-REV7`, reads remote ACTIVE + REV7 spec, records exact remote HEAD, creates a new isolated clean worktree from that HEAD, verifies source blobs, then executes REV7 exactly.
