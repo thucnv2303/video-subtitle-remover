@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-ACTIVE — RECOVERY-007E-SETTINGS-V1-001-REV6
+ACTIVE — RECOVERY-007E-SETTINGS-V1-001-REV7
 
 ## Primary Input (OWNER CONFIRMED)
 - Chinese product-review videos (Original source cho P1 và P2).
@@ -12,26 +12,24 @@ ACTIVE — RECOVERY-007E-SETTINGS-V1-001-REV6
 - Hard-subtitle removal (Pipeline 2) currently works.
 
 ## Documentation & Task State
-- RECOVERY-004 complete at commit 1808076.
-- RECOVERY-005 PASS.
-- RECOVERY-006 execution: COMPLETED; PM review: PASS.
 - GOVERNANCE-AGENTOS-PRECOMMIT-001: PASS / MERGED via PR #34.
 - Canonical product baseline HEAD: `cf20a02f1e7491fddf7f05dab98fae12050460bb`.
 - REV3: INVALIDATED.
 - REV4 / PR #35: INVALIDATED and closed unmerged.
-- REV5 implementation: INVALIDATED after INCIDENT-REV5-003 review.
-- INCIDENT-REV5-003 evidence publication: PASS; PR #36 closed unmerged.
-- Active clean retry: `RECOVERY-007E-SETTINGS-V1-001-REV6`.
-- Active review branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV6`.
-- REV6 canonical source basis: `cf20a02f1e7491fddf7f05dab98fae12050460bb`.
-- First local REV6 attempt: INVALIDATED; remote GitHub branch remained unchanged by implementation.
-- Active execution amendment: `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV6-AMENDMENT-01.md`.
-- Execution: WAITING FOR FRESH RETRY.
+- REV5 implementation: INVALIDATED; INCIDENT-REV5-003 evidence PASS; PR #36 closed unmerged.
+- REV6 implementation: INVALIDATED.
+- INCIDENT-REV6-004 evidence publication: PASS / RESOLVED; PR #37 closed unmerged.
+- Trusted project-state basis for REV7: `b88ffc62aec35cb28de7adf7ce70750f478b29f5`.
+- GitHub comparison verifies that basis contains no source changes relative to canonical `cf20a02...`.
+- Active task: `RECOVERY-007E-SETTINGS-V1-001-REV7`.
+- Active review branch: `review/RECOVERY-007E-SETTINGS-V1-001-REV7`.
+- Active execution spec: `.ai/task_specs/RECOVERY-007E-SETTINGS-V1-001-REV7.md`.
+- Execution: WAITING.
 - Automated verification: WAITING.
 - Code review: WAITING.
-- Owner product test: NOT STARTED — WAITING FOR PM CODE REVIEW.
-- Documentation synchronization: PASS for REV6 retry authority.
+- Owner product test: NOT STARTED / NOT AUTHORIZED.
+- Documentation synchronization: PASS for REV7 authority setup.
 - Product merge permission: BLOCKED.
 
 ## Current branch
-review/RECOVERY-007E-SETTINGS-V1-001-REV6
+review/RECOVERY-007E-SETTINGS-V1-001-REV7
