@@ -1,69 +1,76 @@
 # Current Task
 
 ## Task ID
-BUG-005
+PIPELINE2-MANUAL-REGION-REVISION-002
 
 ## Name
-Pipeline 1 Full Processing Chain
+Pipeline 2 Manual ROI Geometry, Per-Region Mask, and Compact Inpaint Log
 
 ## Status
-CLOSED AT CURRENT FUNCTIONAL CHECKPOINT BY OWNER — NO FURTHER P1 WORK FOR NOW
+READY_FOR_ANTI_EXECUTION
 
-## Base
-- Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
-- Base SHA: `dd520054b385ae18b8154b7c897eb9baad7eac02`
+## Parent task
+`PIPELINE2-RUNTIME-REVISION-001`
 
-## Review branch / PR
-- Branch: `review/BUG-005-P1-FULL-CHAIN`
-- Draft PR: #41
+The previous runtime revision fixed the backend-loading/stuck-state path sufficiently for Owner retest. This task addresses the remaining correctness and observability defects found in that retest.
 
-## Goal reached at current checkpoint
-`ASR(auto) + original-video keyframes/vision → structured analysis/remix artifacts → TTS artifacts → P1 COMPLETE → P2 READY`.
+## Authority / review basis
+- Repository: `thucnv2303/video-subtitle-remover`
+- Authority branch before this task: `review/PIPELINE2-APPROVED-UI-001`
+- Draft PR: #42
+- PM basis SHA before task publication: `186c9726d88a99f4438b77002b1487077c0ce712`
+- Required new review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`
+- Execution spec: `.ai/task_specs/PIPELINE2-MANUAL-REGION-REVISION-002.md`
 
-## Owner runtime technical PASS
-The accepted runtime demonstrated:
-- 8-scene multimodal analysis;
-- 8 remix-script segments;
-- vision=`gemma4:12b`;
-- reasoning=`qwen3-coder:30b`;
-- reasoning 54.4s / 1805 output tokens / 52.2 tok/s;
-- 8 TTS segments generated;
-- durable `voice.mp3` persisted under the P1 job artifact directory;
-- P1 completed and P2 unlocked after the artifact gate.
+## Owner evidence
+Owner reports and supplied runtime log show:
+- realtime preview: PASS;
+- P2 completes and produces output;
+- 440-frame STTN run completed in about 38 seconds at 11.38 frame/s;
+- P3 unlock occurs after successful P2 completion;
+- manual drawn ROI is visually displaced;
+- region-specific mask selection is missing;
+- Console still contains repetitive `/api/frame/...` access logs and expected early preview 404 noise.
 
-This proves the technical processing chain for the tested runtime. Editorial quality of the analysis/remix remains a possible future refinement, not a blocker for the Owner's temporary closure decision.
+## Allowed source files
+- `src/renderer/js/app.js`
+- `src/renderer/js/pipelines/pipeline2-remove.js`
+- `src/renderer/js/pipeline2-runtime.js`
+- `src/renderer/styles/pipeline2-approved.css`
 
-## Latest UX/cancel refinement
-Implemented at the current source checkpoint:
-- primary Start button represents processing state and becomes Stop on hover;
-- legacy separate Stop control is hidden;
-- active Ollama inference can be cancelled through Electron IPC/AbortController;
-- cancellation prevents P1 completion/P2 unlock;
-- repeating Ollama generation timer messages update one live log row;
-- ASR/TTS synchronous backend work uses safe-stop semantics at the request boundary.
+## Allowed knowledge files
+- `.ai/current_state.md`
+- `.ai/task_current.md`
+- `.ai/handoff.md`
+- `.ai/bugs.md`
+- `.ai/qa_checklist.md`
 
-## Verification
-Exact Git blob match + `node --check` PASS:
-- p1-vision IPC `4a9408ef0268f254d55dabc73fa9df8a375f8091`
-- preload `00e44d453c6a5d6b386ee76e392ea5e8300c39ff`
-- analysis `421fd49b8eeb1e6918a5d9b90361501cb99b9646`
-- run UX `cbbf919bea08687f1ba342d3e163911a4981cb95`
-- run config `911402fb096f273c9bebadef71b6588e23083045`
-- pipeline1 AI/TTS `bb1a523a6c10614df1944845ff77901eaf8572bb`
+## Required behavior
+1. Manual drawing and rendered overlays use the actual rendered `canvas-original` rectangle, including letterbox offset, not the full preview wrapper.
+2. Saved regions remain in source-video pixel coordinates.
+3. Each manual region persists its own `maskMode`; existing region objects without it remain backward compatible.
+4. The global mask selector is the default for new regions / auto mode and must not retroactively overwrite existing regions.
+5. Manual multi-pass payload uses the current region's mask mode.
+6. Visible P2 Console suppresses successful `/api/frame/...` access flood and expected early `/api/preview` 404 noise during active P2 processing, while retaining meaningful progress, warnings, fatal errors, and completion/output.
+7. Preserve realtime preview, runtime backend discovery, P1→P2 eligibility/start gates, STTN behavior, and P3 unlock semantics.
 
-Targeted Ollama IPC cancellation simulation: PASS (`P1_CANCELLED`).
-GitHub CI: not configured.
-
-## Deferred evidence
-The latest Start/Stop + log-coalescing UX revision was not separately re-run by the Owner after publication. The Owner explicitly chose to stop further P1 work and accept the current functional checkpoint for now. Do not record the deferred UX retest as PASS.
+## Verification required
+- `node --check src/renderer/js/app.js`
+- `node --check src/renderer/js/pipelines/pipeline2-remove.js`
+- `node --check src/renderer/js/pipeline2-runtime.js`
+- `git diff --check`
+- deterministic ROI mapping simulation including a letterboxed portrait canvas;
+- two-region payload proof with different masks;
+- backward-compatibility proof for a region missing `maskMode`;
+- log-filter proof that frame 200 / expected active-preview 404 are suppressed while fatal errors remain visible.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS.
-- Code review: PASS for current checkpoint.
-- Owner manual app verification: core chain TECHNICAL PASS; latest UX/cancel retest DEFERRED / NOT SEPARATELY VERIFIED.
-- Documentation synchronization: PASS after closure sync.
-- Merge permission: BLOCKED — PR #41 remains Draft/unmerged; no merge was requested.
+- Execution: NOT STARTED.
+- Automated/static verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: PARTIAL PASS / NEEDS_REVISION from previous retest; fresh retest NOT STARTED.
+- Documentation synchronization: PASS at task-open checkpoint.
+- Merge permission: BLOCKED.
 
-## Reopen rule
-Do not resume BUG-005/Pipeline 1 implementation unless the Owner explicitly reopens P1. A new task may now be selected for Pipeline 2 or Pipeline 3.
+## Merge rule
+Do not merge until implementation, automated verification, GitHub code review, fresh Owner runtime PASS, owner-result documentation synchronization, and explicit Project Manager approval are complete.

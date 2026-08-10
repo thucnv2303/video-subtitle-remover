@@ -247,3 +247,192 @@ document.addEventListener('DOMContentLoaded',() => {
   }));
   bindSafeDetailActions();
 });
+
+(function mountApprovedPipeline2() {
+  const pane = document.getElementById('step-2-content');
+  if (!pane || pane.dataset.p2ApprovedMounted === 'true') return;
+
+  if (!document.querySelector('link[data-pipeline2-approved]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'styles/pipeline2-approved.css';
+    link.dataset.pipeline2Approved = 'true';
+    document.head.appendChild(link);
+  }
+
+  const compat = document.createElement('div');
+  compat.className = 'p2-compat-bin';
+  while (pane.firstChild) compat.appendChild(pane.firstChild);
+  const find = (id) => compat.querySelector(`#${id}`);
+  const query = (selector) => compat.querySelector(selector);
+
+  const backendStatus = find('backend-status');
+  const algo = find('algo-select');
+  const mask = find('mask-mode');
+  const modeAuto = find('mode-auto');
+  const modeManual = find('mode-manual');
+  const regionsPanel = find('regions-panel');
+  const videoMeta = find('video-meta');
+  const splitPreview = query('.split-preview');
+  const logPanel = query('.log-panel');
+  const jobList = find('job-list');
+  const btnStart = find('btn-start');
+  const btnCancel = find('btn-cancel');
+  const progressSection = find('progress-section');
+  const btnCopyLog = find('btn-copy-log');
+  const btnClearLog = find('btn-clear-log');
+
+  const title = (n, text, icon) => `<div class="p2-section-title"><span class="p2-section-number">${n}</span><strong>${text}</strong><span class="p2-section-icon">${icon}</span></div>`;
+
+  pane.innerHTML = `
+    <div class="p2-approved-shell">
+      <header class="p2-page-header">
+        <div class="p2-page-title-row"><span class="p2-page-icon">P2</span><div><h1>Pipeline 2 · Xóa phụ đề</h1><p>Loại bỏ phụ đề cháy khỏi video gốc. Chỉ xử lý các Job đã hoàn tất và được mở khóa từ Pipeline 1.</p></div></div>
+        <div class="p2-source-badge">🔒 Mở khóa từ Pipeline 1</div>
+      </header>
+      <div class="p2-workspace-grid">
+        <aside class="p2-control-column">
+          <section class="p2-card p2-controls-card">
+            <div class="p2-card-head">${title('1','Điều khiển & Thuật toán','CTRL')}<div class="p2-backend-slot"></div></div>
+            <div class="p2-control-body">
+              <div class="p2-field"><label>Thuật toán</label><div class="p2-algo-slot"></div></div>
+              <div class="p2-field"><label>Chế độ mask</label><div class="p2-mask-slot"></div></div>
+              <div class="p2-field"><label>Phát hiện vùng phụ đề</label><div class="p2-mode-slot"><div class="toggle-group"></div></div></div>
+              <div class="p2-region-slot"></div>
+            </div>
+          </section>
+          <section class="p2-card p2-p1-summary">
+            <div class="p2-card-head">${title('','Kết quả từ Pipeline 1','P1')}<span id="p2-p1-ready" class="p2-muted">Chưa chọn Job</span></div>
+            <div class="p2-summary-grid">
+              <div class="p2-summary-row"><span>Job nguồn</span><strong id="p2-summary-job">—</strong></div>
+              <div class="p2-summary-row"><span>Pipeline 1</span><strong id="p2-summary-p1">—</strong></div>
+              <div class="p2-summary-row"><span>Voice artifact</span><strong id="p2-summary-voice">—</strong></div>
+              <div class="p2-summary-row"><span>Nguồn xử lý P2</span><strong>Video gốc</strong></div>
+            </div>
+            <div class="p2-summary-footer">P2 chỉ dùng video gốc để xóa burned-in subtitle; không chạy lại AI/TTS.</div>
+          </section>
+        </aside>
+
+        <main class="p2-center-column">
+          <section class="p2-card p2-queue-card">
+            <div class="p2-card-head">${title('2','Job Queue','QUEUE')}<div class="p2-queue-tools"><span id="p2-queue-count">0 job</span><button id="p2-refresh-jobs" class="p2-refresh-btn" type="button">↻ Làm mới</button></div></div>
+            <div class="p2-queue-hint">Chỉ hiển thị Job đủ điều kiện từ Pipeline 1. Danh sách tự cuộn khi có nhiều Job.</div>
+            <div class="p2-queue-head"><span></span><span>Video (từ Pipeline 1)</span><span>Trạng thái</span><span>Tiến trình</span></div>
+            <div class="p2-job-slot"></div>
+            <div class="p2-queue-footer"><span id="p2-queue-selected">Chưa chọn Job</span><span id="p2-queue-progress">—</span></div>
+          </section>
+          <section class="p2-card p2-actions-card">
+            <div class="p2-card-head">${title('4','Hành động','ACTION')}<span class="p2-muted">Theo Job đang chọn</span></div>
+            <div class="p2-action-grid">
+              <div class="p2-action-slot"></div>
+              <button id="p2-sync-jobs" class="p2-btn p2-sync-btn" type="button">↻ Đồng bộ Job</button>
+              <button id="p2-delete-selected" class="p2-btn p2-delete-btn" type="button" disabled title="Chưa có safe delete contract riêng cho P2">🗑 Xóa đã chọn</button>
+            </div>
+            <div class="p2-progress-slot"></div>
+          </section>
+        </main>
+
+        <aside class="p2-detail-column">
+          <section class="p2-card p2-detail-card">
+            <div class="p2-card-head">${title('3','Chi tiết job đang chọn','DETAILS')}<span id="p2-detail-status" class="p2-state-chip">Chưa chọn</span></div>
+            <div class="p2-detail-top"><div class="p2-detail-title"><h3 id="p2-detail-name" class="p2-selected-name">Vui lòng chọn 1 Job</h3><span id="p2-detail-id" class="p2-muted">ID: —</span></div><div class="p2-meta-slot"></div></div>
+            <div class="p2-preview-slot"></div>
+            <div class="p2-preview-note">Video bên trái là nguồn gốc. Khung bên phải chỉ hiển thị kết quả thật sau khi engine P2 tạo output.</div>
+          </section>
+          <section class="p2-card p2-log-card">
+            <div class="p2-card-head">${title('5','Console / Log','LOG')}<div class="p2-log-actions"><span class="p2-live-dot">● Live</span><span class="p2-copy-slot"></span><span class="p2-clear-slot"></span></div></div>
+            <div class="p2-log-slot"></div>
+          </section>
+        </aside>
+      </div>
+    </div>`;
+
+  if (backendStatus) pane.querySelector('.p2-backend-slot')?.appendChild(backendStatus);
+  if (algo) pane.querySelector('.p2-algo-slot')?.appendChild(algo);
+  if (mask) pane.querySelector('.p2-mask-slot')?.appendChild(mask);
+  const modeGroup = pane.querySelector('.p2-mode-slot .toggle-group');
+  if (modeAuto) modeGroup?.appendChild(modeAuto);
+  if (modeManual) modeGroup?.appendChild(modeManual);
+  if (regionsPanel) pane.querySelector('.p2-region-slot')?.appendChild(regionsPanel);
+  if (jobList) pane.querySelector('.p2-job-slot')?.appendChild(jobList);
+  if (videoMeta) pane.querySelector('.p2-meta-slot')?.appendChild(videoMeta);
+  if (splitPreview) pane.querySelector('.p2-preview-slot')?.appendChild(splitPreview);
+  if (logPanel) pane.querySelector('.p2-log-slot')?.appendChild(logPanel);
+  const actionSlot = pane.querySelector('.p2-action-slot');
+  if (btnStart) actionSlot?.appendChild(btnStart);
+  if (btnCancel) actionSlot?.appendChild(btnCancel);
+  if (progressSection) pane.querySelector('.p2-progress-slot')?.appendChild(progressSection);
+  if (btnCopyLog) pane.querySelector('.p2-copy-slot')?.appendChild(btnCopyLog);
+  if (btnClearLog) pane.querySelector('.p2-clear-slot')?.appendChild(btnClearLog);
+
+  pane.appendChild(compat);
+  pane.dataset.p2ApprovedMounted = 'true';
+
+  const refresh = () => {
+    window.renderJobList?.();
+    requestAnimationFrame(syncApprovedP2View);
+  };
+  document.getElementById('p2-refresh-jobs')?.addEventListener('click', refresh);
+  document.getElementById('p2-sync-jobs')?.addEventListener('click', refresh);
+
+  if (jobList) {
+    new MutationObserver(() => requestAnimationFrame(syncApprovedP2View)).observe(jobList, { childList:true, subtree:true, attributes:true });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.step-chevron').forEach(step => step.addEventListener('click', () => {
+      const isP2 = step.dataset.step === '2';
+      const shell = document.querySelector('.app-container');
+      shell?.classList.toggle('pipeline2-shell-active', isP2);
+      if (isP2) {
+        const brand = document.querySelector('.brand h2');
+        if (brand) brand.textContent = 'Video Subtitle Remover';
+        setTimeout(syncApprovedP2View, 0);
+      }
+    }));
+    document.querySelectorAll('.nav-item').forEach(link => link.addEventListener('click', () => {
+      if (link.dataset.page === 'settings') document.querySelector('.app-container')?.classList.remove('pipeline2-shell-active');
+    }));
+    setTimeout(syncApprovedP2View, 300);
+  });
+})();
+
+function syncApprovedP2View() {
+  const pane = document.getElementById('step-2-content');
+  if (!pane?.dataset.p2ApprovedMounted) return;
+  const state = window._appState;
+  const list = document.getElementById('job-list');
+  const visibleCards = list ? [...list.querySelectorAll('.job-card')].filter(card => getComputedStyle(card).display !== 'none') : [];
+  const queueCount = document.getElementById('p2-queue-count');
+  if (queueCount) queueCount.textContent = `${visibleCards.length} job`;
+
+  const job = state?.jobs?.find(item => item.id === state.activeJobId) || null;
+  const name = document.getElementById('p2-detail-name');
+  const id = document.getElementById('p2-detail-id');
+  const status = document.getElementById('p2-detail-status');
+  const selected = document.getElementById('p2-queue-selected');
+  const progress = document.getElementById('p2-queue-progress');
+  if (name) name.textContent = job?.fileName || 'Vui lòng chọn 1 Job';
+  if (id) id.textContent = job ? `ID: #${String(job.id).toUpperCase()}` : 'ID: —';
+  if (status) status.textContent = job ? p2StatusLabel(job) : 'Chưa chọn';
+  if (selected) selected.textContent = job ? `Đang chọn: ${job.fileName}` : 'Chưa chọn Job';
+  if (progress) progress.textContent = job ? `Tiến trình: ${Number(job.p2Progress ?? job.progress ?? 0)}%` : '—';
+
+  const summaryJob = document.getElementById('p2-summary-job');
+  const summaryP1 = document.getElementById('p2-summary-p1');
+  const summaryVoice = document.getElementById('p2-summary-voice');
+  const p1Ready = document.getElementById('p2-p1-ready');
+  if (summaryJob) summaryJob.textContent = job?.fileName || '—';
+  if (summaryP1) summaryP1.textContent = job ? (job.p1Status === 'finished' || job.p2Status !== 'locked' ? 'Hoàn tất' : 'Chưa hoàn tất') : '—';
+  if (summaryVoice) summaryVoice.textContent = job ? (job.ttsAudioPath ? 'Có' : 'Không / không bắt buộc') : '—';
+  if (p1Ready) {
+    const ready = Boolean(job && (job.p1Status === 'finished' || job.p2Status !== 'locked'));
+    p1Ready.textContent = ready ? '● Sẵn sàng' : (job ? '● Đang khóa' : 'Chưa chọn Job');
+    p1Ready.classList.toggle('p2-summary-ready', ready);
+  }
+}
+
+function p2StatusLabel(job) {
+  const status = job?.p2Status || job?.status || 'idle';
+  return ({locked:'Đang khóa',ready:'Sẵn sàng','p2-ready':'Sẵn sàng',idle:'Sẵn sàng',queued:'Đang chờ',processing:'Đang xử lý',finished:'Hoàn tất',error:'Lỗi',cancelled:'Đã hủy'})[status] || status;
+}

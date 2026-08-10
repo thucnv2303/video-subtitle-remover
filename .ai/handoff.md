@@ -1,58 +1,53 @@
 # AgentOS Handoff Status
 
-## Canonical branch
-`recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
-
-## Accepted merged foundation
-- Settings V1 PR #38: MERGED / Owner PASS.
-- Pipeline 1 approved UI PR #39: MERGED / Owner PASS.
-- Pipeline 1 → Pipeline 2 handoff PR #40: MERGED / Owner PASS.
-- Canonical task base: `dd520054b385ae18b8154b7c897eb9baad7eac02`.
-
-## Pipeline 1 checkpoint
-`BUG-005 — Pipeline 1 Full Processing Chain`
+## Active task
+`PIPELINE2-MANUAL-REGION-REVISION-002 — Manual ROI Geometry, Per-Region Mask, and Compact Inpaint Log`
 
 ## Status
-CLOSED AT CURRENT FUNCTIONAL CHECKPOINT BY OWNER — NO FURTHER P1 WORK FOR NOW
+READY FOR ANTI EXECUTION
 
-## Review branch / PR
-- Branch: `review/BUG-005-P1-FULL-CHAIN`.
-- Draft PR: #41.
-- PR remains unmerged.
+## Review basis
+- Current P2 branch before task publication: `review/PIPELINE2-APPROVED-UI-001`.
+- Draft PR: #42.
+- PM basis SHA before publication: `186c9726d88a99f4438b77002b1487077c0ce712`.
+- P2 remains stacked on `review/BUG-005-P1-FULL-CHAIN` at `97d5a13e77b6919931c251c74fab4c191fa04cec`.
+- Required new review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
 
-## Accepted Owner runtime fact
-The full technical chain completed on a fresh P1 job:
-- multimodal analysis: 8 scenes / 8 remix segments;
-- vision model `gemma4:12b`;
-- reasoning model `qwen3-coder:30b`;
-- reasoning 54.4s, 1805 tokens, 52.2 tok/s;
-- TTS produced 8 segments and durable `voice.mp3`;
-- P1 artifacts became ready;
-- P1 completed and then unlocked P2.
+## Owner retest intake — 2026-08-10
+Verified/observed improvements:
+- backend now loads sufficiently for actual STTN processing;
+- realtime result preview works;
+- processing speed is much faster than the prior failed run;
+- supplied log shows 440 frames completed in about 38 seconds at 11.38 frame/s;
+- backend runtime reports STTN GPU mode;
+- clean-video output is created;
+- P3 unlocks after successful P2 completion.
 
-This is the accepted technical runtime checkpoint for P1. Editorial quality can be revisited later if the Owner reopens P1.
+Remaining blockers:
+1. Manual ROI box is displaced from the user's drag location.
+2. Each manual region cannot select/persist its own mask mode; current payload uses one job-level mask.
+3. Visible Console still floods successful `/api/frame/...` access lines and expected early preview 404 lines.
 
-## Latest UX/cancel source at checkpoint
-- primary P1 action integrates Start / Processing / hover Stop / Stopping state;
-- old separate Stop control is hidden;
-- active Ollama inference can be cancelled through Electron IPC and AbortController;
-- cancelled P1 remains incomplete and must not unlock P2;
-- Ollama progress uses one in-place Console row per phase instead of repeated timer lines;
-- synchronous Python ASR/TTS uses safe-stop semantics at the request boundary.
+## Direct source diagnosis
+- Approved P2 CSS makes `canvas-inner` fill the preview pane while `canvas-original` is aspect-ratio constrained and centered. Legacy draw math uses the wrapper dimensions, producing incorrect coordinates/overlay geometry when letterboxing exists.
+- `job.regions.push(...)` stores no `maskMode`.
+- manual `pipeline2-remove.js` payload sends `mask_mode: job.maskMode || 'box'` instead of a region-specific value.
+- P2 runtime log coalescing omits `/api/frame` from its successful access-log filter.
 
-## Verification
-Exact GitHub blob reconstruction + `node --check` PASS for current P1 IPC/preload/analysis/run-UX/run-config/AI-TTS files. Targeted mocked Ollama run + cancel returned `P1_CANCELLED` PASS. GitHub CI is not configured.
+## Execution authority
+Remote active spec:
+- `.ai/task_specs/ACTIVE.md`
+- `.ai/task_specs/PIPELINE2-MANUAL-REGION-REVISION-002.md`
 
-## Deferred evidence
-The latest Start/Stop + log-coalescing UX revision was not separately re-run by the Owner after publication. The Owner explicitly chose to stop further P1 work and accept the current checkpoint. This deferred retest must not be represented as PASS.
+Anti must fetch and read both from the exact remote authority ref named by Project Manager before editing. Local spec copies are not authority.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS.
-- Code review: PASS for current checkpoint.
-- Owner manual verification: core chain TECHNICAL PASS; latest UX/cancel retest DEFERRED / NOT SEPARATELY VERIFIED.
-- Documentation synchronization: PASS after closure sync.
-- Merge permission: BLOCKED — no merge requested; PR #41 remains Draft/unmerged.
+- Execution: new revision NOT STARTED.
+- Automated/static verification: WAITING.
+- Code review: WAITING.
+- Owner manual verification: previous retest PARTIAL PASS / NEEDS_REVISION; fresh retest NOT STARTED.
+- Documentation synchronization: PASS at owner-result intake/task-open checkpoint.
+- Merge permission: BLOCKED.
 
-## Next action
-Do not continue Pipeline 1 implementation unless explicitly reopened by the Owner. The next project task may move to Pipeline 2 or Pipeline 3 while preserving this P1 checkpoint as the reference input contract.
+## Owner action
+No fresh Owner app test until the new source revision is published and Project Manager code review passes. Owner does not edit `.ai` files.
