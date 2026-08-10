@@ -8,9 +8,9 @@
 - [x] Realtime result preview works.
 - [x] Clean-video output is generated.
 - [x] P3 unlock occurs after successful P2 completion.
-- [ ] Manual ROI alignment — previous Owner run FAIL; revision published, fresh retest pending.
-- [ ] Per-region mask independence — previous Owner run FAIL; revision published, fresh retest pending.
-- [ ] Compact P2 Console — previous Owner run FAIL; revision published, fresh retest pending.
+- [ ] Manual ROI alignment — previous Owner run FAIL; revision published, fresh detailed itemization not yet recorded.
+- [ ] Per-region mask independence — previous Owner run FAIL; revision published, fresh detailed itemization not yet recorded.
+- [ ] Compact P2 Console — previous Owner run FAIL; revision published, fresh detailed itemization not yet recorded.
 
 ## Source/scope verification
 - [x] Dedicated review branch from exact parent `39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
@@ -38,22 +38,28 @@
 - [x] Compare `d84d809...` → `cec1842...` shows zero final file differences.
 - [x] Final PR changed-file set contains no probe file.
 
-## Fresh Owner runtime verification — READY
+## Fresh Owner runtime verification — PARTIAL PASS
+Owner report received 2026-08-10:
+- [x] One Pipeline 2 job completed successfully.
+- [x] Owner reports the observed single-job behavior was generally correct and no new defect was reported.
+- [ ] Multi-job/batch execution — NOT TESTED.
+
+Detailed items below were not individually enumerated in the Owner report, so they are not silently converted to PASS:
 - [ ] Draw ROI at center/bottom/side positions; overlay remains under exact drag rectangle.
 - [ ] Resize/change frame; ROI stays aligned to the same video pixels.
 - [ ] Create at least two regions with different masks; selections remain independent.
 - [ ] Run manual multi-pass and verify each region uses its selected mask.
-- [ ] Realtime preview remains working.
-- [ ] Console no longer floods frame success/expected preview-404 lines.
+- [ ] Realtime preview remains working in a multi-job/batch regression.
+- [ ] Console no longer floods frame success/expected preview-404 lines under multi-job/batch load.
 - [ ] Fatal/backend errors remain visible.
-- [ ] Performance does not materially regress.
-- [ ] Clean-video timeline compatibility remains intact.
-- [ ] P3 unlock remains success-only.
+- [ ] Performance does not materially regress under multi-job/batch execution.
+- [ ] Clean-video timeline compatibility remains intact across multiple jobs.
+- [ ] P3 unlock remains success-only across multiple jobs.
 
 ## Gates
 - Execution: PASS.
 - Automated verification: PASS.
 - Code review: PASS.
-- Owner manual app verification: NOT STARTED — READY FOR OWNER RETEST.
-- Documentation synchronization: PASS at this checkpoint.
+- Owner manual app verification: PARTIAL PASS — SINGLE-JOB PASS; MULTI-JOB NOT TESTED.
+- Documentation synchronization: PASS for current Owner-result intake.
 - Merge permission: BLOCKED.

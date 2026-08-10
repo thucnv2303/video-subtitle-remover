@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-PIPELINE2-MANUAL-REGION-REVISION-002 — CODE REVIEW PASS / OWNER RETEST READY
+PIPELINE2-MANUAL-REGION-REVISION-002 — OWNER SINGLE-JOB RUNTIME PASS / MULTI-JOB COVERAGE WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -10,6 +10,7 @@ PIPELINE2-MANUAL-REGION-REVISION-002 — CODE REVIEW PASS / OWNER RETEST READY
 - Active review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
 - Draft PR: #43.
 - Current reviewed source commit: `0e20fc0c6300240276da8e4bef16f67186a08889`.
+- Owner-test intake basis: authorized PR #43 review head `b43f16837202051bcebb1e74900b010b4266869e`; GitHub PR head was unchanged when the Owner result was received.
 
 ## Owner outcome targeted
 The previous P2 retest proved backend/STTN execution, realtime preview, clean output and P3 success unlock, but remained PARTIAL PASS because:
@@ -44,6 +45,12 @@ No backend, preload/python bridge, `pipeline-state.js`, P1, P3, Settings or depe
 - Exact unchanged `src/renderer/js/app.js` blob `99c2cafa509ba2038b98f135156b34271da58c70`: reconstructed byte-identical; `node --check`: PASS.
 - Exact changed-file reconstruction from parent blob hashes to current source/docs: `git diff --check`: PASS.
 
+## Owner runtime result — 2026-08-10
+- Owner reports the fresh Pipeline 2 run completed successfully for a single job and that the observed behavior was generally correct with no new defect reported.
+- This is accepted as Owner runtime PASS for the tested single-job path.
+- Multi-job/batch behavior was explicitly not tested in this run, so it is not claimed as verified.
+- Detailed checklist items not explicitly enumerated by the Owner remain evidence-limited; do not convert this single-job report into a full multi-job P2 release PASS.
+
 ## Controlled publication incident
 During PM verification an accidental one-line probe file `.ai/.pm_probe_should_not_exist` was created in commit `78252c198e6790722e92877c17bfee62312877a0` and immediately removed in normal follow-up commit `cec184210ab9a622c5c62163712ff0f44a9ffe5c`. No force/history rewrite was used. GitHub compare `d84d809...` → `cec1842...` reports zero final file differences, and the final PR changed-file set contains no probe file. The incident is therefore contained, but is recorded rather than hidden.
 
@@ -51,9 +58,9 @@ During PM verification an accidental one-line probe file `.ai/.pm_probe_should_n
 - Execution: PASS for source publication.
 - Automated verification: PASS.
 - Code review: PASS.
-- Owner manual app verification: NOT STARTED — READY FOR OWNER RETEST.
-- Documentation synchronization: PASS at this checkpoint.
-- Merge permission: BLOCKED.
+- Owner manual app verification: PARTIAL PASS — SINGLE-JOB PASS; MULTI-JOB NOT TESTED.
+- Documentation synchronization: PASS for recording this Owner result.
+- Merge permission: BLOCKED pending required multi-job/batch regression coverage or explicit PM determination that such coverage is outside the release gate.
 
 ## Next permitted action
-Owner performs fresh real-app retest of PR #43 against the QA checklist. Do not merge until Owner PASS is recorded in canonical `.ai/`.
+Run a controlled multi-job/batch Pipeline 2 regression test on the same reviewed source. Do not modify source and do not merge while that runtime coverage is still missing.
