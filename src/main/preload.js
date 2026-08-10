@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPythonStatus: () => ipcRenderer.invoke('python:status'),
   listOllamaModels: (endpoint) => ipcRenderer.invoke('ollama:listModels', endpoint),
   analyzeP1Vision: (payload) => ipcRenderer.invoke('ollama:p1AnalyzeVision', payload),
+  persistP1Audio: (payload) => ipcRenderer.invoke('p1:persistAudio', payload),
   openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
