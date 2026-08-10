@@ -11,43 +11,51 @@
 - [x] Runtime reports STTN GPU mode.
 - [x] Clean-video output is written.
 - [x] Matching P3 job unlocks only after successful P2 completion in the captured run.
-- [ ] Manual ROI display geometry matches the exact pixels dragged by Owner — FAIL / revision required.
-- [ ] Each manual region can persist a different mask mode — FAIL / revision required.
-- [ ] Visible P2 Console is compact during inpaint — FAIL / revision required.
+- [ ] Manual ROI display geometry matches exact pixels dragged — previous Owner run FAIL; revision 002 published, fresh retest pending.
+- [ ] Each manual region persists a different mask mode — previous Owner run FAIL; revision 002 published, fresh retest pending.
+- [ ] Visible P2 Console is compact during inpaint — previous Owner run FAIL; revision 002 published, fresh retest pending.
 
-## Required static verification for revision 002
-- [ ] `node --check src/renderer/js/app.js`
-- [ ] `node --check src/renderer/js/pipelines/pipeline2-remove.js`
-- [ ] `node --check src/renderer/js/pipeline2-runtime.js`
-- [ ] `git diff --check`
-- [ ] Changed source limited to approved files.
-- [ ] ROI coordinate simulation with a letterboxed portrait canvas maps pointer→source→overlay with <=1 CSS-pixel display error at tested edges/center.
-- [ ] Two manual regions with different masks produce pass-specific `mask_mode` values.
-- [ ] Legacy region object without `maskMode` falls back to job/default mask.
-- [ ] Log filter suppresses successful `/api/frame/...` access lines during active P2 processing.
-- [ ] Expected early active-job `/api/preview` 404 noise is hidden without hiding unexpected/fatal errors.
-- [ ] Existing realtime `/api/preview` drawing path remains intact.
-- [ ] Backend discovery code unchanged.
-- [ ] `pipeline-state.js` / P1→P2 gate unchanged.
-- [ ] P1/P3 source unchanged.
-- [ ] GitHub CI/checks — none currently configured; local/static evidence must be published in PR.
+## Revision 002 GitHub/source scope
+- [x] Dedicated branch `review/PIPELINE2-MANUAL-REGION-REVISION-002` created from exact parent `39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
+- [x] Draft PR #43 targets `review/PIPELINE2-APPROVED-UI-001`.
+- [x] GitHub compare parent → source checkpoint `f73c1f13d28d5d1222998399c4e0c20ac00ae815` contains exactly two source files.
+- [x] Backend discovery code unchanged.
+- [x] `pipeline-state.js` / P1→P2 gate unchanged.
+- [x] P1/P3/Settings/dependency source unchanged.
+- [x] Existing realtime `/api/preview` drawing path retained in final runtime enhancer.
 
-## Fresh Owner runtime verification — BLOCKED UNTIL CODE REVIEW PASS
-- [ ] Draw ROI around hard subtitles at center/bottom/side positions; overlay remains exactly under the drag rectangle.
-- [ ] Change timeline/frame and resize the window; ROI stays aligned to the same video pixels.
+## Deterministic verification
+- [x] Letterboxed portrait ROI coordinate simulation maps pointer→source→rendered position with <=1 CSS-pixel tested error; maximum observed 0.125 px.
+- [x] Two manual regions resolve independent masks `box` and `tight`.
+- [x] Legacy region without `maskMode` falls back to job mask (`soft` in simulation).
+- [x] `/api/frame/...` 200 access line classifies as hidden during active P2.
+- [x] Expected early `/api/preview` 404 classifies as hidden.
+- [x] `/api/preview` 500 remains visible.
+- [x] Completion line remains visible.
+
+## Static checks still waiting
+- [ ] Exact published-blob `node --check src/renderer/js/pipeline2-runtime.js` — current ChatGPT container cannot fetch GitHub bytes because outbound DNS to GitHub is unavailable.
+- [ ] Exact published-blob `node --check src/renderer/js/pipelines/pipeline2-remove.js` — same environment limitation.
+- [ ] `node --check src/renderer/js/app.js` on exact parent/current blob — source is unchanged by revision 002; no independent local checkout available in this environment.
+- [ ] `git diff --check` — no local Git checkout of this remote branch in the current environment.
+- [ ] GitHub CI/checks — none configured.
+
+## Fresh Owner runtime verification
+- [ ] Draw ROI around hard subtitles at center/bottom/side positions; overlay remains exactly under drag rectangle.
+- [ ] Change timeline/frame and resize window; ROI stays aligned to same video pixels.
 - [ ] Create at least two regions and select different mask modes; selections remain independent.
-- [ ] Run manual multi-pass and confirm each region uses its selected mask mode.
+- [ ] Run manual multi-pass and confirm each region uses selected mask mode.
 - [ ] Realtime result preview remains working.
 - [ ] Console no longer floods `/api/frame` success lines or expected preview 404s.
 - [ ] Fatal/backend errors remain visible.
-- [ ] Processing performance is not materially regressed relative to the current working checkpoint.
+- [ ] Processing performance is not materially regressed relative to current working checkpoint.
 - [ ] Clean-video output remains timeline compatible.
 - [ ] P3 unlock remains success-only.
 
 ## Gate status
-- Execution: NOT STARTED for revision 002.
-- Automated/static verification: WAITING.
-- Code review: WAITING.
-- Owner manual app verification: previous retest PARTIAL PASS / NEEDS_REVISION; fresh retest BLOCKED.
-- Documentation synchronization: PASS at task-open checkpoint.
+- Execution: PASS for direct-PM source publication.
+- Automated/static verification: PARTIAL PASS / WAITING exact syntax + diff check; no CI configured.
+- Code review: IN PROGRESS.
+- Owner manual app verification: previous retest PARTIAL PASS / NEEDS_REVISION; fresh retest NOT STARTED.
+- Documentation synchronization: PASS at source-publication checkpoint.
 - Merge permission: BLOCKED.

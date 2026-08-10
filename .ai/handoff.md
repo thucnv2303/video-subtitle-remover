@@ -4,50 +4,63 @@
 `PIPELINE2-MANUAL-REGION-REVISION-002 — Manual ROI Geometry, Per-Region Mask, and Compact Inpaint Log`
 
 ## Status
-READY FOR ANTI EXECUTION
+SOURCE PUBLISHED / PM REVIEW IN PROGRESS
 
 ## Review basis
-- Current P2 branch before task publication: `review/PIPELINE2-APPROVED-UI-001`.
-- Draft PR: #42.
-- PM basis SHA before publication: `186c9726d88a99f4438b77002b1487077c0ce712`.
-- P2 remains stacked on `review/BUG-005-P1-FULL-CHAIN` at `97d5a13e77b6919931c251c74fab4c191fa04cec`.
-- Required new review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
+- Parent P2 branch: `review/PIPELINE2-APPROVED-UI-001`.
+- Exact parent head: `39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
+- Active review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
+- Draft PR: #43.
+- Source checkpoint before docs: `f73c1f13d28d5d1222998399c4e0c20ac00ae815`.
 
-## Owner retest intake — 2026-08-10
-Verified/observed improvements:
-- backend now loads sufficiently for actual STTN processing;
+## Owner retest intake carried forward
+Working from the previous P2 retest:
+- backend/STTN processing works;
 - realtime result preview works;
-- processing speed is much faster than the prior failed run;
-- supplied log shows 440 frames completed in about 38 seconds at 11.38 frame/s;
-- backend runtime reports STTN GPU mode;
-- clean-video output is created;
-- P3 unlocks after successful P2 completion.
+- performance materially improved;
+- clean-video output was created;
+- P3 unlocked on successful P2 completion.
 
-Remaining blockers:
-1. Manual ROI box is displaced from the user's drag location.
-2. Each manual region cannot select/persist its own mask mode; current payload uses one job-level mask.
-3. Visible Console still floods successful `/api/frame/...` access lines and expected early preview 404 lines.
+Remaining Owner-reported defects targeted by this revision:
+1. shifted manual ROI under approved letterboxed layout;
+2. missing per-region mask selection;
+3. noisy inpaint Console.
 
-## Direct source diagnosis
-- Approved P2 CSS makes `canvas-inner` fill the preview pane while `canvas-original` is aspect-ratio constrained and centered. Legacy draw math uses the wrapper dimensions, producing incorrect coordinates/overlay geometry when letterboxing exists.
-- `job.regions.push(...)` stores no `maskMode`.
-- manual `pipeline2-remove.js` payload sends `mask_mode: job.maskMode || 'box'` instead of a region-specific value.
-- P2 runtime log coalescing omits `/api/frame` from its successful access-log filter.
+## Direct PM implementation
+Changed source is limited to:
+- `src/renderer/js/pipeline2-runtime.js`;
+- `src/renderer/js/pipelines/pipeline2-remove.js`.
 
-## Execution authority
-Remote active spec:
-- `.ai/task_specs/ACTIVE.md`
-- `.ai/task_specs/PIPELINE2-MANUAL-REGION-REVISION-002.md`
+Published source commits:
+- `f2928efb59459e45c6c9a78fdfc6b0a27004d010`;
+- `f73c1f13d28d5d1222998399c4e0c20ac00ae815`.
 
-Anti must fetch and read both from the exact remote authority ref named by Project Manager before editing. Local spec copies are not authority.
+Final behavior:
+- pointer/source/overlay mapping derives from the rendered `canvas-original` rectangle and letterbox offsets;
+- draw start outside actual canvas is rejected;
+- each new manual region stores a mask and region list exposes independent Box/Tight/Soft selection;
+- legacy region without mask remains valid through job/default fallback;
+- actual active manual request is adapted to the current region mask before `/api/process`;
+- successful frame/poll access lines and expected early preview 404 are coalesced from the visible P2 Console while unexpected errors remain visible.
+
+Preserved: backend discovery, realtime preview, STTN behavior, P1→P2 gate and P3 success-only unlock.
+
+## Verification / evidence
+- GitHub compare parent → source checkpoint: exactly two source files changed.
+- Deterministic letterbox ROI simulation: maximum tested edge error 0.125 CSS px — PASS.
+- Region mask simulation: distinct `box`/`tight`; legacy fallback `soft` — PASS.
+- Log classification: frame 200 + preview 404 hidden; preview 500 + completion visible — PASS.
+- Exact published-blob Node syntax check: WAITING in current environment.
+- `git diff --check`: WAITING in current environment.
+- GitHub CI/status checks: not configured.
 
 ## Gates
-- Execution: new revision NOT STARTED.
-- Automated/static verification: WAITING.
-- Code review: WAITING.
-- Owner manual verification: previous retest PARTIAL PASS / NEEDS_REVISION; fresh retest NOT STARTED.
-- Documentation synchronization: PASS at owner-result intake/task-open checkpoint.
+- Execution: PASS for source publication.
+- Automated/static verification: PARTIAL PASS / WAITING exact syntax + diff check.
+- Code review: IN PROGRESS.
+- Owner manual verification: fresh revision-002 retest NOT STARTED.
+- Documentation synchronization: PASS at publication checkpoint.
 - Merge permission: BLOCKED.
 
-## Owner action
-No fresh Owner app test until the new source revision is published and Project Manager code review passes. Owner does not edit `.ai` files.
+## Next action
+Project Manager finishes GitHub review of PR #43 and issues explicit Owner-retest authorization only if the review gate is acceptable. Do not merge.
