@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-WAITING_CODE_REVIEW — BUG-005 PIPELINE 1 FULL CHAIN
+WAITING_OWNER_TEST — BUG-005 PIPELINE 1 FULL CHAIN
 
 ## Canonical branch
 `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
@@ -20,6 +20,7 @@ WAITING_CODE_REVIEW — BUG-005 PIPELINE 1 FULL CHAIN
 ## Active task
 - Task: `BUG-005 — Pipeline 1 Full Processing Chain`.
 - Branch: `review/BUG-005-P1-FULL-CHAIN`.
+- Draft PR: #41.
 - Goal: `ASR → AI Rewrite → TTS → P1 COMPLETE → P2 READY`.
 
 ## Verified root cause
@@ -29,7 +30,7 @@ WAITING_CODE_REVIEW — BUG-005 PIPELINE 1 FULL CHAIN
 - Therefore runtime could complete ASR then always log AI Rewrite/TTS as skipped.
 - In addition, `pipeline1-ai.js` previously logged AI/TTS failures and returned normally, allowing `app.js` to mark P1 complete even when an enabled stage had failed.
 
-## Candidate implementation
+## Reviewed candidate
 - Added `src/renderer/js/pipeline1-run-config.js`.
   - Runs in capture phase on the approved `btn-start-all`.
   - Validates selected provider/model/prompt and cloud API-key presence.
@@ -46,22 +47,19 @@ WAITING_CODE_REVIEW — BUG-005 PIPELINE 1 FULL CHAIN
   - Existing `app.js` catch path therefore marks P1 error, allowing the accepted handoff gate to keep P2 locked.
 
 ## Verification completed
-- Exact local candidate `pipeline1-run-config.js` syntax: `node --check` PASS.
-- Exact local candidate `pipeline1-ai.js` syntax: `node --check` PASS.
-- Local Git blob hash for `pipeline1-run-config.js`: `a26dc1230a91c252ce49139772b2b4afffde7c6f`, matching GitHub.
-- Local Git blob hash for `pipeline1-ai.js`: `12859d4e40d84c716a479820610fef2fe692bd37`, matching GitHub.
-- Targeted simulation PASS:
-  - valid Ollama/model/prompt/clone-voice configuration is snapshotted before Start;
-  - AI failure rejects instead of silently succeeding;
-  - TTS failure rejects instead of silently succeeding.
-- Net product diff versus canonical is limited to `pipeline1-run-config.js` plus `pipeline1-ai.js`.
-- Approved Pipeline 1 UI source is unchanged.
+- `pipeline1-run-config.js` blob `a26dc1230a91c252ce49139772b2b4afffde7c6f`: exact hash match + `node --check` PASS.
+- `pipeline1-ai.js` blob `12859d4e40d84c716a479820610fef2fe692bd37`: exact hash match + `node --check` PASS.
+- Targeted simulation PASS for valid config snapshot, strict AI failure rejection and strict TTS failure rejection.
+- GitHub PR #41 base/head verified; net product diff is exactly the two intended P1 files.
+- Approved P1 UI source is unchanged.
 - P2/P3 product source is unchanged.
+- GitHub CI: not configured.
+- PR #41 review comments: none unresolved.
 
 ## Gates
-- Execution: PASS for candidate publication.
-- Automated/static verification: PASS for syntax/hash/targeted simulation.
-- Code review: WAITING.
-- Owner manual app verification: NOT STARTED / NOT AUTHORIZED until code review PASS.
-- Documentation synchronization: PASS for candidate state.
-- Merge permission: BLOCKED.
+- Execution: PASS.
+- Automated/static verification: PASS.
+- Code review: PASS for Owner runtime test.
+- Owner manual app verification: NOT STARTED / AUTHORIZED.
+- Documentation synchronization: PASS.
+- Merge permission: BLOCKED pending Owner runtime PASS and explicit merge approval.
