@@ -1,6 +1,7 @@
 const { EventEmitter } = require('events');
-const { spawn, execSync } = require('child_process');
+const { spawn, execSync, execFileSync } = require('child_process');
 const http = require('http');
+const fs = require('fs');
 const path = require('path');
 
 class PythonBridge extends EventEmitter {
@@ -9,6 +10,7 @@ class PythonBridge extends EventEmitter {
     this.process = null;
     this.port = options.port || 8765;
     this.appRoot = options.appRoot || process.cwd();
+    this.backendRef = null;
   }
 
   _getPythonExecutable() {
@@ -22,6 +24,56 @@ class PythonBridge extends EventEmitter {
       }
     }
     throw new Error('No python executable found. Please install Python.');
+  }
+
+  _normalizeBackendRoot(candidate) {
+    if (!candidate) return null;
+    const resolved = path.resolve(String(candidate));
+    if (fs.existsSync(path.join(resolved, 'backend', 'main.py'))) return resolved;
+    if (path.basename(resolved).toLowerCase() === 'backend' && fs.existsSync(path.join(resolved, 'main.py'))) {
+      return path.dirname(resolved);
+    }
+    return null;
+  }
+
+  _gitCommonWorktreeRoot() {
+    try {
+      const commonDirRaw = execFileSync('git', ['rev-parse', '--git-common-dir'], {
+        cwd: this.appRoot,
+        encoding: 'utf8',
+        windowsHide: true,
+        stdio: ['ignore', 'pipe', 'ignore']
+      }).trim();
+      if (!commonDirRaw) return null;
+      const commonDir = path.isAbsolute(commonDirRaw)
+        ? commonDirRaw
+        : path.resolve(this.appRoot, commonDirRaw);
+      return path.dirname(commonDir);
+    } catch {
+      return null;
+    }
+  }
+
+  _findBackendReference() {
+    const commonRoot = this._gitCommonWorktreeRoot();
+    const candidates = [
+      process.env.VSR_BACKEND_REF,
+      this.appRoot,
+      path.join(this.appRoot, 'video-subtitle-remover-ref'),
+      commonRoot,
+      commonRoot ? path.join(commonRoot, 'video-subtitle-remover-ref') : null,
+    ];
+
+    const seen = new Set();
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const key = path.resolve(String(candidate)).toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const root = this._normalizeBackendRoot(candidate);
+      if (root) return root;
+    }
+    return null;
   }
 
   async start() {
@@ -42,9 +94,19 @@ class PythonBridge extends EventEmitter {
       // Ignore if no process is using the port
     }
 
+    this.backendRef = this._findBackendReference();
+    const childEnv = { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8' };
+    if (this.backendRef) {
+      childEnv.VSR_BACKEND_REF = this.backendRef;
+      childEnv.PYTHONPATH = [this.backendRef, process.env.PYTHONPATH].filter(Boolean).join(path.delimiter);
+      this.emit('log', `[P2] Backend reference: ${this.backendRef}\n`);
+    } else {
+      this.emit('error', '[P2] Backend reference not found. Pipeline 2 subtitle-removal engine will be unavailable.\n');
+    }
+
     this.process = spawn(pythonBin, [scriptPath], {
       cwd: this.appRoot,
-      env: { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8' }
+      env: childEnv
     });
 
     this.process.stdout.on('data', (data) => {
@@ -103,7 +165,7 @@ class PythonBridge extends EventEmitter {
         if (attempts >= maxAttempts) {
           reject(new Error('Failed to connect to Python backend after 30 seconds'));
         } else if (!this.isRunning()) {
-            reject(new Error('Python backend stopped during startup'));
+          reject(new Error('Python backend stopped during startup'));
         } else {
           setTimeout(check, intervalMs);
         }
