@@ -7,7 +7,7 @@ BUG-005
 Pipeline 1 Full Processing Chain
 
 ## Status
-OWNER_RUNTIME_FAIL / NEEDS_REVISION — OLLAMA MULTIMODAL TIMEOUT
+WAITING_OWNER_RETEST — OLLAMA TELEMETRY / RESOURCE REVISION
 
 ## Base
 - Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
@@ -20,35 +20,36 @@ OWNER_RUNTIME_FAIL / NEEDS_REVISION — OLLAMA MULTIMODAL TIMEOUT
 ## Goal
 `ASR(auto) + original-video keyframes/vision → structured analysis/remix artifacts → TTS artifacts → P1 COMPLETE → P2 READY`.
 
-## Latest Owner runtime FAIL — 2026-08-10
-Tested head: `6ce8d3e9eef3170b3639c42c95c59f51356b8efe`.
+## Previous Owner FAIL
+Head `6ce8d3e9...` timed out during multimodal Stage C after successful ASR and 8 keyframes. The runtime lacked proof of the selected vision model, Ollama model residency, GPU/CPU allocation or token generation progress.
 
-Observed:
-- run config correctly captured Ollama `qwen3-coder:30b`, multimodal mode and clone voice;
-- ASR completed;
-- 8 original-video keyframes were fetched successfully;
-- multimodal Stage C began at 09:29:33 and timed out at 09:33:27;
-- UI/log exposed no selected vision model, Ollama load state or generation progress;
-- P1 ended in error; artifacts/TTS/P2-success acceptance was not reached.
+## Current revision
+- Downscale/re-encode vision keyframes to max 960px / JPEG 0.72 before IPC.
+- Log approximate image payload size.
+- Preflight local Ollama and enumerate installed models.
+- Inspect selected reasoning-model capabilities and select the smallest installed vision-capable fallback when required.
+- Poll `/api/ps` during inference and log model size, VRAM residency and context reported by Ollama.
+- Stream chat output and log first-output latency, progress and final token rate.
+- Use JSON-schema structured output for both visual analysis and final remix analysis.
+- On separate vision/reasoning path, explicitly unload the vision model and verify release before reasoning.
+- Timeout/errors identify exact model + phase.
+- Failure remains fail-closed and must keep P2 locked.
 
-## Verified blocker
-Current `p1-vision-ipc.js` calls Ollama directly from Electron main process. The selected `qwen3-coder:30b` is the reasoning model and capability discovery can choose a different installed vision model. Each chat has a hard 180-second timeout; fallback can require two model phases. There is no phase/model telemetry and keyframes are sent without a dedicated resize/compression budget.
+## Verification
+- `p1-vision-ipc.js` blob `31fcf02146f122a383ee52894d59626f378ac817`: exact Git blob match + `node --check` PASS.
+- `preload.js` blob `f642febe19a196fe088c7bba6486c380484a0e9e`: exact Git blob match + `node --check` PASS.
+- `pipeline1-analysis.js` blob `09e4df418e41ff7eeac74ed9686af6f24fdbeb9e`: exact Git blob match + `node --check` PASS.
+- Failed-head → new-source compare changes only the three files above.
+- Ollama official API contracts used by the revision were re-verified: vision images, model capabilities, running models, streaming, structured outputs and keep-alive unload.
+- GitHub CI: not configured.
 
-The runtime therefore proves timeout but does not prove which model was actively using GPU. Lack of GPU temperature increase is supporting observation only, not sufficient proof that Ollama was never invoked.
-
-## Required revision
-1. Ollama preflight/telemetry: endpoint reachable, selected model capabilities, chosen vision model, running-model state when available.
-2. Log each inference phase with model + start/end/elapsed and phase-specific timeout errors.
-3. Downscale/compress keyframes before multimodal request.
-4. Resource-safe sequential model lifecycle; explicit keep-alive/unload behavior where appropriate.
-5. Do not merely extend timeout.
-6. Fail closed: incomplete analysis => P1 error, P2 locked.
-7. Preserve approved P1 UI and P2/P3 boundaries.
+## Owner retest acceptance
+A fresh Job must show enough telemetry to answer which model is running and where time is spent. PASS still requires meaningful multimodal remix output, required P1 artifacts, visible/playable TTS audio, and P2 unlock only after artifact readiness.
 
 ## Gates
-- Execution: NEEDS_REVISION.
-- Automated/static verification: WAITING for revised candidate.
-- Code review: INVALIDATED / NEEDS_REVISION.
-- Owner manual app verification: FAIL; fresh retest NOT AUTHORIZED.
-- Documentation synchronization: PASS for failure recording.
+- Execution: PASS.
+- Automated/static verification: PASS.
+- Code review: PASS for fresh Owner retest.
+- Owner manual app verification: previous head FAIL; fresh retest AUTHORIZED / NOT STARTED.
+- Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
