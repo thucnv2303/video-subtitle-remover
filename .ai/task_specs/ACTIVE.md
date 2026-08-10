@@ -1,9 +1,12 @@
 # Active PM Execution Spec
 
-Status: WAITING_OWNER_TEST
+Status: WAITING_FINAL_CODE_REVIEW
 
 Task:
-`PIPELINE2-APPROVED-UI-001`
+`PIPELINE2-RUNTIME-REVISION-001`
+
+Parent task:
+`PIPELINE2-APPROVED-UI-001` — Owner UI/layout PASS; processing runtime requires revision.
 
 Repository:
 `thucnv2303/video-subtitle-remover`
@@ -11,37 +14,38 @@ Repository:
 Stacked base:
 - Branch: `review/BUG-005-P1-FULL-CHAIN`
 - Base SHA: `97d5a13e77b6919931c251c74fab4c191fa04cec`
-- Dependency: Draft PR #41 remains unmerged and is preserved as the current P1 functional checkpoint.
+- Draft PR #41 remains unmerged and preserved as the P1 checkpoint.
 
-Review branch:
-`review/PIPELINE2-APPROVED-UI-001`
-
-Draft PR:
-#42
+Review branch / PR:
+- `review/PIPELINE2-APPROVED-UI-001`
+- Draft PR #42
 
 Execution / acceptance spec:
-`.ai/task_specs/PIPELINE2-APPROVED-UI-001.md`
+`.ai/task_specs/PIPELINE2-RUNTIME-REVISION-001.md`
 
-Current source checkpoint:
-`5c9c2f0fa12c884b19fa5d8bfcee080a31364203`
+Runtime source scope:
+- `src/main/python-bridge.js`
+- `src/main/preload.js`
+- `src/renderer/js/pipeline2-runtime.js`
 
-Application source scope:
+Parent UI source remains:
 - `src/renderer/js/pipeline.js`
 - `src/renderer/styles/pipeline2-approved.css`
 
-Review facts:
-- P2 source diff is isolated from the stacked P1 base.
-- No `app.js`, `pipeline-state.js`, backend, P1 engine, P3, Settings, or dependency source file is changed by PR #42.
-- Existing P1→P2 eligibility/start guard remains authoritative in unchanged `pipeline-state.js`.
-- Direct P2 upload/drop remains hidden and blocked.
-- New P2 adapter block parses with `node --check` in isolated delta verification; GitHub CI is not configured.
-- Exact full-file `node --check` of the published GitHub blob is not independently recorded, so Automated/static verification remains WAITING for merge purposes.
+Verification facts:
+- Exact Git blob + `node --check` PASS for the three runtime-revision JS files.
+- Linked-worktree backend discovery simulation PASS.
+- Existing P1→P2 gate remains unchanged.
+- No automatic backend download/clone.
+- CUDA telemetry is preflight only until Owner runtime proves actual STTN processing.
+- GitHub CI is not configured.
 
 Code review:
-PASS for Owner runtime UI verification.
+WAITING final current-head review.
 
 Owner app verification:
-AUTHORIZED / NOT STARTED.
+Previous: UI PASS / processing FAIL.
+Fresh retest: BLOCKED until code review PASS.
 
 Merge permission:
-BLOCKED pending Owner PASS, recorded result, documentation resync, automated gate closure, and explicit merge approval.
+BLOCKED.
