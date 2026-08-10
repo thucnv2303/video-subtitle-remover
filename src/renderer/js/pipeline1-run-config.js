@@ -1,3 +1,5 @@
+import './pipeline1-run-ux.js';
+
 /**
  * Pipeline 1 run configuration bridge.
  * Snapshots the approved UI before the legacy queue handler runs.
@@ -103,6 +105,8 @@ function snapshotPipeline1RunConfig(event) {
     job._aiTriggered = false;
     job._ttsTriggered = false;
     job._ttsRunning = false;
+    job._p1Cancelled = false;
+    job._p1StopRequested = false;
   });
 
   window.addLog?.(
