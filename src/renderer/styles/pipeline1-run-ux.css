@@ -1,0 +1,40 @@
+#step-1-content #btn-start-all {
+  position: relative;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+#step-1-content #btn-start-all.is-processing {
+  border-color: #3b82f6;
+  background: linear-gradient(180deg, #245fb7, #194985);
+  color: #eef6ff;
+  box-shadow: 0 0 20px rgba(59,130,246,.18);
+  cursor: pointer;
+}
+
+#step-1-content #btn-start-all.is-stop-intent {
+  border-color: #ef4444;
+  background: linear-gradient(180deg, #b73535, #8f2525);
+  color: #fff;
+  box-shadow: 0 0 22px rgba(239,68,68,.2);
+}
+
+#step-1-content #btn-start-all.is-stopping {
+  border-color: #f59e0b;
+  background: linear-gradient(180deg, #9a6718, #755014);
+  color: #fff7df;
+  cursor: wait;
+}
+
+#step-1-content .p1-run-stop-integrated {
+  grid-template-columns: 1.25fr 1fr 1fr .85fr;
+}
+
+#step-1-content #btn-stop-all[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 1320px) {
+  #step-1-content .p1-run-stop-integrated {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
