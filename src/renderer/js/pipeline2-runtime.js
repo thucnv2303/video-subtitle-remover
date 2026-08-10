@@ -184,6 +184,13 @@
     };
   }
 
+  function pointerInsideCanvas(event, geometry) {
+    return event.clientX >= geometry.canvasRect.left
+      && event.clientX <= geometry.canvasRect.right
+      && event.clientY >= geometry.canvasRect.top
+      && event.clientY <= geometry.canvasRect.bottom;
+  }
+
   function pointerToCanvas(event, geometry) {
     const x = Math.min(geometry.canvasRect.width, Math.max(0, event.clientX - geometry.canvasRect.left));
     const y = Math.min(geometry.canvasRect.height, Math.max(0, event.clientY - geometry.canvasRect.top));
@@ -234,6 +241,7 @@
           const item = document.createElement('div');
           item.className = 'region-item p2-region-runtime-item';
           item.dataset.p2RegionRuntime = 'true';
+          item.style.cssText = 'display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:6px;padding:5px 0';
 
           const dot = document.createElement('span');
           dot.className = 'region-dot';
@@ -246,6 +254,7 @@
           const mask = document.createElement('select');
           mask.className = 'p2-region-mask-select';
           mask.setAttribute('aria-label', `Mask cho vùng ${region.label}`);
+          mask.style.cssText = 'min-width:72px;height:26px;border:1px solid #334d67;border-radius:5px;background:#0f1e2d;color:#eaf2fb;padding:2px 5px;font-size:9px';
           [['box','Box'], ['tight','Tight'], ['soft','Soft']].forEach(([value, text]) => {
             const option = document.createElement('option');
             option.value = value;
@@ -307,9 +316,8 @@
       const job = activeJob();
       if (!s?.isDrawing || !job || job.subtitleMode !== 'manual') return;
       const geometry = renderedCanvasGeometry();
-      if (!geometry) return;
-      const point = pointerToCanvas(event, geometry);
-      manualSelectionStart = point;
+      if (!geometry || !pointerInsideCanvas(event, geometry)) return;
+      manualSelectionStart = pointerToCanvas(event, geometry);
       s.isSelecting = false;
       s.selectionStart = null;
       event.preventDefault();
@@ -373,6 +381,26 @@
       if (overlay) overlay.dataset.p2RegionSignature = '';
       syncManualRegionUi();
     });
+  }
+
+  function installPerRegionMaskPayload() {
+    if (!window.api?.startProcessBatch || window.api.startProcessBatch.__p2RegionMaskWrapped) return;
+    const originalStartProcessBatch = window.api.startProcessBatch.bind(window.api);
+    const wrapped = async (jobs) => {
+      const s = state();
+      const job = s?.processingJobId ? s.jobs?.find(item => item.id === s.processingJobId) : null;
+      if (job?.subtitleMode === 'manual' && job.regions?.length && Array.isArray(jobs)) {
+        const region = job.regions[Math.max(0, Number(s.processingPassIndex || 0))];
+        if (region) {
+          jobs = jobs.map((payload, index) => index === 0
+            ? { ...payload, mask_mode: region.maskMode || job.maskMode || 'box' }
+            : payload);
+        }
+      }
+      return originalStartProcessBatch(jobs);
+    };
+    wrapped.__p2RegionMaskWrapped = true;
+    window.api.startProcessBatch = wrapped;
   }
 
   async function loadGpuTelemetry(job) {
@@ -499,6 +527,9 @@
   }
 
   function tick() {
+    installManualRegionGeometry();
+    installPerRegionMaskPayload();
+
     const selected = activeJob();
     if (selected?.subtitleMode === 'manual') {
       if (manualRegionUiJobId !== selected.id) {
@@ -533,6 +564,7 @@
     installed = true;
     installLogCoalescing();
     installManualRegionGeometry();
+    installPerRegionMaskPayload();
     if (typeof window.api.onWebSocketMessage === 'function') unsubscribeWs = window.api.onWebSocketMessage(handleWs);
     setInterval(tick, UI_TICK_MS);
     window.addEventListener('beforeunload', () => unsubscribeWs?.(), { once: true });
