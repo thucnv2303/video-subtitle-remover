@@ -1,4 +1,8 @@
 const SYNC_INTERVAL_MS = 250;
+const QUEUE_RECOVERY_DELAY_MS = 120;
+
+let recoveryTimer = null;
+let recoveryJobId = null;
 
 function state() {
   return window._appState || null;
@@ -24,6 +28,81 @@ function currentP1Job(appState) {
 function hasStartableP1(appState) {
   if (!appState?.isBackendReady) return false;
   return Array.isArray(appState.jobs) && appState.jobs.some(job => job.status === 'idle');
+}
+
+function syncRunningJobSelection(appState) {
+  const current = currentP1Job(appState);
+  if (!current) return;
+  if (appState.pipeline1SelectedJobId === current.id && appState.activeJobId === current.id) return;
+
+  appState.pipeline1SelectedJobId = current.id;
+  appState.activeJobId = current.id;
+  window.renderJobList?.();
+  window.renderJobDetail1?.();
+}
+
+function triggerLegacyP1QueueStart(appState, nextJob) {
+  if (!appState || !nextJob) return false;
+  const index = appState.jobs.findIndex(job => job.id === nextJob.id);
+  if (index < 0) return false;
+
+  nextJob.status = 'idle';
+  nextJob.progress = 0;
+  nextJob._p1Cancelled = false;
+  nextJob._p1StopRequested = false;
+  window.renderJobList?.();
+
+  const card = document.querySelectorAll('#step1-job-list .tk-job-card')[index];
+  if (!card) {
+    nextJob.status = 'queued';
+    window.renderJobList?.();
+    return false;
+  }
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'btn-process-job';
+  trigger.dataset.id = nextJob.id;
+  trigger.hidden = true;
+  card.appendChild(trigger);
+  trigger.click();
+  trigger.remove();
+  return true;
+}
+
+function recoverStalledP1Queue() {
+  const appState = state();
+  if (!appState || appState.pipeline1JobId || p1Jobs(appState).some(job => job.status === 'processing')) {
+    if (recoveryTimer) clearTimeout(recoveryTimer);
+    recoveryTimer = null;
+    recoveryJobId = null;
+    return;
+  }
+
+  const nextJob = p1Jobs(appState).find(job => job.status === 'queued' && !job._p1Cancelled && !job._p1StopRequested);
+  if (!nextJob) {
+    if (recoveryTimer) clearTimeout(recoveryTimer);
+    recoveryTimer = null;
+    recoveryJobId = null;
+    return;
+  }
+
+  if (recoveryTimer && recoveryJobId === nextJob.id) return;
+  if (recoveryTimer) clearTimeout(recoveryTimer);
+  recoveryJobId = nextJob.id;
+  recoveryTimer = setTimeout(() => {
+    recoveryTimer = null;
+    recoveryJobId = null;
+    const latest = state();
+    if (!latest || latest.pipeline1JobId || p1Jobs(latest).some(job => job.status === 'processing')) return;
+    const candidate = p1Jobs(latest).find(job => job.id === nextJob.id && job.status === 'queued' && !job._p1Cancelled && !job._p1StopRequested);
+    if (!candidate) return;
+
+    const hadFailure = p1Jobs(latest).some(job => job.status === 'error');
+    if (triggerLegacyP1QueueStart(latest, candidate) && hadFailure) {
+      window.addLog?.(`[P1] ↪ Job lỗi đã được cô lập; tiếp tục hàng đợi với: ${candidate.fileName}`, 'warning');
+    }
+  }, QUEUE_RECOVERY_DELAY_MS);
 }
 
 function injectStyles() {
@@ -76,6 +155,9 @@ function syncButton(button) {
   const stopping = Boolean(current?._p1StopRequested);
   const hoverStop = button.matches(':hover') && active && !stopping;
 
+  syncRunningJobSelection(appState);
+  recoverStalledP1Queue();
+
   button.classList.toggle('is-processing', active && !stopping);
   button.classList.toggle('is-stop-intent', hoverStop);
   button.classList.toggle('is-stopping', stopping);
@@ -92,8 +174,8 @@ function syncButton(button) {
     button.setAttribute('aria-label', 'Dừng xử lý Pipeline 1');
   } else if (active) {
     button.textContent = '⏳ Đang xử lý...';
-    button.title = 'Pipeline 1 đang chạy — đưa chuột vào để dừng';
-    button.setAttribute('aria-label', 'Pipeline 1 đang xử lý');
+    button.title = current?.fileName ? `Pipeline 1 đang xử lý: ${current.fileName}` : 'Pipeline 1 đang chạy — đưa chuột vào để dừng';
+    button.setAttribute('aria-label', current?.fileName ? `Pipeline 1 đang xử lý ${current.fileName}` : 'Pipeline 1 đang xử lý');
   } else {
     button.textContent = '▶ Bắt đầu chạy';
     button.title = 'Bắt đầu xử lý Pipeline 1';
@@ -105,6 +187,10 @@ async function stopP1(button) {
   const appState = state();
   if (!appState || !hasActiveP1(appState)) return;
   const current = currentP1Job(appState);
+
+  if (recoveryTimer) clearTimeout(recoveryTimer);
+  recoveryTimer = null;
+  recoveryJobId = null;
 
   if (current) {
     current._p1Cancelled = true;
