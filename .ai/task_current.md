@@ -7,7 +7,7 @@ BUG-005
 Pipeline 1 Full Processing Chain
 
 ## Status
-WAITING_OWNER_UX_RETEST — CORE CHAIN TECHNICALLY PASS
+CLOSED AT CURRENT FUNCTIONAL CHECKPOINT BY OWNER — NO FURTHER P1 WORK FOR NOW
 
 ## Base
 - Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
@@ -17,11 +17,11 @@ WAITING_OWNER_UX_RETEST — CORE CHAIN TECHNICALLY PASS
 - Branch: `review/BUG-005-P1-FULL-CHAIN`
 - Draft PR: #41
 
-## Goal
+## Goal reached at current checkpoint
 `ASR(auto) + original-video keyframes/vision → structured analysis/remix artifacts → TTS artifacts → P1 COMPLETE → P2 READY`.
 
 ## Owner runtime technical PASS
-The latest completed runtime demonstrated:
+The accepted runtime demonstrated:
 - 8-scene multimodal analysis;
 - 8 remix-script segments;
 - vision=`gemma4:12b`;
@@ -31,23 +31,16 @@ The latest completed runtime demonstrated:
 - durable `voice.mp3` persisted under the P1 job artifact directory;
 - P1 completed and P2 unlocked after the artifact gate.
 
-This proves the technical processing chain for the tested runtime. It does not by itself certify editorial quality of the analysis/remix.
+This proves the technical processing chain for the tested runtime. Editorial quality of the analysis/remix remains a possible future refinement, not a blocker for the Owner's temporary closure decision.
 
-## Current requested refinement
-Owner requested:
-1. Primary Start button must represent actual run state and become Stop on hover while active.
-2. Stop must prevent P1 completion/P2 unlock and cancel active work where the active subsystem supports cancellation.
-3. Repeating Ollama timer/generation log messages must update one live row rather than spam the Console.
-
-## Current implementation
-Source head before docs: `cb6959c454ef196c70f86cecba8a63d3b1f02a62`.
-- New `pipeline1-run-ux.js` controls primary run/stop state and live progress rows.
-- New `pipeline1-run-ux.css` provides processing/stop/stopping visual states.
-- Preload exposes `cancelP1Vision`.
-- Electron P1 vision IPC tracks one active run per renderer and aborts active Ollama inference on Stop.
-- P1 analysis consumes `progress_key` to replace one progress row in-place.
-- Cancellation prevents `p1ArtifactsReady` from becoming true and therefore keeps P2 locked.
-- ASR/TTS backend routes are synchronous; stop during them is safe-stop at the request boundary rather than guaranteed immediate server-compute termination.
+## Latest UX/cancel refinement
+Implemented at the current source checkpoint:
+- primary Start button represents processing state and becomes Stop on hover;
+- legacy separate Stop control is hidden;
+- active Ollama inference can be cancelled through Electron IPC/AbortController;
+- cancellation prevents P1 completion/P2 unlock;
+- repeating Ollama generation timer messages update one live log row;
+- ASR/TTS synchronous backend work uses safe-stop semantics at the request boundary.
 
 ## Verification
 Exact Git blob match + `node --check` PASS:
@@ -61,20 +54,16 @@ Exact Git blob match + `node --check` PASS:
 Targeted Ollama IPC cancellation simulation: PASS (`P1_CANCELLED`).
 GitHub CI: not configured.
 
-## Owner UX retest acceptance
-PASS requires:
-- idle button shows `Bắt đầu chạy`;
-- after Start it remains `Đang xử lý...` until terminal state;
-- hover during Ollama processing changes to red `Dừng xử lý`;
-- clicking Stop during Ollama returns the Job to retryable/non-complete state and P2 remains locked;
-- repeated Ollama generation seconds stay on one live log row;
-- normal completion restores idle button state and preserves completion logs;
-- no regression to generated SRT/audio/artifacts or P1→P2 handoff.
+## Deferred evidence
+The latest Start/Stop + log-coalescing UX revision was not separately re-run by the Owner after publication. The Owner explicitly chose to stop further P1 work and accept the current functional checkpoint for now. Do not record the deferred UX retest as PASS.
 
 ## Gates
 - Execution: PASS.
 - Automated/static verification: PASS.
-- Code review: PASS for focused Owner UX/cancel retest.
-- Owner manual app verification: core chain TECHNICAL PASS; UX/cancel retest NOT STARTED.
-- Documentation synchronization: PASS.
-- Merge permission: BLOCKED.
+- Code review: PASS for current checkpoint.
+- Owner manual app verification: core chain TECHNICAL PASS; latest UX/cancel retest DEFERRED / NOT SEPARATELY VERIFIED.
+- Documentation synchronization: PASS after closure sync.
+- Merge permission: BLOCKED — PR #41 remains Draft/unmerged; no merge was requested.
+
+## Reopen rule
+Do not resume BUG-005/Pipeline 1 implementation unless the Owner explicitly reopens P1. A new task may now be selected for Pipeline 2 or Pipeline 3.
