@@ -16,6 +16,28 @@ function _selectRunningJob(job) {
   window.renderJobDetail1?.();
 }
 
+function _isMalformedJsonError(error) {
+  const message = String(error?.message || error || '');
+  return /Expected .* after array element in JSON|Unexpected token .* in JSON|JSON at position \d+|JSON.*line \d+ column \d+|AI không trả về JSON hợp lệ/i.test(message);
+}
+
+async function _runAnalysisWithMalformedJsonRetry(job, sourceSrt) {
+  try {
+    return await runPipeline1MultimodalAnalysis(job, sourceSrt);
+  } catch (error) {
+    if (job?._p1Cancelled || error?.name === 'AbortError' || !_isMalformedJsonError(error)) throw error;
+    _addLog('[P1] ⚠️ AI trả JSON sai cú pháp; tự thử lại multimodal đúng 1 lần.', 'warning');
+    try {
+      return await runPipeline1MultimodalAnalysis(job, sourceSrt);
+    } catch (retryError) {
+      if (_isMalformedJsonError(retryError)) {
+        _addLog('[P1] ❌ AI vẫn trả JSON sai sau lần thử lại; Job hiện tại sẽ lỗi nhưng hàng đợi tiếp tục.', 'error');
+      }
+      throw retryError;
+    }
+  }
+}
+
 export async function triggerAutoAiRewrite(job, sourceSrt) {
   const btnRetry = document.getElementById('btn-retry-ai');
   _setBtn(btnRetry, true, '⏳ Đang phân tích video...');
@@ -25,7 +47,7 @@ export async function triggerAutoAiRewrite(job, sourceSrt) {
 
   try {
     if (!sourceSrt?.trim()) throw new Error('Không có SRT đầu vào cho Pipeline 1.');
-    const result = await runPipeline1MultimodalAnalysis(job, sourceSrt);
+    const result = await _runAnalysisWithMalformedJsonRetry(job, sourceSrt);
     if (job._p1Cancelled) return { status: 'cancelled' };
     const aiText = result.rewrittenSrt;
     if (!aiText?.includes('-->')) throw new Error('Remix script không có timing SRT hợp lệ.');
