@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   stopPython: () => ipcRenderer.invoke('python:stop'),
   getPythonStatus: () => ipcRenderer.invoke('python:status'),
   listOllamaModels: (endpoint) => ipcRenderer.invoke('ollama:listModels', endpoint),
+  analyzeP1Vision: (payload) => ipcRenderer.invoke('ollama:p1AnalyzeVision', payload),
   openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
