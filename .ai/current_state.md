@@ -8,7 +8,7 @@ PIPELINE1-MULTIJOB-RESILIENCE-003 — UX REVISION CODE REVIEW PASS / OWNER TWO-J
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
 - Draft PR: #44.
 - Starting/base SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
-- Latest source commit: `0e53a6ade8a67a061db214f6050f60ded6e0944d`.
+- Latest source commit: `0e988a0cd187633eafb401f30c3f646b1255e2a9`.
 - Source scope:
   - `src/renderer/js/pipeline1-run-ux.js`
   - `src/renderer/js/pipelines/pipeline1-ai.js`
@@ -27,15 +27,18 @@ During the authorized two-job retest, Owner confirmed the active Job now follows
 - The final `[AI] Lỗi Pipeline 1` message is captured onto the active Job before legacy completion clears the current Job pointer.
 - Clicking a failed Job opens an accessible modal with Job name, captured error text and timestamp; fallback text directs Owner to Console when no captured detail exists.
 - Error popup uses textContent only; no raw model payload or HTML injection is added.
+- Follow-up hardening removed repeated title-attribute writes from the 250 ms feedback loop to avoid MutationObserver churn.
 
 ## Verification evidence
-- `pipeline1-run-ux.js` published blob: `504d6b89d8f806169d060ab7507832b43c28c5af`.
-- Exact reconstructed file `git hash-object`: MATCH `504d6b89d8f806169d060ab7507832b43c28c5af`.
+- `pipeline1-run-ux.js` final blob: `8a08b81e30862716fca21ffcdcb2e7ec54dbece1`.
+- Exact reconstructed file `git hash-object`: MATCH `8a08b81e30862716fca21ffcdcb2e7ec54dbece1`.
 - Exact reconstructed file `node --check`: PASS.
-- Source commit diff reviewed directly from GitHub: only run-UX JS + run-UX CSS changed in this incremental revision.
+- GitHub incremental source review confirms the final hardening commit changes only the feedback-sync block in `pipeline1-run-ux.js`.
+- Processing/error UX source commit and CSS were reviewed directly from GitHub.
 - PR changed-file set remains task-scoped: canonical `.ai/` plus P1 run-UX/P1 AI source only.
 - No P2/P3/STTN/Settings/backend source changes.
 - GitHub status checks: none configured.
+- Latest PM code-review COMMENT/PASS: review `4898257228` anchored to source commit `0e988a0...`.
 
 ## Gates
 - Execution: PASS.
