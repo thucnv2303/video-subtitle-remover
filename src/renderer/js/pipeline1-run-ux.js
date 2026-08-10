@@ -105,6 +105,32 @@ function recoverStalledP1Queue() {
   }, QUEUE_RECOVERY_DELAY_MS);
 }
 
+function isMalformedJsonFailure(result) {
+  if (!result || result.ok || result.cancelled || result.code === 'P1_CANCELLED') return false;
+  const message = String(result.error || '');
+  return /Expected .* after array element in JSON|Unexpected token .* in JSON|JSON at position \d+|JSON.*line \d+ column \d+|AI không trả về JSON hợp lệ/i.test(message);
+}
+
+function installP1JsonRetryWrapper() {
+  const bridge = window.electronAPI;
+  if (!bridge?.analyzeP1Vision || bridge.analyzeP1Vision.__p1JsonRetryWrapped) return;
+
+  const original = bridge.analyzeP1Vision.bind(bridge);
+  const wrapped = async (payload) => {
+    const first = await original(payload);
+    if (!isMalformedJsonFailure(first)) return first;
+
+    window.addLog?.('[P1] ⚠️ AI trả JSON sai cú pháp; tự thử lại multimodal đúng 1 lần.', 'warning');
+    const second = await original(payload);
+    if (isMalformedJsonFailure(second)) {
+      window.addLog?.('[P1] ❌ AI vẫn trả JSON sai sau lần thử lại; Job hiện tại sẽ lỗi nhưng hàng đợi tiếp tục.', 'error');
+    }
+    return second;
+  };
+  wrapped.__p1JsonRetryWrapped = true;
+  bridge.analyzeP1Vision = wrapped;
+}
+
 function injectStyles() {
   if (document.querySelector('link[data-p1-run-ux]')) return;
   const link = document.createElement('link');
@@ -222,6 +248,7 @@ async function stopP1(button) {
 
 function install() {
   injectStyles();
+  installP1JsonRetryWrapper();
   const button = document.getElementById('btn-start-all');
   if (!button || button.dataset.p1RunController === 'true') return Boolean(button);
   button.dataset.p1RunController = 'true';
