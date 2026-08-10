@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-OWNER_RUNTIME_FAIL — BUG-005 PIPELINE 1 FULL CHAIN
+WAITING_CODE_REVIEW — BUG-005 MULTIMODAL REVISION
 
 ## Canonical branch
 `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
@@ -13,44 +13,56 @@ OWNER_RUNTIME_FAIL — BUG-005 PIPELINE 1 FULL CHAIN
 - Settings V1 PR #38: MERGED / Owner PASS.
 - Pipeline 1 approved UI PR #39: MERGED / Owner PASS.
 - Pipeline 1 → Pipeline 2 handoff PR #40: MERGED / Owner PASS.
-- BUG-008 P1→P2 premature handoff defect: RESOLVED / Owner PASS.
+- BUG-008 premature P1→P2 handoff: RESOLVED / Owner PASS.
 
 ## Active task
 - Task: `BUG-005 — Pipeline 1 Full Processing Chain`.
 - Branch: `review/BUG-005-P1-FULL-CHAIN`.
 - Draft PR: #41.
 
-## Owner runtime evidence — 2026-08-10
-Owner executed the reviewed candidate and reported FAIL.
+## Owner runtime FAIL that invalidated the previous candidate
+- ASR returned one incorrect SRT segment for the tested video.
+- Text-only AI rewrite and TTS returned transport success, but this did not satisfy the canonical original-video analysis contract.
+- Backend generated an MP3 but approved Job Detail still showed no audio because legacy `activeJobId` and P1 `pipeline1SelectedJobId` could diverge.
+- P1 incorrectly unlocked P2 despite incomplete/incorrect analysis.
 
-Observed runtime facts:
-- Start captured `AI=ollama/qwen3-coder:30b` and `TTS=clone:0`.
-- `/api/p1/extract-text` returned success but only one ASR SRT segment, `Cảm ơn các bạn đã theo dõi.`, which Owner reports does not match the actual video content.
-- AI rewrite completed from that ASR input.
-- TTS backend successfully generated a real MP3 artifact and `/api/tts-retry` returned success.
-- P1 then logged completion and the P1→P2 handoff unlocked the job.
-- Approved Job Detail audio tab still displayed `Chưa có audio lồng tiếng`.
-- The Job Detail header displayed no selected Job (`ID: —` / prompt to select a Job), while content had still been written into the detail textarea.
+## Revised multimodal candidate
+The current revision replaces text-only acceptance with a fail-closed artifact pipeline:
+1. Start snapshots the approved provider/model/prompt/voice and forces ASR language `auto`.
+2. Existing dedicated P1 ASR produces timestamped source SRT.
+3. Renderer samples keyframes across the ORIGINAL video using existing video-info/frame APIs.
+4. Main-process Ollama IPC inspects local model capabilities. If the selected reasoning model supports vision it receives transcript + keyframes directly; otherwise the app searches installed local Ollama models for a vision-capable model and uses its visual analysis as context for the selected reasoning model.
+5. If no local vision-capable model exists, P1 fails explicitly; text-only fallback is not allowed to unlock P2.
+6. AI must return structured summary/insights/scenes/script_segments/edit_plan JSON. The system output protocol overrides any prompt-preset formatting instruction such as “return only SRT”; prompt presets still guide content/style.
+7. Renderer builds and writes `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`, and `remix_script.srt` under `jobs/<job_id>/p1/`, including source SHA256 fingerprint, duration/FPS/frame count, artifact version, reasoning model and vision model metadata.
+8. TTS runs from the remix SRT. Generated temp audio is copied into the P1 artifact directory as `voice.*`; `tts_timed.srt` is also written there.
+9. The running P1 Job becomes the authoritative `pipeline1SelectedJobId`/`activeJobId`, so detail text/audio/status bind to the same Job.
+10. `p1ArtifactsReady` becomes required for the multimodal candidate. A separate artifact guard relocks P2 and marks P1 error if the legacy runner reports finished without required artifacts.
 
-## Verified defects after Owner FAIL
-1. **Detail selection/artifact binding mismatch**
-   - approved detail rendering/audio uses `pipeline1SelectedJobId`;
-   - legacy flow separately tracks `activeJobId` and writes content during processing;
-   - runtime evidence proves these can diverge, producing text in the panel while audio remains hidden and the detail header shows no selected Job.
-2. **P1 analysis contract is incomplete**
-   - `/api/p1/extract-text` is explicitly ASR-only and delegates to the existing ASR extraction path;
-   - AI rewrite consumes transcript/SRT only;
-   - this does not implement the canonical target P1 requirement for original-video analysis with scene/keyframe/vision context, multimodal timeline, insights and remix-script artifacts.
-3. **Completion acceptance is too weak**
-   - current candidate treats transport-level ASR/AI/TTS success as P1 success even when the ASR content is materially wrong for the source video.
+## Preserved boundaries
+- Approved P1 UI source is unchanged.
+- P2/P3 product source is unchanged.
+- P1 does not remove subtitles, inpaint, cut, mix final video or render.
+- Existing P1→P2 state gate remains in place.
 
-## Gate status
-- Execution: NEEDS_REVISION.
-- Automated/static verification: previous syntax/hash/simulation PASS remains valid only for wiring, not product acceptance.
-- Code review: INVALIDATED / NEEDS_REVISION by Owner runtime evidence.
-- Owner manual app verification: FAIL.
-- Documentation synchronization: PASS for failure recording.
+## Static verification completed on exact GitHub-equivalent source
+- `main.js`, `preload.js`, `p1-vision-ipc.js`, `pipeline1-run-config.js`, `pipeline1-artifact-gate.js`, `pipeline1-analysis.js`, `pipeline1-ai.js`: `node --check` PASS with local Git blob hashes matching the published GitHub blobs.
+- P1 run-config simulation: PASS for `ASR=auto`, multimodal mode, artifact reset and TTS/AI enable snapshot.
+- Ollama selected-model vision simulation: PASS.
+- Ollama fallback-to-separate-vision-model simulation: PASS.
+- No-vision-model fail-closed simulation: PASS.
+- TTS temp-audio → P1 artifact copy simulation: PASS.
+- Legacy false-complete → P2 relock artifact-gate simulation: PASS.
+- GitHub CI: not configured.
+
+## Known limitation of this revision
+- Multimodal P1 runtime is currently authorized only for local Ollama. Gemini/DeepSeek remain available in Settings but P1 Start blocks them rather than silently degrading to text-only analysis.
+- Scene understanding is based on sampled keyframes + vision reasoning in this revision; a deterministic CV scene-boundary detector remains a later refinement and is not claimed as complete.
+
+## Gates
+- Execution: PASS for revised candidate publication.
+- Automated/static verification: PASS for syntax/hash/targeted simulations.
+- Code review: WAITING final GitHub review.
+- Owner manual app verification: previous candidate FAIL; fresh retest NOT AUTHORIZED until revised code review PASS.
+- Documentation synchronization: PASS for revised candidate state.
 - Merge permission: BLOCKED.
-
-## Permitted next action
-Revise BUG-005 on the existing review branch or a fresh focused revision branch. First fix the selected-Job/detail artifact binding and then correct the P1 analysis contract so completion is based on valid analysis artifacts, not merely successful HTTP calls. Do not modify P2/P3 responsibilities.
