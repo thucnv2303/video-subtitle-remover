@@ -1,58 +1,77 @@
 # AgentOS Handoff Status
 
-## Canonical branch
-`recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
-
-## Accepted merged foundation
-- Settings V1 PR #38: MERGED / Owner PASS.
-- Pipeline 1 approved UI PR #39: MERGED / Owner PASS.
-- Pipeline 1 → Pipeline 2 handoff PR #40: MERGED / Owner PASS.
-- Canonical task base: `dd520054b385ae18b8154b7c897eb9baad7eac02`.
-
-## Pipeline 1 checkpoint
-`BUG-005 — Pipeline 1 Full Processing Chain`
+## Active task
+`PIPELINE2-APPROVED-UI-001 — Pipeline 2 Approved UI`
 
 ## Status
-CLOSED AT CURRENT FUNCTIONAL CHECKPOINT BY OWNER — NO FURTHER P1 WORK FOR NOW
+CODE REVIEW PASS / OWNER TEST AUTHORIZED
+
+## Stacked basis
+- Base branch: `review/BUG-005-P1-FULL-CHAIN`.
+- Base SHA: `97d5a13e77b6919931c251c74fab4c191fa04cec`.
+- P1 Draft PR #41 remains unmerged and is preserved as the current functional checkpoint.
 
 ## Review branch / PR
-- Branch: `review/BUG-005-P1-FULL-CHAIN`.
-- Draft PR: #41.
-- PR remains unmerged.
+- Branch: `review/PIPELINE2-APPROVED-UI-001`.
+- Draft PR: #42.
+- Reviewed P2 source checkpoint: `5c9c2f0fa12c884b19fa5d8bfcee080a31364203`.
 
-## Accepted Owner runtime fact
-The full technical chain completed on a fresh P1 job:
-- multimodal analysis: 8 scenes / 8 remix segments;
-- vision model `gemma4:12b`;
-- reasoning model `qwen3-coder:30b`;
-- reasoning 54.4s, 1805 tokens, 52.2 tok/s;
-- TTS produced 8 segments and durable `voice.mp3`;
-- P1 artifacts became ready;
-- P1 completed and then unlocked P2.
+## Verified P2 source facts
+PR #42 changes application source only in:
+- `src/renderer/js/pipeline.js`
+- `src/renderer/styles/pipeline2-approved.css`
 
-This is the accepted technical runtime checkpoint for P1. Editorial quality can be revisited later if the Owner reopens P1.
+The implementation mounts the approved P2 workspace by moving/reusing existing Step 2 runtime nodes. Existing `app.js`, `pipeline-state.js`, API/backend, P1 engine, P3 and Settings product source remain unchanged by this task.
 
-## Latest UX/cancel source at checkpoint
-- primary P1 action integrates Start / Processing / hover Stop / Stopping state;
-- old separate Stop control is hidden;
-- active Ollama inference can be cancelled through Electron IPC and AbortController;
-- cancelled P1 remains incomplete and must not unlock P2;
-- Ollama progress uses one in-place Console row per phase instead of repeated timer lines;
-- synchronous Python ASR/TTS uses safe-stop semantics at the request boundary.
+Unchanged `pipeline-state.js` remains authoritative for:
+- only P1 FINISHED jobs becoming P2 eligible;
+- blocking direct P2 upload/drop;
+- P2 Start interception;
+- subtitle-removal-only execution with ASR/AI/TTS disabled;
+- P2 success unlocking P3.
+
+The approved UI provides:
+- controls/algorithm column;
+- read-only P1 readiness summary;
+- dominant internal-scroll Job Queue;
+- separate Actions card;
+- selected-job original/result detail preview;
+- internal-scroll Console/Log;
+- responsive stacked behavior at narrower widths.
+
+Unsupported P2-only delete-selected is deliberately disabled rather than implemented with an unsafe state mutation.
 
 ## Verification
-Exact GitHub blob reconstruction + `node --check` PASS for current P1 IPC/preload/analysis/run-UX/run-config/AI-TTS files. Targeted mocked Ollama run + cancel returned `P1_CANCELLED` PASS. GitHub CI is not configured.
+- GitHub PR scope/diff review: PASS.
+- PR comments/reviews/threads: no unresolved blockers.
+- GitHub CI/status checks: none configured for the reviewed source checkpoint.
+- Isolated P2 adapter block `node --check`: PASS.
+- Exact full published `pipeline.js` blob syntax verification is not independently recorded in this review environment, so Automated/static verification remains WAITING for merge purposes.
 
-## Deferred evidence
-The latest Start/Stop + log-coalescing UX revision was not separately re-run by the Owner after publication. The Owner explicitly chose to stop further P1 work and accept the current checkpoint. This deferred retest must not be represented as PASS.
+## Code review
+PASS for Owner runtime UI verification.
+
+## Owner action now permitted
+Run the real app from the exact current PR #42 head and test:
+1. P2 visual parity with the approved demo/P1 tone.
+2. 0 / 1 / 10+ eligible jobs.
+3. Queue internal scrolling without pushing Actions out of view.
+4. Selected job drives metadata and original/result panes.
+5. No direct P2 upload/drop path.
+6. Only P1-unlocked jobs appear.
+7. Start runs existing subtitle-removal-only P2 path.
+8. Responsive/fullscreen fit.
+9. Console readability and internal scroll.
+
+Report direct observed PASS/FAIL plus any screenshot/log evidence needed to identify defects. Owner does not edit `.ai` files.
 
 ## Gates
 - Execution: PASS.
-- Automated/static verification: PASS.
-- Code review: PASS for current checkpoint.
-- Owner manual verification: core chain TECHNICAL PASS; latest UX/cancel retest DEFERRED / NOT SEPARATELY VERIFIED.
-- Documentation synchronization: PASS after closure sync.
-- Merge permission: BLOCKED — no merge requested; PR #41 remains Draft/unmerged.
+- Automated/static verification: WAITING for complete exact-blob/runtime evidence; isolated P2 adapter syntax PASS.
+- Code review: PASS.
+- Owner manual app verification: AUTHORIZED / NOT STARTED.
+- Documentation synchronization: PASS at this checkpoint.
+- Merge permission: BLOCKED.
 
-## Next action
-Do not continue Pipeline 1 implementation unless explicitly reopened by the Owner. The next project task may move to Pipeline 2 or Pipeline 3 while preserving this P1 checkpoint as the reference input contract.
+## Next action after Owner result
+Project Manager records Owner PASS/FAIL in canonical `.ai` files, reviews any runtime defect if present, and only then re-evaluates automated/documentation/merge gates.
