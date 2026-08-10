@@ -1,4 +1,6 @@
 const FRAME_SAMPLE_COUNT = 8;
+const MAX_VISION_EDGE = 960;
+const VISION_JPEG_QUALITY = 0.72;
 
 function log(message, type = 'info') {
   if (typeof window.addLog === 'function') window.addLog(message, type);
@@ -42,6 +44,26 @@ function blobToBase64(blob) {
   });
 }
 
+async function compressFrameBlob(blob) {
+  if (typeof createImageBitmap !== 'function') return blobToBase64(blob);
+  const bitmap = await createImageBitmap(blob);
+  try {
+    const scale = Math.min(1, MAX_VISION_EDGE / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) return blobToBase64(blob);
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    const compressed = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', VISION_JPEG_QUALITY));
+    return blobToBase64(compressed || blob);
+  } finally {
+    bitmap.close?.();
+  }
+}
+
 function sampleFrameIndexes(totalFrames, count = FRAME_SAMPLE_COUNT) {
   const total = Math.max(1, Math.floor(Number(totalFrames) || 1));
   const wanted = Math.max(2, Math.min(count, total));
@@ -58,11 +80,15 @@ async function collectVisualContext(job) {
   if (!info?.total_frames || !info?.fps) throw new Error('Không đọc được metadata video để phân tích hình ảnh.');
   const indexes = sampleFrameIndexes(info.total_frames);
   const frames = [];
+  let originalBytes = 0;
+  let encodedChars = 0;
 
   for (const frameIndex of indexes) {
     const blob = await window.api.getFrame(frameIndex, job.filePath);
     if (!blob || !blob.size) continue;
-    const imageBase64 = await blobToBase64(blob);
+    originalBytes += blob.size;
+    const imageBase64 = await compressFrameBlob(blob);
+    encodedChars += imageBase64.length;
     frames.push({
       frame: frameIndex,
       time_sec: Number((frameIndex / info.fps).toFixed(3)),
@@ -74,6 +100,8 @@ async function collectVisualContext(job) {
     throw new Error(`Chỉ lấy được ${frames.length}/${indexes.length} keyframe; chưa đủ để phân tích video.`);
   }
 
+  const approxCompressedBytes = encodedChars * 0.75;
+  log(`[P1] 🗜 Keyframe vision: ${frames.length} ảnh; nguồn ${(originalBytes / 1048576).toFixed(2)} MiB → payload khoảng ${(approxCompressedBytes / 1048576).toFixed(2)} MiB; cạnh tối đa ${MAX_VISION_EDGE}px.`, 'info');
   return { info, frames };
 }
 
@@ -179,22 +207,37 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
   log(`[P1] ✅ Đã lấy ${frames.length} keyframe trên ${Number(info.duration || 0).toFixed(1)}s video.`, 'success');
 
   log('[P1] 🧠 Giai đoạn C — Phân tích multimodal + xây remix script...', 'info');
-  const visual = await window.electronAPI.analyzeP1Vision({
-    endpoint: config.endpoint,
-    model: config.model,
-    prompt: config.prompt,
-    transcript_srt: transcriptSrt,
-    video_path: job.filePath,
-    video_info: {
-      duration: info.duration,
-      fps: info.fps,
-      total_frames: info.total_frames,
-      width: info.width,
-      height: info.height,
-    },
-    frames,
+  const unsubscribeProgress = window.electronAPI?.onP1VisionProgress?.((payload) => {
+    const message = String(payload?.message || '').trim();
+    if (!message) return;
+    const type = ['success', 'error', 'warning'].includes(payload?.type) ? payload.type : 'info';
+    log(`[Ollama] ${message}`, type);
   });
-  if (!visual?.ok) throw new Error(visual?.error || 'Phân tích multimodal thất bại.');
+
+  let visual;
+  try {
+    visual = await window.electronAPI.analyzeP1Vision({
+      endpoint: config.endpoint,
+      model: config.model,
+      prompt: config.prompt,
+      transcript_srt: transcriptSrt,
+      video_path: job.filePath,
+      video_info: {
+        duration: info.duration,
+        fps: info.fps,
+        total_frames: info.total_frames,
+        width: info.width,
+        height: info.height,
+      },
+      frames,
+    });
+  } finally {
+    if (typeof unsubscribeProgress === 'function') unsubscribeProgress();
+  }
+  if (!visual?.ok) {
+    const prefix = [visual?.phase, visual?.model].filter(Boolean).join(' / ');
+    throw new Error(`${prefix ? `${prefix}: ` : ''}${visual?.error || 'Phân tích multimodal thất bại.'}`);
+  }
 
   const analysis = visual.analysis || {};
   const scriptSegments = normalizeScriptSegments(analysis, sourceBlocks, info.duration);
@@ -242,7 +285,7 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
   job.p1Artifacts = bundle;
   job.p1AnalysisMode = sourceMeta.analysis_mode;
   job.sourceFingerprint = sourceMeta.source_fingerprint;
-  log(`[P1] ✅ Multimodal analysis hoàn tất — ${analysis.scenes.length} scene, ${scriptSegments.length} đoạn script.`, 'success');
+  log(`[P1] ✅ Multimodal analysis hoàn tất — ${analysis.scenes.length} scene, ${scriptSegments.length} đoạn script; vision=${sourceMeta.vision_model}; reasoning=${sourceMeta.reasoning_model}.`, 'success');
 
   return { sourceSrt: transcriptSrt, rewrittenSrt, analysis, bundle, info, visual };
 }
