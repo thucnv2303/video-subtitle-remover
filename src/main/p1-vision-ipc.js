@@ -1,5 +1,6 @@
 const fs = require('fs');
 const crypto = require('crypto');
+const path = require('path');
 
 function localOllamaUrl(rawEndpoint, pathname) {
   const raw = typeof rawEndpoint === 'string' && rawEndpoint.trim()
@@ -119,6 +120,23 @@ async function chat(net, endpoint, model, messages, options = {}) {
 }
 
 module.exports = function registerP1VisionIPC({ ipcMain, net }) {
+  ipcMain.handle('p1:persistAudio', async (event, payload = {}) => {
+    try {
+      const sourcePath = String(payload.source_path || '').trim();
+      const artifactDir = String(payload.artifact_dir || '').trim();
+      if (!sourcePath || !fs.existsSync(sourcePath)) return { ok: false, error: 'Không tìm thấy audio TTS nguồn.' };
+      if (!artifactDir) return { ok: false, error: 'Artifact directory đang trống.' };
+      const ext = path.extname(sourcePath).toLowerCase() || '.mp3';
+      if (!['.mp3','.wav','.m4a','.aac','.ogg','.flac','.opus'].includes(ext)) return { ok: false, error: 'Định dạng audio TTS không hợp lệ.' };
+      fs.mkdirSync(artifactDir, { recursive: true });
+      const target = path.join(artifactDir, `voice${ext}`);
+      fs.copyFileSync(sourcePath, target);
+      return { ok: true, audio_path: target };
+    } catch (err) {
+      return { ok: false, error: err?.message || 'Không thể lưu audio Pipeline 1.' };
+    }
+  });
+
   ipcMain.handle('ollama:p1AnalyzeVision', async (event, payload = {}) => {
     try {
       const model = String(payload.model || '').trim();
