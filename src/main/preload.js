@@ -130,7 +130,17 @@ function installOllamaModelScanner() {
   return true;
 }
 
+function installP2RuntimeScript() {
+  if (document.querySelector('script[data-pipeline2-runtime]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/pipeline2-runtime.js';
+  script.defer = true;
+  script.dataset.pipeline2Runtime = 'true';
+  document.head.appendChild(script);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
+  installP2RuntimeScript();
   let attempts = 0;
   const timer = setInterval(() => {
     attempts += 1;
