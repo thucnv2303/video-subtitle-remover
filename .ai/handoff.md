@@ -4,50 +4,48 @@
 `PIPELINE2-MANUAL-REGION-REVISION-002 — Manual ROI Geometry, Per-Region Mask, and Compact Inpaint Log`
 
 ## Status
-READY FOR ANTI EXECUTION
+OWNER SINGLE-JOB RUNTIME PASS / MULTI-JOB RETEST PENDING
 
 ## Review basis
-- Current P2 branch before task publication: `review/PIPELINE2-APPROVED-UI-001`.
-- Draft PR: #42.
-- PM basis SHA before publication: `186c9726d88a99f4438b77002b1487077c0ce712`.
-- P2 remains stacked on `review/BUG-005-P1-FULL-CHAIN` at `97d5a13e77b6919931c251c74fab4c191fa04cec`.
-- Required new review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
+- Parent P2: `review/PIPELINE2-APPROVED-UI-001@39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
+- Review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
+- Draft PR: #43.
+- Current source commit: `0e20fc0c6300240276da8e4bef16f67186a08889`.
+- Owner-test intake basis: authorized PR #43 head `b43f16837202051bcebb1e74900b010b4266869e`; PR head unchanged at intake.
 
-## Owner retest intake — 2026-08-10
-Verified/observed improvements:
-- backend now loads sufficiently for actual STTN processing;
-- realtime result preview works;
-- processing speed is much faster than the prior failed run;
-- supplied log shows 440 frames completed in about 38 seconds at 11.38 frame/s;
-- backend runtime reports STTN GPU mode;
-- clean-video output is created;
-- P3 unlocks after successful P2 completion.
+## Current source state
+Application source changes remain limited to:
+- `src/renderer/js/pipeline2-runtime.js`;
+- `src/renderer/js/pipelines/pipeline2-remove.js`.
 
-Remaining blockers:
-1. Manual ROI box is displaced from the user's drag location.
-2. Each manual region cannot select/persist its own mask mode; current payload uses one job-level mask.
-3. Visible Console still floods successful `/api/frame/...` access lines and expected early preview 404 lines.
+The runtime enhancer now owns manual ROI capture against the rendered canvas, includes letterbox offsets, suppresses the legacy wrapper draw path while manual capture is active, reasserts corrected region list/overlay DOM after legacy rendering, stores independent region masks, adapts the active manual payload, and compacts expected P2 access-log noise.
 
-## Direct source diagnosis
-- Approved P2 CSS makes `canvas-inner` fill the preview pane while `canvas-original` is aspect-ratio constrained and centered. Legacy draw math uses the wrapper dimensions, producing incorrect coordinates/overlay geometry when letterboxing exists.
-- `job.regions.push(...)` stores no `maskMode`.
-- manual `pipeline2-remove.js` payload sends `mask_mode: job.maskMode || 'box'` instead of a region-specific value.
-- P2 runtime log coalescing omits `/api/frame` from its successful access-log filter.
+Preserved: backend discovery, realtime preview, STTN behavior, P1→P2 gate and P3 success-only unlock.
 
-## Execution authority
-Remote active spec:
-- `.ai/task_specs/ACTIVE.md`
-- `.ai/task_specs/PIPELINE2-MANUAL-REGION-REVISION-002.md`
+## Verification evidence
+- Runtime published blob `f2b39abb2a948eb14e21665f6e0f234a1bef6ae1`: exact local hash match + `node --check` PASS.
+- `pipeline2-remove.js` published blob `67340ba29825ced3b4e5e5c583b591cba0ed2510`: exact local hash match + `node --check` PASS.
+- ROI deterministic simulation: PASS, latest maximum tested error 0.25 CSS px.
+- Region-mask simulation: PASS (`box`, `tight`, legacy fallback `soft`).
+- Log simulation: PASS; frame 200/expected preview 404 hidden, preview 500/completion visible.
+- GitHub scope review: no backend/P1/P3/pipeline-state/dependency changes.
+- No GitHub CI/status checks configured.
+- Exact unchanged `app.js` blob `99c2cafa509ba2038b98f135156b34271da58c70`: byte-identical reconstruction + `node --check` PASS.
+- Exact changed-file parent→current reconstruction: `git diff --check` PASS.
 
-Anti must fetch and read both from the exact remote authority ref named by Project Manager before editing. Local spec copies are not authority.
+## Owner runtime result — 2026-08-10
+Owner reports a successful fresh Pipeline 2 single-job run and no new observed defect; overall behavior in that tested path was reported as correct. This is accepted as single-job runtime PASS only. Multi-job/batch execution was explicitly not tested and remains the next runtime coverage gap.
+
+## Controlled publication incident
+A PM verification probe accidentally created `.ai/.pm_probe_should_not_exist` in commit `78252c198e6790722e92877c17bfee62312877a0`. It was immediately deleted in `cec184210ab9a622c5c62163712ff0f44a9ffe5c`, with no reset/force/history rewrite. GitHub compare `d84d809...` → `cec1842...` has zero final changed files. Final PR scope contains no probe artifact.
 
 ## Gates
-- Execution: new revision NOT STARTED.
-- Automated/static verification: WAITING.
-- Code review: WAITING.
-- Owner manual verification: previous retest PARTIAL PASS / NEEDS_REVISION; fresh retest NOT STARTED.
-- Documentation synchronization: PASS at owner-result intake/task-open checkpoint.
+- Execution: PASS.
+- Automated verification: PASS.
+- Code review: PASS.
+- Owner manual verification: PARTIAL PASS — SINGLE-JOB PASS; MULTI-JOB NOT TESTED.
+- Documentation synchronization: PASS for current Owner-result intake.
 - Merge permission: BLOCKED.
 
-## Owner action
-No fresh Owner app test until the new source revision is published and Project Manager code review passes. Owner does not edit `.ai` files.
+## Next action
+Run a controlled multi-job/batch Pipeline 2 regression on the same reviewed source. No source edits and no merge before the missing coverage is resolved or explicitly ruled out of the gate by PM.

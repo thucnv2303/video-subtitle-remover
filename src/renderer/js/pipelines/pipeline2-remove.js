@@ -50,7 +50,7 @@ export async function runNextPass(job) {
         subtitle_areas: subtitleAreas,
         frame_range: frameRange,
         inpaint_mode: job.algorithm,
-        mask_mode: job.maskMode || 'box',
+        mask_mode: region.maskMode || job.maskMode || 'box',
         extract_srt: passIdx === 0 ? job.extractSrt : false,
         ai_rewrite: passIdx === 0 ? job.aiRewrite : false,
         ai_config: aiConfig,

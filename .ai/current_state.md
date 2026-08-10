@@ -1,61 +1,66 @@
 # Current State
 
 ## Status
-PIPELINE2-MANUAL-REGION-REVISION-002 — READY FOR ANTI EXECUTION
+PIPELINE2-MANUAL-REGION-REVISION-002 — OWNER SINGLE-JOB RUNTIME PASS / MULTI-JOB COVERAGE WAITING
 
-## Canonical product foundation
-- Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`.
-- Canonical merged task base before stacked P1 work: `dd520054b385ae18b8154b7c897eb9baad7eac02`.
-- Settings V1 PR #38: MERGED / Owner PASS.
-- Pipeline 1 approved UI PR #39: MERGED / Owner PASS.
-- Pipeline 1 → Pipeline 2 handoff PR #40: MERGED / Owner PASS.
+## Authority
+- Repository: `thucnv2303/video-subtitle-remover`.
+- Parent P2 branch: `review/PIPELINE2-APPROVED-UI-001`.
+- Exact parent head: `39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
+- Active review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
+- Draft PR: #43.
+- Current reviewed source commit: `0e20fc0c6300240276da8e4bef16f67186a08889`.
+- Owner-test intake basis: authorized PR #43 review head `b43f16837202051bcebb1e74900b010b4266869e`; GitHub PR head was unchanged when the Owner result was received.
 
-## Preserved Pipeline 1 checkpoint
-- Branch: `review/BUG-005-P1-FULL-CHAIN`.
-- Draft PR: #41.
-- P2 stacked base SHA: `97d5a13e77b6919931c251c74fab4c191fa04cec`.
-- PR #41 remains unmerged and preserved as the current functional checkpoint.
+## Owner outcome targeted
+The previous P2 retest proved backend/STTN execution, realtime preview, clean output and P3 success unlock, but remained PARTIAL PASS because:
+1. manual ROI was displaced under the letterboxed portrait layout;
+2. manual regions did not persist independent mask modes;
+3. visible P2 Console contained frame/poll noise.
 
-## Active Pipeline 2 checkpoint
-- Branch: `review/PIPELINE2-APPROVED-UI-001`.
-- Draft PR: #42.
-- PM basis before this task publication: `186c9726d88a99f4438b77002b1487077c0ce712`.
-- Owner has already accepted the redesigned P2 UI/layout.
+## Current source revision
+Changed application source relative to the exact parent is limited to:
+- `src/renderer/js/pipeline2-runtime.js`;
+- `src/renderer/js/pipelines/pipeline2-remove.js`.
 
-## Owner runtime retest — 2026-08-10
-Positive observations:
-- previous `backend not available` / 0% stuck failure is no longer reproduced;
-- realtime result preview works;
-- processing speed is materially improved;
-- captured run processed 440 frames in about 38 seconds at 11.38 frame/s;
-- runtime reported STTN GPU mode and generated the clean-video output;
-- successful P2 completion unlocked the matching P3 job.
+Current behavior:
+- ROI source/display conversion uses `canvas-original.getBoundingClientRect()` and letterbox offsets;
+- draw starts outside the rendered video are rejected and the legacy wrapper handler is suppressed while manual drawing is active;
+- runtime observers immediately restore corrected region UI/overlays after legacy list/frame rendering mutates the DOM;
+- new regions inherit the current global mask selector and persist `maskMode` independently;
+- legacy regions fall back to `job.maskMode || 'box'`;
+- the active manual request resolves the current region mask;
+- successful `/api/frame/...` and poll logs plus expected active `/api/preview` 404 lines are suppressed without suppressing unexpected errors.
 
-Remaining failures found by Owner:
-- manual drawn subtitle region appears displaced from the pixels originally dragged;
-- manual regions no longer have an independent mask-mode choice per region;
-- visible inpaint Console is still noisy, dominated by successful `/api/frame/...` access logs and expected early `/api/preview` 404 lines.
+No backend, preload/python bridge, `pipeline-state.js`, P1, P3, Settings or dependency source is changed by this task.
 
-## Direct code findings
-- `app.js` maps pointer coordinates against `canvas-inner`, while the approved P2 CSS makes `canvas-inner` fill the preview pane and centers an aspect-ratio-constrained canvas inside it. The saved/painted ROI therefore uses the wrong display coordinate space when letterboxing exists.
-- region objects currently store coordinates/range/label only; no region-level `maskMode` is persisted.
-- `pipeline2-remove.js` sends `mask_mode: job.maskMode`, so all manual passes share the job-level mask.
-- `pipeline2-runtime.js` suppresses successful status/preview/health/gpu access logs but does not suppress successful `/api/frame/...` access lines; expected early preview 404 lines also remain visible.
+## Verification evidence
+- Published runtime blob SHA: `f2b39abb2a948eb14e21665f6e0f234a1bef6ae1`; identical local file hash and `node --check`: PASS.
+- Published `pipeline2-remove.js` blob SHA: `67340ba29825ced3b4e5e5c583b591cba0ed2510`; exact local hash match and `node --check`: PASS.
+- Deterministic ROI simulation: <=1 CSS px criterion PASS; latest run maximum error 0.25 px.
+- Mask simulation: `box`, `tight`, legacy fallback `soft` — PASS.
+- Log simulation: frame 200 hidden; preview 404 hidden; preview 500/completion visible — PASS.
+- GitHub compare parent → `0e20fc0...`: final tree contains only the two approved source files plus canonical task documentation.
+- GitHub CI/status checks: none configured.
+- Exact unchanged `src/renderer/js/app.js` blob `99c2cafa509ba2038b98f135156b34271da58c70`: reconstructed byte-identical; `node --check`: PASS.
+- Exact changed-file reconstruction from parent blob hashes to current source/docs: `git diff --check`: PASS.
 
-## Active revision
-Task: `PIPELINE2-MANUAL-REGION-REVISION-002`.
-Spec: `.ai/task_specs/PIPELINE2-MANUAL-REGION-REVISION-002.md`.
-Required review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
+## Owner runtime result — 2026-08-10
+- Owner reports the fresh Pipeline 2 run completed successfully for a single job and that the observed behavior was generally correct with no new defect reported.
+- This is accepted as Owner runtime PASS for the tested single-job path.
+- Multi-job/batch behavior was explicitly not tested in this run, so it is not claimed as verified.
+- Detailed checklist items not explicitly enumerated by the Owner remain evidence-limited; do not convert this single-job report into a full multi-job P2 release PASS.
 
-Scope is limited to manual ROI geometry, per-region mask state/payload, and visible P2 log compaction. Preserve the working runtime bridge, realtime preview, STTN algorithm behavior, P1→P2 gate, and P3 unlock rules.
+## Controlled publication incident
+During PM verification an accidental one-line probe file `.ai/.pm_probe_should_not_exist` was created in commit `78252c198e6790722e92877c17bfee62312877a0` and immediately removed in normal follow-up commit `cec184210ab9a622c5c62163712ff0f44a9ffe5c`. No force/history rewrite was used. GitHub compare `d84d809...` → `cec1842...` reports zero final file differences, and the final PR changed-file set contains no probe file. The incident is therefore contained, but is recorded rather than hidden.
 
 ## Gates
-- Execution: previous runtime revision PASS; new revision NOT STARTED.
-- Automated/static verification: previous runtime revision PASS; new revision WAITING.
-- Code review: new revision WAITING.
-- Owner manual app verification: PARTIAL PASS / NEEDS_REVISION.
-- Documentation synchronization: PASS after this owner-result intake checkpoint.
-- Merge permission: BLOCKED.
+- Execution: PASS for source publication.
+- Automated verification: PASS.
+- Code review: PASS.
+- Owner manual app verification: PARTIAL PASS — SINGLE-JOB PASS; MULTI-JOB NOT TESTED.
+- Documentation synchronization: PASS for recording this Owner result.
+- Merge permission: BLOCKED pending required multi-job/batch regression coverage or explicit PM determination that such coverage is outside the release gate.
 
 ## Next permitted action
-Anti executes only the remote active spec from the exact current authority ref, publishes a dedicated review branch and Draft PR, then Project Manager reviews source/diff/tests before any fresh Owner retest. Do not merge.
+Run a controlled multi-job/batch Pipeline 2 regression test on the same reviewed source. Do not modify source and do not merge while that runtime coverage is still missing.
