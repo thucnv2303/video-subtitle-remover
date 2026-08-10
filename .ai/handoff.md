@@ -13,37 +13,51 @@
 `BUG-005 — Pipeline 1 Full Processing Chain`
 
 ## Status
-WAITING_OWNER_RETEST — OLLAMA TELEMETRY / RESOURCE REVISION
+WAITING_OWNER_UX_RETEST — CORE P1 CHAIN TECHNICALLY PASS
 
 ## Review branch / PR
 - Branch: `review/BUG-005-P1-FULL-CHAIN`
 - Draft PR: #41
 
-## Previous runtime failure
-Owner runtime at head `6ce8d3e9...` proved ASR + keyframes worked but multimodal Ollama analysis timed out without showing which model was loaded or generating. That head remains FAIL and must not be reused for acceptance.
+## Latest Owner runtime fact
+The full technical chain completed on a fresh P1 job:
+- multimodal analysis: 8 scenes / 8 remix segments;
+- vision model `gemma4:12b`;
+- reasoning model `qwen3-coder:30b`;
+- reasoning 54.4s, 1805 tokens, 52.2 tok/s;
+- TTS produced 8 segments and durable `voice.mp3`;
+- P1 artifacts became ready;
+- P1 completed and then unlocked P2.
 
-## Current revision
-- Keyframes are resized/re-encoded before Ollama to reduce request/vision load.
-- Renderer forwards Electron P1 vision-progress events into the existing Console / Log.
-- Ollama preflight logs reachability and model count.
-- Capability lookup logs selected reasoning model and actual vision model.
-- `/api/ps` polling logs model residency, model bytes, VRAM bytes and context length while each phase runs.
-- `/api/chat` now streams so first token/output latency and ongoing generation are visible.
-- Errors/timeouts include phase + model.
-- Structured JSON schema remains enforced.
-- Separate vision model is explicitly unloaded/verified before selected reasoning model starts.
-- P1 remains fail-closed; P2 remains locked on incomplete analysis.
+This is technical runtime PASS for the chain. Editorial quality can and should already be reviewed from P1 scenes/timeline/remix SRT/audio; P3 later validates how those artifacts perform in final assembly.
+
+## Current UX/cancel revision
+Source head before documentation commits: `cb6959c454ef196c70f86cecba8a63d3b1f02a62`.
+
+Implemented after Owner feedback:
+- primary P1 action integrates Start / Processing / hover Stop / Stopping state;
+- old separate Stop control is hidden;
+- active Ollama inference can be cancelled through Electron IPC and AbortController;
+- cancelled P1 must remain incomplete/retryable and P2 must remain locked;
+- Ollama load/generation progress uses one in-place Console row per phase instead of appending repeated timer lines;
+- final/start/error logs remain separate review evidence;
+- synchronous Python ASR/TTS uses safe-stop semantics: cancellation prevents P1 completion, but the current synchronous request may need to return before the Job becomes retryable.
 
 ## Verification
-Exact GitHub blobs for `p1-vision-ipc.js`, `preload.js`, and `pipeline1-analysis.js` were reconstructed and verified with matching Git blob SHA plus `node --check` PASS. GitHub compare from the failed head shows only those three product files changed in this correction. Official Ollama API contracts used by the correction were also re-verified. GitHub CI is not configured.
+Exact GitHub blob reconstruction + `node --check` PASS for current P1 IPC/preload/analysis/run-UX/run-config/AI-TTS files. Targeted mocked Ollama run + cancel returned `P1_CANCELLED` PASS. GitHub CI is not configured.
+
+## Owner retest
+Fresh focused runtime test is AUTHORIZED for:
+1. primary button state and hover Stop;
+2. Stop during active Ollama inference;
+3. P2 remains locked after cancellation;
+4. repetitive Ollama timer log stays one live-updating line;
+5. normal rerun/completion still produces P1 artifacts + TTS and unlocks P2.
 
 ## Gates
 - Execution: PASS.
 - Automated/static verification: PASS.
-- Code review: PASS for fresh Owner retest.
-- Owner manual app verification: previous head FAIL; fresh retest AUTHORIZED / NOT STARTED.
+- Code review: PASS for focused UX/cancel retest.
+- Owner manual verification: core chain TECHNICAL PASS; UX/cancel NOT STARTED.
 - Documentation synchronization: PASS.
-- Merge permission: BLOCKED.
-
-## Next action
-Owner tests a new P1 Job on the current PR #41 head. Capture the `[Ollama]` telemetry through model selection, `/api/ps` residency and streaming generation. Runtime acceptance still requires meaningful multimodal artifacts + playable TTS + P2 unlock only after the full P1 artifact gate.
+- Merge permission: BLOCKED pending final Owner acceptance and explicit merge approval.
