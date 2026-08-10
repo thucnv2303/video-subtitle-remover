@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-PIPELINE2-RUNTIME-REVISION-001 — WAITING_OWNER_RETEST
+PIPELINE2-RUNTIME-REVISION-001 — CODE REVIEW PASS / OWNER RETEST AUTHORIZED
 
 ## Canonical product foundation
 - Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`.
@@ -19,6 +19,7 @@ PIPELINE2-RUNTIME-REVISION-001 — WAITING_OWNER_RETEST
 ## Active Pipeline 2 review
 - Branch: `review/PIPELINE2-APPROVED-UI-001`.
 - Draft PR: #42.
+- Runtime revision source checkpoint: `b17d64fa94b7a8bafd8cb6eb396856a619f0df6c`.
 - Owner approved the redesigned Pipeline 2 UI/layout during runtime testing.
 - The same Owner test exposed a P2 engine/runtime failure; UI acceptance does not equal processing PASS.
 
@@ -56,7 +57,7 @@ Exact locally constructed source matched the published Git blobs and passed `nod
 
 Targeted linked-worktree simulation: a clean linked worktree resolved `<main-worktree>/video-subtitle-remover-ref` through `git rev-parse --git-common-dir` — PASS.
 
-GitHub CI/status checks: not configured.
+GitHub compare from the Owner-failed head `d573a3bb...` to the reviewed revision shows only the three authorized runtime source files plus canonical documentation/spec changes. `app.js`, `pipeline-state.js`, backend Python, P1/P3 source and dependencies are unchanged. No unresolved PR review threads exist. GitHub CI/status checks are not configured.
 
 ## Current interpretation of GPU state
 Upstream STTN is CUDA-capable and current project config enables hardware acceleration, but the failed Owner run never loaded the real backend. CUDA preflight in the revision proves availability only; actual STTN GPU execution still requires Owner runtime evidence and must not be claimed from preflight alone.
@@ -64,10 +65,10 @@ Upstream STTN is CUDA-capable and current project config enables hardware accele
 ## Gates
 - Execution: PASS for current runtime revision publication.
 - Automated/static verification: PASS for exact-blob JS syntax/hash + linked-worktree discovery simulation; no GitHub CI configured.
-- Code review: WAITING final PM review of current PR #42 head.
-- Owner manual app verification: prior UI PASS / processing FAIL; fresh runtime retest NOT YET AUTHORIZED until final PM review.
-- Documentation synchronization: PASS at this revision checkpoint.
+- Code review: PASS for fresh Owner runtime retest.
+- Owner manual app verification: prior UI PASS / processing FAIL; fresh runtime retest AUTHORIZED / NOT STARTED.
+- Documentation synchronization: PASS at this review checkpoint.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Project Manager reviews the exact current PR #42 head/diff. If code review PASS, Owner retests the same short video for backend import, STTN progress, live result preview, compact log behavior and successful clean-video output. Do not merge.
+Owner retests the same short video from the exact current PR #42 head. Required observations: backend reference import, non-stuck STTN progress, realtime result preview, compact one-row progress logging, accelerator/device behavior, final clean-video output and P3 unlock only after P2 success. Do not merge.
