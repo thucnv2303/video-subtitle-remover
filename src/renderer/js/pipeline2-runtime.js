@@ -20,6 +20,7 @@
   let unsubscribeWs = null;
   let manualSelectionStart = null;
   let manualRegionUiJobId = null;
+  let manualRegionObserversInstalled = false;
 
   function state() {
     return window._appState || null;
@@ -227,7 +228,9 @@
     if (!job || job.subtitleMode !== 'manual' || !list || !geometry) return;
 
     const signature = regionUiSignature(job);
-    const listReady = list.dataset.p2RegionSignature === signature && list.querySelectorAll('[data-p2-region-runtime]').length === job.regions.length;
+    const expectedListNodes = job.regions.length || 1;
+    const listReady = list.dataset.p2RegionSignature === signature
+      && list.querySelectorAll('[data-p2-region-runtime]').length === expectedListNodes;
     if (!listReady) {
       list.innerHTML = '';
       if (!job.regions.length) {
@@ -285,7 +288,8 @@
       list.dataset.p2RegionSignature = signature;
     }
 
-    const overlayReady = geometry.overlay.dataset.p2RegionSignature === signature && geometry.overlay.querySelectorAll('[data-p2-region-runtime]').length === job.regions.length;
+    const overlayReady = geometry.overlay.dataset.p2RegionSignature === signature
+      && geometry.overlay.querySelectorAll('[data-p2-region-runtime]').length === job.regions.length;
     if (!overlayReady) {
       geometry.overlay.querySelectorAll('.region-overlay,[data-p2-region-runtime]').forEach(node => node.remove());
       job.regions.forEach((region, index) => {
@@ -306,6 +310,37 @@
     renderManualRegions(job);
   }
 
+  function installManualRegionObservers() {
+    if (manualRegionObserversInstalled) return;
+    const overlay = document.getElementById('subtitle-overlay');
+    const list = document.getElementById('regions-list');
+    if (!overlay || !list) return;
+    manualRegionObserversInstalled = true;
+
+    let scheduled = false;
+    const scheduleSync = () => {
+      if (scheduled) return;
+      scheduled = true;
+      queueMicrotask(() => {
+        scheduled = false;
+        const job = activeJob();
+        if (!job || job.subtitleMode !== 'manual') return;
+        const geometry = renderedCanvasGeometry();
+        if (!geometry) return;
+        const signature = regionUiSignature(job);
+        const expectedListNodes = job.regions.length || 1;
+        const listReady = list.dataset.p2RegionSignature === signature
+          && list.querySelectorAll('[data-p2-region-runtime]').length === expectedListNodes;
+        const overlayReady = overlay.dataset.p2RegionSignature === signature
+          && overlay.querySelectorAll('[data-p2-region-runtime]').length === job.regions.length;
+        if (!listReady || !overlayReady) renderManualRegions(job);
+      });
+    };
+
+    new MutationObserver(scheduleSync).observe(list, { childList: true });
+    new MutationObserver(scheduleSync).observe(overlay, { childList: true });
+  }
+
   function installManualRegionGeometry() {
     const canvasInner = document.getElementById('canvas-inner-orig');
     if (!canvasInner || canvasInner.dataset.p2ManualGeometry === 'true') return;
@@ -315,13 +350,16 @@
       const s = state();
       const job = activeJob();
       if (!s?.isDrawing || !job || job.subtitleMode !== 'manual') return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      s.isSelecting = false;
+      s.selectionStart = null;
+      manualSelectionStart = null;
+
       const geometry = renderedCanvasGeometry();
       if (!geometry || !pointerInsideCanvas(event, geometry)) return;
       manualSelectionStart = pointerToCanvas(event, geometry);
-      s.isSelecting = false;
-      s.selectionStart = null;
-      event.preventDefault();
-      event.stopImmediatePropagation();
     }, true);
 
     canvasInner.addEventListener('mousemove', (event) => {
@@ -360,7 +398,7 @@
           startFrame: 0,
           endFrame: Number(s.videoInfo.total_frames || 1) - 1,
           label: job.regions.length + 1,
-          maskMode: job.maskMode || document.getElementById('mask-mode')?.value || 'box'
+          maskMode: document.getElementById('mask-mode')?.value || job.maskMode || 'box'
         });
       }
       s.isDrawing = false;
@@ -528,6 +566,7 @@
 
   function tick() {
     installManualRegionGeometry();
+    installManualRegionObservers();
     installPerRegionMaskPayload();
 
     const selected = activeJob();
@@ -564,6 +603,7 @@
     installed = true;
     installLogCoalescing();
     installManualRegionGeometry();
+    installManualRegionObservers();
     installPerRegionMaskPayload();
     if (typeof window.api.onWebSocketMessage === 'function') unsubscribeWs = window.api.onWebSocketMessage(handleWs);
     setInterval(tick, UI_TICK_MS);
