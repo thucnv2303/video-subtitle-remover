@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-WAITING_OWNER_TEST — BUG-005 PIPELINE 1 FULL CHAIN
+OWNER_RUNTIME_FAIL — BUG-005 PIPELINE 1 FULL CHAIN
 
 ## Canonical branch
 `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
@@ -12,54 +12,45 @@ WAITING_OWNER_TEST — BUG-005 PIPELINE 1 FULL CHAIN
 ## Accepted merged foundation
 - Settings V1 PR #38: MERGED / Owner PASS.
 - Pipeline 1 approved UI PR #39: MERGED / Owner PASS.
-  - Merge commit: `bf166660807423ec5d97ed365e9735940b2804e3`.
 - Pipeline 1 → Pipeline 2 handoff PR #40: MERGED / Owner PASS.
-  - Merge commit: `9a0b301171d047ccb0280eabe917f1bcd9ea85c2`.
 - BUG-008 P1→P2 premature handoff defect: RESOLVED / Owner PASS.
 
 ## Active task
 - Task: `BUG-005 — Pipeline 1 Full Processing Chain`.
 - Branch: `review/BUG-005-P1-FULL-CHAIN`.
 - Draft PR: #41.
-- Goal: `ASR → AI Rewrite → TTS → P1 COMPLETE → P2 READY`.
 
-## Verified root cause
-- The approved Pipeline 1 UI removed the old AI/TTS enable checkboxes.
-- Legacy `createJob()` still initializes `aiRewrite=false` and `ttsGenerate=false`.
-- Legacy Start All only queues idle jobs and did not snapshot the approved provider/model/prompt/voice controls into each job.
-- Therefore runtime could complete ASR then always log AI Rewrite/TTS as skipped.
-- In addition, `pipeline1-ai.js` previously logged AI/TTS failures and returned normally, allowing `app.js` to mark P1 complete even when an enabled stage had failed.
+## Owner runtime evidence — 2026-08-10
+Owner executed the reviewed candidate and reported FAIL.
 
-## Reviewed candidate
-- Added `src/renderer/js/pipeline1-run-config.js`.
-  - Runs in capture phase on the approved `btn-start-all`.
-  - Validates selected provider/model/prompt and cloud API-key presence.
-  - Snapshots approved UI configuration into every idle P1 job before the legacy queue handler runs.
-  - AI Rewrite is enabled for the approved P1 flow.
-  - TTS is enabled when a voice other than `none` is selected.
-  - No global `ai_api_key` is created or used as new authority.
-- Updated `src/renderer/js/pipelines/pipeline1-ai.js`.
-  - Uses the per-job provider/model/prompt snapshot.
-  - Enabled AI Rewrite failures now reject/throw.
-  - Enabled TTS failures now reject/throw.
-  - AI failure no longer falls back to TTS and then reports success.
-  - TTS failure no longer returns as if the stage completed.
-  - Existing `app.js` catch path therefore marks P1 error, allowing the accepted handoff gate to keep P2 locked.
+Observed runtime facts:
+- Start captured `AI=ollama/qwen3-coder:30b` and `TTS=clone:0`.
+- `/api/p1/extract-text` returned success but only one ASR SRT segment, `Cảm ơn các bạn đã theo dõi.`, which Owner reports does not match the actual video content.
+- AI rewrite completed from that ASR input.
+- TTS backend successfully generated a real MP3 artifact and `/api/tts-retry` returned success.
+- P1 then logged completion and the P1→P2 handoff unlocked the job.
+- Approved Job Detail audio tab still displayed `Chưa có audio lồng tiếng`.
+- The Job Detail header displayed no selected Job (`ID: —` / prompt to select a Job), while content had still been written into the detail textarea.
 
-## Verification completed
-- `pipeline1-run-config.js` blob `a26dc1230a91c252ce49139772b2b4afffde7c6f`: exact hash match + `node --check` PASS.
-- `pipeline1-ai.js` blob `12859d4e40d84c716a479820610fef2fe692bd37`: exact hash match + `node --check` PASS.
-- Targeted simulation PASS for valid config snapshot, strict AI failure rejection and strict TTS failure rejection.
-- GitHub PR #41 base/head verified; net product diff is exactly the two intended P1 files.
-- Approved P1 UI source is unchanged.
-- P2/P3 product source is unchanged.
-- GitHub CI: not configured.
-- PR #41 review comments: none unresolved.
+## Verified defects after Owner FAIL
+1. **Detail selection/artifact binding mismatch**
+   - approved detail rendering/audio uses `pipeline1SelectedJobId`;
+   - legacy flow separately tracks `activeJobId` and writes content during processing;
+   - runtime evidence proves these can diverge, producing text in the panel while audio remains hidden and the detail header shows no selected Job.
+2. **P1 analysis contract is incomplete**
+   - `/api/p1/extract-text` is explicitly ASR-only and delegates to the existing ASR extraction path;
+   - AI rewrite consumes transcript/SRT only;
+   - this does not implement the canonical target P1 requirement for original-video analysis with scene/keyframe/vision context, multimodal timeline, insights and remix-script artifacts.
+3. **Completion acceptance is too weak**
+   - current candidate treats transport-level ASR/AI/TTS success as P1 success even when the ASR content is materially wrong for the source video.
 
-## Gates
-- Execution: PASS.
-- Automated/static verification: PASS.
-- Code review: PASS for Owner runtime test.
-- Owner manual app verification: NOT STARTED / AUTHORIZED.
-- Documentation synchronization: PASS.
-- Merge permission: BLOCKED pending Owner runtime PASS and explicit merge approval.
+## Gate status
+- Execution: NEEDS_REVISION.
+- Automated/static verification: previous syntax/hash/simulation PASS remains valid only for wiring, not product acceptance.
+- Code review: INVALIDATED / NEEDS_REVISION by Owner runtime evidence.
+- Owner manual app verification: FAIL.
+- Documentation synchronization: PASS for failure recording.
+- Merge permission: BLOCKED.
+
+## Permitted next action
+Revise BUG-005 on the existing review branch or a fresh focused revision branch. First fix the selected-Job/detail artifact binding and then correct the P1 analysis contract so completion is based on valid analysis artifacts, not merely successful HTTP calls. Do not modify P2/P3 responsibilities.
