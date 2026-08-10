@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, net } = require('electron');
 const path = require('path');
 const { PythonBridge } = require('./python-bridge');
+const registerP1VisionIPC = require('./p1-vision-ipc');
 
 // Prevent Windows cache lock errors (Access is Denied 0x5 / Gpu Cache Creation failed)
 app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
@@ -8,6 +9,7 @@ app.commandLine.appendSwitch('disable-http-cache');
 
 let mainWindow;
 const pythonBridge = new PythonBridge({ appRoot: path.join(__dirname, '..', '..') });
+registerP1VisionIPC({ ipcMain, net });
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -15,7 +17,7 @@ function createWindow() {
     height: 900,
     minWidth: 1100,
     minHeight: 700,
-    show: false, // Don't show until ready
+    show: false,
     title: 'Video Subtitle Remover',
     backgroundColor: '#0a0a0f',
     autoHideMenuBar: true,
@@ -27,17 +29,14 @@ function createWindow() {
   });
 
   Menu.setApplicationMenu(null);
-
   mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
 
-  // Show window once content is ready
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.focus();
     console.log('Window is now visible');
   });
 
-  // Also show on did-finish-load as fallback
   mainWindow.webContents.on('did-finish-load', () => {
     if (!mainWindow.isVisible()) {
       mainWindow.show();
@@ -46,7 +45,6 @@ function createWindow() {
     console.log('Page loaded successfully');
   });
 
-  // Log any page errors
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
     console.error(`Failed to load page: ${errorCode} - ${errorDescription}`);
   });
@@ -55,22 +53,15 @@ function createWindow() {
     console.log(`[Renderer] ${message}`);
   });
 
-  // Forward python logs to renderer
   pythonBridge.on('log', (msg) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('python:log', msg);
-    }
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('python:log', msg);
   });
 
   pythonBridge.on('error', (msg) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('python:error', msg);
-    }
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('python:error', msg);
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+  mainWindow.on('closed', () => { mainWindow = null; });
 }
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -88,8 +79,6 @@ if (!gotTheLock) {
 
   app.whenReady().then(async () => {
     createWindow();
-
-    // Start python backend - don't block window creation
     pythonBridge.start().then(() => {
       console.log(`Python backend started on port ${pythonBridge.getPort()}`);
     }).catch((err) => {
@@ -107,11 +96,8 @@ app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
 });
 
-app.on('will-quit', () => {
-  pythonBridge.stop();
-});
+app.on('will-quit', () => { pythonBridge.stop(); });
 
-// IPC Handlers
 ipcMain.handle('dialog:openFile', async (event, customFilters) => {
   const defaultFilters = [
     { name: 'Media Files', extensions: ['mp4', 'avi', 'mkv', 'mov', 'jpg', 'png', 'bmp'] },
@@ -119,102 +105,45 @@ ipcMain.handle('dialog:openFile', async (event, customFilters) => {
     { name: 'Subtitle Files', extensions: ['srt', 'ass', 'vtt', 'txt'] },
     { name: 'All Files', extensions: ['*'] }
   ];
-  const result = await dialog.showOpenDialog({
-    title: 'Chọn file',
-    properties: ['openFile', 'multiSelections'],
-    filters: customFilters || defaultFilters
-  });
-  return result;
+  return dialog.showOpenDialog({ title: 'Chọn file', properties: ['openFile', 'multiSelections'], filters: customFilters || defaultFilters });
 });
 
-ipcMain.handle('dialog:openDirectory', async () => {
-  const result = await dialog.showOpenDialog({
-    title: 'Chọn thư mục đầu ra',
-    properties: ['openDirectory']
-  });
-  return result;
-});
+ipcMain.handle('dialog:openDirectory', async () => dialog.showOpenDialog({
+  title: 'Chọn thư mục đầu ra', properties: ['openDirectory']
+}));
 
 ipcMain.handle('dialog:saveFile', async (event, defaultPath) => {
-  const { canceled, filePath } = await dialog.showSaveDialog({
-    title: 'Lưu file',
-    defaultPath
-  });
-  if (canceled) {
-    return null;
-  } else {
-    return filePath;
-  }
+  const { canceled, filePath } = await dialog.showSaveDialog({ title: 'Lưu file', defaultPath });
+  return canceled ? null : filePath;
 });
 
 ipcMain.handle('ollama:listModels', async (event, endpoint) => {
-  const raw = typeof endpoint === 'string' && endpoint.trim()
-    ? endpoint.trim()
-    : 'http://localhost:11434/api/chat';
-
+  const raw = typeof endpoint === 'string' && endpoint.trim() ? endpoint.trim() : 'http://localhost:11434/api/chat';
   try {
     const url = new URL(raw.includes('://') ? raw : `http://${raw}`);
-    if (!['http:', 'https:'].includes(url.protocol)) {
-      return { ok: false, error: 'Endpoint Ollama phải dùng HTTP hoặc HTTPS.' };
-    }
-
+    if (!['http:', 'https:'].includes(url.protocol)) return { ok: false, error: 'Endpoint Ollama phải dùng HTTP hoặc HTTPS.' };
     const host = url.hostname.toLowerCase();
-    if (!['localhost', '127.0.0.1', '::1'].includes(host)) {
-      return { ok: false, error: 'Quét model chỉ hỗ trợ Ollama local (localhost/127.0.0.1).' };
-    }
-
-    url.pathname = '/api/tags';
-    url.search = '';
-    url.hash = '';
-
+    if (!['localhost', '127.0.0.1', '::1'].includes(host)) return { ok: false, error: 'Quét model chỉ hỗ trợ Ollama local (localhost/127.0.0.1).' };
+    url.pathname = '/api/tags'; url.search = ''; url.hash = '';
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
     try {
       const response = await net.fetch(url.toString(), { signal: controller.signal });
-      if (!response.ok) {
-        return { ok: false, error: `Ollama trả về HTTP ${response.status}.` };
-      }
+      if (!response.ok) return { ok: false, error: `Ollama trả về HTTP ${response.status}.` };
       const body = await response.json();
-      const models = Array.isArray(body?.models)
-        ? body.models
-            .map(item => item?.name || item?.model)
-            .filter(name => typeof name === 'string' && name.trim())
-        : [];
+      const models = Array.isArray(body?.models) ? body.models.map(item => item?.name || item?.model).filter(name => typeof name === 'string' && name.trim()) : [];
       return { ok: true, models: [...new Set(models)] };
-    } finally {
-      clearTimeout(timeout);
-    }
+    } finally { clearTimeout(timeout); }
   } catch (err) {
-    const message = err?.name === 'AbortError'
-      ? 'Ollama không phản hồi trong 6 giây.'
-      : (err?.message || 'Không thể kết nối Ollama.');
-    return { ok: false, error: message };
+    return { ok: false, error: err?.name === 'AbortError' ? 'Ollama không phản hồi trong 6 giây.' : (err?.message || 'Không thể kết nối Ollama.') };
   }
 });
 
 ipcMain.handle('python:start', async () => {
-  try {
-    await pythonBridge.start();
-    return true;
-  } catch (err) {
-    console.error(err);
-    return false;
-  }
+  try { await pythonBridge.start(); return true; }
+  catch (err) { console.error(err); return false; }
 });
-
-ipcMain.handle('python:stop', () => {
-  pythonBridge.stop();
-  return true;
-});
-
-ipcMain.handle('python:status', () => {
-  return pythonBridge.isRunning();
-});
-ipcMain.handle('app:openPath', async (e, p) => {
-  const { shell } = require('electron');
-  await shell.openPath(p);
-});
-
-ipcMain.handle('app:getPath', () => {
-  return app.getAppPath();
-});
+ipcMain.handle('python:stop', () => { pythonBridge.stop(); return true; });
+ipcMain.handle('python:status', () => pythonBridge.isRunning());
+ipcMain.handle('app:openPath', async (e, p) => { const { shell } = require('electron'); await shell.openPath(p); });
+ipcMain.handle('app:getPath', () => app.getAppPath());
