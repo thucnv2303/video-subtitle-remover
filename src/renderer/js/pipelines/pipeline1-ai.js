@@ -26,6 +26,7 @@ export async function triggerAutoAiRewrite(job, sourceSrt) {
   try {
     if (!sourceSrt?.trim()) throw new Error('Không có SRT đầu vào cho Pipeline 1.');
     const result = await runPipeline1MultimodalAnalysis(job, sourceSrt);
+    if (job._p1Cancelled) return { status: 'cancelled' };
     const aiText = result.rewrittenSrt;
     if (!aiText?.includes('-->')) throw new Error('Remix script không có timing SRT hợp lệ.');
 
@@ -39,14 +40,22 @@ export async function triggerAutoAiRewrite(job, sourceSrt) {
     const detailText = document.getElementById('step1-detail-text');
     if (detailText) detailText.value = aiText;
 
-    if (job.ttsGenerate) await triggerAutoTts(job, aiText);
+    if (job.ttsGenerate) {
+      const ttsResult = await triggerAutoTts(job, aiText);
+      if (ttsResult?.status === 'cancelled' || job._p1Cancelled) return { status: 'cancelled' };
+    }
 
     job.p1ArtifactsReady = true;
+    job._p1StopRequested = false;
     _selectRunningJob(job);
     _addLog('[P1] ✅ Analysis/remix artifacts đã sẵn sàng.', 'success');
     return { status: 'ok', result: aiText, analysis: result.analysis, artifacts: result.bundle };
   } catch (error) {
     job.p1ArtifactsReady = false;
+    if (job._p1Cancelled || error?.name === 'AbortError') {
+      _addLog('[P1] ⏹ Pipeline 1 đã dừng theo yêu cầu.', 'warning');
+      return { status: 'cancelled' };
+    }
     _addLog('[P1] ❌ Phân tích/remix thất bại: ' + error.message, 'error');
     throw error;
   } finally {
@@ -59,12 +68,16 @@ export async function triggerAutoTts(job, srtText) {
   if (!voice || voice === 'none') throw new Error('TTS đã được bật nhưng chưa chọn giọng đọc.');
   if (!srtText?.trim()) throw new Error('Không có remix SRT để tạo TTS.');
   if (job._ttsRunning) throw new Error('TTS đang chạy cho Job này.');
+  if (job._p1Cancelled) return { status: 'cancelled' };
 
   _selectRunningJob(job);
   job._ttsRunning = true;
   const btnRetry = document.getElementById('btn-retry-tts');
   _setBtn(btnRetry, true, '⏳ Đang tạo voice...');
   _addLog('[TTS] 🎤 Đang tạo âm thanh lồng tiếng từ remix script...', 'info');
+
+  const controller = new AbortController();
+  job._ttsAbortController = controller;
 
   try {
     let refAudio = null;
@@ -78,6 +91,7 @@ export async function triggerAutoTts(job, srtText) {
     const ttsRes = await fetch(`${window.api.base}/api/tts-retry`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         srt_content: srtText,
         tts_voice: voice,
@@ -85,9 +99,11 @@ export async function triggerAutoTts(job, srtText) {
         tts_ref_audio: refAudio,
       }),
     });
+    if (job._p1Cancelled) return { status: 'cancelled' };
     if (!ttsRes.ok) throw new Error(`TTS HTTP ${ttsRes.status}`);
 
     const ttsData = await ttsRes.json();
+    if (job._p1Cancelled) return { status: 'cancelled' };
     if (ttsData.status !== 'ok' || !ttsData.audio_path) {
       throw new Error(ttsData.error || 'TTS không trả về audio hợp lệ.');
     }
@@ -121,9 +137,14 @@ export async function triggerAutoTts(job, srtText) {
     _addLog(`[TTS] ✅ TTS hoàn tất: ${job.ttsAudioPath}`, 'success');
     return { status: 'ok', audio_path: job.ttsAudioPath };
   } catch (error) {
+    if (job._p1Cancelled || error?.name === 'AbortError') {
+      _addLog('[TTS] ⏹ TTS đã dừng theo yêu cầu.', 'warning');
+      return { status: 'cancelled' };
+    }
     _addLog('[TTS] ❌ TTS thất bại: ' + error.message, 'error');
     throw error;
   } finally {
+    if (job._ttsAbortController === controller) job._ttsAbortController = null;
     job._ttsRunning = false;
     _setBtn(btnRetry, false, '🔄 Tạo lại TTS');
   }
