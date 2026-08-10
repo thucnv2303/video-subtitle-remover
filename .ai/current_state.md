@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-PIPELINE2-APPROVED-UI-001 — CODE REVIEW PASS / OWNER TEST AUTHORIZED
+PIPELINE2-RUNTIME-REVISION-001 — WAITING_OWNER_RETEST
 
 ## Canonical product foundation
 - Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`.
@@ -13,76 +13,61 @@ PIPELINE2-APPROVED-UI-001 — CODE REVIEW PASS / OWNER TEST AUTHORIZED
 ## Preserved Pipeline 1 checkpoint
 - Branch: `review/BUG-005-P1-FULL-CHAIN`.
 - Draft PR: #41.
-- Stacked base SHA for the current P2 UI task: `97d5a13e77b6919931c251c74fab4c191fa04cec`.
-- Owner previously accepted the current P1 functional checkpoint and requested no further P1 refinement for now.
-- PR #41 remains unmerged; this P2 task does not merge or reopen P1.
+- P2 stacked base SHA: `97d5a13e77b6919931c251c74fab4c191fa04cec`.
+- Owner temporarily closed further P1 refinement; PR #41 remains unmerged.
 
-## Active task
-`PIPELINE2-APPROVED-UI-001 — Pipeline 2 approved UI`
+## Active Pipeline 2 review
+- Branch: `review/PIPELINE2-APPROVED-UI-001`.
+- Draft PR: #42.
+- Owner approved the redesigned Pipeline 2 UI/layout during runtime testing.
+- The same Owner test exposed a P2 engine/runtime failure; UI acceptance does not equal processing PASS.
 
-Review branch:
-`review/PIPELINE2-APPROVED-UI-001`
+## Owner runtime failure — 2026-08-10
+Observed directly by Owner:
+- selected P2 job displayed `ĐANG XÓA SUB` but stayed at 0% for about 1m41s;
+- result pane did not update realtime;
+- Console accumulated repeated `/api/status` access lines;
+- Action/status area exposed `error: backend not available`;
+- no visible GPU load.
 
-Draft PR:
-#42
+Direct source review verified the primary cause: `api/server.py` imports `backend.main.SubtitleRemover` from an ignored local `video-subtitle-remover-ref` directory. A clean linked test worktree does not contain that ignored folder, so the Python API can remain healthy while `HAS_BACKEND=False` and the actual subtitle-removal engine is unavailable.
 
-Reviewed source checkpoint:
-`5c9c2f0fa12c884b19fa5d8bfcee080a31364203`
+The source also already exposes `/api/preview` and captures live preview frames, but legacy renderer result preview only loads the output video after completion.
 
-## Verified implementation facts
-GitHub review of PR #42 confirms the application-source diff is limited to:
+## Owner-authorized runtime revision
+Spec: `.ai/task_specs/PIPELINE2-RUNTIME-REVISION-001.md`.
+
+Current runtime revision changes:
+- `src/main/python-bridge.js` — discovers an existing backend reference from the linked worktree's Git common root and passes it to Python through `PYTHONPATH` / `VSR_BACKEND_REF`; no network download.
+- `src/main/preload.js` — loads the isolated P2 runtime enhancer.
+- `src/renderer/js/pipeline2-runtime.js` — status fail-fast watchdog, throttled real `/api/preview`, one-row P2 progress telemetry, repetitive access/heartbeat log suppression, CUDA preflight reporting.
+
+Approved P2 UI files remain:
 - `src/renderer/js/pipeline.js`
 - `src/renderer/styles/pipeline2-approved.css`
 
-The PR also contains the task execution spec under `.ai/task_specs/`.
+Unchanged `pipeline-state.js` remains authoritative for P1→P2 eligibility and subtitle-removal-only start (`extractSrt=false`, `asrFallback=false`, `aiRewrite=false`, `ttsGenerate=false`).
 
-The P2 UI adapter:
-- reuses and relocates existing Step 2 runtime DOM nodes before deferred `app.js` startup;
-- preserves existing algorithm, mask, manual-region, preview, progress, start/cancel, job-list and log nodes;
-- hides direct `btn-open-file` and `drop-zone` UX in Pipeline 2;
-- uses the existing `pipeline-state.js` gate for P1→P2 eligibility and P2 start authorization;
-- does not add AI rewrite, TTS, ASR or final-render logic to P2;
-- keeps unsupported P2-only delete-selected disabled instead of inventing a new mutation path;
-- gives Job Queue and Console independent internal scrolling and responsive stacked behavior at narrower widths.
+## Verification for runtime revision
+Exact locally constructed source matched the published Git blobs and passed `node --check`:
+- `src/main/python-bridge.js` = `01014a592391d315895feb7001fe6bb81ea642c2` — PASS.
+- `src/main/preload.js` = `74784c2f5190d804ee8efad95b063a11b4484c13` — PASS.
+- `src/renderer/js/pipeline2-runtime.js` = `9f8d1ad46c07521f9dcd4bf1664054e54bad636d` — PASS.
 
-Unchanged `pipeline-state.js` still requires P1 FINISHED before P2 eligibility and, on P2 start, forces:
-- `extractSrt = false`
-- `asrFallback = false`
-- `aiRewrite = false`
-- `ttsGenerate = false`
+Targeted linked-worktree simulation: a clean linked worktree resolved `<main-worktree>/video-subtitle-remover-ref` through `git rev-parse --git-common-dir` — PASS.
 
-## Verification
-- PR #42: OPEN / DRAFT / mergeable.
-- Changed files reviewed directly from GitHub: PASS for scope.
-- PR review threads/comments: none unresolved.
-- GitHub CI/checks: not configured; no workflow runs/status checks exist for the reviewed source checkpoint.
-- Isolated P2 adapter delta: `node --check` PASS.
-- Exact full published `pipeline.js` blob has not been independently syntax-checked outside GitHub in this review environment because direct container network access is unavailable. Therefore this is not recorded as a complete automated/static PASS for merge purposes.
+GitHub CI/status checks: not configured.
 
-## Code review result
-PASS for Owner runtime UI verification.
-
-No source blocker was found that requires another code revision before Owner testing.
-
-## Owner acceptance to run now
-Owner should test PR #42 in the real app and report observed PASS/FAIL for:
-- P2 visual parity with the approved demo/P1 visual language;
-- 0 / 1 / 10+ eligible jobs;
-- internal Job Queue scrolling with Actions remaining visible;
-- selected job drives metadata and original/result previews;
-- no direct P2 upload/drop path;
-- only P1-unlocked jobs appear;
-- Start invokes existing subtitle-removal-only P2 path;
-- responsive/fullscreen fit;
-- Console readability and scroll behavior.
+## Current interpretation of GPU state
+Upstream STTN is CUDA-capable and current project config enables hardware acceleration, but the failed Owner run never loaded the real backend. CUDA preflight in the revision proves availability only; actual STTN GPU execution still requires Owner runtime evidence and must not be claimed from preflight alone.
 
 ## Gates
-- Execution: PASS for P2 UI source publication.
-- Automated/static verification: WAITING for complete exact-blob/runtime evidence; isolated P2 adapter syntax PASS.
-- Code review: PASS for Owner runtime test.
-- Owner manual app verification: AUTHORIZED / NOT STARTED.
-- Documentation synchronization: PASS at this documentation checkpoint.
+- Execution: PASS for current runtime revision publication.
+- Automated/static verification: PASS for exact-blob JS syntax/hash + linked-worktree discovery simulation; no GitHub CI configured.
+- Code review: WAITING final PM review of current PR #42 head.
+- Owner manual app verification: prior UI PASS / processing FAIL; fresh runtime retest NOT YET AUTHORIZED until final PM review.
+- Documentation synchronization: PASS at this revision checkpoint.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Owner runs the real app from the exact current PR #42 head and reports observed P2 PASS/FAIL. Do not merge. After Owner evidence, update canonical `.ai` files again and re-evaluate all merge gates.
+Project Manager reviews the exact current PR #42 head/diff. If code review PASS, Owner retests the same short video for backend import, STTN progress, live result preview, compact log behavior and successful clean-video output. Do not merge.
