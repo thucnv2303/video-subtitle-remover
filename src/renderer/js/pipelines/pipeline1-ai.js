@@ -76,9 +76,6 @@ export async function triggerAutoTts(job, srtText) {
   _setBtn(btnRetry, true, '⏳ Đang tạo voice...');
   _addLog('[TTS] 🎤 Đang tạo âm thanh lồng tiếng từ remix script...', 'info');
 
-  const controller = new AbortController();
-  job._ttsAbortController = controller;
-
   try {
     let refAudio = null;
     if (voice.startsWith('clone:')) {
@@ -91,7 +88,6 @@ export async function triggerAutoTts(job, srtText) {
     const ttsRes = await fetch(`${window.api.base}/api/tts-retry`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
       body: JSON.stringify({
         srt_content: srtText,
         tts_voice: voice,
@@ -99,7 +95,10 @@ export async function triggerAutoTts(job, srtText) {
         tts_ref_audio: refAudio,
       }),
     });
-    if (job._p1Cancelled) return { status: 'cancelled' };
+    if (job._p1Cancelled) {
+      _addLog('[TTS] ⏹ Đã dừng sau khi request TTS hiện tại kết thúc an toàn.', 'warning');
+      return { status: 'cancelled' };
+    }
     if (!ttsRes.ok) throw new Error(`TTS HTTP ${ttsRes.status}`);
 
     const ttsData = await ttsRes.json();
@@ -144,7 +143,6 @@ export async function triggerAutoTts(job, srtText) {
     _addLog('[TTS] ❌ TTS thất bại: ' + error.message, 'error');
     throw error;
   } finally {
-    if (job._ttsAbortController === controller) job._ttsAbortController = null;
     job._ttsRunning = false;
     _setBtn(btnRetry, false, '🔄 Tạo lại TTS');
   }
