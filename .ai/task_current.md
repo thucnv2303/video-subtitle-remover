@@ -7,47 +7,47 @@ PIPELINE1-MULTIJOB-RESILIENCE-003
 Pipeline 1 Multi-Job Failure Isolation, Running-Job UI Sync, and Bounded JSON Retry
 
 ## Status
-FINAL_SOURCE_PUBLISHED_PM_REVIEW_IN_PROGRESS
+CODE_REVIEW_PASS_OWNER_TWO_JOB_RETEST_READY
 
 ## Authority
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
 - Draft PR: #44.
 - Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
 - Final source commit: `100e343427264e128acd8cadc67f279faf450e56`.
-- Source scope:
-  - `src/renderer/js/pipeline1-run-ux.js`
-  - `src/renderer/js/pipelines/pipeline1-ai.js`
+- PM-reviewed PR head before final gate-sync docs commit: `0435d4146c7d148552f68884aecdf3203cf3ac67`.
+- Source files: `src/renderer/js/pipeline1-run-ux.js`, `src/renderer/js/pipelines/pipeline1-ai.js`.
 
 ## Required outcome
-1. UI selection/detail follows the P1 Job actually processing.
-2. One P1 Job failure does not stop later queued P1 Jobs.
-3. Owner Stop/Cancel does not auto-resume pending Jobs.
-4. Malformed structured JSON is retried exactly once in P1 orchestration.
-5. Abort/cancel/timeout/unrelated errors are not retried by malformed-JSON policy.
-6. A second malformed JSON failure marks only the current Job failed; queue can continue.
+1. Selected/detail state follows actual processing P1 Job.
+2. One failed P1 Job does not stop later queued P1 Jobs.
+3. Owner Stop/Cancel does not auto-resume pending work.
+4. Malformed structured JSON is retried exactly once.
+5. Abort/cancel/timeout/unrelated failures are not retried by malformed-JSON policy.
+6. Second malformed result fails only current Job; queue can continue.
 
-## Final verification
+## Verification
 PASS:
-- final `pipeline1-run-ux.js` exact blob/hash + `node --check`;
-- final `pipeline1-ai.js` exact blob/hash + `node --check`;
-- multi-job continuation simulation;
+- exact final blob/hash + `node --check` for both source files;
+- failure isolation simulation;
 - running-job selection simulation;
-- malformed JSON retry-once final orchestration simulation;
-- malformed twice => exactly 2 calls then current-job failure;
+- malformed JSON retry exactly once final orchestration simulation;
+- malformed twice => exactly two calls then error;
 - AbortError/timeout/cancelled => no retry;
-- final source diff whitespace hygiene.
+- source diff hygiene;
+- exact PR source scope/full-file review;
+- no configured status checks and no unresolved review threads.
 
-## Review correction
-Intermediate renderer monkey-patching of `window.electronAPI.analyzeP1Vision` was rejected by PM review and removed. Final retry is implemented inside `pipeline1-ai.js`, leaving contextBridge API untouched.
+## PM review correction
+Intermediate renderer monkey-patching of `window.electronAPI.analyzeP1Vision` was rejected and removed. Final implementation leaves contextBridge API untouched and performs retry in `pipeline1-ai.js`.
 
 ## Gates
 - Execution: PASS.
 - Automated/static verification: PASS.
-- Code review: IN PROGRESS.
-- Owner verification: NOT STARTED.
-- Documentation sync: IN PROGRESS.
+- Code review: PASS.
+- Owner verification: NOT STARTED — AUTHORIZED.
+- Documentation sync: PASS after final docs publication/reverification.
 - Merge: BLOCKED.
 - Step 3: BLOCKED.
 
-## Merge rule
-No Step 3 progression or merge approval until final code review PASS, Owner verifies the two-job P1 runtime path, the result is recorded in canonical `.ai/`, and PM gives explicit approval.
+## Owner retest requirement
+Run at least two P1 Jobs. Verify current-job UI tracking, normal queue advance, failure isolation, Stop/Cancel non-resume, and bounded JSON retry behavior if malformed JSON recurs.
