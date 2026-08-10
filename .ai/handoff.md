@@ -4,7 +4,7 @@
 `PIPELINE2-RUNTIME-REVISION-001 — Pipeline 2 Runtime Hardening`
 
 ## Status
-WAITING_FINAL_CODE_REVIEW
+CODE REVIEW PASS / OWNER RETEST AUTHORIZED
 
 ## Stacked basis
 - Base branch: `review/BUG-005-P1-FULL-CHAIN`.
@@ -14,6 +14,7 @@ WAITING_FINAL_CODE_REVIEW
 ## Review branch / PR
 - Branch: `review/PIPELINE2-APPROVED-UI-001`.
 - Draft PR: #42.
+- Runtime source checkpoint: `b17d64fa94b7a8bafd8cb6eb396856a619f0df6c`.
 - Parent P2 UI task remains on this PR; Owner has accepted its layout.
 
 ## Owner runtime result
@@ -34,20 +35,23 @@ The first real P2 processing test is NOT PASS:
 
 Unchanged `pipeline-state.js` remains authoritative for P1→P2 eligibility and subtitle-removal-only execution.
 
-## Verification
-Exact Git blob + `node --check`: PASS for python bridge, preload and P2 runtime enhancer.
-Linked-worktree backend reference discovery simulation: PASS.
-GitHub CI: not configured.
+## Verification / code review
+- Exact Git blob + `node --check`: PASS for python bridge, preload and P2 runtime enhancer.
+- Linked-worktree backend reference discovery simulation: PASS.
+- GitHub compare from Owner-failed head to revision source checkpoint: authorized runtime source + docs only.
+- No unresolved PR review threads.
+- GitHub CI/status checks: none configured.
+- PM code review: PASS for fresh Owner retest.
 
 CUDA telemetry in the revision is preflight only. Do not claim actual GPU inference until Owner runtime proves the backend imports and STTN processes frames.
 
 ## Gates
 - Execution: PASS.
 - Automated/static verification: PASS for current revision evidence; no CI configured.
-- Code review: WAITING current-head review.
-- Owner manual verification: UI PASS / previous processing FAIL; fresh retest NOT AUTHORIZED yet.
+- Code review: PASS.
+- Owner manual verification: UI PASS / previous processing FAIL; fresh retest AUTHORIZED / NOT STARTED.
 - Documentation synchronization: PASS at this checkpoint.
 - Merge permission: BLOCKED.
 
-## Next action
-PM reviews current PR #42 diff/head. If PASS, Owner retests the same short video and reports backend import, progress/live-preview/log behavior, GPU observation and final clean-video result. Owner does not edit `.ai` files.
+## Owner action
+Retest the same short video from exact current PR #42 head. Report backend import, STTN progress, live result preview, compact Console behavior, GPU observation, clean-video result and P3 unlock behavior. Owner does not edit `.ai` files.
