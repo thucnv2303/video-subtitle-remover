@@ -235,15 +235,9 @@ function syncJobFeedback(appState) {
     card.dataset.p1JobId = job.id;
     card.classList.toggle('p1-job-card-processing', processing);
     card.classList.toggle('p1-job-card-error', failed);
-    if (failed) card.title = 'Click để xem chi tiết lỗi Pipeline 1';
-    else if (card.title === 'Click để xem chi tiết lỗi Pipeline 1') card.removeAttribute('title');
 
     const status = card.querySelector('.p1-job-state');
-    if (status) {
-      status.classList.toggle('p1-job-state-live', processing);
-      if (failed) status.title = 'Click Job để xem lỗi';
-      else status.removeAttribute('title');
-    }
+    if (status) status.classList.toggle('p1-job-state-live', processing);
   });
 }
 
