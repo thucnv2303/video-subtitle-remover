@@ -9,16 +9,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPythonStatus: () => ipcRenderer.invoke('python:status'),
   listOllamaModels: (endpoint) => ipcRenderer.invoke('ollama:listModels', endpoint),
   analyzeP1Vision: (payload) => ipcRenderer.invoke('ollama:p1AnalyzeVision', payload),
+  cancelP1Vision: (payload) => ipcRenderer.invoke('ollama:p1CancelVision', payload),
   persistP1Audio: (payload) => ipcRenderer.invoke('p1:persistAudio', payload),
-  onP1VisionProgress: (callback) => {
-    const handler = (event, payload) => callback(payload);
-    ipcRenderer.on('p1:vision-progress', handler);
-    return () => ipcRenderer.removeListener('p1:vision-progress', handler);
-  },
   openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
+  onP1VisionProgress: (callback) => {
+    const listener = (e, payload) => callback(payload);
+    ipcRenderer.on('p1:vision-progress', listener);
+    return () => ipcRenderer.removeListener('p1:vision-progress', listener);
+  },
   platform: process.platform
 });
 
