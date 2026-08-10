@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-WAITING_OWNER_UX_RETEST — BUG-005 CORE CHAIN TECHNICALLY PASS
+P1 FUNCTIONAL MILESTONE CLOSED BY OWNER — NO FURTHER P1 WORK FOR NOW
 
 ## Canonical branch
 `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
@@ -14,10 +14,11 @@ WAITING_OWNER_UX_RETEST — BUG-005 CORE CHAIN TECHNICALLY PASS
 - Pipeline 1 approved UI PR #39: MERGED / Owner PASS.
 - Pipeline 1 → Pipeline 2 handoff PR #40: MERGED / Owner PASS.
 
-## Active task
+## Current P1 checkpoint
 - Task: `BUG-005 — Pipeline 1 Full Processing Chain`.
 - Branch: `review/BUG-005-P1-FULL-CHAIN`.
 - Draft PR: #41.
+- Owner disposition on 2026-08-10: temporarily close Pipeline 1 at the current functional checkpoint and stop further P1 refinement for now.
 
 ## Owner runtime core-chain result — 2026-08-10
 Owner runtime demonstrated the P1 technical chain completing end-to-end:
@@ -30,17 +31,17 @@ Owner runtime demonstrated the P1 technical chain completing end-to-end:
 - P1 reported analysis/remix artifacts ready and completed;
 - P1→P2 unlocked only after completion.
 
-This is a technical PASS for the processing/artifact/TTS chain on that runtime. Editorial quality of the generated analysis/remix remains a separate product-quality judgment; P1 artifacts/SRT can already be inspected before P3, while P3 later validates final assembly/timing/mix/render use of those artifacts.
+This remains the accepted technical runtime evidence for the P1 processing/artifact/TTS chain. Editorial quality of the generated analysis/remix remains a later product-quality refinement if the Owner chooses to reopen P1.
 
 ## Current UX/cancel revision
-Product source head before documentation sync: `cb6959c454ef196c70f86cecba8a63d3b1f02a62`.
+Product source checkpoint before this documentation-only closure: `cb6959c454ef196c70f86cecba8a63d3b1f02a62`.
 
-Owner-requested refinements implemented:
-1. Primary `Bắt đầu chạy` button is integrated with run/stop state: idle → processing → hover Stop → stopping → idle/complete.
+Implemented refinements:
+1. Primary `Bắt đầu chạy` button integrates idle → processing → hover Stop → stopping → idle/complete state.
 2. Legacy separate Stop button is hidden in P1.
-3. Active Ollama multimodal inference has a real Electron AbortController and `ollama:p1CancelVision` IPC; manual stop returns `P1_CANCELLED` and P1 must not unlock P2.
-4. Repetitive Ollama generation/load progress uses `progress_key` and updates one live Console row instead of appending timer lines continuously. Start/end/error evidence remains separate log lines.
-5. Python ASR/TTS endpoints are synchronous. Stop during these phases is safe-stop semantics: P1 is marked cancelled and cannot complete/unlock P2; the current synchronous request may need to return before the Job becomes retryable. This limitation is documented rather than hidden.
+3. Active Ollama multimodal inference has Electron AbortController cancellation through `ollama:p1CancelVision`; cancellation must not unlock P2.
+4. Repetitive Ollama generation/load progress uses `progress_key` and one live Console row instead of appending timer lines continuously.
+5. Python ASR/TTS endpoints remain synchronous. Stop during these phases uses safe-stop semantics and may wait for the current request boundary before the Job is retryable.
 
 ## Verification for current UX/cancel source
 Exact GitHub blobs were reconstructed locally and matched with `git hash-object`, then syntax-checked with `node --check`:
@@ -53,10 +54,16 @@ Exact GitHub blobs were reconstructed locally and matched with `git hash-object`
 - Targeted IPC simulation: cancelling an active Ollama analysis returned `P1_CANCELLED` — PASS.
 - GitHub CI: not configured.
 
+## Deferred evidence / known limitation
+The latest Start/Stop + log-coalescing UX revision was not separately re-run by the Owner after publication. The Owner chose to stop further P1 work and accept the current functional checkpoint for now. This is a product disposition, not a claim that the unperformed UX retest passed.
+
 ## Gates
-- Execution: PASS for current source publication.
+- Execution: PASS for current P1 source publication.
 - Automated/static verification: PASS for exact-blob syntax/hash and Ollama cancel simulation.
-- Code review: PASS for focused Owner UX/cancel retest.
-- Owner manual app verification: core P1 chain TECHNICAL PASS; new UX/cancel revision NOT YET VERIFIED.
-- Documentation synchronization: PASS after this update.
-- Merge permission: BLOCKED pending UX/cancel Owner PASS, final product-quality disposition, and explicit merge approval.
+- Code review: PASS for the current P1 checkpoint.
+- Owner manual app verification: core P1 chain TECHNICAL PASS; latest UX/cancel retest DEFERRED / NOT SEPARATELY VERIFIED.
+- Documentation synchronization: PASS after this closure update.
+- Merge permission: BLOCKED — PR #41 remains unmerged; no merge was requested in the current interaction.
+
+## Next permitted action
+Do not continue Pipeline 1 implementation unless the Owner explicitly reopens it. Select the next Pipeline 2 or Pipeline 3 task separately, preserving this P1 checkpoint as the current reference.
