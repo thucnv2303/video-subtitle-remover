@@ -13,7 +13,7 @@ UX_REVISION_CODE_REVIEW_PASS_OWNER_RETEST_READY
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
 - Draft PR: #44.
 - Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
-- Latest source commit: `0e53a6ade8a67a061db214f6050f60ded6e0944d`.
+- Latest source commit: `0e988a0cd187633eafb401f30c3f646b1255e2a9`.
 
 ## Required outcome
 1. Selected/detail state follows actual processing P1 Job.
@@ -35,11 +35,13 @@ UX_REVISION_CODE_REVIEW_PASS_OWNER_RETEST_READY
 - Standardized final P1 error log is captured onto the active Job before `_finishP1Job` clears the active pointer.
 - Failed-card click opens a modal with safe text-only Job/error/timestamp content.
 - P1 orchestration retains one bounded malformed-JSON retry.
+- Feedback sync avoids repeated attribute writes that could retrigger its MutationObserver.
 
 ## Verification
-- exact published run-UX blob `504d6b89d8f806169d060ab7507832b43c28c5af` matches local reconstruction;
+- exact published run-UX blob `8a08b81e30862716fca21ffcdcb2e7ec54dbece1` matches local reconstruction;
 - `node --check` for exact run-UX JS PASS;
-- GitHub incremental source diff reviewed and limited to run-UX JS/CSS;
+- GitHub incremental diff review PASS;
+- latest PM review `4898257228` PASS for source through `0e988a0...`;
 - no P2/P3/STTN/Settings/backend source change;
 - no GitHub CI/status checks configured.
 
