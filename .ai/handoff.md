@@ -1,57 +1,53 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE2-RUNTIME-REVISION-001 — Pipeline 2 Runtime Hardening`
+`PIPELINE2-MANUAL-REGION-REVISION-002 — Manual ROI Geometry, Per-Region Mask, and Compact Inpaint Log`
 
 ## Status
-CODE REVIEW PASS / OWNER RETEST AUTHORIZED
+READY FOR ANTI EXECUTION
 
-## Stacked basis
-- Base branch: `review/BUG-005-P1-FULL-CHAIN`.
-- Base SHA: `97d5a13e77b6919931c251c74fab4c191fa04cec`.
-- P1 Draft PR #41 remains unmerged and preserved as the current functional checkpoint.
-
-## Review branch / PR
-- Branch: `review/PIPELINE2-APPROVED-UI-001`.
+## Review basis
+- Current P2 branch before task publication: `review/PIPELINE2-APPROVED-UI-001`.
 - Draft PR: #42.
-- Runtime source checkpoint: `b17d64fa94b7a8bafd8cb6eb396856a619f0df6c`.
-- Parent P2 UI task remains on this PR; Owner has accepted its layout.
+- PM basis SHA before publication: `186c9726d88a99f4438b77002b1487077c0ce712`.
+- P2 remains stacked on `review/BUG-005-P1-FULL-CHAIN` at `97d5a13e77b6919931c251c74fab4c191fa04cec`.
+- Required new review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
 
-## Owner runtime result
-The first real P2 processing test is NOT PASS:
-- UI/layout accepted by Owner;
-- processing stuck at 0% while `error: backend not available` was visible;
-- no realtime result preview;
-- repeated `/api/status` lines flooded the Console;
-- no evidence of real STTN GPU execution.
+## Owner retest intake — 2026-08-10
+Verified/observed improvements:
+- backend now loads sufficiently for actual STTN processing;
+- realtime result preview works;
+- processing speed is much faster than the prior failed run;
+- supplied log shows 440 frames completed in about 38 seconds at 11.38 frame/s;
+- backend runtime reports STTN GPU mode;
+- clean-video output is created;
+- P3 unlocks after successful P2 completion.
 
-## Root cause / code evidence
-`api/server.py` imports the actual subtitle-removal backend from ignored local `video-subtitle-remover-ref`. Clean linked worktrees do not copy ignored directories. Existing `/api/preview` already exposes captured frames, but legacy renderer result preview loads only finished output.
+Remaining blockers:
+1. Manual ROI box is displaced from the user's drag location.
+2. Each manual region cannot select/persist its own mask mode; current payload uses one job-level mask.
+3. Visible Console still floods successful `/api/frame/...` access lines and expected early preview 404 lines.
 
-## Current runtime revision
-- `src/main/python-bridge.js`: discovers an existing backend reference through Git common worktree root and injects it via `PYTHONPATH` / `VSR_BACKEND_REF`; never downloads/clones automatically.
-- `src/main/preload.js`: loads the isolated P2 runtime enhancer.
-- `src/renderer/js/pipeline2-runtime.js`: fail-fast backend watchdog, throttled live preview, compact one-row progress telemetry and repetitive log suppression.
+## Direct source diagnosis
+- Approved P2 CSS makes `canvas-inner` fill the preview pane while `canvas-original` is aspect-ratio constrained and centered. Legacy draw math uses the wrapper dimensions, producing incorrect coordinates/overlay geometry when letterboxing exists.
+- `job.regions.push(...)` stores no `maskMode`.
+- manual `pipeline2-remove.js` payload sends `mask_mode: job.maskMode || 'box'` instead of a region-specific value.
+- P2 runtime log coalescing omits `/api/frame` from its successful access-log filter.
 
-Unchanged `pipeline-state.js` remains authoritative for P1→P2 eligibility and subtitle-removal-only execution.
+## Execution authority
+Remote active spec:
+- `.ai/task_specs/ACTIVE.md`
+- `.ai/task_specs/PIPELINE2-MANUAL-REGION-REVISION-002.md`
 
-## Verification / code review
-- Exact Git blob + `node --check`: PASS for python bridge, preload and P2 runtime enhancer.
-- Linked-worktree backend reference discovery simulation: PASS.
-- GitHub compare from Owner-failed head to revision source checkpoint: authorized runtime source + docs only.
-- No unresolved PR review threads.
-- GitHub CI/status checks: none configured.
-- PM code review: PASS for fresh Owner retest.
-
-CUDA telemetry in the revision is preflight only. Do not claim actual GPU inference until Owner runtime proves the backend imports and STTN processes frames.
+Anti must fetch and read both from the exact remote authority ref named by Project Manager before editing. Local spec copies are not authority.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS for current revision evidence; no CI configured.
-- Code review: PASS.
-- Owner manual verification: UI PASS / previous processing FAIL; fresh retest AUTHORIZED / NOT STARTED.
-- Documentation synchronization: PASS at this checkpoint.
+- Execution: new revision NOT STARTED.
+- Automated/static verification: WAITING.
+- Code review: WAITING.
+- Owner manual verification: previous retest PARTIAL PASS / NEEDS_REVISION; fresh retest NOT STARTED.
+- Documentation synchronization: PASS at owner-result intake/task-open checkpoint.
 - Merge permission: BLOCKED.
 
 ## Owner action
-Retest the same short video from exact current PR #42 head. Report backend import, STTN progress, live result preview, compact Console behavior, GPU observation, clean-video result and P3 unlock behavior. Owner does not edit `.ai` files.
+No fresh Owner app test until the new source revision is published and Project Manager code review passes. Owner does not edit `.ai` files.

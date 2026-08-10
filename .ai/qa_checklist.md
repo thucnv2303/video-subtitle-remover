@@ -1,44 +1,53 @@
 # QA Checklist
 
 ## Active task
-`PIPELINE2-APPROVED-UI-001`
+`PIPELINE2-MANUAL-REGION-REVISION-002`
 
-## Static / GitHub review
-- [x] Draft PR #42 exists on `review/PIPELINE2-APPROVED-UI-001`.
-- [x] Base is the preserved P1 checkpoint branch `review/BUG-005-P1-FULL-CHAIN` at `97d5a13e77b6919931c251c74fab4c191fa04cec`.
-- [x] Application-source diff limited to `src/renderer/js/pipeline.js` and `src/renderer/styles/pipeline2-approved.css`.
-- [x] No `app.js`, `pipeline-state.js`, API/backend, P1 engine, P3, Settings or dependency source change in PR #42.
-- [x] Direct P2 upload/drop UI remains hidden/blocked.
-- [x] Existing P1→P2 eligibility gate remains unchanged and authoritative.
-- [x] P2 start contract keeps ASR/AI/TTS disabled.
-- [x] Job Queue uses internal vertical scrolling.
-- [x] Actions panel is structurally separate from Job Queue rows.
-- [x] Console/Log uses internal scrolling.
-- [x] Unsupported P2-only delete-selected action is disabled rather than fake-functional.
-- [x] Responsive CSS includes a stacked layout at narrower widths.
-- [x] Isolated new P2 adapter block parses with `node --check`.
-- [ ] Exact full published `src/renderer/js/pipeline.js` blob independently syntax-checked in this review environment.
-- [ ] GitHub CI/checks PASS — no CI/checks are configured for this head.
+## Previous runtime retest intake — 2026-08-10
+- [x] P2 backend no longer remains stuck at 0% with `backend not available`.
+- [x] Realtime result preview works by Owner observation.
+- [x] Supplied runtime log reaches 440/440 frames.
+- [x] Supplied runtime log reports about 38 seconds and 11.38 frame/s for the captured STTN run.
+- [x] Runtime reports STTN GPU mode.
+- [x] Clean-video output is written.
+- [x] Matching P3 job unlocks only after successful P2 completion in the captured run.
+- [ ] Manual ROI display geometry matches the exact pixels dragged by Owner — FAIL / revision required.
+- [ ] Each manual region can persist a different mask mode — FAIL / revision required.
+- [ ] Visible P2 Console is compact during inpaint — FAIL / revision required.
 
-## Owner runtime verification — AUTHORIZED / NOT STARTED
-- [ ] P2 visual parity with Owner-approved demo and accepted P1 visual tone.
-- [ ] Empty eligible queue state.
-- [ ] One eligible job state.
-- [ ] 10+ eligible jobs with internal queue scroll and Actions remaining visible.
-- [ ] Selecting a job updates metadata and original/result preview panes correctly.
-- [ ] No direct file upload/drop path in P2.
-- [ ] Only jobs unlocked by successful P1 completion appear in P2.
-- [ ] Start executes subtitle-removal-only Pipeline 2.
-- [ ] Result preview is not faked before real output exists.
-- [ ] Responsive/fullscreen layout fits without bottom controls being obscured.
-- [ ] Console is readable and scrolls internally.
-- [ ] Hard-subtitle removal still produces timeline-compatible clean video.
-- [ ] P2 completion unlocks matching P3 job.
+## Required static verification for revision 002
+- [ ] `node --check src/renderer/js/app.js`
+- [ ] `node --check src/renderer/js/pipelines/pipeline2-remove.js`
+- [ ] `node --check src/renderer/js/pipeline2-runtime.js`
+- [ ] `git diff --check`
+- [ ] Changed source limited to approved files.
+- [ ] ROI coordinate simulation with a letterboxed portrait canvas maps pointer→source→overlay with <=1 CSS-pixel display error at tested edges/center.
+- [ ] Two manual regions with different masks produce pass-specific `mask_mode` values.
+- [ ] Legacy region object without `maskMode` falls back to job/default mask.
+- [ ] Log filter suppresses successful `/api/frame/...` access lines during active P2 processing.
+- [ ] Expected early active-job `/api/preview` 404 noise is hidden without hiding unexpected/fatal errors.
+- [ ] Existing realtime `/api/preview` drawing path remains intact.
+- [ ] Backend discovery code unchanged.
+- [ ] `pipeline-state.js` / P1→P2 gate unchanged.
+- [ ] P1/P3 source unchanged.
+- [ ] GitHub CI/checks — none currently configured; local/static evidence must be published in PR.
+
+## Fresh Owner runtime verification — BLOCKED UNTIL CODE REVIEW PASS
+- [ ] Draw ROI around hard subtitles at center/bottom/side positions; overlay remains exactly under the drag rectangle.
+- [ ] Change timeline/frame and resize the window; ROI stays aligned to the same video pixels.
+- [ ] Create at least two regions and select different mask modes; selections remain independent.
+- [ ] Run manual multi-pass and confirm each region uses its selected mask mode.
+- [ ] Realtime result preview remains working.
+- [ ] Console no longer floods `/api/frame` success lines or expected preview 404s.
+- [ ] Fatal/backend errors remain visible.
+- [ ] Processing performance is not materially regressed relative to the current working checkpoint.
+- [ ] Clean-video output remains timeline compatible.
+- [ ] P3 unlock remains success-only.
 
 ## Gate status
-- Execution: PASS.
-- Automated/static verification: WAITING for complete exact-blob/runtime evidence; isolated adapter syntax PASS.
-- Code review: PASS for Owner runtime verification.
-- Owner manual app verification: AUTHORIZED / NOT STARTED.
-- Documentation synchronization: PASS at current checkpoint.
+- Execution: NOT STARTED for revision 002.
+- Automated/static verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: previous retest PARTIAL PASS / NEEDS_REVISION; fresh retest BLOCKED.
+- Documentation synchronization: PASS at task-open checkpoint.
 - Merge permission: BLOCKED.

@@ -1,78 +1,76 @@
 # Current Task
 
 ## Task ID
-PIPELINE2-RUNTIME-REVISION-001
+PIPELINE2-MANUAL-REGION-REVISION-002
 
 ## Name
-Pipeline 2 Runtime Hardening After Owner UI Test
+Pipeline 2 Manual ROI Geometry, Per-Region Mask, and Compact Inpaint Log
 
 ## Status
-CODE_REVIEW_PASS — OWNER_RETEST_AUTHORIZED
+READY_FOR_ANTI_EXECUTION
 
 ## Parent task
-`PIPELINE2-APPROVED-UI-001 — Pipeline 2 Approved UI`
+`PIPELINE2-RUNTIME-REVISION-001`
 
-Owner has accepted the P2 UI/layout. The current task only addresses processing/runtime defects found during the first real-app test.
+The previous runtime revision fixed the backend-loading/stuck-state path sufficiently for Owner retest. This task addresses the remaining correctness and observability defects found in that retest.
 
-## Stacked base / review
-- Base branch: `review/BUG-005-P1-FULL-CHAIN`
-- Base SHA: `97d5a13e77b6919931c251c74fab4c191fa04cec`
-- Review branch: `review/PIPELINE2-APPROVED-UI-001`
+## Authority / review basis
+- Repository: `thucnv2303/video-subtitle-remover`
+- Authority branch before this task: `review/PIPELINE2-APPROVED-UI-001`
 - Draft PR: #42
-- Runtime source checkpoint: `b17d64fa94b7a8bafd8cb6eb396856a619f0df6c`
-- Runtime spec: `.ai/task_specs/PIPELINE2-RUNTIME-REVISION-001.md`
+- PM basis SHA before task publication: `186c9726d88a99f4438b77002b1487077c0ce712`
+- Required new review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`
+- Execution spec: `.ai/task_specs/PIPELINE2-MANUAL-REGION-REVISION-002.md`
 
-## Owner runtime evidence
-First P2 runtime test:
-- UI/layout: PASS by Owner.
-- Processing: FAIL.
-- Job remained at 0% while UI exposed `error: backend not available`.
-- Result preview was not realtime.
-- Console accumulated repeated status polling lines.
-- GPU did not visibly load because the actual subtitle-removal backend had not imported.
+## Owner evidence
+Owner reports and supplied runtime log show:
+- realtime preview: PASS;
+- P2 completes and produces output;
+- 440-frame STTN run completed in about 38 seconds at 11.38 frame/s;
+- P3 unlock occurs after successful P2 completion;
+- manual drawn ROI is visually displaced;
+- region-specific mask selection is missing;
+- Console still contains repetitive `/api/frame/...` access logs and expected early preview 404 noise.
 
-## Verified root cause
-`api/server.py` depends on ignored local `video-subtitle-remover-ref`. In a clean linked Owner-test worktree that directory is absent, so API health can PASS while `HAS_BACKEND=False`.
-
-## Runtime revision source
-Authorized files:
-- `src/main/python-bridge.js`
-- `src/main/preload.js`
+## Allowed source files
+- `src/renderer/js/app.js`
+- `src/renderer/js/pipelines/pipeline2-remove.js`
 - `src/renderer/js/pipeline2-runtime.js`
-
-Existing approved UI remains in:
-- `src/renderer/js/pipeline.js`
 - `src/renderer/styles/pipeline2-approved.css`
 
-No P1/P3/AI/TTS/final-render logic is added to P2.
+## Allowed knowledge files
+- `.ai/current_state.md`
+- `.ai/task_current.md`
+- `.ai/handoff.md`
+- `.ai/bugs.md`
+- `.ai/qa_checklist.md`
 
-## Implemented revision
-- Linked-worktree backend reference discovery through Git common directory and `PYTHONPATH`.
-- Explicit startup log when backend reference is found/missing; no automatic clone/download.
-- Frontend status watchdog converts backend `error:*` into P2 Error and stops endless polling/timer state.
-- Throttled `/api/preview` draws real backend preview into result canvas while processing.
-- One live P2 progress row updates in place; repetitive Uvicorn status/preview access lines and inpaint heartbeats are removed from the visible Console during P2 processing.
-- CUDA/GPU info is logged as preflight/expected device only; actual STTN GPU use still requires runtime proof.
+## Required behavior
+1. Manual drawing and rendered overlays use the actual rendered `canvas-original` rectangle, including letterbox offset, not the full preview wrapper.
+2. Saved regions remain in source-video pixel coordinates.
+3. Each manual region persists its own `maskMode`; existing region objects without it remain backward compatible.
+4. The global mask selector is the default for new regions / auto mode and must not retroactively overwrite existing regions.
+5. Manual multi-pass payload uses the current region's mask mode.
+6. Visible P2 Console suppresses successful `/api/frame/...` access flood and expected early `/api/preview` 404 noise during active P2 processing, while retaining meaningful progress, warnings, fatal errors, and completion/output.
+7. Preserve realtime preview, runtime backend discovery, P1→P2 eligibility/start gates, STTN behavior, and P3 unlock semantics.
 
-## Verification / review
-Exact Git blob identity + `node --check` PASS:
-- python bridge `01014a592391d315895feb7001fe6bb81ea642c2`
-- preload `74784c2f5190d804ee8efad95b063a11b4484c13`
-- P2 runtime `9f8d1ad46c07521f9dcd4bf1664054e54bad636d`
-
-Linked-worktree backend-discovery simulation: PASS.
-GitHub compare from failed Owner head to the runtime source checkpoint contains only authorized runtime source plus documentation. No unresolved review threads. GitHub CI/status checks are absent.
+## Verification required
+- `node --check src/renderer/js/app.js`
+- `node --check src/renderer/js/pipelines/pipeline2-remove.js`
+- `node --check src/renderer/js/pipeline2-runtime.js`
+- `git diff --check`
+- deterministic ROI mapping simulation including a letterboxed portrait canvas;
+- two-region payload proof with different masks;
+- backward-compatibility proof for a region missing `maskMode`;
+- log-filter proof that frame 200 / expected active-preview 404 are suppressed while fatal errors remain visible.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS for current runtime revision evidence; no CI configured.
-- Code review: PASS for fresh Owner retest.
-- Owner manual app verification: UI PASS / previous processing FAIL; fresh retest AUTHORIZED / NOT STARTED.
-- Documentation synchronization: PASS at current review checkpoint.
+- Execution: NOT STARTED.
+- Automated/static verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: PARTIAL PASS / NEEDS_REVISION from previous retest; fresh retest NOT STARTED.
+- Documentation synchronization: PASS at task-open checkpoint.
 - Merge permission: BLOCKED.
 
-## Owner retest
-Use the same short video and verify backend reference import, STTN progress, live result preview, one-row progress/log behavior, GPU observation, final clean-video output and P3 unlock after successful P2 only.
-
 ## Merge rule
-Do not merge until fresh Owner runtime verification PASS is recorded, documentation is synchronized again, and explicit Project Manager approval is given.
+Do not merge until implementation, automated verification, GitHub code review, fresh Owner runtime PASS, owner-result documentation synchronization, and explicit Project Manager approval are complete.

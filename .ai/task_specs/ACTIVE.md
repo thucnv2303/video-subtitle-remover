@@ -1,55 +1,44 @@
 # Active PM Execution Spec
 
-Status: WAITING_OWNER_RETEST
+Status: READY_FOR_ANTI_EXECUTION
 
 Task:
-`PIPELINE2-RUNTIME-REVISION-001`
+`PIPELINE2-MANUAL-REGION-REVISION-002`
 
 Parent task:
-`PIPELINE2-APPROVED-UI-001` — Owner UI/layout PASS; processing runtime revision now reviewed.
+`PIPELINE2-RUNTIME-REVISION-001` — Owner retest completed with runtime improvements verified, but manual-region correctness and Console compactness require revision.
 
 Repository:
 `thucnv2303/video-subtitle-remover`
 
-Stacked base:
-- Branch: `review/BUG-005-P1-FULL-CHAIN`
-- Base SHA: `97d5a13e77b6919931c251c74fab4c191fa04cec`
-- Draft PR #41 remains unmerged and preserved as the P1 checkpoint.
+Authority branch / current P2 checkpoint:
+- Branch: `review/PIPELINE2-APPROVED-UI-001`
+- Draft PR: #42
+- Stacked base under PR #42: `review/BUG-005-P1-FULL-CHAIN` at `97d5a13e77b6919931c251c74fab4c191fa04cec`
+- PM review basis before this task publication: `186c9726d88a99f4438b77002b1487077c0ce712`
 
-Review branch / PR:
-- `review/PIPELINE2-APPROVED-UI-001`
-- Draft PR #42
+New review branch required:
+`review/PIPELINE2-MANUAL-REGION-REVISION-002`
 
 Execution / acceptance spec:
-`.ai/task_specs/PIPELINE2-RUNTIME-REVISION-001.md`
+`.ai/task_specs/PIPELINE2-MANUAL-REGION-REVISION-002.md`
 
-Reviewed runtime source checkpoint:
-`b17d64fa94b7a8bafd8cb6eb396856a619f0df6c`
+Owner retest findings recorded on 2026-08-10:
+- backend/runtime no longer stuck at 0%; STTN processed the video;
+- realtime result preview: PASS by Owner observation;
+- performance materially improved; captured run processed 440 frames in about 38 seconds and reported 11.38 frame/s;
+- engine output reported STTN GPU mode and produced the clean-video output;
+- P2 completion unlocked the matching P3 job;
+- manual ROI overlay appears displaced from the pixels the Owner drew;
+- per-region mask selection is missing; current implementation uses a job-level mask;
+- visible inpaint Console remains noisy with repeated successful `/api/frame/...` requests and expected early `/api/preview` 404 lines.
 
-Runtime source scope:
-- `src/main/python-bridge.js`
-- `src/main/preload.js`
-- `src/renderer/js/pipeline2-runtime.js`
-
-Parent UI source remains:
-- `src/renderer/js/pipeline.js`
-- `src/renderer/styles/pipeline2-approved.css`
-
-Verification facts:
-- Exact Git blob + `node --check` PASS for the three runtime-revision JS files.
-- Linked-worktree backend discovery simulation PASS.
-- Existing P1→P2 eligibility/start gate remains unchanged.
-- No automatic backend download/clone.
-- CUDA telemetry is preflight only until Owner runtime proves actual STTN processing.
-- No unresolved PR review threads.
-- GitHub CI/status checks are not configured.
-
-Code review:
-PASS for fresh Owner runtime retest.
+Execution rule:
+Anti must `git fetch origin`, read this ACTIVE file and the referenced spec from `origin/review/PIPELINE2-APPROVED-UI-001`, and confirm the exact remote HEAD named in the PM dispatch prompt before editing. Local task-spec copies are not authority.
 
 Owner app verification:
-Previous: UI PASS / processing FAIL.
-Fresh retest: AUTHORIZED / NOT STARTED.
+Current retest: PARTIAL PASS / NEEDS_REVISION.
+Fresh verification of the new revision: NOT STARTED.
 
 Merge permission:
 BLOCKED.
