@@ -3,6 +3,7 @@ const QUEUE_RECOVERY_DELAY_MS = 120;
 
 let recoveryTimer = null;
 let recoveryJobId = null;
+let errorLogCaptureInstalled = false;
 
 function state() {
   return window._appState || null;
@@ -105,6 +106,161 @@ function recoverStalledP1Queue() {
   }, QUEUE_RECOVERY_DELAY_MS);
 }
 
+function installP1ErrorCapture() {
+  if (errorLogCaptureInstalled || typeof window.addLog !== 'function') return;
+  const original = window.addLog;
+  if (original.__p1ErrorCaptureWrapped) {
+    errorLogCaptureInstalled = true;
+    return;
+  }
+
+  const wrapped = function wrappedP1Log(message, type = 'info') {
+    const match = String(message || '').match(/^\[AI\]\s*❌\s*Lỗi Pipeline 1:\s*(.+)$/i);
+    const appState = state();
+    const current = currentP1Job(appState);
+    if (match && current) {
+      current.p1ErrorMessage = match[1].trim() || 'Pipeline 1 thất bại.';
+      current.p1ErrorAt = Date.now();
+    }
+    return original.apply(this, arguments);
+  };
+  wrapped.__p1ErrorCaptureWrapped = true;
+  window.addLog = wrapped;
+  errorLogCaptureInstalled = true;
+}
+
+function ensureP1ErrorDialog() {
+  let overlay = document.getElementById('p1-error-dialog');
+  if (overlay) return overlay;
+
+  overlay = document.createElement('div');
+  overlay.id = 'p1-error-dialog';
+  overlay.className = 'p1-error-dialog';
+  overlay.hidden = true;
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'p1-error-dialog-title');
+
+  const panel = document.createElement('section');
+  panel.className = 'p1-error-dialog-panel';
+
+  const header = document.createElement('div');
+  header.className = 'p1-error-dialog-header';
+
+  const titleWrap = document.createElement('div');
+  const eyebrow = document.createElement('span');
+  eyebrow.className = 'p1-error-dialog-eyebrow';
+  eyebrow.textContent = 'PIPELINE 1';
+  const title = document.createElement('h3');
+  title.id = 'p1-error-dialog-title';
+  title.textContent = 'Job xử lý bị lỗi';
+  titleWrap.append(eyebrow, title);
+
+  const closeIcon = document.createElement('button');
+  closeIcon.type = 'button';
+  closeIcon.className = 'p1-error-dialog-close';
+  closeIcon.dataset.p1ErrorClose = 'true';
+  closeIcon.setAttribute('aria-label', 'Đóng thông báo lỗi');
+  closeIcon.textContent = '×';
+  header.append(titleWrap, closeIcon);
+
+  const jobName = document.createElement('strong');
+  jobName.className = 'p1-error-dialog-job';
+  jobName.dataset.p1ErrorJob = 'true';
+
+  const message = document.createElement('pre');
+  message.className = 'p1-error-dialog-message';
+  message.dataset.p1ErrorMessage = 'true';
+
+  const meta = document.createElement('div');
+  meta.className = 'p1-error-dialog-meta';
+  meta.dataset.p1ErrorMeta = 'true';
+
+  const actions = document.createElement('div');
+  actions.className = 'p1-error-dialog-actions';
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'p1-error-dialog-action';
+  closeButton.dataset.p1ErrorClose = 'true';
+  closeButton.textContent = 'Đóng';
+  actions.appendChild(closeButton);
+
+  panel.append(header, jobName, message, meta, actions);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+
+  const close = () => {
+    overlay.classList.remove('is-open');
+    overlay.hidden = true;
+  };
+
+  overlay.addEventListener('click', event => {
+    if (event.target === overlay || event.target.closest('[data-p1-error-close="true"]')) close();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !overlay.hidden) close();
+  });
+  return overlay;
+}
+
+function openP1ErrorDialog(job) {
+  if (!job) return;
+  const overlay = ensureP1ErrorDialog();
+  const jobName = overlay.querySelector('[data-p1-error-job="true"]');
+  const message = overlay.querySelector('[data-p1-error-message="true"]');
+  const meta = overlay.querySelector('[data-p1-error-meta="true"]');
+  if (jobName) jobName.textContent = job.fileName || `Job ${job.id || ''}`;
+  if (message) {
+    message.textContent = job.p1ErrorMessage
+      || 'Pipeline 1 đã kết thúc với trạng thái lỗi. Xem Console / Log để biết thêm chi tiết.';
+  }
+  if (meta) {
+    meta.textContent = job.p1ErrorAt
+      ? `Thời điểm ghi nhận: ${new Date(job.p1ErrorAt).toLocaleTimeString('vi-VN', { hour12: false })}`
+      : 'Chi tiết lỗi được lấy từ lần xử lý gần nhất của Job này.';
+  }
+  overlay.hidden = false;
+  overlay.classList.add('is-open');
+  overlay.querySelector('[data-p1-error-close="true"]')?.focus();
+}
+
+function syncJobFeedback(appState) {
+  if (!appState?.jobs) return;
+  const cards = [...document.querySelectorAll('#step1-job-list .tk-job-card')];
+  cards.forEach((card, index) => {
+    const job = appState.jobs[index];
+    if (!job) return;
+    const processing = job.status === 'processing';
+    const failed = job.status === 'error';
+    card.dataset.p1JobId = job.id;
+    card.classList.toggle('p1-job-card-processing', processing);
+    card.classList.toggle('p1-job-card-error', failed);
+    if (failed) card.title = 'Click để xem chi tiết lỗi Pipeline 1';
+    else if (card.title === 'Click để xem chi tiết lỗi Pipeline 1') card.removeAttribute('title');
+
+    const status = card.querySelector('.p1-job-state');
+    if (status) {
+      status.classList.toggle('p1-job-state-live', processing);
+      if (failed) status.title = 'Click Job để xem lỗi';
+      else status.removeAttribute('title');
+    }
+  });
+}
+
+function bindErrorCardClick(queue) {
+  if (!queue || queue.dataset.p1ErrorPopupBound === 'true') return;
+  queue.dataset.p1ErrorPopupBound = 'true';
+  queue.addEventListener('click', event => {
+    if (event.target.closest('button, a, input, select, textarea')) return;
+    const card = event.target.closest('.tk-job-card');
+    if (!card || !queue.contains(card)) return;
+    const appState = state();
+    const job = appState?.jobs?.find(item => item.id === card.dataset.p1JobId);
+    if (job?.status !== 'error') return;
+    setTimeout(() => openP1ErrorDialog(job), 0);
+  });
+}
+
 function injectStyles() {
   if (document.querySelector('link[data-p1-run-ux]')) return;
   const link = document.createElement('link');
@@ -155,8 +311,10 @@ function syncButton(button) {
   const stopping = Boolean(current?._p1StopRequested);
   const hoverStop = button.matches(':hover') && active && !stopping;
 
+  installP1ErrorCapture();
   syncRunningJobSelection(appState);
   recoverStalledP1Queue();
+  syncJobFeedback(appState);
 
   button.classList.toggle('is-processing', active && !stopping);
   button.classList.toggle('is-stop-intent', hoverStop);
@@ -246,6 +404,7 @@ function install() {
 
   const queue = document.getElementById('step1-job-list');
   if (queue) {
+    bindErrorCardClick(queue);
     new MutationObserver(() => syncButton(button)).observe(queue, { childList: true, subtree: true, attributes: true });
   }
 
