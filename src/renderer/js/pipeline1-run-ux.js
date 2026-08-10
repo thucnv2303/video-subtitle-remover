@@ -68,6 +68,30 @@ function updateProgressLog(progressKey, message, type = 'info', done = false) {
 }
 window.updateP1ProgressLog = updateProgressLog;
 
+function progressKeyForMessage(message) {
+  const text = String(message || '');
+  const match = text.match(/^\[Ollama\]\s+(Vision analysis|Reasoning\/remix|Multimodal analysis):/i);
+  if (!match) return null;
+  const isProgress = /đang sinh output|đang chờ Ollama load|đang được Ollama giữ trong bộ nhớ|gửi request tới/i.test(text);
+  const isDone = /hoàn tất trong|FAIL:/i.test(text);
+  return (isProgress || isDone) ? { key: `ollama:${match[1].toLowerCase()}`, done: isDone } : null;
+}
+
+function installLogCoalescer() {
+  if (window.__p1LogCoalescerInstalled || typeof window.addLog !== 'function') return false;
+  const baseAddLog = window.addLog;
+  window.addLog = function p1CoalescingLogger(message, type = 'info') {
+    const progress = progressKeyForMessage(message);
+    if (progress) {
+      updateProgressLog(progress.key, message, type, progress.done);
+      return;
+    }
+    baseAddLog(message, type);
+  };
+  window.__p1LogCoalescerInstalled = true;
+  return true;
+}
+
 function syncButton(button) {
   const appState = state();
   if (!button || !appState) return;
@@ -137,6 +161,7 @@ async function stopP1(button) {
 
 function install() {
   injectStyles();
+  installLogCoalescer();
   const button = document.getElementById('btn-start-all');
   if (!button || button.dataset.p1RunController === 'true') return Boolean(button);
   button.dataset.p1RunController = 'true';
@@ -171,10 +196,12 @@ function install() {
 let attempts = 0;
 const timer = setInterval(() => {
   attempts += 1;
+  installLogCoalescer();
   if (install() || attempts > 80) clearInterval(timer);
 }, 100);
 
 setInterval(() => {
+  installLogCoalescer();
   const button = document.getElementById('btn-start-all');
   if (button?.dataset.p1RunController === 'true') syncButton(button);
 }, SYNC_INTERVAL_MS);
