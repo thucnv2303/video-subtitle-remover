@@ -10,7 +10,7 @@ UX REVISION CODE REVIEW PASS / OWNER RETEST READY
 - Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
 - Draft PR: #44.
-- Latest source commit: `0e53a6ade8a67a061db214f6050f60ded6e0944d`.
+- Latest source commit: `0e988a0cd187633eafb401f30c3f646b1255e2a9`.
 
 ## Current source
 - `src/renderer/js/pipeline1-run-ux.js`: queue recovery, active-Job selection, active/error card synchronization, safe error capture + popup.
@@ -22,10 +22,11 @@ UX REVISION CODE REVIEW PASS / OWNER RETEST READY
 - Failed Job click should expose error details.
 
 ## Verification
-- run-UX exact blob/hash match `504d6b89d8f806169d060ab7507832b43c28c5af`.
+- run-UX exact blob/hash match `8a08b81e30862716fca21ffcdcb2e7ec54dbece1`.
 - exact run-UX `node --check` PASS.
-- GitHub source diff reviewed; incremental source revision touches only run-UX JS/CSS.
-- Prior multi-job isolation + bounded JSON retry implementation preserved.
+- GitHub source diff reviewed; final feedback hardening removes repeated title writes from the observer loop.
+- Latest PM code review PASS: review `4898257228`, source through `0e988a0...`.
+- Prior multi-job isolation + bounded JSON retry preserved.
 - No P2/P3/STTN/Settings/backend source change.
 
 ## Gates
