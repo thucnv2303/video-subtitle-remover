@@ -1,257 +1,194 @@
 import '../pipeline-state.js';
+import '../pipeline1-run-config.js';
+import '../pipeline1-artifact-gate.js';
+import { runPipeline1MultimodalAnalysis } from '../pipeline1-analysis.js';
 
 /**
- * Pipeline 1 — AI Analysis + TTS Chain
- *
- * Luồng: SRT gốc → AI Rewrite → TTS audio
- * Kết quả lưu vào job:
- *   job.srtContent      — SRT gốc từ OCR/ASR
- *   job.aiContent       — SRT đã được AI dịch/viết lại
- *   job.ttsAudioPath    — đường dẫn audio TTS đã tạo
- *   job.ttsTimedSrt     — SRT với timing khớp TTS (dùng cho burn sub ở Pipeline 3)
+ * Pipeline 1 analysis + remix + TTS.
+ * P1 must fail when required analysis/artifacts/TTS fail.
  */
 
-// ─── AI Rewrite ──────────────────────────────────────────────────────────────
+function _selectRunningJob(job) {
+  const state = window._appState;
+  if (!state || !job) return;
+  state.pipeline1SelectedJobId = job.id;
+  state.activeJobId = job.id;
+  window.renderJobDetail1?.();
+}
 
-/**
- * Gửi SRT lên AI để viết lại/dịch, sau đó tự động chain sang TTS nếu job.ttsGenerate = true.
- * @param {object} job
- * @param {string} srtText — nội dung SRT gốc
- */
-export async function triggerAutoAiRewrite(job, srtText) {
+export async function triggerAutoAiRewrite(job, sourceSrt) {
   const btnRetry = document.getElementById('btn-retry-ai');
-  _setBtn(btnRetry, true, '⏳ AI đang viết...');
-  _addLog('[AI] 🔄 Đang viết lại phụ đề bằng AI...', 'info');
+  _setBtn(btnRetry, true, '⏳ Đang phân tích video...');
+  _selectRunningJob(job);
+  job.p1ArtifactsReady = false;
+  _addLog('[P1] 🧠 Bắt đầu phân tích original video + transcript + keyframes...', 'info');
 
   try {
-    const provider = localStorage.getItem('ai_provider') || 'gemini';
-    let api_keys = [];
-    try { api_keys = JSON.parse(localStorage.getItem(`ai_api_keys_${provider}`) || '[]'); } catch { api_keys = []; }
-    const selectedModel = localStorage.getItem(`ai_model_${provider}`) || '';
+    if (!sourceSrt?.trim()) throw new Error('Không có SRT đầu vào cho Pipeline 1.');
+    const result = await runPipeline1MultimodalAnalysis(job, sourceSrt);
+    if (job._p1Cancelled) return { status: 'cancelled' };
+    const aiText = result.rewrittenSrt;
+    if (!aiText?.includes('-->')) throw new Error('Remix script không có timing SRT hợp lệ.');
 
-    // Fallback key sources
-    if (api_keys.length === 0) {
-      if (provider === 'ollama' && selectedModel) api_keys = [selectedModel];
-      else if (localStorage.getItem('ai_api_key')) api_keys = [{ key: localStorage.getItem('ai_api_key') }];
+    job.aiContent = aiText;
+    job.remixSrt = aiText;
+    job._aiTriggered = true;
+    _selectRunningJob(job);
+
+    const elAiContent = document.getElementById('ai-content');
+    if (elAiContent) elAiContent.value = aiText;
+    const detailText = document.getElementById('step1-detail-text');
+    if (detailText) detailText.value = aiText;
+
+    if (job.ttsGenerate) {
+      const ttsResult = await triggerAutoTts(job, aiText);
+      if (ttsResult?.status === 'cancelled' || job._p1Cancelled) return { status: 'cancelled' };
     }
 
-    // Lấy nội dung prompt đang chọn
-    let promptText = localStorage.getItem('ai_prompt') || '';
-    if (!promptText) {
-      try {
-        const prompts = JSON.parse(localStorage.getItem('ai_prompts') || '[]');
-        const activeId = localStorage.getItem('ai_active_prompt_id');
-        const found = prompts.find(p => p.id === activeId);
-        if (found) promptText = found.content;
-      } catch { /* ignore */ }
+    job.p1ArtifactsReady = true;
+    job._p1StopRequested = false;
+    _selectRunningJob(job);
+    _addLog('[P1] ✅ Analysis/remix artifacts đã sẵn sàng.', 'success');
+    return { status: 'ok', result: aiText, analysis: result.analysis, artifacts: result.bundle };
+  } catch (error) {
+    job.p1ArtifactsReady = false;
+    if (job._p1Cancelled || error?.name === 'AbortError') {
+      _addLog('[P1] ⏹ Pipeline 1 đã dừng theo yêu cầu.', 'warning');
+      return { status: 'cancelled' };
     }
-
-    if (!promptText || api_keys.filter(Boolean).length === 0) {
-      _addLog('[AI] ⚠️ Chưa cấu hình AI key/prompt — bỏ qua AI rewrite.', 'warning');
-      _setBtn(btnRetry, false, '🔄 Viết lại AI');
-      // Vẫn chain TTS với SRT gốc nếu cần
-      if (job.ttsGenerate) await triggerAutoTts(job, srtText);
-      return;
-    }
-
-    const aiConfig = {
-      provider,
-      api_keys: api_keys.map(k => k.key || k),
-      model: selectedModel,
-      endpoint: localStorage.getItem('ai_endpoint') || '',
-      prompt: promptText,
-    };
-
-    const res = await fetch(`${window.api.base}/api/ai-rewrite`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ srt_content: srtText, ai_config: aiConfig }),
-    });
-    const data = await res.json();
-
-    if (data.status === 'ok') {
-      const aiText = data.result;
-      job.aiContent = aiText;
-
-      // Cập nhật UI textarea
-      const elAiContent = document.getElementById('ai-content');
-      if (elAiContent) elAiContent.value = aiText;
-
-      _addLog('[AI] ✅ Viết lại phụ đề thành công!', 'success');
-
-      // Đảm bảo content truyền vào TTS luôn là SRT hợp lệ có -->
-      const srtForTts = aiText.includes('-->') ? aiText : _buildTimedSrt(aiText, srtText);
-
-      // Chain sang TTS ngay
-      if (job.ttsGenerate) {
-        job._aiTriggered = true;
-        await triggerAutoTts(job, srtForTts);
-      }
-    } else {
-      _addLog('[AI] ❌ Lỗi viết lại: ' + (data.error || 'Unknown'), 'error');
-      // Fallback: chain TTS với SRT gốc
-      if (job.ttsGenerate) await triggerAutoTts(job, srtText);
-    }
-  } catch (e) {
-    _addLog('[AI] ❌ Lỗi kết nối AI: ' + e.message, 'error');
-    if (job.ttsGenerate) await triggerAutoTts(job, srtText);
+    _addLog('[P1] ❌ Phân tích/remix thất bại: ' + error.message, 'error');
+    throw error;
   } finally {
-    _setBtn(btnRetry, false, '🔄 Viết lại AI');
+    _setBtn(btnRetry, false, '🔄 Phân tích lại');
   }
 }
 
-// ─── TTS (Auto chain sau AI) ─────────────────────────────────────────────────
-
-/**
- * Tạo TTS audio từ SRT. Lưu kết quả vào job.ttsAudioPath và job.ttsTimedSrt.
- * KHÔNG ghép vào video ở đây — việc ghép thuộc Pipeline 3 (Finalize).
- * @param {object} job
- * @param {string} srtText — SRT hợp lệ (có -->) để tạo TTS
- */
 export async function triggerAutoTts(job, srtText) {
-  const voice = job.ttsVoice || localStorage.getItem('tts_voice') || 'none';
-  if (!voice || voice === 'none') {
-    _addLog('[TTS] ⚠️ Chưa chọn giọng — bỏ qua TTS.', 'warning');
-    return;
-  }
+  const voice = job.ttsVoice || job.p1Config?.ttsVoice || localStorage.getItem('tts_voice') || 'none';
+  if (!voice || voice === 'none') throw new Error('TTS đã được bật nhưng chưa chọn giọng đọc.');
+  if (!srtText?.trim()) throw new Error('Không có remix SRT để tạo TTS.');
+  if (job._ttsRunning) throw new Error('TTS đang chạy cho Job này.');
+  if (job._p1Cancelled) return { status: 'cancelled' };
 
-  if (job._ttsRunning) {
-    _addLog('[TTS] ℹ️ TTS đang chạy, bỏ qua trigger thứ 2.', 'info');
-    return;
-  }
+  _selectRunningJob(job);
   job._ttsRunning = true;
-
   const btnRetry = document.getElementById('btn-retry-tts');
   _setBtn(btnRetry, true, '⏳ Đang tạo voice...');
-  _addLog('[TTS] 🎤 Đang tạo âm thanh lồng tiếng...', 'info');
+  _addLog('[TTS] 🎤 Đang tạo âm thanh lồng tiếng từ remix script...', 'info');
 
   try {
-    // Lấy ref audio nếu dùng clone voice
     let refAudio = null;
     if (voice.startsWith('clone:')) {
-      const idx = parseInt(voice.split(':')[1]);
+      const idx = parseInt(voice.split(':')[1], 10);
       const voices = JSON.parse(localStorage.getItem('tts_voices') || '[]');
-      if (voices[idx]) refAudio = voices[idx].audioPath;
+      refAudio = voices[idx]?.audioPath || null;
+      if (!refAudio) throw new Error('Không tìm thấy audio tham chiếu của giọng clone đã chọn.');
     }
 
     const ttsRes = await fetch(`${window.api.base}/api/tts-retry`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        srt_content:   srtText,
-        tts_voice:     voice,
-        video_path:    job.filePath,
+        srt_content: srtText,
+        tts_voice: voice,
+        video_path: job.filePath,
         tts_ref_audio: refAudio,
       }),
     });
-    const ttsData = await ttsRes.json();
+    if (job._p1Cancelled) {
+      _addLog('[TTS] ⏹ Đã dừng sau khi request TTS hiện tại kết thúc an toàn.', 'warning');
+      return { status: 'cancelled' };
+    }
+    if (!ttsRes.ok) throw new Error(`TTS HTTP ${ttsRes.status}`);
 
-    if (ttsData.status !== 'ok') {
-      _addLog('[TTS] ❌ Tạo voice thất bại: ' + (ttsData.error || 'Unknown'), 'error');
-      return;
+    const ttsData = await ttsRes.json();
+    if (job._p1Cancelled) return { status: 'cancelled' };
+    if (ttsData.status !== 'ok' || !ttsData.audio_path) {
+      throw new Error(ttsData.error || 'TTS không trả về audio hợp lệ.');
     }
 
-    // Lưu kết quả TTS vào job để Pipeline 3 dùng
-    job.ttsAudioPath  = ttsData.audio_path;
-    job.ttsTimedSrt   = ttsData.srt_content || _buildTimedSrt(srtText, job.srtContent);
+    job.ttsAudioPath = ttsData.audio_path;
+    if (job.p1ArtifactDir && window.electronAPI?.persistP1Audio) {
+      const persisted = await window.electronAPI.persistP1Audio({ source_path: job.ttsAudioPath, artifact_dir: job.p1ArtifactDir });
+      if (!persisted?.ok || !persisted?.audio_path) throw new Error(persisted?.error || 'Không thể lưu audio TTS vào P1 artifacts.');
+      job.ttsAudioPath = persisted.audio_path;
+      job.p1ArtifactPaths = job.p1ArtifactPaths || {};
+      job.p1ArtifactPaths.voice = persisted.audio_path;
+    }
+    job.ttsTimedSrt = ttsData.srt_content || _buildTimedSrt(srtText, job.srtContent);
     job.ttsAudioDurMs = ttsData.audio_duration_ms || 0;
     job.ttsSegmentsTiming = ttsData.segments_timing || [];
-    job.karaokeAss    = ttsData.karaoke_ass || null;
+    job.karaokeAss = ttsData.karaoke_ass || null;
+    job._ttsTriggered = true;
 
-    const segCount = job.ttsSegmentsTiming.length;
-    _addLog(`[TTS] ✅ Tạo ${segCount} segments thành công! Audio: ${ttsData.audio_path}`, 'success');
-
-    // Preview audio trong UI
-    const audioEl = document.getElementById('job-tts-preview-audio');
-    if (audioEl) {
-      audioEl.src = 'file://' + job.ttsAudioPath.replace(/\\/g, '/');
-      audioEl.style.display = 'block';
+    if (job.p1ArtifactDir && job.ttsTimedSrt) {
+      const save = await window.api.writeFile(`${job.p1ArtifactDir}/tts_timed.srt`, job.ttsTimedSrt);
+      if (save?.status === 'error') throw new Error(save.error || 'Không lưu được tts_timed.srt.');
+      job.p1ArtifactPaths = job.p1ArtifactPaths || {};
+      job.p1ArtifactPaths['tts_timed.srt'] = `${job.p1ArtifactDir}/tts_timed.srt`;
     }
 
-    // Cập nhật voice segments list
+    _selectRunningJob(job);
     if (typeof window.renderVoiceSegments === 'function') {
-      window.renderVoiceSegments([{ text: 'Auto TTS', audio_path: job.ttsAudioPath }]);
+      window.renderVoiceSegments([{ text: 'Pipeline 1 TTS', audio_path: job.ttsAudioPath }]);
     }
 
-    _addLog('[TTS] ✅ TTS hoàn tất — chờ Pipeline 1 đóng gói kết quả và mở khóa Pipeline 2.', 'success');
-
-  } catch (e) {
-    _addLog('[TTS] ❌ Lỗi pipeline TTS: ' + e.message, 'error');
-    console.error('[triggerAutoTts]', e);
+    _addLog(`[TTS] ✅ TTS hoàn tất: ${job.ttsAudioPath}`, 'success');
+    return { status: 'ok', audio_path: job.ttsAudioPath };
+  } catch (error) {
+    if (job._p1Cancelled || error?.name === 'AbortError') {
+      _addLog('[TTS] ⏹ TTS đã dừng theo yêu cầu.', 'warning');
+      return { status: 'cancelled' };
+    }
+    _addLog('[TTS] ❌ TTS thất bại: ' + error.message, 'error');
+    throw error;
   } finally {
     job._ttsRunning = false;
     _setBtn(btnRetry, false, '🔄 Tạo lại TTS');
   }
 }
 
-// ─── SRT Utilities ───────────────────────────────────────────────────────────
-
-/**
- * Ghép nội dung text mới vào timestamp của SRT gốc.
- * Trả về SRT hợp lệ có -->.
- */
 export function _buildTimedSrt(newText, originalSrt) {
   if (newText && newText.includes('-->')) return newText;
-
   if (!originalSrt || !originalSrt.includes('-->')) {
-    const lines = (newText || '').split('\n').filter(l => l.trim());
-    return lines.map((line, i) => {
-      const start = _msToSrtTime(i * 4000);
-      const end   = _msToSrtTime(i * 4000 + 3800);
-      return `${i + 1}\n${start} --> ${end}\n${line}\n`;
+    const lines = (newText || '').split('\n').filter(line => line.trim());
+    return lines.map((line, index) => {
+      const start = _msToSrtTime(index * 4000);
+      const end = _msToSrtTime(index * 4000 + 3800);
+      return `${index + 1}\n${start} --> ${end}\n${line}\n`;
     }).join('\n');
   }
 
-  // Parse timestamp slots từ SRT gốc
   const slots = [];
   for (const block of originalSrt.trim().split(/\n\n+/)) {
-    const m = block.match(/(\d{2}:\d{2}:\d{2}[,\.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,\.]\d{3})/);
-    if (m) slots.push({ start: m[1].replace('.', ','), end: m[2].replace('.', ',') });
+    const match = block.match(/(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})/);
+    if (match) slots.push({ start: match[1].replace('.', ','), end: match[2].replace('.', ',') });
   }
-  if (slots.length === 0) return newText;
+  if (!slots.length) return newText;
+  const lines = (newText || '').split('\n').map(line => line.trim()).filter(line => line && !/^\d+$/.test(line) && !line.includes('-->'));
+  if (!lines.length) return originalSrt;
 
-  const newLines = (newText || '').split('\n')
-    .map(l => l.trim())
-    .filter(l => l && !/^\d+$/.test(l) && !l.includes('-->'));
-  if (newLines.length === 0) return originalSrt;
-
-  let result = '';
-  if (newLines.length === slots.length) {
-    slots.forEach((s, i) => { result += `${i + 1}\n${s.start} --> ${s.end}\n${newLines[i]}\n\n`; });
-  } else if (newLines.length < slots.length) {
-    const ratio = slots.length / newLines.length;
-    slots.forEach((s, i) => {
-      const idx = Math.min(Math.floor(i / ratio), newLines.length - 1);
-      result += `${i + 1}\n${s.start} --> ${s.end}\n${newLines[idx]}\n\n`;
-    });
-  } else {
-    const ratio = newLines.length / slots.length;
-    slots.forEach((s, i) => {
-      const from = Math.floor(i * ratio);
-      const to   = Math.min(Math.floor((i + 1) * ratio), newLines.length);
-      result += `${i + 1}\n${s.start} --> ${s.end}\n${newLines.slice(from, to).join(' ')}\n\n`;
-    });
-  }
-  return result;
+  return slots.map((slot, index) => {
+    const textIndex = Math.min(Math.floor(index * lines.length / slots.length), lines.length - 1);
+    return `${index + 1}\n${slot.start} --> ${slot.end}\n${lines[textIndex]}\n`;
+  }).join('\n');
 }
 
 export function _msToSrtTime(ms) {
-  const h   = Math.floor(ms / 3600000);
-  const m   = Math.floor((ms % 3600000) / 60000);
-  const s   = Math.floor((ms % 60000) / 1000);
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
   const mil = ms % 1000;
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(mil).padStart(3,'0')}`;
 }
 
-// ─── Private helpers ─────────────────────────────────────────────────────────
-
-function _addLog(msg, type) {
-  if (typeof window.addLog === 'function') window.addLog(msg, type);
-  else console.log(`[${type}] ${msg}`);
+function _addLog(message, type) {
+  if (typeof window.addLog === 'function') window.addLog(message, type);
+  else console.log(`[${type}] ${message}`);
 }
 
-function _setBtn(btn, disabled, text) {
-  if (!btn) return;
-  btn.disabled = disabled;
-  btn.textContent = text;
+function _setBtn(button, disabled, text) {
+  if (!button) return;
+  button.disabled = disabled;
+  button.textContent = text;
 }

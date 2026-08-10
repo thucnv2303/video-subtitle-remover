@@ -29,3 +29,6 @@ Pipeline 1 is the current technical priority.
 
 ## D-010
 Owner manual verification blocks merge for source-code tasks.
+
+## D-011 — Temporarily close Pipeline 1 at the current functional checkpoint
+On 2026-08-10 the Owner decided to stop further Pipeline 1 refinement for now and accept the current functional checkpoint as the working P1 reference for subsequent project work. The accepted runtime evidence proves the core multimodal analysis/remix/TTS/artifact chain and gated P1→P2 handoff. The latest Start/Stop and log-coalescing UX revision was not separately re-run by the Owner and therefore remains deferred rather than PASS. This decision does not authorize merge of PR #41; merge remains subject to the normal explicit merge gate.

@@ -14,45 +14,30 @@ src/renderer/
 │   └── main.css             (File CSS chính)
 └── js/
     ├── app.js               (Main entry point — IIFE non-module. Điều phối toàn bộ:
-    │                         job queue, pipeline 2 inpaint, navigation, UI events.
-    │                         Gọi window.triggerAutoAiRewrite, window.finalizeVideo, v.v.)
-    ├── pipeline-state.js    (Compatibility state/handoff gate introduced by PIPELINE1-HANDOFF-001.
-    │                         Adds p1Status/p1Progress, p2Status/p2Progress, p3Status;
-    │                         hides/blocks P2 until P1 success; P2 success opens P3.)
-    ├── store.js             (Global state: state object, loadState, saveState)
-    ├── api.js               (APIClient: fetch/WebSocket với backend. Expose window.api)
-    ├── pipeline.js          (Pipeline 1 approved UI adapter + step navigation)
-    ├── utils/
-    │   ├── logger.js        (addLog(msg, type), showToast(msg, type, dur), getLogCategory.
-    │   │                     Hỗ trợ cả 2 dạng gọi: simple và legacy el-based)
-    │   ├── formatters.js    (fmtTime, fmtTimeFull, formatFileSize, fmtPercent, msToSrtTime)
-    │   └── dom.js           (el object ~100 DOM refs, $ và $$ helpers)
+    │                         job queue, pipeline 2 inpaint, navigation, UI events.)
+    ├── pipeline-state.js    (Compatibility P1/P2/P3 state/handoff gate.)
+    ├── pipeline1-run-config.js (BUG-005 run snapshot; ASR auto + multimodal mode.)
+    ├── pipeline1-analysis.js (BUG-005 original-video keyframe collection, multimodal artifact builder.)
+    ├── pipeline1-artifact-gate.js (BUG-005 fail-closed guard before P2 handoff.)
+    ├── store.js
+    ├── api.js
+    ├── pipeline.js          (Owner-approved Pipeline 1 UI adapter.)
     ├── pipelines/
-    │   ├── pipeline1-ai.js  ★ PIPELINE 1: AI Analysis + TTS Chain
-    │   │                     triggerAutoAiRewrite(job, srtText) → AI rewrite → chain TTS
-    │   │                     triggerAutoTts(job, srtText) → tạo TTS audio, lưu vào job
-    │   │                     KẾT QUẢ: job.ttsAudioPath, job.ttsTimedSrt, job.karaokeAss
-    │   │                     KHÔNG ghép video — việc đó thuộc Pipeline 3
-    │   ├── pipeline2-remove.js  (Legacy helpers — runNextPass, pollProgress, handleWSMessage
-    │   │                         — hiện tích hợp vào app.js. File này giữ lại để tham khảo)
-    │   ├── pipeline3-finalize.js  ★ PIPELINE 3: Finalize Video
-    │   │                     finalizeVideo(job):
-    │   │                       Bước 1: Điều chỉnh tempo video khớp TTS
-    │   │                       Bước 2: Tách vocal gốc (nếu bật tts-remove-vocal)
-    │   │                       Bước 3: Ghép TTS audio vào video đã xóa sub → _with_voice.mp4
-    │   │                       Bước 4: Burn subtitle (nếu job.voiceSub) → _final.mp4
-    │   │                     INPUT: job.outputPath + job.ttsAudioPath (từ Pipeline 1)
-    │   │                     OUTPUT: job.finalOutputPath (_final.mp4)
-    │   └── pipeline3-sub.js (Re-export alias → pipeline3-finalize.js)
+    │   ├── pipeline1-ai.js  (P1 multimodal analysis/remix → TTS chain; no render.)
+    │   ├── pipeline2-remove.js
+    │   ├── pipeline3-finalize.js
+    │   └── pipeline3-sub.js
     └── components/
-        ├── job-manager.js   (createJob, renderJobList, processNextJob, onJobFinished, loadVideo)
-        ├── prompt-manager.js(initPromptManager, renderPromptDropdown — quản lý AI prompts)
-        ├── video-preview.js (fetchAndDrawLivePreview, startLivePreviewPolling)
-        └── settings.js      (initSettings, loadSettingsValues, renderSavedVoices,
-                               updateVoiceDropdown, checkTTSStatus, voice clone management)
-```
+        ├── job-manager.js
+        ├── prompt-manager.js
+        ├── video-preview.js
+        └── settings.js
 
-Vì `index.html` load `app.js` dạng `<script src="...">` (non-module), các ES6 module được bridge qua `<script type="module">` inline trong HTML để expose hàm lên `window.*`. `app.js` gọi các hàm module qua `window.*`. Các module tự gọi `window.addLog` và `window.showToast`.
+src/main/
+├── main.js                  (Electron main; registers P1 vision IPC.)
+├── preload.js               (contextBridge for P1 vision/audio artifact IPC.)
+└── p1-vision-ipc.js         (local Ollama capability/vision analysis + source fingerprint + audio artifact persistence.)
+```
 
 ### Current compatibility handoff state
 Until the legacy shared-job runner is fully refactored, `pipeline-state.js` separates pipeline lifecycle state on each shared job:
@@ -63,14 +48,58 @@ p2Status: locked | ready | queued | processing | finished | error
 p3Status: locked | ready
 ```
 
-Rules in the current handoff candidate:
+Rules:
 - a newly uploaded job belongs to P1 and is P2/P3 locked;
 - P1 queued/processing/error/cancel never unlocks P2;
 - P1 success maps to `p1Status=finished`, `p2Status=ready`, `p3Status=locked`;
 - P2 does not accept direct upload and is guarded from starting while any P1 job is queued/processing;
 - P2 start forces subtitle-removal-only behavior: no ASR extraction, AI rewrite, or TTS chaining;
 - P2 success maps to `p2Status=finished`, `p3Status=ready`;
-- this is a compatibility layer around legacy `state.jobs` / `job.status`, not the final artifact-store architecture.
+- this remains a compatibility layer around legacy `state.jobs` / `job.status`, not the final artifact-store state model.
+
+### BUG-005 multimodal revision — CODE CANDIDATE / OWNER RETEST REQUIRED
+The previous text-only `ASR → rewrite → TTS` candidate was invalidated by Owner runtime evidence. The revised candidate aligns P1 more closely with the target artifact boundary:
+
+```text
+ORIGINAL VIDEO
+  ├─ audio → dedicated P1 Whisper ASR (language=auto)
+  └─ sampled original-video keyframes + video metadata
+          ↓
+local Ollama multimodal analysis
+  ├─ selected model used directly when it has vision capability
+  └─ otherwise installed local vision model supplies visual context
+       to the selected reasoning model
+          ↓
+structured JSON
+  ├─ summary / insights
+  ├─ scenes
+  ├─ timed remix script segments
+  └─ edit plan
+          ↓
+jobs/<job_id>/p1/
+  ├─ scenes.json
+  ├─ multimodal_timeline.json
+  ├─ remix_script.json
+  ├─ edit_plan.json
+  ├─ remix_script.srt
+  ├─ voice.*            (when TTS enabled)
+  └─ tts_timed.srt      (when TTS enabled)
+          ↓
+p1ArtifactsReady=true
+          ↓
+P2 may become READY
+```
+
+Candidate invariants:
+- source SHA256 fingerprint is calculated from the ORIGINAL video and stored with JSON artifacts;
+- duration, FPS, frame count, artifact version and reasoning/vision model identity are stored with artifacts;
+- no local vision-capable Ollama model means P1 fails closed; transcript-only fallback cannot unlock P2;
+- prompt preset controls content intent/style, but the system JSON artifact schema is authoritative over prompt formatting instructions;
+- the running Job is the authoritative Job for P1 detail text/audio/status;
+- legacy `finished` without `p1ArtifactsReady=true` is relocked by the candidate-specific artifact guard;
+- P1 still never inpaints/removes subtitles/renders video.
+
+Current limitation: this candidate enables multimodal P1 only for local Ollama. Gemini/DeepSeek are deliberately blocked in P1 rather than silently degrading to text-only. Scene understanding currently uses sampled keyframes + vision reasoning; deterministic CV scene-boundary detection is not yet claimed.
 
 ## 2. TARGET PRODUCT ARCHITECTURE — OWNER CONFIRMED / PROPOSED
 
@@ -103,7 +132,7 @@ Kiến trúc chia thành 3 pipeline hoạt động hoàn toàn độc lập, gia
 - Cắt cảnh dùng original source timecodes, sắp xếp lại theo `edit_plan.json` (khi cần).
 - Mix TTS và background audio, burn SRT mới.
 - Render final video.
-- **Strict Rule:** Tuyệt đối không được sửa đổi (modify) outputs của Pipeline 1 và Pipeline 2. Bắt buộc BLOCK operation nếu artifacts từ P1 và P2 không đến từ cùng một source video.
+- **Strict Rule:** Tuyệt đối không được sửa đổi outputs của Pipeline 1 và Pipeline 2. Bắt buộc BLOCK operation nếu artifacts từ P1 và P2 không đến từ cùng một source video.
 
 ### Artifact Boundaries & Source Identity
 Artifacts P1 được lưu ở `jobs/<job_id>/p1/`.
