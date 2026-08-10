@@ -10,15 +10,15 @@
 
 ## Source/scope
 - [x] Dedicated branch and Draft PR #44.
-- [x] Latest source commit `0e53a6ade8a67a061db214f6050f60ded6e0944d`.
-- [x] Incremental UX source change only: `pipeline1-run-ux.js` + `pipeline1-run-ux.css`.
-- [x] Existing `pipeline1-ai.js` bounded retry preserved.
+- [x] Latest source commit `0e988a0cd187633eafb401f30c3f646b1255e2a9`.
+- [x] Incremental UX source change only: `pipeline1-run-ux.js` + `pipeline1-run-ux.css`; existing `pipeline1-ai.js` bounded retry preserved.
 - [x] No P2/P3/STTN/Settings/backend source changes.
 
 ## Automated/static
-- [x] Exact run-UX blob `504d6b89d8f806169d060ab7507832b43c28c5af` reconstructed byte-identical by `git hash-object`.
+- [x] Exact run-UX blob `8a08b81e30862716fca21ffcdcb2e7ec54dbece1` reconstructed byte-identical by `git hash-object`.
 - [x] Exact run-UX `node --check` PASS.
 - [x] GitHub source diff scope reviewed.
+- [x] Final feedback hardening avoids repeated title-attribute writes in the MutationObserver loop.
 - [x] No configured GitHub status checks.
 
 ## Code review
@@ -29,6 +29,7 @@
 - [x] Error dialog content uses `textContent` only.
 - [x] Error dialog supports close button, backdrop click and Escape.
 - [x] Clicking controls inside a Job card does not trigger the popup.
+- [x] Latest PM code review PASS recorded as review `4898257228` for source through `0e988a0...`.
 
 ## Owner retest — READY
 - [ ] Processing Job is immediately distinguishable from queued/idle Jobs.
