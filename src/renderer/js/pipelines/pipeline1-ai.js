@@ -1,5 +1,6 @@
 import '../pipeline-state.js';
 import '../pipeline1-run-config.js';
+import '../pipeline1-artifact-gate.js';
 import { runPipeline1MultimodalAnalysis } from '../pipeline1-analysis.js';
 
 /**
