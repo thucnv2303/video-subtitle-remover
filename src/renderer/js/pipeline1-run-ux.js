@@ -109,7 +109,6 @@ async function stopP1(button) {
   if (current) {
     current._p1Cancelled = true;
     current._p1StopRequested = true;
-    try { current._ttsAbortController?.abort('owner-stop'); } catch { /* no-op */ }
   }
 
   p1Jobs(appState).forEach(job => {
