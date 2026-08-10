@@ -2,6 +2,104 @@ const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
 
+const FINAL_SCHEMA = {
+  type: 'object',
+  properties: {
+    summary: { type: 'string' },
+    insights: {
+      type: 'object',
+      properties: {
+        topic: { type: 'string' },
+        product_or_subject: { type: 'string' },
+        audience: { type: 'string' },
+        hook: { type: 'string' },
+        benefits: { type: 'array', items: { type: 'string' } },
+        evidence: { type: 'array', items: { type: 'string' } },
+        cta: { type: 'string' },
+        conflicts: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['topic', 'product_or_subject', 'audience', 'hook', 'benefits', 'evidence', 'cta', 'conflicts'],
+    },
+    scenes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          index: { type: 'integer' },
+          time_sec: { type: 'number' },
+          visual: { type: 'string' },
+          speech_context: { type: 'string' },
+          purpose: { type: 'string' },
+        },
+        required: ['index', 'time_sec', 'visual', 'speech_context', 'purpose'],
+      },
+    },
+    script_segments: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          start: { type: 'string' },
+          end: { type: 'string' },
+          text: { type: 'string' },
+        },
+        required: ['start', 'end', 'text'],
+      },
+    },
+    edit_plan: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          scene_index: { type: 'integer' },
+          action: { type: 'string', enum: ['keep', 'trim', 'reorder'] },
+          reason: { type: 'string' },
+        },
+        required: ['scene_index', 'action', 'reason'],
+      },
+    },
+    edit_notes: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['summary', 'insights', 'scenes', 'script_segments', 'edit_plan', 'edit_notes'],
+};
+
+const VISION_SCHEMA = {
+  type: 'object',
+  properties: {
+    summary: { type: 'string' },
+    scenes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          index: { type: 'integer' },
+          time_sec: { type: 'number' },
+          visual: { type: 'string' },
+          speech_context: { type: 'string' },
+          purpose: { type: 'string' },
+        },
+        required: ['index', 'time_sec', 'visual', 'speech_context', 'purpose'],
+      },
+    },
+    visual_evidence: { type: 'array', items: { type: 'string' } },
+    conflicts: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['summary', 'scenes', 'visual_evidence', 'conflicts'],
+};
+
+function emitProgress(event, message, type = 'info', details = {}) {
+  try {
+    event.sender.send('p1:vision-progress', {
+      message,
+      type,
+      at: Date.now(),
+      ...details,
+    });
+  } catch {
+    // Renderer may have closed while a local model was still returning.
+  }
+}
+
 function localOllamaUrl(rawEndpoint, pathname) {
   const raw = typeof rawEndpoint === 'string' && rawEndpoint.trim()
     ? rawEndpoint.trim()
@@ -16,7 +114,15 @@ function localOllamaUrl(rawEndpoint, pathname) {
   return url.toString();
 }
 
-async function fetchJson(net, url, options = {}, timeoutMs = 120000) {
+function timeoutError(phase, model, timeoutMs) {
+  const err = new Error(`${phase} với model ${model} quá thời gian ${Math.round(timeoutMs / 1000)} giây.`);
+  err.code = 'OLLAMA_PHASE_TIMEOUT';
+  err.phase = phase;
+  err.model = model;
+  return err;
+}
+
+async function fetchJson(net, url, options = {}, timeoutMs = 120000, phase = 'Ollama request') {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -24,8 +130,11 @@ async function fetchJson(net, url, options = {}, timeoutMs = 120000) {
     const text = await response.text();
     let body = {};
     try { body = text ? JSON.parse(text) : {}; } catch { body = { raw: text }; }
-    if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`);
+    if (!response.ok) throw new Error(body?.error || `${phase}: HTTP ${response.status}`);
     return body;
+  } catch (err) {
+    if (err?.name === 'AbortError') throw timeoutError(phase, 'local', timeoutMs);
+    throw err;
   } finally {
     clearTimeout(timeout);
   }
@@ -49,29 +158,48 @@ async function modelInfo(net, endpoint, model) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, verbose: false }),
-  }, 15000);
+  }, 15000, `Đọc capability ${model}`);
 }
 
-async function findVisionModel(net, endpoint, preferredModel) {
+function modelLabel(info, fallbackName) {
+  const name = info?.model || fallbackName || 'unknown';
+  const size = info?.details?.parameter_size || '?';
+  const quant = info?.details?.quantization_level || '?';
+  return `${name} (${size}, ${quant})`;
+}
+
+async function findVisionModel(net, endpoint, preferredModel, event) {
+  emitProgress(event, `Kiểm tra capability model đã chọn: ${preferredModel}...`);
   const preferredInfo = await modelInfo(net, endpoint, preferredModel);
   const preferredCaps = Array.isArray(preferredInfo?.capabilities) ? preferredInfo.capabilities : [];
-  if (preferredCaps.includes('vision')) return { model: preferredModel, capabilities: preferredCaps, fallback: false };
+  emitProgress(event, `Reasoning model: ${modelLabel(preferredInfo, preferredModel)}; capability=[${preferredCaps.join(', ') || 'none'}].`);
+  if (preferredCaps.includes('vision')) {
+    emitProgress(event, `Model ${preferredModel} có vision; dùng một model cho cả hình ảnh và reasoning.`, 'success');
+    return { model: preferredModel, capabilities: preferredCaps, fallback: false, info: preferredInfo };
+  }
 
-  const tags = await fetchJson(net, localOllamaUrl(endpoint, '/api/tags'), {}, 10000);
-  const names = Array.isArray(tags?.models)
-    ? tags.models.map(item => item?.name || item?.model).filter(Boolean)
+  emitProgress(event, `${preferredModel} không có vision. Đang tìm model vision local nhẹ nhất...`, 'warning');
+  const tags = await fetchJson(net, localOllamaUrl(endpoint, '/api/tags'), {}, 10000, 'Quét model Ollama');
+  const candidates = Array.isArray(tags?.models)
+    ? tags.models
+      .map(item => ({ name: item?.name || item?.model, size: Number(item?.size) || Number.MAX_SAFE_INTEGER }))
+      .filter(item => item.name && item.name !== preferredModel)
+      .sort((a, b) => a.size - b.size)
     : [];
-  for (const name of names.slice(0, 16)) {
-    if (name === preferredModel) continue;
+
+  for (const candidate of candidates.slice(0, 20)) {
     try {
-      const info = await modelInfo(net, endpoint, name);
+      const info = await modelInfo(net, endpoint, candidate.name);
       const caps = Array.isArray(info?.capabilities) ? info.capabilities : [];
-      if (caps.includes('vision')) return { model: name, capabilities: caps, fallback: true };
-    } catch {
-      // Ignore one broken local model and keep looking.
+      if (caps.includes('vision')) {
+        emitProgress(event, `Vision model được chọn: ${modelLabel(info, candidate.name)}.`, 'success');
+        return { model: candidate.name, capabilities: caps, fallback: true, info };
+      }
+    } catch (err) {
+      emitProgress(event, `Bỏ qua ${candidate.name}: ${err?.message || 'không đọc được capability'}.`, 'warning');
     }
   }
-  return { model: null, capabilities: preferredCaps, fallback: false };
+  return { model: null, capabilities: preferredCaps, fallback: false, info: null };
 }
 
 function sha256File(filePath) {
@@ -85,13 +213,13 @@ function sha256File(filePath) {
 }
 
 function compactFrames(frames) {
-  const safe = Array.isArray(frames) ? frames.slice(0, 12) : [];
+  const safe = Array.isArray(frames) ? frames.slice(0, 10) : [];
   let totalChars = 0;
   return safe.map(frame => {
     const image = String(frame?.image_base64 || '');
     totalChars += image.length;
     if (!image) return null;
-    if (totalChars > 32 * 1024 * 1024) throw new Error('Tổng dữ liệu keyframe vượt giới hạn 32 MB.');
+    if (totalChars > 12 * 1024 * 1024) throw new Error('Tổng dữ liệu keyframe vượt giới hạn 12 MB sau nén.');
     return {
       frame: Number(frame?.frame) || 0,
       time_sec: Number(frame?.time_sec) || 0,
@@ -101,22 +229,173 @@ function compactFrames(frames) {
 }
 
 function outputContractPrompt(userPrompt, videoInfo, frameMeta) {
-  return `Bạn là bộ phân tích multimodal của Pipeline 1. Output protocol của hệ thống có ưu tiên cao hơn format được nhắc trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH (chỉ dùng để định hướng nội dung):\n---\n${userPrompt}\n---\n\nYÊU CẦU HỆ THỐNG BẮT BUỘC:\n- Dùng đồng thời transcript và hình ảnh keyframe; không suy luận chỉ từ một nguồn.\n- Phân tích video gốc: nội dung, sản phẩm/chủ thể, đối tượng, hook, lợi ích, bằng chứng, CTA và chi tiết trực quan quan trọng.\n- Nếu transcript mâu thuẫn với hình ảnh, ghi nhận trong insights.conflicts thay vì bịa.\n- Viết lại lời thoại tiếng Việt tự nhiên, phù hợp TTS.\n- script_segments phải nằm trong thời lượng video và dùng timestamp SRT.\n- Không thêm giá, công dụng, chứng nhận hoặc thông tin không có căn cứ.\n- Dù prompt người dùng yêu cầu SRT/Markdown/text, RESPONSE CỦA LẦN GỌI NÀY vẫn phải là DUY NHẤT JSON hợp lệ; ứng dụng sẽ tự tạo SRT từ script_segments.\n- JSON schema bắt buộc:\n{\n  "summary":"...",\n  "insights":{"topic":"...","product_or_subject":"...","audience":"...","hook":"...","benefits":[],"evidence":[],"cta":"","conflicts":[]},\n  "scenes":[{"index":1,"time_sec":0,"visual":"...","speech_context":"...","purpose":"..."}],\n  "script_segments":[{"start":"00:00:00,000","end":"00:00:04,000","text":"..."}],\n  "edit_plan":[{"scene_index":1,"action":"keep|trim|reorder","reason":"..."}],\n  "edit_notes":[]\n}\n\nVideo metadata: ${JSON.stringify(videoInfo || {})}\nKeyframe timestamps: ${JSON.stringify(frameMeta || [])}`;
+  return `Bạn là bộ phân tích multimodal của Pipeline 1. Output protocol của hệ thống có ưu tiên cao hơn format được nhắc trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH (chỉ dùng để định hướng nội dung):\n---\n${userPrompt}\n---\n\nYÊU CẦU HỆ THỐNG BẮT BUỘC:\n- Dùng đồng thời transcript và hình ảnh keyframe; không suy luận chỉ từ một nguồn.\n- Phân tích video gốc: nội dung, sản phẩm/chủ thể, đối tượng, hook, lợi ích, bằng chứng, CTA và chi tiết trực quan quan trọng.\n- Nếu transcript mâu thuẫn với hình ảnh, ghi nhận trong insights.conflicts thay vì bịa.\n- Viết lại lời thoại tiếng Việt tự nhiên, phù hợp TTS.\n- script_segments phải nằm trong thời lượng video và dùng timestamp SRT.\n- Không thêm giá, công dụng, chứng nhận hoặc thông tin không có căn cứ.\n- RESPONSE phải tuân theo JSON schema của hệ thống; ứng dụng sẽ tự tạo SRT từ script_segments.\n\nVideo metadata: ${JSON.stringify(videoInfo || {})}\nKeyframe timestamps: ${JSON.stringify(frameMeta || [])}`;
 }
 
-async function chat(net, endpoint, model, messages, options = {}) {
-  const payload = {
-    model,
-    messages,
-    stream: false,
-    format: 'json',
-    options: { temperature: 0.2, ...options },
+function bytesToGiB(value) {
+  return (Number(value || 0) / (1024 ** 3)).toFixed(1);
+}
+
+async function runningModels(net, endpoint) {
+  const result = await fetchJson(net, localOllamaUrl(endpoint, '/api/ps'), {}, 5000, 'Đọc model đang chạy');
+  return Array.isArray(result?.models) ? result.models : [];
+}
+
+function startModelMonitor(net, endpoint, event, model, phase) {
+  let stopped = false;
+  let polling = false;
+  let lastSignature = '';
+
+  const poll = async () => {
+    if (stopped || polling) return;
+    polling = true;
+    try {
+      const models = await runningModels(net, endpoint);
+      const active = models.find(item => (item?.name || item?.model) === model);
+      if (active) {
+        const signature = `${active.size || 0}:${active.size_vram || 0}:${active.context_length || 0}`;
+        if (signature !== lastSignature) {
+          lastSignature = signature;
+          emitProgress(
+            event,
+            `${phase}: ${model} đang được Ollama giữ trong bộ nhớ; model=${bytesToGiB(active.size)} GiB, VRAM=${bytesToGiB(active.size_vram)} GiB, ctx=${active.context_length || '?'}.`
+          );
+        }
+      } else if (lastSignature !== 'not-loaded') {
+        lastSignature = 'not-loaded';
+        emitProgress(event, `${phase}: đang chờ Ollama load ${model}...`);
+      }
+    } catch {
+      // Telemetry must never break the inference request.
+    } finally {
+      polling = false;
+    }
   };
-  return fetchJson(net, localOllamaUrl(endpoint, '/api/chat'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  }, 180000);
+
+  poll();
+  const timer = setInterval(poll, 4000);
+  return () => {
+    stopped = true;
+    clearInterval(timer);
+  };
+}
+
+async function unloadModel(net, endpoint, model, event) {
+  emitProgress(event, `Giải phóng model ${model} trước phase kế tiếp...`);
+  try {
+    await fetchJson(net, localOllamaUrl(endpoint, '/api/generate'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, prompt: '', stream: false, keep_alive: 0 }),
+    }, 30000, `Unload ${model}`);
+    const deadline = Date.now() + 12000;
+    while (Date.now() < deadline) {
+      const active = await runningModels(net, endpoint).catch(() => []);
+      if (!active.some(item => (item?.name || item?.model) === model)) {
+        emitProgress(event, `Đã giải phóng ${model}.`, 'success');
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    emitProgress(event, `${model} vẫn còn trong /api/ps sau yêu cầu unload; tiếp tục với cảnh báo.`, 'warning');
+  } catch (err) {
+    emitProgress(event, `Không xác nhận được unload ${model}: ${err?.message || err}.`, 'warning');
+  }
+}
+
+async function chatStream(net, endpoint, model, messages, {
+  event,
+  phase,
+  format,
+  timeoutMs,
+  numPredict,
+}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const started = Date.now();
+  const stopMonitor = startModelMonitor(net, endpoint, event, model, phase);
+  emitProgress(event, `${phase}: gửi request tới ${model}; timeout=${Math.round(timeoutMs / 1000)}s.`);
+
+  try {
+    const response = await net.fetch(localOllamaUrl(endpoint, '/api/chat'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model,
+        messages,
+        stream: true,
+        format,
+        think: false,
+        keep_alive: 0,
+        options: {
+          temperature: 0.2,
+          num_predict: numPredict,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      let detail = text;
+      try { detail = JSON.parse(text)?.error || text; } catch { /* keep text */ }
+      throw new Error(`${phase} / ${model}: HTTP ${response.status} ${detail || ''}`.trim());
+    }
+    if (!response.body?.getReader) throw new Error(`${phase} / ${model}: response stream không khả dụng.`);
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let pending = '';
+    let content = '';
+    let chunkCount = 0;
+    let firstOutputAt = null;
+    let finalChunk = null;
+
+    const consume = (line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      const item = JSON.parse(trimmed);
+      if (item?.error) throw new Error(`${phase} / ${model}: ${item.error}`);
+      const part = item?.message?.content;
+      if (typeof part === 'string' && part) {
+        content += part;
+        if (!firstOutputAt) {
+          firstOutputAt = Date.now();
+          emitProgress(event, `${phase}: ${model} đã bắt đầu sinh output sau ${((firstOutputAt - started) / 1000).toFixed(1)}s.`, 'success');
+        }
+      }
+      chunkCount += 1;
+      if (chunkCount % 25 === 0) {
+        emitProgress(event, `${phase}: ${model} đang sinh output... ${((Date.now() - started) / 1000).toFixed(0)}s.`);
+      }
+      if (item?.done) finalChunk = item;
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      pending += decoder.decode(value, { stream: true });
+      const lines = pending.split(/\r?\n/);
+      pending = lines.pop() || '';
+      for (const line of lines) consume(line);
+    }
+    pending += decoder.decode();
+    if (pending.trim()) consume(pending);
+
+    if (!content.trim()) throw new Error(`${phase} / ${model}: Ollama kết thúc nhưng không trả content.`);
+    const elapsed = ((Date.now() - started) / 1000).toFixed(1);
+    const evalCount = Number(finalChunk?.eval_count || 0);
+    const evalDuration = Number(finalChunk?.eval_duration || 0);
+    const tokPerSec = evalDuration > 0 ? (evalCount / (evalDuration / 1e9)).toFixed(1) : '?';
+    emitProgress(event, `${phase}: ${model} hoàn tất trong ${elapsed}s; output_tokens=${evalCount || '?'}, tốc độ=${tokPerSec} tok/s.`, 'success');
+    return { message: { content }, metrics: finalChunk || {} };
+  } catch (err) {
+    if (err?.name === 'AbortError') throw timeoutError(phase, model, timeoutMs);
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+    stopMonitor();
+  }
 }
 
 module.exports = function registerP1VisionIPC({ ipcMain, net }) {
@@ -150,7 +429,11 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       if (!frames.length) return { ok: false, error: 'Không có keyframe để phân tích.' };
       if (!videoPath || !fs.existsSync(videoPath)) return { ok: false, error: 'Không tìm thấy video nguồn để tạo fingerprint.' };
 
-      const vision = await findVisionModel(net, payload.endpoint, model);
+      emitProgress(event, `Kết nối Ollama local tại ${localOllamaUrl(payload.endpoint, '/api/tags')}...`);
+      const tags = await fetchJson(net, localOllamaUrl(payload.endpoint, '/api/tags'), {}, 10000, 'Ollama preflight');
+      emitProgress(event, `Ollama reachable; ${Array.isArray(tags?.models) ? tags.models.length : 0} model local.`, 'success');
+
+      const vision = await findVisionModel(net, payload.endpoint, model, event);
       if (!vision.model) {
         return {
           ok: false,
@@ -163,25 +446,49 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       const frameMeta = frames.map(({ frame, time_sec }) => ({ frame, time_sec }));
       const systemPrompt = outputContractPrompt(prompt, payload.video_info, frameMeta);
       const images = frames.map(frame => frame.image_base64);
+      const payloadMiB = (images.reduce((sum, image) => sum + image.length, 0) * 0.75 / (1024 ** 2)).toFixed(2);
+      emitProgress(event, `Vision payload: ${frames.length} keyframe, khoảng ${payloadMiB} MiB base64-decoded image data.`);
 
       let finalAnalysis;
       const reasoningModel = model;
       if (vision.model === model) {
-        const result = await chat(net, payload.endpoint, model, [
+        const result = await chatStream(net, payload.endpoint, model, [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `TRANSCRIPT SRT:\n${transcript}`, images },
-        ]);
+        ], {
+          event,
+          phase: 'Multimodal analysis',
+          format: FINAL_SCHEMA,
+          timeoutMs: 300000,
+          numPredict: 2200,
+        });
         finalAnalysis = parseJsonContent(result?.message?.content);
       } else {
-        const visionResult = await chat(net, payload.endpoint, vision.model, [
-          { role: 'system', content: 'Phân tích các keyframe video theo timestamp. Trả JSON với summary, scenes, visual_evidence và conflicts. Không viết script quảng cáo.' },
+        const visionResult = await chatStream(net, payload.endpoint, vision.model, [
+          { role: 'system', content: 'Phân tích các keyframe video theo timestamp. Chỉ mô tả những gì có căn cứ trực quan và đối chiếu transcript.' },
           { role: 'user', content: `TRANSCRIPT SRT để đối chiếu:\n${transcript}\n\nKeyframe timestamps: ${JSON.stringify(frameMeta)}`, images },
-        ]);
+        ], {
+          event,
+          phase: 'Vision analysis',
+          format: VISION_SCHEMA,
+          timeoutMs: 240000,
+          numPredict: 1200,
+        });
         const visualContext = parseJsonContent(visionResult?.message?.content);
-        const reasoningResult = await chat(net, payload.endpoint, model, [
+
+        await unloadModel(net, payload.endpoint, vision.model, event);
+        emitProgress(event, `Chuyển sang reasoning model ${model} với visual context đã rút gọn.`);
+
+        const reasoningResult = await chatStream(net, payload.endpoint, model, [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `TRANSCRIPT SRT:\n${transcript}\n\nVISUAL ANALYSIS JSON:\n${JSON.stringify(visualContext)}` },
-        ]);
+        ], {
+          event,
+          phase: 'Reasoning/remix',
+          format: FINAL_SCHEMA,
+          timeoutMs: 360000,
+          numPredict: 2200,
+        });
         finalAnalysis = parseJsonContent(reasoningResult?.message?.content);
       }
 
@@ -195,10 +502,14 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
         used_vision_fallback: vision.model !== model,
       };
     } catch (err) {
-      const message = err?.name === 'AbortError'
-        ? 'Ollama quá thời gian phản hồi khi phân tích video.'
-        : (err?.message || 'Không thể phân tích video bằng Ollama.');
-      return { ok: false, error: message };
+      emitProgress(event, `FAIL: ${err?.message || 'Không thể phân tích video bằng Ollama.'}`, 'error');
+      return {
+        ok: false,
+        code: err?.code || 'OLLAMA_ANALYSIS_FAILED',
+        phase: err?.phase || null,
+        model: err?.model || null,
+        error: err?.message || 'Không thể phân tích video bằng Ollama.',
+      };
     }
   });
 };
