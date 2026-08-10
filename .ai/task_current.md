@@ -7,14 +7,15 @@ BUG-005
 Pipeline 1 Full Processing Chain
 
 ## Status
-WAITING_CODE_REVIEW
+WAITING_OWNER_TEST
 
 ## Base
 - Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
 - Base SHA: `dd520054b385ae18b8154b7c897eb9baad7eac02`
 
-## Review branch
-`review/BUG-005-P1-FULL-CHAIN`
+## Review branch / PR
+- Branch: `review/BUG-005-P1-FULL-CHAIN`
+- Draft PR: #41
 
 ## Goal
 Make the approved Pipeline 1 Start flow execute the enabled chain correctly:
@@ -45,20 +46,21 @@ Make the approved Pipeline 1 Start flow execute the enabled chain correctly:
 - `pipeline1-run-config.js` Git blob: `a26dc1230a91c252ce49139772b2b4afffde7c6f`; exact reconstructed hash match + `node --check` PASS.
 - `pipeline1-ai.js` Git blob: `12859d4e40d84c716a479820610fef2fe692bd37`; exact reconstructed hash match + `node --check` PASS.
 - Targeted simulation: PASS for valid config snapshot, strict AI failure rejection, strict TTS failure rejection.
+- PR #41 base/head/scope verified directly from GitHub.
 - Net product source diff against canonical: exactly two files listed above.
 - No approved UI source changes.
 - No P2/P3 product source changes.
-- GitHub CI: not configured.
+- GitHub CI: not configured; PR comments: none unresolved.
 
 ## Gates
 - Execution: PASS.
 - Automated/static verification: PASS.
-- Code review: WAITING.
-- Owner manual app verification: NOT STARTED / NOT AUTHORIZED.
+- Code review: PASS for Owner runtime test.
+- Owner manual app verification: NOT STARTED / AUTHORIZED.
 - Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
 
-## Owner test after code review PASS
+## Owner test
 With a valid provider/model/prompt and selected voice:
 1. add a fresh P1 job;
 2. Start must log the run configuration;
