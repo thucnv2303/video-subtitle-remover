@@ -17,13 +17,13 @@
 - [x] Draft PR #43 targets `review/PIPELINE2-APPROVED-UI-001`.
 - [x] Final application-source scope is only `src/renderer/js/pipeline2-runtime.js` and `src/renderer/js/pipelines/pipeline2-remove.js`.
 - [x] Backend/P1/P3/Settings/dependencies/pipeline-state unchanged.
-- [x] Runtime hardening commit: `a59a11365258656a02faae21863dbc10d4570ab5`.
+- [x] Current source commit: `0e20fc0c6300240276da8e4bef16f67186a08889`.
 
 ## Automated/static evidence
 - [x] Exact published runtime blob `f2b39abb2a948eb14e21665f6e0f234a1bef6ae1` matches locally tested hash; `node --check` PASS.
-- [x] Exact published `pipeline2-remove.js` blob `d0fab97dc0702f4a7d0dd5b18f30ae40b7f7368b` reconstructed byte-identical; `node --check` PASS.
-- [ ] Exact unchanged `src/renderer/js/app.js` `node --check` — WAITING.
-- [ ] Repository `git diff --check` — WAITING exact checkout.
+- [x] Exact published `pipeline2-remove.js` blob `67340ba29825ced3b4e5e5c583b591cba0ed2510` matches locally tested hash; `node --check` PASS.
+- [x] Exact unchanged `src/renderer/js/app.js` blob `99c2cafa509ba2038b98f135156b34271da58c70` reconstructed byte-identical; `node --check` PASS.
+- [x] Exact changed-file parent→current reconstruction: `git diff --check` PASS.
 - [x] ROI portrait-letterbox simulation <=1 CSS px; latest max error 0.25 px.
 - [x] Two-region masks remain independent: `box`, `tight`.
 - [x] Legacy region missing `maskMode` falls back to job mask `soft` in simulation.
@@ -38,7 +38,7 @@
 - [x] Compare `d84d809...` → `cec1842...` shows zero final file differences.
 - [x] Final PR changed-file set contains no probe file.
 
-## Fresh Owner runtime verification — BLOCKED UNTIL CODE REVIEW PASS
+## Fresh Owner runtime verification — READY
 - [ ] Draw ROI at center/bottom/side positions; overlay remains under exact drag rectangle.
 - [ ] Resize/change frame; ROI stays aligned to the same video pixels.
 - [ ] Create at least two regions with different masks; selections remain independent.
@@ -52,8 +52,8 @@
 
 ## Gates
 - Execution: PASS.
-- Automated verification: PARTIAL PASS / WAITING two required static checks.
-- Code review: WAITING.
-- Owner manual app verification: NOT STARTED for revision 002.
+- Automated verification: PASS.
+- Code review: PASS.
+- Owner manual app verification: NOT STARTED — READY FOR OWNER RETEST.
 - Documentation synchronization: PASS at this checkpoint.
 - Merge permission: BLOCKED.
