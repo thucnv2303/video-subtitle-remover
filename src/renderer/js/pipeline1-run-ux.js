@@ -35,6 +35,39 @@ function injectStyles() {
   document.head.appendChild(link);
 }
 
+function logLine(container, progressKey) {
+  if (!container || !progressKey) return null;
+  return [...container.querySelectorAll('.log-entry')].find(entry => entry.dataset.progressKey === progressKey) || null;
+}
+
+function formatLogText(message) {
+  const time = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+  return `[${time}] ${message}`;
+}
+
+function updateProgressLog(progressKey, message, type = 'info', done = false) {
+  if (!progressKey || !message) return;
+  const containers = [
+    document.getElementById('log-output'),
+    document.getElementById('step1-log-output'),
+  ].filter(Boolean);
+
+  for (const container of containers) {
+    let entry = logLine(container, progressKey);
+    if (!entry) {
+      entry = document.createElement('div');
+      entry.className = `log-entry log-${type}`;
+      entry.dataset.progressKey = progressKey;
+      container.appendChild(entry);
+    }
+    entry.className = `log-entry log-${type}`;
+    entry.textContent = formatLogText(message);
+    if (done) entry.dataset.progressDone = 'true';
+    container.scrollTop = container.scrollHeight;
+  }
+}
+window.updateP1ProgressLog = updateProgressLog;
+
 function syncButton(button) {
   const appState = state();
   if (!button || !appState) return;
@@ -76,7 +109,7 @@ async function stopP1(button) {
   if (current) {
     current._p1Cancelled = true;
     current._p1StopRequested = true;
-    try { current._ttsAbortController?.abort(); } catch { /* no-op */ }
+    try { current._ttsAbortController?.abort('owner-stop'); } catch { /* no-op */ }
   }
 
   p1Jobs(appState).forEach(job => {
@@ -94,9 +127,7 @@ async function stopP1(button) {
   if (current?.id && window.electronAPI?.cancelP1Vision) {
     requests.push(window.electronAPI.cancelP1Vision({ job_id: current.id }));
   }
-  if (window.api?.cancelProcess) {
-    requests.push(window.api.cancelProcess());
-  }
+  if (window.api?.cancelProcess) requests.push(window.api.cancelProcess());
   await Promise.allSettled(requests);
 
   window.renderJobList?.();
