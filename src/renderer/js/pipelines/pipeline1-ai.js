@@ -93,6 +93,13 @@ export async function triggerAutoTts(job, srtText) {
     }
 
     job.ttsAudioPath = ttsData.audio_path;
+    if (job.p1ArtifactDir && window.electronAPI?.persistP1Audio) {
+      const persisted = await window.electronAPI.persistP1Audio({ source_path: job.ttsAudioPath, artifact_dir: job.p1ArtifactDir });
+      if (!persisted?.ok || !persisted?.audio_path) throw new Error(persisted?.error || 'Không thể lưu audio TTS vào P1 artifacts.');
+      job.ttsAudioPath = persisted.audio_path;
+      job.p1ArtifactPaths = job.p1ArtifactPaths || {};
+      job.p1ArtifactPaths.voice = persisted.audio_path;
+    }
     job.ttsTimedSrt = ttsData.srt_content || _buildTimedSrt(srtText, job.srtContent);
     job.ttsAudioDurMs = ttsData.audio_duration_ms || 0;
     job.ttsSegmentsTiming = ttsData.segments_timing || [];
