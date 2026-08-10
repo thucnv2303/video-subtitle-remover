@@ -7,69 +7,55 @@ PIPELINE2-MANUAL-REGION-REVISION-002
 Pipeline 2 Manual ROI Geometry, Per-Region Mask, and Compact Inpaint Log
 
 ## Status
-SOURCE_PUBLISHED — PM_REVIEW_IN_PROGRESS
+PM_REVIEW_WAITING_REQUIRED_STATIC_EVIDENCE
 
-## Parent / authority
-- Parent branch: `review/PIPELINE2-APPROVED-UI-001`.
-- Exact parent head: `39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
-- Active review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
+## Authority
+- Parent: `review/PIPELINE2-APPROVED-UI-001@39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
+- Review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
 - Draft PR: #43.
-- PM source checkpoint: `f73c1f13d28d5d1222998399c4e0c20ac00ae815` before documentation commit.
+- Current source hardening commit: `a59a11365258656a02faae21863dbc10d4570ab5`.
 
-## Owner outcome targeted
-1. Manual ROI remains on the exact video pixels dragged, including portrait/letterboxed display.
-2. Each manual region has an independent persisted mask mode.
-3. P2 visible Console stays compact during inpaint without hiding real failures.
-
-## Published source
-Source commits:
-- `f2928efb59459e45c6c9a78fdfc6b0a27004d010` — initial implementation.
-- `f73c1f13d28d5d1222998399c4e0c20ac00ae815` — self-review correction/hardening.
-
-Changed source relative to parent:
+## Scope
+Changed application source only:
 - `src/renderer/js/pipeline2-runtime.js`
 - `src/renderer/js/pipelines/pipeline2-remove.js`
 
-The final runtime enhancer:
-- maps manual pointer geometry using `canvas-original.getBoundingClientRect()`;
-- includes letterbox offsets in overlay positioning;
-- blocks draw-start outside the rendered canvas;
-- stores `maskMode` on new regions and renders an independent Box/Tight/Soft selector;
-- preserves legacy region fallback to `job.maskMode || 'box'`;
-- adapts the actual active `window.api.startProcessBatch` manual request to the region for `state.processingPassIndex`;
-- suppresses successful frame/status/preview/health/gpu access noise plus expected early preview 404 during active P2 only.
+Do not change backend/STTN algorithm, preload/python bridge, `pipeline-state.js`, P1, P3, Settings or dependencies.
 
-## Preserved boundaries
-- no `api/server.py` change;
-- no python bridge/preload change;
-- no `pipeline-state.js` change;
-- no P1/P3/Settings/dependency change;
-- no subtitle-removal algorithm rewrite;
-- realtime `/api/preview` remains in place;
-- P3 remains success-only unlock.
+## Implemented behavior
+1. Manual ROI uses the actual rendered `canvas-original` rectangle and letterbox offsets.
+2. Manual capture blocks legacy wrapper drawing, including clicks that begin in letterbox space.
+3. Runtime observers reassert corrected region UI/overlays immediately after legacy DOM rendering.
+4. New regions store the current global mask selector value as their own `maskMode`.
+5. Each region can independently select Box/Tight/Soft; legacy region fallback remains supported.
+6. Active manual request uses the current region mask.
+7. P2 visible Console suppresses successful frame/poll traffic and expected preview 404 while preserving real errors/progress/completion.
+8. Existing realtime preview, runtime backend discovery and P3 success-only unlock remain intact.
 
 ## Verification
-Deterministic simulation PASS:
-- letterboxed portrait ROI round-trip max tested edge error 0.125 CSS px;
-- region masks `box` and `tight` remain distinct;
-- legacy region without `maskMode` falls back to job mask `soft`;
-- `/api/frame` 200 and expected `/api/preview` 404 classify as hidden;
-- `/api/preview` 500 and completion classify as visible.
-
-GitHub compare from exact parent to source checkpoint: only two approved source files changed.
+PASS:
+- exact published runtime blob `f2b39abb2a948eb14e21665f6e0f234a1bef6ae1` == local tested blob; `node --check` PASS;
+- exact published `pipeline2-remove.js` blob `d0fab97dc0702f4a7d0dd5b18f30ae40b7f7368b` reconstructed byte-identical; `node --check` PASS;
+- deterministic letterbox ROI simulation <=1 CSS px, latest max error 0.25 px;
+- mask resolution `box`, `tight`, legacy fallback `soft`;
+- log filter keeps preview 500/completion visible while hiding frame 200/expected preview 404;
+- GitHub final source scope limited to the two approved source files.
 
 WAITING:
-- exact published-blob `node --check`;
-- local-checkout `git diff --check`;
-- GitHub CI/checks (not configured).
+- `node --check src/renderer/js/app.js` on exact unchanged blob;
+- repository `git diff --check` on an exact checkout;
+- GitHub CI is not configured.
+
+## Controlled publication incident
+PM accidentally created `.ai/.pm_probe_should_not_exist` in `78252c198e6790722e92877c17bfee62312877a0`, then removed it in `cec184210ab9a622c5c62163712ff0f44a9ffe5c` without force/history rewrite. Compare from the pre-probe docs head `d84d8092f1dcb7f816c890fe1b38da0cbb942a0f` to cleanup head shows zero final file differences. Treat this as contained but recorded evidence.
 
 ## Gates
-- Execution: PASS for source publication.
-- Automated/static verification: PARTIAL PASS / WAITING remaining exact syntax + diff check.
-- Code review: IN PROGRESS.
-- Owner manual app verification: fresh retest NOT STARTED; previous P2 retest PARTIAL PASS / NEEDS_REVISION.
-- Documentation synchronization: PASS at publication checkpoint.
+- Execution: PASS.
+- Automated verification: PARTIAL PASS / WAITING two required static checks.
+- Code review: WAITING.
+- Owner manual app verification: NOT STARTED for this revision.
+- Documentation synchronization: PASS at this checkpoint.
 - Merge permission: BLOCKED.
 
 ## Merge rule
-No merge until required verification, PM code review, fresh Owner runtime PASS, owner result documentation, documentation synchronization and explicit PM approval are complete.
+No merge until required verification, PM code review, fresh Owner runtime PASS, owner-result documentation sync and explicit PM approval are complete.

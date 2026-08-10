@@ -4,63 +4,46 @@
 `PIPELINE2-MANUAL-REGION-REVISION-002 — Manual ROI Geometry, Per-Region Mask, and Compact Inpaint Log`
 
 ## Status
-SOURCE PUBLISHED / PM REVIEW IN PROGRESS
+PM REVIEW WAITING REQUIRED STATIC EVIDENCE
 
 ## Review basis
-- Parent P2 branch: `review/PIPELINE2-APPROVED-UI-001`.
-- Exact parent head: `39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
-- Active review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
+- Parent P2: `review/PIPELINE2-APPROVED-UI-001@39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
+- Review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
 - Draft PR: #43.
-- Source checkpoint before docs: `f73c1f13d28d5d1222998399c4e0c20ac00ae815`.
+- Current source hardening commit: `a59a11365258656a02faae21863dbc10d4570ab5`.
 
-## Owner retest intake carried forward
-Working from the previous P2 retest:
-- backend/STTN processing works;
-- realtime result preview works;
-- performance materially improved;
-- clean-video output was created;
-- P3 unlocked on successful P2 completion.
-
-Remaining Owner-reported defects targeted by this revision:
-1. shifted manual ROI under approved letterboxed layout;
-2. missing per-region mask selection;
-3. noisy inpaint Console.
-
-## Direct PM implementation
-Changed source is limited to:
+## Current source state
+Application source changes remain limited to:
 - `src/renderer/js/pipeline2-runtime.js`;
 - `src/renderer/js/pipelines/pipeline2-remove.js`.
 
-Published source commits:
-- `f2928efb59459e45c6c9a78fdfc6b0a27004d010`;
-- `f73c1f13d28d5d1222998399c4e0c20ac00ae815`.
-
-Final behavior:
-- pointer/source/overlay mapping derives from the rendered `canvas-original` rectangle and letterbox offsets;
-- draw start outside actual canvas is rejected;
-- each new manual region stores a mask and region list exposes independent Box/Tight/Soft selection;
-- legacy region without mask remains valid through job/default fallback;
-- actual active manual request is adapted to the current region mask before `/api/process`;
-- successful frame/poll access lines and expected early preview 404 are coalesced from the visible P2 Console while unexpected errors remain visible.
+The runtime enhancer now owns manual ROI capture against the rendered canvas, includes letterbox offsets, suppresses the legacy wrapper draw path while manual capture is active, reasserts corrected region list/overlay DOM after legacy rendering, stores independent region masks, adapts the active manual payload, and compacts expected P2 access-log noise.
 
 Preserved: backend discovery, realtime preview, STTN behavior, P1→P2 gate and P3 success-only unlock.
 
-## Verification / evidence
-- GitHub compare parent → source checkpoint: exactly two source files changed.
-- Deterministic letterbox ROI simulation: maximum tested edge error 0.125 CSS px — PASS.
-- Region mask simulation: distinct `box`/`tight`; legacy fallback `soft` — PASS.
-- Log classification: frame 200 + preview 404 hidden; preview 500 + completion visible — PASS.
-- Exact published-blob Node syntax check: WAITING in current environment.
-- `git diff --check`: WAITING in current environment.
-- GitHub CI/status checks: not configured.
+## Verification evidence
+- Runtime published blob `f2b39abb2a948eb14e21665f6e0f234a1bef6ae1`: exact local hash match + `node --check` PASS.
+- `pipeline2-remove.js` published blob `d0fab97dc0702f4a7d0dd5b18f30ae40b7f7368b`: byte-identical reconstruction + `node --check` PASS.
+- ROI deterministic simulation: PASS, latest maximum tested error 0.25 CSS px.
+- Region-mask simulation: PASS (`box`, `tight`, legacy fallback `soft`).
+- Log simulation: PASS; frame 200/expected preview 404 hidden, preview 500/completion visible.
+- GitHub scope review: no backend/P1/P3/pipeline-state/dependency changes.
+- No GitHub CI/status checks configured.
+
+Still WAITING:
+- exact unchanged `app.js` `node --check` required by task spec;
+- repository `git diff --check` from an exact checkout.
+
+## Controlled publication incident
+A PM verification probe accidentally created `.ai/.pm_probe_should_not_exist` in commit `78252c198e6790722e92877c17bfee62312877a0`. It was immediately deleted in `cec184210ab9a622c5c62163712ff0f44a9ffe5c`, with no reset/force/history rewrite. GitHub compare `d84d809...` → `cec1842...` has zero final changed files. Final PR scope contains no probe artifact.
 
 ## Gates
-- Execution: PASS for source publication.
-- Automated/static verification: PARTIAL PASS / WAITING exact syntax + diff check.
-- Code review: IN PROGRESS.
+- Execution: PASS.
+- Automated verification: PARTIAL PASS / WAITING remaining required checks.
+- Code review: WAITING.
 - Owner manual verification: fresh revision-002 retest NOT STARTED.
-- Documentation synchronization: PASS at publication checkpoint.
+- Documentation synchronization: PASS at this checkpoint.
 - Merge permission: BLOCKED.
 
 ## Next action
-Project Manager finishes GitHub review of PR #43 and issues explicit Owner-retest authorization only if the review gate is acceptable. Do not merge.
+Obtain the two remaining required static checks from an exact checkout or equivalent trusted evidence. Do not start Owner testing and do not merge before PM code review PASS.

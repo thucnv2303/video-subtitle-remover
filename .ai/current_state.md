@@ -1,72 +1,59 @@
 # Current State
 
 ## Status
-PIPELINE2-MANUAL-REGION-REVISION-002 — SOURCE PUBLISHED / PM REVIEW CHECKPOINT
+PIPELINE2-MANUAL-REGION-REVISION-002 — PM SOURCE REVIEW / VERIFICATION IN PROGRESS
 
-## Canonical product foundation
-- Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`.
-- Canonical merged task base before stacked P1 work: `dd520054b385ae18b8154b7c897eb9baad7eac02`.
-- Settings V1 PR #38: MERGED / Owner PASS.
-- Pipeline 1 approved UI PR #39: MERGED / Owner PASS.
-- Pipeline 1 → Pipeline 2 handoff PR #40: MERGED / Owner PASS.
+## Authority
+- Repository: `thucnv2303/video-subtitle-remover`.
+- Parent P2 branch: `review/PIPELINE2-APPROVED-UI-001`.
+- Exact parent head: `39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
+- Active review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
+- Draft PR: #43.
+- Current reviewed source hardening commit: `a59a11365258656a02faae21863dbc10d4570ab5`.
 
-## Preserved Pipeline 1 checkpoint
-- Branch: `review/BUG-005-P1-FULL-CHAIN`.
-- Draft PR: #41.
-- P2 stacked base SHA: `97d5a13e77b6919931c251c74fab4c191fa04cec`.
-- PR #41 remains unmerged and preserved as the current functional checkpoint.
+## Owner outcome targeted
+The previous P2 retest proved backend/STTN execution, realtime preview, clean output and P3 success unlock, but remained PARTIAL PASS because:
+1. manual ROI was displaced under the letterboxed portrait layout;
+2. manual regions did not persist independent mask modes;
+3. visible P2 Console contained frame/poll noise.
 
-## Parent Pipeline 2 checkpoint
-- Branch: `review/PIPELINE2-APPROVED-UI-001`.
-- Draft PR: #42.
-- Exact parent head used for revision 002: `39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
-- Owner UI/layout: PASS.
-- Previous runtime retest: backend/STTN/realtime preview/output/P3 unlock materially improved; overall PARTIAL PASS / NEEDS_REVISION because ROI, region mask and Console defects remained.
-
-## Active direct-PM source revision
-Task: `PIPELINE2-MANUAL-REGION-REVISION-002`.
-Review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
-Draft PR: #43, base `review/PIPELINE2-APPROVED-UI-001`.
-
-Source publication:
-- `f2928efb59459e45c6c9a78fdfc6b0a27004d010` — initial narrow source implementation.
-- `f73c1f13d28d5d1222998399c4e0c20ac00ae815` — PM self-review correction/hardening checkpoint.
-
-Changed source relative to exact parent head is limited to:
+## Current source revision
+Changed application source relative to the exact parent is limited to:
 - `src/renderer/js/pipeline2-runtime.js`;
 - `src/renderer/js/pipelines/pipeline2-remove.js`.
 
-No backend, preload/python bridge, `pipeline-state.js`, P1, P3, Settings or dependency source is changed by revision 002.
+Current behavior:
+- ROI source/display conversion uses `canvas-original.getBoundingClientRect()` and letterbox offsets;
+- draw starts outside the rendered video are rejected and the legacy wrapper handler is suppressed while manual drawing is active;
+- runtime observers immediately restore corrected region UI/overlays after legacy list/frame rendering mutates the DOM;
+- new regions inherit the current global mask selector and persist `maskMode` independently;
+- legacy regions fall back to `job.maskMode || 'box'`;
+- the active manual request resolves the current region mask;
+- successful `/api/frame/...` and poll logs plus expected active `/api/preview` 404 lines are suppressed without suppressing unexpected errors.
 
-## Implemented behavior
-- Manual ROI mapping uses the actual rendered `canvas-original` rectangle rather than the full preview wrapper.
-- Letterbox offset is included when drawing saved overlays.
-- New manual regions store their own `maskMode`; existing regions without it fall back to job/default mask.
-- Region list exposes independent Box/Tight/Soft selection per region.
-- Active manual P2 request payload is adapted to the current region mask while preserving the existing app.js runner.
-- Visible P2 Console suppresses successful frame/poll access noise plus expected early `/api/preview` 404 lines only while P2 is active; unexpected errors remain visible.
-- Existing realtime result preview, backend discovery, STTN behavior and success-only P3 unlock are intentionally preserved.
+No backend, preload/python bridge, `pipeline-state.js`, P1, P3, Settings or dependency source is changed by this task.
 
 ## Verification evidence
-Deterministic logic simulation:
-- 720x960 source rendered as 450x600 centered in an 800px-wide wrapper: tested top-left, center, bottom-right and arbitrary ROI round-trip with maximum edge error 0.125 CSS px — PASS against <=1 px criterion.
-- Region masks resolved `box`, `tight`; legacy missing-region-mask case resolved job fallback `soft` — PASS.
-- Log classification: frame 200 hidden; preview 404 hidden; preview 500 visible; completion visible — PASS.
+- Published runtime blob SHA: `f2b39abb2a948eb14e21665f6e0f234a1bef6ae1`; identical local file hash and `node --check`: PASS.
+- Published `pipeline2-remove.js` blob SHA: `d0fab97dc0702f4a7d0dd5b18f30ae40b7f7368b`; reconstructed byte-identical blob hash and `node --check`: PASS.
+- Deterministic ROI simulation: <=1 CSS px criterion PASS; latest run maximum error 0.25 px.
+- Mask simulation: `box`, `tight`, legacy fallback `soft` — PASS.
+- Log simulation: frame 200 hidden; preview 404 hidden; preview 500/completion visible — PASS.
+- GitHub compare parent → `a59a113...`: final tree contains only the two approved source files plus canonical task documentation.
+- GitHub CI/status checks: none configured.
+- Required `node --check src/renderer/js/app.js`: WAITING; `app.js` is unchanged by this revision.
+- Required repository `git diff --check`: WAITING because this environment has no GitHub-resolvable local checkout.
 
-GitHub compare `39c2ac7...` → `f73c1f1...`: exactly two source files, +270/-2 total.
-
-Still unavailable in this ChatGPT execution environment:
-- exact published-blob `node --check` for the modified JS files;
-- repository `git diff --check` against a local checkout.
-Container network cannot resolve GitHub and GitHub CI/status checks are not configured. These are not claimed PASS.
+## Controlled publication incident
+During PM verification an accidental one-line probe file `.ai/.pm_probe_should_not_exist` was created in commit `78252c198e6790722e92877c17bfee62312877a0` and immediately removed in normal follow-up commit `cec184210ab9a622c5c62163712ff0f44a9ffe5c`. No force/history rewrite was used. GitHub compare `d84d809...` → `cec1842...` reports zero final file differences, and the final PR changed-file set contains no probe file. The incident is therefore contained, but is recorded rather than hidden.
 
 ## Gates
-- Execution: PASS for direct-PM source publication to dedicated review branch/Draft PR.
-- Automated/static verification: PARTIAL PASS — deterministic ROI/mask/log simulations PASS; exact-blob JS syntax and `git diff --check` WAITING; no GitHub CI configured.
-- Code review: IN PROGRESS / final decision not yet granted at this documentation checkpoint.
-- Owner manual app verification: previous retest PARTIAL PASS / NEEDS_REVISION; fresh revision-002 retest NOT STARTED.
-- Documentation synchronization: PASS at this source-publication checkpoint.
+- Execution: PASS for source publication.
+- Automated verification: PARTIAL PASS / WAITING `app.js` syntax + repository `git diff --check`.
+- Code review: WAITING remaining required verification.
+- Owner manual app verification: fresh revision-002 retest NOT STARTED.
+- Documentation synchronization: PASS at this checkpoint.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Project Manager completes direct GitHub review of PR #43 current head, including exact diff/full source and scope. Fresh Owner runtime retest remains blocked until code review is explicitly authorized. Do not merge.
+Complete the two missing static checks from an exact checkout or equivalent trusted evidence. Only after code review PASS may Owner retest PR #43. Do not merge.
