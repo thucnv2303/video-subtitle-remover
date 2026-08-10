@@ -1,47 +1,39 @@
 # AgentOS Handoff Status
 
-## Canonical baseline
+## Canonical branch
 `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
 
-Post-Settings canonical source HEAD:
-`e578e48c22a79c69005f2d3373599addfc412ecf`
+## Accepted merged foundation
+- Settings V1 PR #38: MERGED / Owner PASS.
+- Pipeline 1 UI PR #39: MERGED / Owner PASS.
+  - Merge commit: `bf166660807423ec5d97ed365e9735940b2804e3`.
+- Pipeline 1 → Pipeline 2 handoff PR #40: MERGED / Owner PASS.
+  - Merge commit: `9a0b301171d047ccb0280eabe917f1bcd9ea85c2`.
 
-Settings V1:
-MERGED / OWNER PASS — PR #38.
-
-## Pipeline 1 UI foundation
-- Branch: `review/PIPELINE1-APPROVED-UI-001`
-- Draft PR #39
-- Owner runtime UI verification: PASS.
-- Approved UI HEAD used by current task: `2324d922de4874af1eb33f5dec2ea2d63a2bb968`.
-
-## Active task
-`PIPELINE1-HANDOFF-001`
+## Current task
+`BUG-005 — Pipeline 1 Full Processing Chain`
 
 ## Status
-OWNER_RUNTIME_PASS
+READY_FOR_IMPLEMENTATION
 
-## Review branch / PR
-- `review/PIPELINE1-HANDOFF-001`
-- Draft PR #40
+## Accepted constraints that must remain unchanged
+- Approved Pipeline 1 UI must not regress.
+- P1 upload remains hidden from P2 until P1 succeeds.
+- P1 error/cancel keeps P2 locked.
+- P1 success unlocks only the matching P2 job.
+- P2 performs subtitle removal only.
+- P2 success unlocks P3.
 
-## Accepted runtime behavior
-- P1 processing route is now separated from premature P2 visibility.
-- P1 success performs the handoff and unlocks P2.
-- P2 remains the subtitle-removal stage and P3 is not opened by P1 alone.
-- Owner runtime verification on 2026-08-10: PASS for the handoff route.
-- Runtime screenshot/log shows ASR completed, AI rewrite skipped, TTS skipped, P1 completed, and P2 was automatically unlocked.
+## Next implementation target
+Repair and verify the full enabled Pipeline 1 chain:
+`ASR → AI Rewrite → TTS → P1 COMPLETE → P2 READY`.
 
-## Remaining functional focus
-BUG-005 remains open/narrowed: full Pipeline 1 execution with AI rewrite + TTS enabled still requires a dedicated runtime verification/repair pass. This next task must preserve the approved P1 UI and the accepted P1→P2 handoff contract.
+Owner runtime has already verified the ASR + handoff path when AI rewrite/TTS are skipped. The next task must prove the enabled AI rewrite and TTS stages and correct completion/error semantics.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS.
-- Code review: PASS.
-- Owner manual app verification: PASS for PIPELINE1-HANDOFF-001.
+- Execution: NOT STARTED.
+- Automated verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: NOT STARTED.
 - Documentation synchronization: PASS.
-- Merge permission: BLOCKED pending explicit Owner/Project Manager approval to merge.
-
-## Next action
-After explicit merge decision for the accepted handoff work, open the focused BUG-005 task for the full ASR → AI rewrite → TTS → P1 complete chain.
+- Merge permission: BLOCKED.
