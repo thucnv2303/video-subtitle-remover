@@ -1,3 +1,5 @@
+import '../pipeline-state.js';
+
 /**
  * Pipeline 1 — AI Analysis + TTS Chain
  *
@@ -171,7 +173,7 @@ export async function triggerAutoTts(job, srtText) {
       window.renderVoiceSegments([{ text: 'Auto TTS', audio_path: job.ttsAudioPath }]);
     }
 
-    _addLog('[TTS] ✅ Pipeline 1 hoàn tất — chuyển sang Pipeline 3 để hoàn thiện video.', 'success');
+    _addLog('[TTS] ✅ TTS hoàn tất — chờ Pipeline 1 đóng gói kết quả và mở khóa Pipeline 2.', 'success');
 
   } catch (e) {
     _addLog('[TTS] ❌ Lỗi pipeline TTS: ' + e.message, 'error');
