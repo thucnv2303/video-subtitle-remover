@@ -1,45 +1,42 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-HANDOFF-001
+BUG-005
 
 ## Name
-Pipeline 1 → Pipeline 2 State/Handoff Gate
+Pipeline 1 Full Processing Chain
 
 ## Status
-OWNER_RUNTIME_PASS
+READY_FOR_IMPLEMENTATION
 
-## Base
-`2324d922de4874af1eb33f5dec2ea2d63a2bb968`
+## Canonical base
+- Branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
+- Latest accepted merge lineage includes:
+  - PR #39 UI merge `bf166660807423ec5d97ed365e9735940b2804e3`
+  - PR #40 handoff merge `9a0b301171d047ccb0280eabe917f1bcd9ea85c2`
 
-## Review branch / PR
-- Branch: `review/PIPELINE1-HANDOFF-001`
-- Draft PR: #40
+## Goal
+Make the approved Pipeline 1 Start flow execute the full enabled chain correctly:
+`ASR → AI Rewrite → TTS → P1 COMPLETE → P2 READY`.
 
 ## Required behavior
-- Upload creates a P1 job only.
-- P2 remains locked/hidden until P1 succeeds.
-- P1 error/cancel stays locked from P2.
-- P1 success makes the exact job ready in P2.
-- P2 processes the ORIGINAL source video only for subtitle removal.
-- P2 cannot accept direct upload/drop bypass.
-- P2 success, not P1 success, opens P3.
+- Preserve the approved Pipeline 1 UI.
+- Preserve the accepted P1→P2 handoff gate.
+- P1 must never perform subtitle removal or final rendering.
+- AI rewrite must use the selected provider/model/prompt.
+- TTS must use the selected voice/settings when enabled.
+- P1 must only mark complete after all enabled P1 stages finish successfully.
+- P2 remains locked on P1 failure/cancel.
+- Successful P1 completion unlocks exactly the matching P2 job.
 
-## Verification
-- Static/source review: PASS.
-- State/guard simulations: PASS.
-- Owner runtime verification on 2026-08-10: PASS for the P1→P2 handoff/processing route.
-- Runtime evidence shows ASR completed, AI rewrite and TTS were skipped in this test, P1 completed, and P2 was automatically unlocked.
-- BUG-008: resolved by Owner runtime evidence.
-- BUG-005: remains open/narrowed because the full enabled AI rewrite + TTS chain has not yet been verified.
+## Known evidence
+- Owner runtime on PR #40 proved ASR can complete and handoff can work when AI rewrite/TTS are skipped.
+- Full enabled AI rewrite + TTS chain is not yet runtime verified.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS.
-- Code review: PASS.
-- Owner manual app verification: PASS for this handoff task.
-- Documentation synchronization: PASS.
-- Merge permission: BLOCKED pending explicit merge approval.
-
-## Next focused task
-Verify and repair the full Pipeline 1 chain with AI rewrite + TTS enabled, without changing the approved UI or the accepted P1→P2 handoff contract.
+- Execution: NOT STARTED.
+- Automated verification: WAITING.
+- Code review: WAITING.
+- Owner manual app verification: NOT STARTED.
+- Documentation synchronization: PASS for task transition.
+- Merge permission: BLOCKED.
