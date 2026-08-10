@@ -1,10 +1,6 @@
 /**
  * Pipeline 1 run configuration bridge.
- *
- * The approved Pipeline 1 UI no longer exposes the legacy AI/TTS enable
- * checkboxes that app.js used to read. This bridge snapshots the approved UI
- * into each idle P1 job immediately before the legacy Start All handler queues
- * the jobs.
+ * Snapshots the approved UI before the legacy queue handler runs.
  */
 
 function _readProviderKeys(provider) {
@@ -30,8 +26,8 @@ function _resolvePrompt(select) {
 function _failStart(event, message) {
   event.preventDefault();
   event.stopImmediatePropagation();
-  if (typeof window.addLog === 'function') window.addLog(`[P1] ❌ ${message}`, 'error');
-  if (typeof window.showToast === 'function') window.showToast(message, 'error', 5000);
+  window.addLog?.(`[P1] ❌ ${message}`, 'error');
+  window.showToast?.(message, 'error', 5000);
 }
 
 function snapshotPipeline1RunConfig(event) {
@@ -58,6 +54,10 @@ function snapshotPipeline1RunConfig(event) {
     _failStart(event, `Nhà cung cấp AI không hợp lệ: ${provider}`);
     return;
   }
+  if (provider !== 'ollama') {
+    _failStart(event, 'Pipeline 1 multimodal hiện chỉ mở cho Ollama local. Cloud provider chưa được phép fallback text-only.');
+    return;
+  }
   if (!model) {
     _failStart(event, 'Hãy chọn model AI trước khi chạy Pipeline 1.');
     return;
@@ -71,7 +71,6 @@ function snapshotPipeline1RunConfig(event) {
     return;
   }
 
-  // Persist values typed in the approved UI even if the field never lost focus.
   localStorage.setItem('ai_provider', provider);
   localStorage.setItem(`ai_model_${provider}`, model);
   if (promptId) localStorage.setItem('ai_active_prompt_id', promptId);
@@ -89,33 +88,30 @@ function snapshotPipeline1RunConfig(event) {
     ttsVoice: voice,
     ttsEnabled,
     ttsSpeed: Number(speedEl?.value || localStorage.getItem('tts_speed') || 1),
+    analysisMode: 'multimodal-keyframes-v1',
   };
 
   idleJobs.forEach(job => {
-    // AI is a required stage of the approved P1 flow. TTS is enabled whenever
-    // the user selected a voice; choosing "none" intentionally disables TTS.
     job.aiRewrite = true;
     job.ttsGenerate = ttsEnabled;
     job.ttsVoice = voice;
+    job.asrLanguage = 'auto';
     job.p1Config = { ...snapshot };
+    job.p1ArtifactsReady = false;
+    job.p1Analysis = null;
+    job.p1Artifacts = null;
     job._aiTriggered = false;
     job._ttsTriggered = false;
     job._ttsRunning = false;
   });
 
-  if (typeof window.addLog === 'function') {
-    window.addLog(
-      `[P1] Cấu hình chạy: AI=${provider}/${model}; TTS=${ttsEnabled ? voice : 'tắt'}.`,
-      'info'
-    );
-  }
+  window.addLog?.(
+    `[P1] Cấu hình chạy: ASR=auto; Analysis=multimodal; AI=${provider}/${model}; TTS=${ttsEnabled ? voice : 'tắt'}.`,
+    'info'
+  );
 }
 
 const startButton = document.getElementById('btn-start-all');
-if (startButton) {
-  // Capture phase runs before the legacy app.js click handler, even though
-  // app.js owns the actual queue transition.
-  startButton.addEventListener('click', snapshotPipeline1RunConfig, true);
-}
+if (startButton) startButton.addEventListener('click', snapshotPipeline1RunConfig, true);
 
 export { snapshotPipeline1RunConfig };
