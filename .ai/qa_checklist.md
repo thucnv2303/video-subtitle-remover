@@ -3,60 +3,48 @@
 ## Active task
 `PIPELINE1-MULTIJOB-RESILIENCE-003`
 
-## Owner failure intake
-- [x] Multi-job P1 reproduced: one Job errored and later Job remained queued.
-- [x] Selection/detail did not reliably follow actual processing Job.
-- [x] Ollama reasoning completed then malformed JSON parsing failed.
+## Owner runtime feedback
+- [x] Multi-job retest reached a real processing state on latest reviewed flow.
+- [x] Owner requested stronger visual distinction for processing Job.
+- [x] Owner requested failed-Job click to show error details.
 
-## Source/scope verification
-- [x] Dedicated branch `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
-- [x] Exact start `5db876b00160415b465d10cd117b44d33ae15159`.
-- [x] Final source commit `100e343427264e128acd8cadc67f279faf450e56`.
-- [x] Source scope only `pipeline1-run-ux.js` and `pipelines/pipeline1-ai.js`.
-- [x] No P2/P3/STTN/Settings source changes.
-- [x] Intermediate contextBridge monkey-patch absent from final source.
+## Source/scope
+- [x] Dedicated branch and Draft PR #44.
+- [x] Latest source commit `0e53a6ade8a67a061db214f6050f60ded6e0944d`.
+- [x] Incremental UX source change only: `pipeline1-run-ux.js` + `pipeline1-run-ux.css`.
+- [x] Existing `pipeline1-ai.js` bounded retry preserved.
+- [x] No P2/P3/STTN/Settings/backend source changes.
 
-## Automated/static evidence
-- [x] run-ux blob `1042d3f65b2555feb32ec960345b7d81f903798d` hash match + `node --check` PASS.
-- [x] pipeline1-ai blob `9451409b5c594b2f4f67650863b00c7a8b4e1571` hash match + `node --check` PASS.
-- [x] Multi-job failure isolation simulation PASS.
-- [x] Running-job selection simulation PASS.
-- [x] Malformed JSON first failure + one retry success => exactly 2 calls PASS.
-- [x] Malformed twice => exactly 2 calls then error PASS.
-- [x] AbortError => no retry PASS.
-- [x] Timeout => no retry PASS.
-- [x] Cancelled Job => no retry PASS.
-- [x] Final source diff whitespace hygiene PASS.
-- [x] GitHub status checks: none configured.
+## Automated/static
+- [x] Exact run-UX blob `504d6b89d8f806169d060ab7507832b43c28c5af` reconstructed byte-identical by `git hash-object`.
+- [x] Exact run-UX `node --check` PASS.
+- [x] GitHub source diff scope reviewed.
+- [x] No configured GitHub status checks.
 
 ## Code review
-- [x] PR #44 open/Draft; correct base branch and base SHA.
-- [x] Exact changed-file list: 7 canonical docs + 2 approved source files.
-- [x] Full final run-ux reviewed.
-- [x] Full final pipeline1-ai reviewed.
-- [x] Queue recovery guards Owner Stop/Cancel path.
-- [x] Retry bounded to one additional analysis call.
-- [x] No raw model payload logging added.
-- [x] No unrelated source changes.
-- [x] No unresolved review threads.
-- [x] PM code review COMMENT/PASS recorded, review id `4897109838`.
+- [x] Processing state uses blue pulse/glow and spinner rather than ambiguous static status.
+- [x] `prefers-reduced-motion` disables animation.
+- [x] Failed Job receives persistent red state.
+- [x] Standard final P1 error log is captured before legacy current-Job cleanup.
+- [x] Error dialog content uses `textContent` only.
+- [x] Error dialog supports close button, backdrop click and Escape.
+- [x] Clicking controls inside a Job card does not trigger the popup.
 
-## Fresh Owner runtime verification — AUTHORIZED / NOT STARTED
-- [ ] Add at least two P1 videos and start batch.
-- [ ] Current Job row/status/detail follows actual processing Job.
-- [ ] Normal completion advances to next Job.
-- [ ] If one Job errors, next queued Job begins automatically and app does not stay stuck.
-- [ ] Owner Stop/Cancel leaves pending Jobs stopped/idle rather than auto-resuming.
-- [ ] If malformed JSON recurs, only one retry warning appears.
-- [ ] Retry success lets current Job continue normally.
-- [ ] Retry failure marks current Job error but next queued Job starts.
-- [ ] No P2/P3 regression observed from this P1-only revision.
+## Owner retest — READY
+- [ ] Processing Job is immediately distinguishable from queued/idle Jobs.
+- [ ] Spinner/pulse stops when Job leaves processing state.
+- [ ] Failed Job stays visibly red.
+- [ ] Clicking failed Job opens popup with the actual latest P1 error when available.
+- [ ] Popup closes normally and does not block queue continuation.
+- [ ] Failed Job still allows next queued Job to start automatically.
+- [ ] Stop/Cancel does not auto-resume pending Jobs.
+- [ ] No P2/P3 regression observed.
 
 ## Gates
 - Execution: PASS.
-- Automated/static verification: PASS.
+- Automated/static verification: PASS for available checks.
 - Code review: PASS.
-- Owner manual app verification: NOT STARTED — READY.
-- Documentation synchronization: PASS after final gate-sync docs publication/reverification.
+- Owner manual app verification: PARTIAL — RETEST READY.
+- Documentation synchronization: PASS after publication/reverification.
 - Merge permission: BLOCKED.
 - Step 3 progression: BLOCKED.
