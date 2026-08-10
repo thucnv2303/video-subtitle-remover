@@ -111,7 +111,7 @@ function syncFromSettings() {
   const voice = document.getElementById('step1-tts-voice');
   const p = localStorage.getItem('ai_provider') || 'gemini';
   if (provider) provider.value = ['gemini','deepseek','ollama'].includes(p) ? p : 'gemini';
-  if (model) model.value = localStorage.getItem(`ai_model_${provider?.value || 'gemini'}`, '') || '';
+  if (model) model.value = localStorage.getItem(`ai_model_${provider?.value || 'gemini'}`) || '';
   fillModelList(provider?.value || 'gemini');
   syncVoiceOptions();
   const savedVoice = localStorage.getItem('tts_voice') || 'none';
