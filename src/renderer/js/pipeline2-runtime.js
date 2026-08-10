@@ -4,6 +4,7 @@
   const PREVIEW_INTERVAL_MS = 850;
   const STATUS_INTERVAL_MS = 1800;
   const UI_TICK_MS = 500;
+  const REGION_COLORS = ['#7c3aed', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#ef4444'];
 
   let installed = false;
   let previewBusy = false;
@@ -17,6 +18,8 @@
   let gpuInfo = null;
   let telemetryJobId = null;
   let unsubscribeWs = null;
+  let manualSelectionStart = null;
+  let manualRegionUiJobId = null;
 
   function state() {
     return window._appState || null;
@@ -29,6 +32,12 @@
     if (!job) return null;
     const isP2 = job.pipeline === 2 || ['queued', 'processing', 'error', 'finished'].includes(job.p2Status);
     return isP2 ? job : null;
+  }
+
+  function activeJob() {
+    const s = state();
+    if (!s?.activeJobId) return null;
+    return s.jobs?.find(item => item.id === s.activeJobId) || null;
   }
 
   function formatElapsed(job) {
@@ -101,7 +110,9 @@
   }
 
   function isNoisyAccessLog(text) {
-    return /\bINFO:\s+127\.0\.0\.1:\d+\s+-\s+"(?:GET|POST) \/api\/(?:status|preview|health|gpu-info)\b.*HTTP\/1\.1"\s+200\s+OK/i.test(text);
+    const successfulPolling = /\bINFO:\s+127\.0\.0\.1:\d+\s+-\s+"(?:GET|POST) \/api\/(?:status|preview|health|gpu-info|frame\/[^\s?"]+)\b[^\"]*HTTP\/1\.1"\s+200\s+OK/i.test(text);
+    const expectedPreviewNotReady = /\bINFO:\s+127\.0\.0\.1:\d+\s+-\s+"GET \/api\/preview\b[^\"]*HTTP\/1\.1"\s+404\s+Not Found/i.test(text);
+    return successfulPolling || expectedPreviewNotReady;
   }
 
   function isHeartbeat(text) {
@@ -149,6 +160,219 @@
         }
       }
     }).observe(output, { childList: true });
+  }
+
+  function renderedCanvasGeometry() {
+    const canvas = document.getElementById('canvas-original');
+    const overlay = document.getElementById('subtitle-overlay');
+    const info = state()?.videoInfo;
+    if (!canvas || !overlay || !info?.width || !info?.height) return null;
+    const canvasRect = canvas.getBoundingClientRect();
+    const overlayRect = overlay.getBoundingClientRect();
+    if (canvasRect.width <= 0 || canvasRect.height <= 0) return null;
+    return {
+      canvas,
+      overlay,
+      canvasRect,
+      overlayRect,
+      offsetX: canvasRect.left - overlayRect.left,
+      offsetY: canvasRect.top - overlayRect.top,
+      scaleToSourceX: Number(info.width) / canvasRect.width,
+      scaleToSourceY: Number(info.height) / canvasRect.height,
+      scaleToDisplayX: canvasRect.width / Number(info.width),
+      scaleToDisplayY: canvasRect.height / Number(info.height)
+    };
+  }
+
+  function pointerToCanvas(event, geometry) {
+    const x = Math.min(geometry.canvasRect.width, Math.max(0, event.clientX - geometry.canvasRect.left));
+    const y = Math.min(geometry.canvasRect.height, Math.max(0, event.clientY - geometry.canvasRect.top));
+    return { x, y };
+  }
+
+  function drawSelectionPreview(start, end, geometry) {
+    let preview = document.getElementById('region-preview');
+    if (!preview) {
+      preview = document.createElement('div');
+      preview.id = 'region-preview';
+      geometry.overlay.appendChild(preview);
+    }
+    const left = geometry.offsetX + Math.min(start.x, end.x);
+    const top = geometry.offsetY + Math.min(start.y, end.y);
+    preview.style.cssText = `position:absolute;pointer-events:none;z-index:10;border:2px dashed #7c3aed;left:${left}px;top:${top}px;width:${Math.abs(end.x-start.x)}px;height:${Math.abs(end.y-start.y)}px`;
+  }
+
+  function regionUiSignature(job) {
+    return (job?.regions || []).map(region => [
+      region.xmin,
+      region.xmax,
+      region.ymin,
+      region.ymax,
+      region.startFrame,
+      region.endFrame,
+      region.maskMode || job?.maskMode || 'box'
+    ].join(':')).join('|');
+  }
+
+  function renderManualRegions(job) {
+    const list = document.getElementById('regions-list');
+    const geometry = renderedCanvasGeometry();
+    if (!job || job.subtitleMode !== 'manual' || !list || !geometry) return;
+
+    const signature = regionUiSignature(job);
+    const listReady = list.dataset.p2RegionSignature === signature && list.querySelectorAll('[data-p2-region-runtime]').length === job.regions.length;
+    if (!listReady) {
+      list.innerHTML = '';
+      if (!job.regions.length) {
+        const empty = document.createElement('div');
+        empty.className = 'region-empty';
+        empty.dataset.p2RegionRuntime = 'true';
+        empty.textContent = 'Bấm "+ Vẽ vùng" rồi kéo chuột trên video';
+        list.appendChild(empty);
+      } else {
+        job.regions.forEach((region, index) => {
+          const item = document.createElement('div');
+          item.className = 'region-item p2-region-runtime-item';
+          item.dataset.p2RegionRuntime = 'true';
+
+          const dot = document.createElement('span');
+          dot.className = 'region-dot';
+          dot.style.background = REGION_COLORS[index % REGION_COLORS.length];
+
+          const label = document.createElement('span');
+          label.className = 'region-label';
+          label.textContent = `Vùng #${region.label} (${region.startFrame}-${region.endFrame})`;
+
+          const mask = document.createElement('select');
+          mask.className = 'p2-region-mask-select';
+          mask.setAttribute('aria-label', `Mask cho vùng ${region.label}`);
+          [['box','Box'], ['tight','Tight'], ['soft','Soft']].forEach(([value, text]) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = text;
+            mask.appendChild(option);
+          });
+          mask.value = region.maskMode || job.maskMode || 'box';
+          mask.addEventListener('change', () => {
+            region.maskMode = mask.value;
+            list.dataset.p2RegionSignature = '';
+          });
+
+          const remove = document.createElement('button');
+          remove.className = 'btn-region-del';
+          remove.type = 'button';
+          remove.textContent = '✕';
+          remove.addEventListener('click', () => {
+            job.regions.splice(index, 1);
+            list.dataset.p2RegionSignature = '';
+            geometry.overlay.dataset.p2RegionSignature = '';
+            renderManualRegions(job);
+          });
+
+          item.append(dot, label, mask, remove);
+          list.appendChild(item);
+        });
+      }
+      list.dataset.p2RegionSignature = signature;
+    }
+
+    const overlayReady = geometry.overlay.dataset.p2RegionSignature === signature && geometry.overlay.querySelectorAll('[data-p2-region-runtime]').length === job.regions.length;
+    if (!overlayReady) {
+      geometry.overlay.querySelectorAll('.region-overlay,[data-p2-region-runtime]').forEach(node => node.remove());
+      job.regions.forEach((region, index) => {
+        const div = document.createElement('div');
+        div.className = 'region-overlay';
+        div.dataset.p2RegionRuntime = 'true';
+        div.style.cssText = `position:absolute;border:2px solid ${REGION_COLORS[index % REGION_COLORS.length]};pointer-events:none;left:${geometry.offsetX + region.xmin * geometry.scaleToDisplayX}px;top:${geometry.offsetY + region.ymin * geometry.scaleToDisplayY}px;width:${(region.xmax-region.xmin) * geometry.scaleToDisplayX}px;height:${(region.ymax-region.ymin) * geometry.scaleToDisplayY}px;`;
+        geometry.overlay.appendChild(div);
+      });
+      geometry.overlay.dataset.p2RegionSignature = signature;
+    }
+    manualRegionUiJobId = job.id;
+  }
+
+  function syncManualRegionUi() {
+    const job = activeJob();
+    if (!job || job.subtitleMode !== 'manual') return;
+    renderManualRegions(job);
+  }
+
+  function installManualRegionGeometry() {
+    const canvasInner = document.getElementById('canvas-inner-orig');
+    if (!canvasInner || canvasInner.dataset.p2ManualGeometry === 'true') return;
+    canvasInner.dataset.p2ManualGeometry = 'true';
+
+    canvasInner.addEventListener('mousedown', (event) => {
+      const s = state();
+      const job = activeJob();
+      if (!s?.isDrawing || !job || job.subtitleMode !== 'manual') return;
+      const geometry = renderedCanvasGeometry();
+      if (!geometry) return;
+      const point = pointerToCanvas(event, geometry);
+      manualSelectionStart = point;
+      s.isSelecting = false;
+      s.selectionStart = null;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, true);
+
+    canvasInner.addEventListener('mousemove', (event) => {
+      if (!manualSelectionStart) return;
+      const geometry = renderedCanvasGeometry();
+      if (!geometry) return;
+      drawSelectionPreview(manualSelectionStart, pointerToCanvas(event, geometry), geometry);
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, true);
+
+    canvasInner.addEventListener('mouseup', (event) => {
+      if (!manualSelectionStart) return;
+      const s = state();
+      const job = activeJob();
+      const geometry = renderedCanvasGeometry();
+      document.getElementById('region-preview')?.remove();
+      if (!s || !job || job.subtitleMode !== 'manual' || !geometry || !s.videoInfo) {
+        manualSelectionStart = null;
+        return;
+      }
+      const end = pointerToCanvas(event, geometry);
+      const start = manualSelectionStart;
+      manualSelectionStart = null;
+
+      const xmin = Math.round(Math.min(start.x, end.x) * geometry.scaleToSourceX);
+      const xmax = Math.round(Math.max(start.x, end.x) * geometry.scaleToSourceX);
+      const ymin = Math.round(Math.min(start.y, end.y) * geometry.scaleToSourceY);
+      const ymax = Math.round(Math.max(start.y, end.y) * geometry.scaleToSourceY);
+      if (xmax - xmin >= 10 && ymax - ymin >= 5) {
+        job.regions.push({
+          xmin,
+          xmax,
+          ymin,
+          ymax,
+          startFrame: 0,
+          endFrame: Number(s.videoInfo.total_frames || 1) - 1,
+          label: job.regions.length + 1,
+          maskMode: job.maskMode || document.getElementById('mask-mode')?.value || 'box'
+        });
+      }
+      s.isDrawing = false;
+      s.isSelecting = false;
+      s.selectionStart = null;
+      document.getElementById('btn-draw-region')?.classList.remove('active');
+      geometry.canvas.style.cursor = 'default';
+      const list = document.getElementById('regions-list');
+      if (list) list.dataset.p2RegionSignature = '';
+      geometry.overlay.dataset.p2RegionSignature = '';
+      renderManualRegions(job);
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, true);
+
+    window.addEventListener('resize', () => {
+      const overlay = document.getElementById('subtitle-overlay');
+      if (overlay) overlay.dataset.p2RegionSignature = '';
+      syncManualRegionUi();
+    });
   }
 
   async function loadGpuTelemetry(job) {
@@ -275,6 +499,17 @@
   }
 
   function tick() {
+    const selected = activeJob();
+    if (selected?.subtitleMode === 'manual') {
+      if (manualRegionUiJobId !== selected.id) {
+        const list = document.getElementById('regions-list');
+        const overlay = document.getElementById('subtitle-overlay');
+        if (list) list.dataset.p2RegionSignature = '';
+        if (overlay) overlay.dataset.p2RegionSignature = '';
+      }
+      syncManualRegionUi();
+    }
+
     const job = currentP2Job();
     if (!job) {
       if (liveRow?.isConnected && liveJobId) {
@@ -297,6 +532,7 @@
     if (!window._appState || !window.api || !document.getElementById('log-output')) return false;
     installed = true;
     installLogCoalescing();
+    installManualRegionGeometry();
     if (typeof window.api.onWebSocketMessage === 'function') unsubscribeWs = window.api.onWebSocketMessage(handleWs);
     setInterval(tick, UI_TICK_MS);
     window.addEventListener('beforeunload', () => unsubscribeWs?.(), { once: true });
