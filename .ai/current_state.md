@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-WAITING_CODE_REVIEW — BUG-005 MULTIMODAL REVISION
+WAITING_OWNER_RETEST — BUG-005 MULTIMODAL REVISION
 
 ## Canonical branch
 `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
@@ -45,14 +45,15 @@ The current revision replaces text-only acceptance with a fail-closed artifact p
 - P1 does not remove subtitles, inpaint, cut, mix final video or render.
 - Existing P1→P2 state gate remains in place.
 
-## Static verification completed on exact GitHub-equivalent source
-- `main.js`, `preload.js`, `p1-vision-ipc.js`, `pipeline1-run-config.js`, `pipeline1-artifact-gate.js`, `pipeline1-analysis.js`, `pipeline1-ai.js`: `node --check` PASS with local Git blob hashes matching the published GitHub blobs.
-- P1 run-config simulation: PASS for `ASR=auto`, multimodal mode, artifact reset and TTS/AI enable snapshot.
-- Ollama selected-model vision simulation: PASS.
-- Ollama fallback-to-separate-vision-model simulation: PASS.
+## Verification and review
+- Exact published equivalents for `main.js`, `preload.js`, `p1-vision-ipc.js`, `pipeline1-run-config.js`, `pipeline1-artifact-gate.js`, `pipeline1-analysis.js`, `pipeline1-ai.js`: `node --check` PASS and local Git blob hash match.
+- P1 run-config ASR-auto/multimodal simulation: PASS.
+- Selected-model vision simulation: PASS.
+- Separate local vision-model fallback simulation: PASS.
 - No-vision-model fail-closed simulation: PASS.
 - TTS temp-audio → P1 artifact copy simulation: PASS.
-- Legacy false-complete → P2 relock artifact-gate simulation: PASS.
+- Legacy false-complete → P2 relock simulation: PASS.
+- GitHub code review on revised source: PASS for fresh Owner retest.
 - GitHub CI: not configured.
 
 ## Known limitation of this revision
@@ -60,9 +61,9 @@ The current revision replaces text-only acceptance with a fail-closed artifact p
 - Scene understanding is based on sampled keyframes + vision reasoning in this revision; a deterministic CV scene-boundary detector remains a later refinement and is not claimed as complete.
 
 ## Gates
-- Execution: PASS for revised candidate publication.
-- Automated/static verification: PASS for syntax/hash/targeted simulations.
-- Code review: WAITING final GitHub review.
-- Owner manual app verification: previous candidate FAIL; fresh retest NOT AUTHORIZED until revised code review PASS.
-- Documentation synchronization: PASS for revised candidate state.
-- Merge permission: BLOCKED.
+- Execution: PASS.
+- Automated/static verification: PASS.
+- Code review: PASS for fresh Owner retest.
+- Owner manual app verification: previous candidate FAIL; fresh multimodal retest AUTHORIZED / NOT STARTED.
+- Documentation synchronization: PASS.
+- Merge permission: BLOCKED pending fresh Owner PASS and explicit merge approval.
