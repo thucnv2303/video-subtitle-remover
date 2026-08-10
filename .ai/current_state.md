@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-WAITING_OWNER_RETEST — BUG-005 MULTIMODAL REVISION
+OWNER_RUNTIME_FAIL — BUG-005 MULTIMODAL OLLAMA TIMEOUT
 
 ## Canonical branch
 `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
@@ -20,50 +20,46 @@ WAITING_OWNER_RETEST — BUG-005 MULTIMODAL REVISION
 - Branch: `review/BUG-005-P1-FULL-CHAIN`.
 - Draft PR: #41.
 
-## Owner runtime FAIL that invalidated the previous candidate
-- ASR returned one incorrect SRT segment for the tested video.
-- Text-only AI rewrite and TTS returned transport success, but this did not satisfy the canonical original-video analysis contract.
-- Backend generated an MP3 but approved Job Detail still showed no audio because legacy `activeJobId` and P1 `pipeline1SelectedJobId` could diverge.
-- P1 incorrectly unlocked P2 despite incomplete/incorrect analysis.
+## Owner runtime FAIL — multimodal revision — 2026-08-10
+Owner tested PR head `6ce8d3e9eef3170b3639c42c95c59f51356b8efe` with a fresh P1 job.
 
-## Revised multimodal candidate
-The current revision replaces text-only acceptance with a fail-closed artifact pipeline:
-1. Start snapshots the approved provider/model/prompt/voice and forces ASR language `auto`.
-2. Existing dedicated P1 ASR produces timestamped source SRT.
-3. Renderer samples keyframes across the ORIGINAL video using existing video-info/frame APIs.
-4. Main-process Ollama IPC inspects local model capabilities. If the selected reasoning model supports vision it receives transcript + keyframes directly; otherwise the app searches installed local Ollama models for a vision-capable model and uses its visual analysis as context for the selected reasoning model.
-5. If no local vision-capable model exists, P1 fails explicitly; text-only fallback is not allowed to unlock P2.
-6. AI must return structured summary/insights/scenes/script_segments/edit_plan JSON. The system output protocol overrides any prompt-preset formatting instruction such as “return only SRT”; prompt presets still guide content/style.
-7. Renderer builds and writes `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`, and `remix_script.srt` under `jobs/<job_id>/p1/`, including source SHA256 fingerprint, duration/FPS/frame count, artifact version, reasoning model and vision model metadata.
-8. TTS runs from the remix SRT. Generated temp audio is copied into the P1 artifact directory as `voice.*`; `tts_timed.srt` is also written there.
-9. The running P1 Job becomes the authoritative `pipeline1SelectedJobId`/`activeJobId`, so detail text/audio/status bind to the same Job.
-10. `p1ArtifactsReady` becomes required for the multimodal candidate. A separate artifact guard relocks P2 and marks P1 error if the legacy runner reports finished without required artifacts.
+Observed runtime facts:
+- P1 captured `ASR=auto; Analysis=multimodal; AI=ollama/qwen3-coder:30b; TTS=clone:0`.
+- ASR completed and returned one SRT segment.
+- P1 successfully fetched 8 keyframes from a 17.6s ORIGINAL video.
+- Multimodal Stage C started at 09:29:33.
+- No Ollama model/capability/load/progress diagnostics were shown during Stage C.
+- At 09:33:27 P1 failed with `Ollama quá thời gian phản hồi khi phân tích video.`
+- Job remained failed; this runtime did not demonstrate successful artifacts/TTS/P2 handoff.
+- Python backend also logged `Warning: Could not import backend: No module named 'backend'`; this is a separate defect/risk because current multimodal Ollama inference is called from Electron main process, not through the Python API.
 
-## Preserved boundaries
-- Approved P1 UI source is unchanged.
-- P2/P3 product source is unchanged.
-- P1 does not remove subtitles, inpaint, cut, mix final video or render.
-- Existing P1→P2 state gate remains in place.
+## Verified code findings after runtime FAIL
+- `src/main/p1-vision-ipc.js` sends Ollama requests directly via Electron `net.fetch`.
+- `qwen3-coder:30b` is the selected reasoning model. Capability lookup may choose a second installed vision-capable model for keyframe analysis.
+- Each `/api/chat` request has a hard 180-second timeout.
+- The fallback design can execute two large-model phases sequentially: vision analysis then reasoning analysis.
+- The current IPC emits no progress telemetry for capability lookup, selected vision model, model load, running model, prompt evaluation or generation.
+- Renderer sends 8 JPEG keyframes as base64 without a dedicated resize/compression/token budget before Ollama.
+- Therefore the runtime evidence proves a timeout, but does not prove which model was actively running on GPU at each point.
 
-## Verification and review
-- Exact published equivalents for `main.js`, `preload.js`, `p1-vision-ipc.js`, `pipeline1-run-config.js`, `pipeline1-artifact-gate.js`, `pipeline1-analysis.js`, `pipeline1-ai.js`: `node --check` PASS and local Git blob hash match.
-- P1 run-config ASR-auto/multimodal simulation: PASS.
-- Selected-model vision simulation: PASS.
-- Separate local vision-model fallback simulation: PASS.
-- No-vision-model fail-closed simulation: PASS.
-- TTS temp-audio → P1 artifact copy simulation: PASS.
-- Legacy false-complete → P2 relock simulation: PASS.
-- GitHub code review on revised source: PASS for fresh Owner retest.
-- GitHub CI: not configured.
+## Decision
+`NEEDS_REVISION`
 
-## Known limitation of this revision
-- Multimodal P1 runtime is currently authorized only for local Ollama. Gemini/DeepSeek remain available in Settings but P1 Start blocks them rather than silently degrading to text-only analysis.
-- Scene understanding is based on sampled keyframes + vision reasoning in this revision; a deterministic CV scene-boundary detector remains a later refinement and is not claimed as complete.
+The prior code-review PASS for fresh Owner retest is invalidated for head `6ce8d3e...`.
+
+## Required next revision
+1. Add explicit Ollama preflight and per-phase observability: endpoint reachability, selected reasoning-model capabilities, chosen vision model, phase start/end and elapsed time, and running-model diagnostics where available.
+2. Make timeout failures identify the exact model and phase.
+3. Reduce/normalize keyframe payload before vision inference.
+4. Use a resource-safe sequential vision → reasoning strategy, including explicit keep-alive/unload behavior where appropriate.
+5. Do not solve this merely by increasing timeout.
+6. Preserve fail-closed behavior and keep P2 locked on any incomplete multimodal analysis.
+7. Preserve P1/P2/P3 responsibility boundaries.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS.
-- Code review: PASS for fresh Owner retest.
-- Owner manual app verification: previous candidate FAIL; fresh multimodal retest AUTHORIZED / NOT STARTED.
-- Documentation synchronization: PASS.
-- Merge permission: BLOCKED pending fresh Owner PASS and explicit merge approval.
+- Execution: NEEDS_REVISION.
+- Automated/static verification: previous checks PASS only for the failed head; new revision WAITING.
+- Code review: INVALIDATED / NEEDS_REVISION.
+- Owner manual app verification: FAIL.
+- Documentation synchronization: PASS for failure recording.
+- Merge permission: BLOCKED.
