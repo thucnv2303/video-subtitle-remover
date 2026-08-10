@@ -211,7 +211,12 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
     const message = String(payload?.message || '').trim();
     if (!message) return;
     const type = ['success', 'error', 'warning'].includes(payload?.type) ? payload.type : 'info';
-    log(`[Ollama] ${message}`, type);
+    const formatted = `[Ollama] ${message}`;
+    if (payload?.progress_key && typeof window.updateP1ProgressLog === 'function') {
+      window.updateP1ProgressLog(payload.progress_key, formatted, type, Boolean(payload.progress_done));
+      return;
+    }
+    log(formatted, type);
   });
 
   let visual;
