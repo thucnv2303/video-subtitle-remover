@@ -13,38 +13,35 @@
 `BUG-005 — Pipeline 1 Full Processing Chain`
 
 ## Status
-WAITING_OWNER_TEST
+OWNER_RUNTIME_FAIL / NEEDS_REVISION
 
 ## Review branch / PR
 - Branch: `review/BUG-005-P1-FULL-CHAIN`
 - Draft PR: #41
 
-## Verified root cause
-The approved P1 UI replaced the legacy enable checkboxes, but Start All still relied on job fields initialized as `aiRewrite=false` and `ttsGenerate=false`. The visible provider/model/prompt/voice settings were never mapped into the job before queueing. In addition, AI/TTS helper errors were swallowed, allowing false P1 completion.
+## Owner runtime evidence — 2026-08-10
+- Configuration snapshot ran: Ollama `qwen3-coder:30b`, clone voice selected.
+- ASR returned a single SRT line that Owner reports does not match actual video content.
+- AI rewrite and TTS completed technically from that bad input.
+- Backend created a real MP3 artifact.
+- Approved Job Detail audio tab still showed no audio.
+- Detail header showed no selected Job while detail text was populated.
+- P1 was incorrectly accepted as complete and P2 was unlocked.
 
-## Reviewed candidate
-- New `src/renderer/js/pipeline1-run-config.js` snapshots/validates the approved P1 configuration in capture phase before the legacy Start handler queues jobs.
-- `src/renderer/js/pipelines/pipeline1-ai.js` now treats enabled AI/TTS failures as fatal stage errors and propagates them to the P1 runner.
-- AI is required for the approved P1 Start flow.
-- TTS is enabled when a non-`none` voice is selected.
-- No source change was made to the approved P1 UI layout, P2, or P3.
-- Existing P1→P2 handoff remains the authority for keeping P2 locked on error/cancel and unlocking only after P1 success.
-
-## Verification
-- `pipeline1-run-config.js` exact GitHub blob `a26dc1230a91c252ce49139772b2b4afffde7c6f`: hash match + `node --check` PASS.
-- `pipeline1-ai.js` exact GitHub blob `12859d4e40d84c716a479820610fef2fe692bd37`: hash match + `node --check` PASS.
-- Targeted Node simulation: PASS for config snapshot and strict AI/TTS rejection.
-- PR #41 is open/draft, correct base, and mergeable.
-- GitHub changed-file review: product scope exactly the two intended P1 files plus canonical `.ai` documentation.
-- GitHub CI: not configured; unresolved PR comments: none.
+## Verified defects
+- Approved detail view is keyed by `pipeline1SelectedJobId`, while legacy processing/UI paths also use `activeJobId`; runtime proves the two authorities can diverge.
+- `/api/p1/extract-text` is explicitly ASR-only and delegates to the ASR extraction route.
+- AI rewrite currently receives transcript/SRT only, not original-video vision/keyframe/scene analysis context.
+- This is insufficient for the canonical P1 architecture requiring original-video analysis and multimodal/scene/insight/remix artifacts.
+- Completion gate currently validates transport/stage success but not correctness/completeness of required analysis artifacts.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS.
-- Code review: PASS for Owner runtime test.
-- Owner manual app verification: NOT STARTED / AUTHORIZED.
-- Documentation synchronization: PASS.
+- Execution: NEEDS_REVISION.
+- Automated/static verification: WAITING for revised candidate.
+- Code review: NEEDS_REVISION; previous PASS invalidated by runtime evidence.
+- Owner manual app verification: FAIL; retest NOT AUTHORIZED yet.
+- Documentation synchronization: PASS for failure recording.
 - Merge permission: BLOCKED.
 
-## Next action
-Owner runs PR #41 and verifies the full enabled path: ASR → AI Rewrite → TTS → P1 complete → P2 ready. Also verify one deliberate AI/TTS failure leaves P1 in error and P2 locked. Do not merge until Owner PASS is recorded and explicit merge approval is given.
+## Next permitted action
+Revise BUG-005 only. First establish one authoritative selected P1 Job for detail text/audio/status. Then correct the P1 analysis contract so the original video is genuinely analyzed according to architecture and required artifacts are validated before P1 may unlock P2. Preserve P2 subtitle-removal-only and P3 finalize responsibilities.
