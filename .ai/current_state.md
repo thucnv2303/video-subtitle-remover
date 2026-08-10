@@ -1,48 +1,37 @@
 # Current State
 
 ## Status
-OWNER_RUNTIME_PASS — PIPELINE1-HANDOFF-001
+MERGED — PIPELINE1 UI + HANDOFF ACCEPTED
 
-## Canonical baseline
-- Canonical branch: `recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`.
+## Canonical branch
+`recovery/RECOVERY-007E-OWNER-RUNTIME-BASELINE-008`
+
+## Merged work
 - Settings V1 PR #38: MERGED / Owner PASS.
-- Post-Settings canonical source HEAD: `e578e48c22a79c69005f2d3373599addfc412ecf`.
+- Pipeline 1 approved UI PR #39: MERGED / Owner PASS.
+  - Merge commit: `bf166660807423ec5d97ed365e9735940b2804e3`.
+- Pipeline 1 → Pipeline 2 handoff PR #40: MERGED / Owner PASS.
+  - Merge commit: `9a0b301171d047ccb0280eabe917f1bcd9ea85c2`.
 
-## Pipeline 1 UI foundation
-- UI branch: `review/PIPELINE1-APPROVED-UI-001`.
-- Draft PR: #39.
-- Owner runtime UI verification: PASS.
-- Approved UI HEAD used as handoff base: `2324d922de4874af1eb33f5dec2ea2d63a2bb968`.
-
-## Active task
-- Task: `PIPELINE1-HANDOFF-001`.
-- Branch: `review/PIPELINE1-HANDOFF-001`.
-- Draft PR: #40, stacked on the approved UI branch.
-- Goal: P1 upload remains P1-only until successful P1 completion unlocks P2.
-
-## Reviewed implementation
-- `src/renderer/js/pipeline-state.js` adds per-pipeline lifecycle state and P1→P2/P2→P3 gates.
-- New jobs: P1 idle / P2 locked / P3 locked.
+## Accepted runtime behavior
+- Pipeline 1 UI is accepted by Owner.
+- P1 uploads remain P1-only until successful P1 completion.
 - P1 error/cancel keeps P2 locked.
-- P1 success maps to P1 finished / P2 ready / P3 locked.
-- P2 direct upload/drop bypass is blocked.
-- P2 Start is gated and forces subtitle-removal-only flags.
-- P2 success maps to P3 ready.
-- `pipeline1-ai.js` loads the state gate and no longer claims direct P1→P3 completion after TTS.
+- P1 success unlocks only the matching P2 job.
+- P2 is subtitle-removal only and remains responsible for the original source video.
+- P2 success, not P1 success, unlocks P3.
+- BUG-008 is RESOLVED by Owner runtime evidence.
 
-## Verification
-- Exact source blobs were previously syntax-checked and state/guard simulations passed.
-- GitHub CI: not configured.
-- PR #40 unresolved review comments: none.
-- Owner runtime verification on 2026-08-10: PASS for the P1→P2 handoff/processing route.
-- Owner screenshot/log shows ASR completion, AI rewrite skipped, TTS skipped, P1 completion, and automatic P2 unlock for the tested job.
-- This runtime PASS resolves the handoff defect BUG-008.
-- Full enabled AI rewrite + TTS chain is still not considered verified; BUG-005 remains open/narrowed for the next focused task.
+## Remaining functional focus
+BUG-005 remains OPEN/NARROWED. The next focused task is the full enabled Pipeline 1 chain:
+`ASR → AI Rewrite → TTS → P1 COMPLETE → P2 READY`.
 
-## Gates
+The accepted P1 UI and P1→P2 handoff contract must not regress during BUG-005 work.
+
+## Gates for merged work
 - Execution: PASS.
 - Automated/static verification: PASS.
 - Code review: PASS.
-- Owner manual app verification: PASS for PIPELINE1-HANDOFF-001.
-- Documentation synchronization: PASS.
-- Merge permission: BLOCKED pending explicit Project Manager/Owner merge approval in the current interaction.
+- Owner manual app verification: PASS.
+- Documentation synchronization: PASS after this merge closeout.
+- Merge permission: CONSUMED / MERGED.
