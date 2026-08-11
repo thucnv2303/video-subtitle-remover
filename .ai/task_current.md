@@ -1,54 +1,60 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-MULTIJOB-RESILIENCE-003
+PIPELINE1-ADAPTIVE-VISION-004
 
 ## Name
-Pipeline 1 Multi-Job Resilience, File-Path Compatibility, Reasoning/GPU Resilience, Spinner Stability, and Vision Output Resilience
+Pipeline 1 Adaptive Keyframe Sampling and Hierarchical Vision
 
 ## Status
-SPINNER_VISION_REVISION_CODE_REVIEW_PASS_OWNER_RETEST_READY
+SOURCE_REVIEW_PASS_STATIC_AND_OWNER_RETEST_WAITING
 
 ## Authority
-- Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
-- Draft PR: #44.
-- Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
-- Latest Owner-tested head: `5bfe88fa179b297d6fc8ba906a7f3c9a788acd3c`.
-- Latest reviewed source: `4f8b6737337abf488e49c58853b5ad3715fdeb7d`.
-- PM review: `4903882317`.
+- Parent: `review/PIPELINE1-MULTIJOB-RESILIENCE-003@4508eaed5be1130519e57f927f761976dd5a5458`.
+- Review branch: `review/PIPELINE1-ADAPTIVE-VISION-004`.
+- Draft PR: #45.
+- Current reviewed source: `1bde0d6db589f53406de4038f2781d9c3164fbd9`.
+- PM review: `4904434998`.
+- Exact task spec: `.ai/task_specs/PIPELINE1-ADAPTIVE-VISION-004.md`.
 
-## Owner-confirmed state
-- Multi-job failure isolation: PASS.
-- Failed Job popup reachable: PASS.
-- Absolute input path compatibility: PASS in latest runtime (`F:\test3.mp4`, ASR/frame reads succeed).
-- OmniVoice idle release log: PASS in latest runtime.
-- Spinner smoothness: FAIL on Owner-tested head; still visibly jerks.
-- Second Job vision: FAIL because gemma4 structured output hits fixed 1200-token cap.
-- qwen post-TTS stress result: still WAITING because second Job does not yet pass vision.
+## Goal
+Remove fixed-eight sampling as the P1 visual-analysis authority. Calculate keyframe evidence from the actual input duration, bound each Vision request, and preserve whole-video context through one final global reasoning pass.
 
-## Current implementation
-1. Processing card remains steady; only spinner animates.
-2. Replacement spinner nodes receive a time-based phase so legacy Job-card rerenders do not restart rotation from zero.
-3. Fallback vision budget scales only with keyframe count: `min(2200, 1200 + frameCount*100)`; 8 keyframes use 2000.
-4. Vision prompt explicitly limits scene and evidence verbosity while retaining the required schema.
-5. Phase/model is returned separately from normalized error text to avoid duplicated popup prefixes.
-6. Reasoning remains finite at 360 seconds with at most one reasoning-only repair.
-7. OmniVoice idle release, Electron file-path bridge, retry/queue isolation, Stop/Cancel guards and canonical P1 status logic remain preserved.
+## Scope
+Application source changes are limited to:
+- `src/renderer/js/pipeline1-analysis.js`
+- `src/main/p1-vision-ipc.js`
 
-## Verification
-- GitHub incremental scope from Owner-tested head is limited to task spec + `src/main/p1-vision-ipc.js` + `src/main/preload.js` + `src/renderer/js/pipeline1-spinner-phase.js` + `src/renderer/styles/pipeline1-run-ux.css`.
-- PM source review PASS `4903882317`.
-- No unresolved inline threads.
-- GitHub CI/status checks: none configured.
-- Automated/static gate remains PARTIAL for this exact revision.
+No P2/P3/STTN/Settings/TTS source changes.
 
-## Owner retest acceptance
-- Spinner rotates continuously with no visible restart/jump while Job UI updates.
-- For 8 keyframes, vision progress reports `output_limit=2000 token` and passes the prior 1200-token truncation point.
-- If vision still cannot complete, failure is bounded and explicit; no infinite retry.
-- Error popup shows `Vision analysis / gemma4:12b` only once.
-- After vision succeeds, `test3.mp4` reaches qwen reasoning and completes or fails within the finite timeout with exact detail.
-- Existing popup retry and queue-behind-active behavior remain usable.
+## Implementation
+1. Duration-aware sample count uses approximately 1 frame / 4 seconds.
+2. Minimum evidence protects short videos; total frames are hard capped at 80.
+3. Samples are evenly distributed over the full source timeline.
+4. At most 8 frames are sent per Vision chunk.
+5. Chunk boundaries are chronological and cover 0 -> video duration.
+6. Chunk transcript contains only overlapping timestamped SRT blocks.
+7. Each chunk returns `VISION_SCHEMA` evidence only.
+8. All chunk evidence is ordered and supplied with the complete transcript to one global reasoning/remix pass.
+9. Final artifacts retain the existing P1 output contract and add sampling/chunk provenance; artifact version becomes 2.
+10. Any chunk failure/cancel prevents false P1 success.
+
+## Deterministic checks completed
+- 24s: 8 frames / 1 chunk.
+- 60s: 15 / 2.
+- 300s: 75 / 10.
+- 400s: 80 / 10 safety cap.
+- Max 8 frames/chunk and complete boundary coverage: PASS.
+- SRT overlap slicing simulation: PASS.
+- PM source/diff review: PASS `4904434998`.
+
+## Verification still required
+- Exact published `node --check src/renderer/js/pipeline1-analysis.js`.
+- Exact published `node --check src/main/p1-vision-ipc.js`.
+- Exact final `git diff --check` against parent head.
+- Owner short-video runtime.
+- Owner >60-second runtime proving automatic >8 evidence and multiple chunks.
+- Final artifacts + P1->P2 unlock only after all chunks/global reasoning/TTS succeed.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner PARTIAL PASS / RETEST REQUIRED; documentation sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED; documentation sync PASS after current docs publication; merge BLOCKED; Step 3 BLOCKED.

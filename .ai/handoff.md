@@ -1,44 +1,38 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-MULTIJOB-RESILIENCE-003`
+`PIPELINE1-ADAPTIVE-VISION-004 — Adaptive Keyframe Sampling and Hierarchical Vision`
 
 ## Status
-SPINNER / VISION TRUNCATION REVISION CODE REVIEW PASS — OWNER RETEST READY
+SOURCE REVIEW PASS / STATIC + OWNER RETEST WAITING
 
 ## Review basis
-- Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
-- Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
-- Draft PR: #44.
-- Latest Owner-tested head: `5bfe88fa179b297d6fc8ba906a7f3c9a788acd3c`.
-- Latest reviewed source: `4f8b6737337abf488e49c58853b5ad3715fdeb7d`.
-- PM review: `4903882317`.
+- Parent: `review/PIPELINE1-MULTIJOB-RESILIENCE-003@4508eaed5be1130519e57f927f761976dd5a5458`.
+- Review branch: `review/PIPELINE1-ADAPTIVE-VISION-004`.
+- Draft PR: #45.
+- Reviewed source: `1bde0d6db589f53406de4038f2781d9c3164fbd9`.
+- PM review: `4904434998`.
 
-## Latest Owner evidence
-- Absolute Windows path handling now works; `test3.mp4` reaches ASR/keyframes from `F:\test3.mp4`.
-- First Job completes P1 and clone TTS.
-- OmniVoice idle release message is observed before the second Job vision run.
-- Second Job fails at fallback `gemma4:12b` vision because the old fixed 1200-token output ceiling is reached before JSON closes.
-- Processing spinner still appears to restart/jump during Job UI updates.
-- Popup repeats phase/model in its error string.
+## What changed
+The previous fixed-eight P1 visual sampling is replaced by duration-aware sampling. Short videos retain useful evidence; longer videos automatically receive more keyframes. Evidence is bounded to 80 total frames and 8 per Vision request. Larger evidence sets are processed in chronological chunks; each chunk receives only overlapping transcript segments and returns structured visual evidence. One global reasoning pass then consumes the complete transcript plus all ordered chunk evidence to create the final P1 analysis/remix contract.
 
-## Current correction
-- Vision output headroom is bounded but increased: 8 keyframes => 2000 tokens, max 2200.
-- Vision prompt is explicitly concise to reduce structured-output size.
-- IPC returns normalized error text separately from phase/model.
-- Spinner animation phase is derived from time and applied to replacement status nodes, including canonical `status-processing` nodes.
-- CSS consumes the phase with negative `animation-delay`; whole card remains unanimated.
-- Prior file-path compatibility, queue isolation, popup retry, qwen bounded repair/timeout and OmniVoice release remain intact.
+## Deterministic evidence
+- 24s -> 8 frames / 1 chunk.
+- 60s -> 15 / 2.
+- 300s -> 75 / 10.
+- 400s -> capped 80 / 10.
+- Per-chunk frame maximum and whole-duration coverage: PASS.
+- Transcript overlap slicing: PASS.
+- Source/diff review: PASS.
 
-## Evidence status
-- File-path compatibility: OWNER RUNTIME PASS.
-- OmniVoice idle release mechanism: OWNER RUNTIME OBSERVED.
-- Fixed 1200-token vision cap as current failure cause: OWNER RUNTIME + SOURCE VERIFIED.
-- Spinner restart cause from legacy DOM replacement: SOURCE VERIFIED; current fix requires Owner runtime verification.
-- qwen performance after TTS: WAITING because latest second Job failed before reasoning.
+## Evidence still missing
+- Exact final Node syntax checks on the published blobs.
+- Exact final diff hygiene command.
+- Owner Electron runtime on short + >60s video.
+- Runtime proof that all chunks finish before the single global reasoning and before P1->P2 unlock.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner PARTIAL PASS / RETEST REQUIRED; docs sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED; docs sync PASS after this publication; merge BLOCKED; Step 3 BLOCKED.
 
 ## Next action
-Owner tests the latest PR #44 head. First verify smooth spinner and 8-keyframe `output_limit=2000`. Then let `test3.mp4` continue through vision into qwen reasoning and report completion/finite failure plus popup text if any.
+Static-check the exact adaptive head, then Owner tests one short and one longer input. Do not merge or start Step 3 before Owner PASS is recorded.

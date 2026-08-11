@@ -1,45 +1,45 @@
 # QA Checklist
 
 ## Active task
-`PIPELINE1-MULTIJOB-RESILIENCE-003`
+`PIPELINE1-ADAPTIVE-VISION-004`
 
-## Source/integration verification
-- [x] Dedicated branch and Draft PR #44.
-- [x] Latest reviewed source `4f8b6737337abf488e49c58853b5ad3715fdeb7d`.
-- [x] Latest Owner-tested head `5bfe88fa...` recorded.
-- [x] Incremental compare from Owner-tested head is limited to active task spec + P1 vision IPC + preload + spinner phase adapter + P1 run-UX CSS.
-- [x] Vision output budget is bounded by keyframe count; 8 keyframes => 2000 tokens, maximum 2200.
-- [x] Vision prompt requests concise schema-complete output.
-- [x] IPC error normalization avoids embedding phase/model twice in returned error text.
-- [x] Spinner phase adapter changes only presentation state and does not mutate Job state.
-- [x] Spinner phase is applied to canonical `status-processing` nodes and consumed through CSS negative animation delay.
-- [x] Spinner adapter is loaded from real preload boot path.
-- [x] Prior Electron file-path compatibility remains present.
-- [x] Prior OmniVoice idle release remains present.
-- [x] PM incremental source review PASS `4903882317`.
-- [x] No unresolved inline PR review threads.
+## Source/scope
+- [x] Dedicated branch `review/PIPELINE1-ADAPTIVE-VISION-004` from exact parent `4508eaed5be1130519e57f927f761976dd5a5458`.
+- [x] Draft PR #45 targets `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
+- [x] Application-source changes limited to `src/renderer/js/pipeline1-analysis.js` and `src/main/p1-vision-ipc.js`.
+- [x] No P2/P3/STTN/Settings/TTS source changes.
+- [x] Fixed global `FRAME_SAMPLE_COUNT = 8` removed as sampling authority.
+
+## Deterministic adaptive checks
+- [x] 24s -> 8 frames / 1 chunk.
+- [x] 60s -> 15 frames / 2 chunks.
+- [x] 300s -> 75 frames / 10 chunks.
+- [x] 400s -> safety cap 80 frames / 10 chunks.
+- [x] Every simulated chunk <=8 frames.
+- [x] First chunk starts at 0 and final chunk ends at source duration.
+- [x] Boundary-spanning SRT segment is included in both adjacent overlapping windows.
+- [x] Non-overlapping SRT segments are excluded from unrelated chunks.
+- [x] Vision chunks are evidence-only; final remix schema is produced by one global reasoning stage after chunk analysis.
+- [x] PM source/diff review PASS `4904434998`.
+
+## Static checks still required
+- [ ] Exact published `node --check src/renderer/js/pipeline1-analysis.js`.
+- [ ] Exact published `node --check src/main/p1-vision-ipc.js`.
+- [ ] Exact `git diff --check 4508eaed5be1130519e57f927f761976dd5a5458..HEAD`.
 - [ ] GitHub CI/status checks — none configured.
-- [ ] Exact final-revision executable JS/Python/static suite — PM runtime evidence unavailable; automated/static remains PARTIAL.
 
-## Owner evidence already PASS
-- [x] Multi-job failure isolation.
-- [x] Failed Job popup opens.
-- [x] Absolute path resolution: latest run reads `F:\test3.mp4`; metadata/frames/ASR succeed.
-- [x] First Job completes vision + qwen reasoning + TTS in latest sequence.
-- [x] OmniVoice release log appears after clone-TTS burst.
-
-## Fresh Owner retest — BLOCKING
-- [ ] Processing card stays steady.
-- [ ] Spinner rotation is visually continuous with no periodic restart/jump while Job UI updates.
-- [ ] For the same 8-keyframe `test3.mp4`, vision log reports `output_limit=2000 token`.
-- [ ] `test3.mp4` progresses past the prior fixed-1200 vision truncation point.
-- [ ] If vision still fails, failure is bounded/explicit and does not retry indefinitely.
-- [ ] Error popup displays phase/model once, not duplicated.
-- [ ] After vision succeeds, `test3.mp4` reaches qwen reasoning.
-- [ ] qwen reasoning completes or fails within the existing finite timeout with readable exact detail.
-- [ ] Popup `↻ Chạy lại` remains usable.
-- [ ] Retry while another Job is active remains queued and non-preemptive.
-- [ ] Stop/Cancel does not revive explicitly stopped Jobs.
+## Fresh Owner runtime — BLOCKING
+- [ ] Short `test3.mp4`: adaptive plan shows approximately 8 keyframes / 1 chunk.
+- [ ] Short video completes all Vision chunks then exactly one global reasoning stage.
+- [ ] >60s input automatically uses more than 8 keyframes.
+- [ ] >60s input uses multiple chunks with <=8 frames each.
+- [ ] Logs expose duration/frame/chunk plan without image payloads.
+- [ ] Chunk transcript/log ranges are chronological and plausible for the source timeline.
+- [ ] Any chunk failure causes P1 failure and does not unlock P2.
+- [ ] Successful run persists artifact version 2 / `multimodal-adaptive-chunks-v2` provenance.
+- [ ] P1->P2 unlock occurs only after all chunks + global reasoning + required TTS/artifacts succeed.
+- [ ] Inherited failed-Job popup/retry/queue behavior remains functional.
+- [ ] Inherited processing spinner remains acceptable in runtime.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner PARTIAL PASS / RETEST REQUIRED; documentation sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED; documentation sync PASS after docs publication; merge BLOCKED; Step 3 BLOCKED.
