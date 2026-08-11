@@ -1,59 +1,63 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-FINAL-RUNTIME-GUARDS-005
+PIPELINE1-CONTINUOUS-NARRATION-006
 
 ## Name
-Pipeline 1 Manual Job Browsing and Narration Duration Gate
+Pipeline 1 Voice-Aware Continuous Narration and Bounded Reasoning
 
 ## Status
-CODE_REVIEW_PASS_STATIC_AND_OWNER_RETEST_WAITING
+OWNER_FAIL_RECORDED_IMPLEMENTATION_READY
 
 ## Authority
-- Parent: `review/PIPELINE1-ADAPTIVE-VISION-004@0f668866dba2a38053080627872229e9ed85addd`.
-- Review branch: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
-- Draft PR: #46.
-- Current reviewed source: `d9dcd665295a6ca2583644e2ffb39e6421f79f32`.
-- PM review: `4904862077`.
-- Exact task spec: `.ai/task_specs/PIPELINE1-FINAL-RUNTIME-GUARDS-005.md`.
+- Parent failed head: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
+- Parent Draft PR: #46.
+- Active review branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
+- Exact task spec: `.ai/task_specs/PIPELINE1-CONTINUOUS-NARRATION-006.md`.
 
 ## Owner outcome
-Before P1 can be approved for merge:
-1. User must be able to inspect another Job while a different Job continues processing.
-2. Final exported narration track must never exceed source video duration and may be shorter by at most 5%: accepted ratio `0.95..1.00`.
+Pipeline 1 must keep the useful multi-job queue behavior while generating one coherent narration that is written for the selected voice/speed and source duration before TTS. Successful final audio must be 95–100% of source-video duration without cutting voice or changing video speed.
 
-## Source scope
-- `src/renderer/js/pipeline1-run-ux.js`
+## Required product flow
+1. ASR + adaptive Vision collect evidence.
+2. Final reasoning receives source duration, selected voice and selected speed.
+3. Reasoning returns one continuous `narration_script`, not a per-scene speech script.
+4. Synthesize the full narration once.
+5. Measure the actual generated audio file duration.
+6. If outside 95–100%, rewrite the whole narration once using measured voice rate, then synthesize once more.
+7. If still outside range, fail closed and keep P2 locked.
+8. Subtitle display timing is generated after full-audio synthesis and must not create speech gaps.
+
+## Source scope allowed
+- `src/main/p1-vision-ipc.js`
+- `src/main/preload.js`
+- `src/renderer/js/pipeline1-analysis.js`
 - `src/renderer/js/pipelines/pipeline1-ai.js`
+- canonical `.ai/` files affected by this task.
 
-No P2/P3/STTN/Settings/backend/TTS-engine source changes.
+## Forbidden
+- No P2/P3/STTN/Settings changes.
+- No broad `app.js` refactor.
+- No backend/TTS-engine rewrite merely to preserve legacy segmented TTS.
+- No `/api/tts-retry` in the final continuous P1 narration path.
+- No video tempo manipulation or voice truncation.
+- No unlimited retry loop.
+- No true parallel heavy GPU inference.
 
-## Implementation
-1. Periodic run-UX synchronization preserves an existing valid `pipeline1SelectedJobId`.
-2. Processing Job is auto-selected only if there is no valid manual selection.
-3. AI/TTS phase transitions preserve manual detail selection; `activeJobId` still identifies execution authority.
-4. Source duration comes from P1 artifact metadata with video-info fallback.
-5. Exported TTS duration is normalized from the current backend contract: prefer `exported_audio_duration_ms`, otherwise legacy `audio_duration_ms + 1000ms` fixed export tail.
-6. Success gate is inclusive 95% through 100% of source duration.
-7. Outside range on pass 1 triggers exactly one configured-model script-fit request targeting 97.5%.
-8. Repaired output must keep exact SRT segment count and timestamps.
-9. Repaired `remix_script.srt` and `remix_script.json` are synchronized before final success.
-10. TTS regenerates exactly once after repair.
-11. Pass 2 outside range throws a readable error; P1 remains not ready and P2 stays locked.
-12. No video speed manipulation or voice truncation is used.
+## Runtime evidence forcing this revision
+- 24.30s source -> 48.10s exported voice after pass 2 (197.9%): FAIL.
+- 16 separate speech segments were synthesized for the failed narration: wrong product behavior.
+- Next queued Job auto-started: preserve this sequential continuation.
+- 17.6s Job global reasoning was still running at 349s after Vision completed: latency regression requiring bounded compact reasoning.
 
-## Verification completed
-- Deterministic duration helper simulation: PASS for 94/95/100/101%, 120% repair-scale, and legacy export-tail normalization.
-- Source/diff review: PASS `4904862077`.
-- Scope compare: task spec + exactly two approved application source files before canonical docs sync.
-
-## Verification still required
-- Exact `node --check src/renderer/js/pipeline1-run-ux.js`.
-- Exact `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
-- Exact `git diff --check 0f668866dba2a38053080627872229e9ed85addd..HEAD`.
-- Owner runtime: select Job B while Job A processes and detail remains on B.
-- Owner runtime: overlong/underlong narration enters one repair and final successful exported ratio is 95–100%, or fails closed after pass 2.
-- Pending adaptive long-video runtime: >60s input must demonstrate >8 samples/multiple bounded Vision chunks before final merge approval.
+## Verification required before Owner retest
+- Exact Node syntax checks for every changed JS file.
+- Deterministic voice/char-budget tests and 95/100 boundary tests.
+- Source proof: no P1 `/api/tts-retry` call; one full-text `/api/tts/generate` call per pass.
+- Source proof: final reasoning schema has one narration string and does not regenerate Vision scene descriptions.
+- Source proof: at most one whole-script repair and one re-TTS.
+- Exact diff hygiene.
+- PM diff + full-file review.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED on PR #46; documentation sync PASS after final docs publication; merge BLOCKED; Step 3 BLOCKED.
+Execution NOT STARTED; automated/static WAITING; code review WAITING; Owner WAITING; docs sync PASS for failure intake/task definition; merge BLOCKED; Step 3 BLOCKED.
