@@ -37,8 +37,7 @@
   position: relative;
   border-color: rgba(59,130,246,.72) !important;
   background: rgba(37,99,235,.08) !important;
-  box-shadow: 0 0 0 1px rgba(59,130,246,.12), 0 0 18px rgba(59,130,246,.18);
-  animation: p1-job-card-pulse 1.65s ease-in-out infinite;
+  box-shadow: 0 0 0 1px rgba(59,130,246,.16), 0 0 18px rgba(59,130,246,.2);
 }
 
 #step-1-content .p1-job-card-processing .p1-job-state-live {
@@ -188,6 +187,7 @@
 .p1-error-dialog-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-top: 16px;
 }
 
@@ -205,13 +205,7 @@
   to { transform: rotate(360deg); }
 }
 
-@keyframes p1-job-card-pulse {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(59,130,246,.1), 0 0 12px rgba(59,130,246,.12); }
-  50% { box-shadow: 0 0 0 1px rgba(96,165,250,.26), 0 0 24px rgba(59,130,246,.27); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  #step-1-content .p1-job-card-processing,
   #step-1-content .p1-job-card-processing .p1-job-state-live::before {
     animation: none;
   }
