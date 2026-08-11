@@ -18,6 +18,7 @@ Close the final Owner-reported Pipeline 1 runtime blockers before merge: preserv
 ## Scope allowed
 - `src/renderer/js/pipeline1-run-ux.js` — narrow selection synchronization correction only.
 - `src/renderer/js/pipelines/pipeline1-ai.js` — narration-duration measurement, one bounded script-fit repair, artifact synchronization, and hard final duration gate.
+- `api/server.py` — narrow correction so `/api/tts-retry` reports the actual exported audio-track duration used by the gate; no TTS model/voice-generation architecture change.
 - canonical `.ai/` state/task/handoff/QA/bugs/architecture docs affected by this correction.
 
 ## Scope forbidden
@@ -37,8 +38,8 @@ Close the final Owner-reported Pipeline 1 runtime blockers before merge: preserv
 
 ## Required behavior — narration duration
 1. Use real source-video duration from the current Job metadata/artifacts; do not infer duration from SRT text alone.
-2. Use real synthesized TTS duration returned by `/api/tts-retry`.
-3. Accepted final narration duration is `[95%, 100%]` of source-video duration.
+2. `/api/tts-retry` must report the actual exported TTS audio-track duration, not merely the last subtitle display timestamp. If useful for diagnostics it may also return the speech/subtitle end separately.
+3. Accepted final exported narration-track duration is `[95%, 100%]` of source-video duration.
 4. If first TTS output is outside the accepted window, perform exactly one bounded script-fit repair using the configured reasoning provider/model and the existing SRT rewrite route.
 5. Repair direction is explicit:
    - overlong narration => shorten wording proportionally while preserving meaning;
@@ -52,18 +53,20 @@ Close the final Owner-reported Pipeline 1 runtime blockers before merge: preserv
 ## Verification required
 - `node --check src/renderer/js/pipeline1-run-ux.js`
 - `node --check src/renderer/js/pipelines/pipeline1-ai.js`
+- `python -m py_compile api/server.py`
 - deterministic helper tests for duration ratios: 94%, 95%, 100%, 101%, and repair-ratio calculation.
 - source review proves at most one repair/re-TTS cycle.
 - source review proves repaired `remix_script.srt` and `remix_script.json` stay synchronized before P1 success.
 - source review proves manual Job selection is no longer overwritten when the selected Job still exists.
+- source review proves duration gate consumes actual exported audio duration from `/api/tts-retry`.
 - `git diff --check` or exact changed-file equivalent.
 
 ## Owner runtime acceptance
 1. Start two Jobs; while Job A is processing, click Job B. Detail panel must stay on B until Owner selects another Job; Job A continues processing normally.
 2. Run a case that previously produced overlong narration.
-3. Log must show source duration and measured TTS duration.
+3. Log must show source duration and measured exported TTS duration.
 4. If first pass is outside range, exactly one automatic script-fit repair occurs, then exactly one TTS regeneration.
-5. Final successful Job must report narration ratio between 95% and 100% inclusive.
+5. Final successful Job must report exported narration ratio between 95% and 100% inclusive.
 6. If the repair cannot reach range, Job must be `Lỗi`, popup must show exact duration mismatch, and P2 remains locked.
 7. Existing adaptive Vision, multi-job continuation, retry popup, file-path compatibility, spinner behavior, OmniVoice release and artifact gates must remain working.
 
