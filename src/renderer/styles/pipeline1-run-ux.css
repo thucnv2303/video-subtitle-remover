@@ -61,6 +61,7 @@
   transform-origin: center;
   will-change: transform;
   animation: p1-job-spinner .75s linear infinite;
+  animation-delay: var(--p1-spinner-phase, 0ms);
 }
 
 #step-1-content .p1-job-card-error {
