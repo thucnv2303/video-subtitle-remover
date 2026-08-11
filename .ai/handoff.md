@@ -4,44 +4,41 @@
 `PIPELINE1-CONTINUOUS-NARRATION-006 — Voice-Aware Continuous Narration and Bounded Reasoning`
 
 ## Status
-SOURCE REVIEW PASS / OWNER RETEST READY / FINAL STATIC WAITING
+OWNER RUNTIME FAIL / NEEDS REVISION
 
 ## Review basis
-- Failed parent: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c` / PR #46 Owner FAIL.
+- Parent failed: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c` / PR #46 Owner FAIL.
 - Active branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
 - Draft PR: #47.
-- Reviewed source head: `e07c02776a5918be7a4d2c1a72b26ed3138027cc`.
-- PM review: `4905691792`.
+- Owner-tested head: `5d247d8ee37fc8370a3f05983eeac7cfc850e444`.
+- Previous source review: `4905691792` at `e07c02776a5918be7a4d2c1a72b26ed3138027cc`.
 - Exact spec: `.ai/task_specs/PIPELINE1-CONTINUOUS-NARRATION-006.md`.
 
-## Owner evidence that invalidated PR #46
-- 24.30s video -> 48.10s voice after pass 2 (197.9%).
-- Old TTS produced 16 independent speech segments; Owner requires one narration spoken continuously from beginning to end.
-- Next queued Job did auto-start; preserve that behavior.
-- 17.6s Job reached 349s qwen global reasoning after Vision; old 360s reasoning bound is unacceptable for this short input.
+## Fresh Owner runtime evidence
+- Job 1: 24.30s source; pass-1 continuous voice 16.52s (68.0%).
+- Measured repair target correctly computed 391–412 chars, but qwen returned the same 280-char narration. Current handler accepted it and ran pass 2; pass 2 stayed 16.52s/68.0% and failed.
+- Queue isolation still works: Job 2 auto-started after Job 1 failed.
+- Job 2: 17.60s source; Vision finished in 28.3s. qwen started output after 55.5s but did not complete before the 150s bound and failed with `OLLAMA_PHASE_TIMEOUT`.
 
-## Current published correction
-- Final qwen schema emits one `narration_script` and compact insights/edit plan; scene evidence is reused from Vision chunks.
-- Source duration + selected voice + selected speed drive an initial narration character budget before TTS.
-- Short video global reasoning timeout = 150s and output budget scales with narration target.
-- P1 continuous TTS uses full text through `/api/tts/generate`, one request per pass; `/api/tts-retry` is removed from this P1 path.
-- Selected speed is applied to the generated track with ffmpeg `atempo`; ffprobe exact file duration is the gate authority.
-- Success requires voice/video ratio 95–100% inclusive.
-- One miss allows exactly one whole-narration fit from measured actual voice rate and exactly one final TTS pass; second miss fails closed.
-- `voice.wav` is the accepted normalized narration audio; `tts_timed.srt` is derived after synthesis for subtitle display only.
-- Automatic sequential queue and PR #46 manual browsing behavior are inherited; no concurrent heavy GPU execution was introduced.
+## Verified engineering defects
+1. Narration length constraints are prompt-only. Repair schema/handler does not enforce computed min/max character bounds before final TTS.
+2. Final short-video reasoning remains too permissive: token floor is 900 and insight/edit arrays are structurally unbounded, allowing the selected 30B model to spend the full 150s on nonessential JSON.
+3. The fail-closed behavior itself is correct; the corrective work is to enforce output shape/length earlier and reduce final reasoning work.
 
-## Evidence status
-- Local reconstructed syntax checks: PASS for all four changed JS candidates.
-- Deterministic helper verification: PASS.
-- GitHub source/diff review: PASS `4905691792`.
-- CI/status: none configured.
-- Review threads: none unresolved.
-- Exact final-head Node checks + exact `git diff --check`: WAITING.
-- Fresh Owner runtime PR #47: NOT STARTED — READY.
+## Preserved behavior
+- One full-text `/api/tts/generate` call per pass.
+- No segmented `/api/tts-retry` P1 narration path in the supplied log.
+- Automatic sequential queue continuation works.
+- P2 remains locked on P1 failure.
+
+## Next correction
+- Add structural + explicit character validation for initial and repaired narration.
+- Reject out-of-budget repair before re-TTS.
+- Shrink/bound final JSON metadata and lower the short-narration output budget while retaining the Owner-selected reasoning model.
+- Keep max one repair + one final TTS and do not touch P2/P3/TTS-engine.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED — READY; docs sync PASS after this publication; merge BLOCKED; Step 3 BLOCKED.
+Execution NEEDS REVISION; automated/static WAITING; code review INVALIDATED; Owner FAIL on `5d247d8...`; docs sync PASS after failure-intake commits; merge BLOCKED; Step 3 BLOCKED.
 
 ## Next action
-Owner checks out the final PR #47 docs/head, runs exact Node/diff commands, then runs the former two-Job failure sequence. Required observations: continuous narration, no segmented speech synthesis, bounded qwen reasoning, 95–100% accepted audio or one-fit fail-closed behavior, automatic next-Job continuation, and manual Job browsing. Record Owner result before any merge decision.
+Implement the narrow corrective revision on PR #47, publish source separately, verify exact diff/static evidence, PM review, then authorize another Owner retest.
