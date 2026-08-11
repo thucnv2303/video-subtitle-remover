@@ -3,49 +3,33 @@
 ## Active task
 `PIPELINE1-MULTIJOB-RESILIENCE-003`
 
-## Owner runtime feedback
-- [x] Multi-job retest reached a real processing state on latest reviewed flow.
-- [x] Owner requested stronger visual distinction for processing Job.
-- [x] Owner requested failed-Job click to show error details.
-
 ## Source/scope
-- [x] Dedicated branch and Draft PR #44.
-- [x] Latest source commit `0e988a0cd187633eafb401f30c3f646b1255e2a9`.
-- [x] Incremental UX source change only: `pipeline1-run-ux.js` + `pipeline1-run-ux.css`; existing `pipeline1-ai.js` bounded retry preserved.
+- [x] Dedicated review branch and Draft PR #44.
+- [x] Latest source commit `542ccb44df047d001ebfcbe669ad223b7a5ef840`.
+- [x] Latest delta limited to `src/renderer/js/pipeline1-run-ux.js` and `src/renderer/styles/pipeline1-run-ux.css`.
 - [x] No P2/P3/STTN/Settings/backend source changes.
 
-## Automated/static
-- [x] Exact run-UX blob `8a08b81e30862716fca21ffcdcb2e7ec54dbece1` reconstructed byte-identical by `git hash-object`.
-- [x] Exact run-UX `node --check` PASS.
-- [x] GitHub source diff scope reviewed.
-- [x] Final feedback hardening avoids repeated title-attribute writes in the MutationObserver loop.
-- [x] No configured GitHub status checks.
-
 ## Code review
-- [x] Processing state uses blue pulse/glow and spinner rather than ambiguous static status.
-- [x] `prefers-reduced-motion` disables animation.
-- [x] Failed Job receives persistent red state.
-- [x] Standard final P1 error log is captured before legacy current-Job cleanup.
-- [x] Error dialog content uses `textContent` only.
-- [x] Error dialog supports close button, backdrop click and Escape.
-- [x] Clicking controls inside a Job card does not trigger the popup.
-- [x] Latest PM code review PASS recorded as review `4898257228` for source through `0e988a0...`.
+- [x] Failed-card click handled before legacy card click via capture phase.
+- [x] Failed card exposes visible `↻ Chạy lại` action.
+- [x] Retry changes only failed Job to `queued` and resets retry/cancel state.
+- [x] Existing active P1 Job is not cancelled or replaced by retry.
+- [x] If `pipeline1JobId` exists, legacy `processPipeline1Queue()` returns; retried Job remains queued.
+- [x] If no active Job exists, existing recovery path can start queued retry.
+- [x] Prior freeze fix preserved: MutationObserver does not watch attributes.
+- [x] Error popup still uses safe text-only content.
 
-## Owner retest — READY
-- [ ] Processing Job is immediately distinguishable from queued/idle Jobs.
-- [ ] Spinner/pulse stops when Job leaves processing state.
-- [ ] Failed Job stays visibly red.
-- [ ] Clicking failed Job opens popup with the actual latest P1 error when available.
-- [ ] Popup closes normally and does not block queue continuation.
-- [ ] Failed Job still allows next queued Job to start automatically.
-- [ ] Stop/Cancel does not auto-resume pending Jobs.
-- [ ] No P2/P3 regression observed.
+## Owner retest — REQUIRED
+- [ ] Clicking failed Job body opens error popup.
+- [ ] Popup displays captured error or clear fallback.
+- [ ] `↻ Chạy lại` appears only for failed Job.
+- [ ] Click `Chạy lại` changes failed Job to queued.
+- [ ] With another Job processing, retried Job stays queued and active Job continues uninterrupted.
+- [ ] After active Job completes/errors, queued retry starts automatically.
+- [ ] With no active Job, retry starts normally.
+- [ ] Add-video no longer freezes renderer.
+- [ ] Processing glow/spinner still follows actual active Job.
+- [ ] Stop/Cancel does not revive explicitly stopped Jobs.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PASS for available checks.
-- Code review: PASS.
-- Owner manual app verification: PARTIAL — RETEST READY.
-- Documentation synchronization: PASS after publication/reverification.
-- Merge permission: BLOCKED.
-- Step 3 progression: BLOCKED.
+Execution PASS; code review PASS; Owner manual verification WAITING; merge BLOCKED; Step 3 BLOCKED.

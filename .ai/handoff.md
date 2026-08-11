@@ -4,28 +4,32 @@
 `PIPELINE1-MULTIJOB-RESILIENCE-003`
 
 ## Status
-FREEZE FIX CODE REVIEW PASS / OWNER RETEST READY
+FAILED-JOB RETRY/POPUP REVISION — OWNER RETEST READY
 
 ## Review basis
 - Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
 - Draft PR: #44.
-- Latest source commit: `9d958614dc1ca9d7249418f4fd9415bf84f6d56b`.
+- Latest source commit: `542ccb44df047d001ebfcbe669ad223b7a5ef840`.
 
-## Owner failure intake — 2026-08-11
-App became unresponsive immediately after loading a video on the prior UX head. Backend startup/health/GPU/WebSocket appeared normal beforehand.
+## Latest Owner findings
+- Failed Job click did not open popup.
+- Failed Jobs need an explicit restart action.
+- Restart during another active Job must enqueue, not preempt.
 
-## Root cause / correction
-The P1 queue MutationObserver watched attributes while feedback synchronization changed Job-card dataset/classes. This created a self-triggering observer loop when Job cards were inserted. Latest source observes only child-list/subtree changes and conditionally sets `data-p1-job-id`.
+## Current correction
+- Error-card click listener uses capture phase.
+- Failed badge includes `↻ Chạy lại`.
+- Retry clears failed-state metadata and places only that Job into `queued`.
+- Active Job is left untouched; existing P1 queue runner naturally waits because `pipeline1JobId` is occupied.
+- With no active Job, queue recovery starts the queued retry.
+- Prior observer-loop freeze fix remains intact.
 
 ## Verification
-- Source diff is one file/two narrow changes.
-- PM post-regression review PASS: `4902045575`.
-- Active Job pulse/spinner, failed-Job popup, queue failure isolation, Stop/Cancel guard and bounded malformed-JSON retry remain present.
-- No P2/P3/STTN/Settings/backend source change.
+GitHub compare from prior reviewed head to latest source changes only `pipeline1-run-ux.js` and `pipeline1-run-ux.css`. Legacy queue semantics were inspected directly and support queue-behind-active behavior. Runtime popup/retry verification remains Owner WAITING.
 
 ## Gates
-Execution PASS; automated/static PASS for available checks; code review PASS; Owner verification FAIL on prior head / RETEST READY on latest head; docs sync PASS after publication/reverification; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; code review PASS for current narrow revision; Owner verification RETEST READY; docs sync PASS after publication/reverification; merge BLOCKED; Step 3 BLOCKED.
 
 ## Next action
-Owner updates the existing Owner-test worktree to latest PR #44 head. First verify add-video no longer freezes the renderer, then resume two-job P1 test and error-popup/queue-continuation checks.
+Owner retests popup and retry on latest PR #44 head before any Step 3 progression.
