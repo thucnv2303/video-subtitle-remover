@@ -70,6 +70,30 @@
   background: rgba(127,29,29,.17) !important;
 }
 
+#step-1-content .p1-job-card-error .p1-job-state {
+  gap: 6px;
+}
+
+#step-1-content .p1-job-retry {
+  margin-left: 2px;
+  padding: 1px 6px;
+  min-height: 20px;
+  border: 1px solid rgba(248,113,113,.62);
+  border-radius: 999px;
+  background: rgba(127,29,29,.32);
+  color: #fecaca;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+#step-1-content .p1-job-retry:hover {
+  border-color: #f87171;
+  background: rgba(185,28,28,.42);
+  color: #fff;
+}
+
 .p1-error-dialog[hidden] {
   display: none !important;
 }
