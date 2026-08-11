@@ -9,50 +9,6 @@ const MAX_CHUNKS = 10;
 const MAX_CHUNK_IMAGE_CHARS = 12 * 1024 * 1024;
 const NARRATION_TARGET_RATIO = 0.975;
 
-const FINAL_SCHEMA = {
-  type: 'object',
-  properties: {
-    summary: { type: 'string' },
-    insights: {
-      type: 'object',
-      properties: {
-        topic: { type: 'string' },
-        product_or_subject: { type: 'string' },
-        audience: { type: 'string' },
-        hook: { type: 'string' },
-        benefits: { type: 'array', items: { type: 'string' } },
-        evidence: { type: 'array', items: { type: 'string' } },
-        cta: { type: 'string' },
-        conflicts: { type: 'array', items: { type: 'string' } },
-      },
-      required: ['topic', 'product_or_subject', 'audience', 'hook', 'benefits', 'evidence', 'cta', 'conflicts'],
-    },
-    narration_script: { type: 'string' },
-    edit_plan: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          scene_index: { type: 'integer' },
-          action: { type: 'string', enum: ['keep', 'trim', 'reorder'] },
-          reason: { type: 'string' },
-        },
-        required: ['scene_index', 'action', 'reason'],
-      },
-    },
-    edit_notes: { type: 'array', items: { type: 'string' } },
-  },
-  required: ['summary', 'insights', 'narration_script', 'edit_plan', 'edit_notes'],
-};
-
-const NARRATION_REPAIR_SCHEMA = {
-  type: 'object',
-  properties: {
-    narration_script: { type: 'string' },
-  },
-  required: ['narration_script'],
-};
-
 const VISION_SCHEMA = {
   type: 'object',
   properties: {
@@ -109,6 +65,17 @@ function outputTruncatedError(phase, model, limit) {
   return err;
 }
 
+function narrationLengthError(phase, model, length, budget) {
+  const err = new Error(`narration ${length} ký tự nằm ngoài budget ${budget.min_chars}-${budget.max_chars} ký tự.`);
+  err.code = 'NARRATION_LENGTH_OUT_OF_BUDGET';
+  err.phase = phase;
+  err.model = model;
+  err.narrationLength = length;
+  err.minChars = budget.min_chars;
+  err.maxChars = budget.max_chars;
+  return err;
+}
+
 function cancelledError() {
   const err = new Error('Pipeline 1 đã được người dùng dừng.');
   err.code = 'P1_CANCELLED';
@@ -148,6 +115,11 @@ function parseJsonContent(value) {
 
 function compactNarration(value) {
   return String(value || '').replace(/```(?:json)?/gi, '').replace(/\s+/g, ' ').trim();
+}
+
+function compactField(value, maxLength) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  return text.length > maxLength ? text.slice(0, maxLength).trim() : text;
 }
 
 async function modelInfo(net, endpoint, model) {
@@ -242,9 +214,9 @@ function normalizedTtsSpeed(rawSpeed) {
 
 function voiceCharsPerSecond(voice) {
   const normalized = String(voice || '').toLowerCase();
-  if (normalized.startsWith('clone:')) return 13.5;
+  if (normalized.startsWith('clone:')) return 16.5;
   if (normalized.includes('neural')) return 14.5;
-  return 13.5;
+  return 15.0;
 }
 
 function narrationBudget(videoDurationSec, voice, speed) {
@@ -265,9 +237,87 @@ function narrationBudget(videoDurationSec, voice, speed) {
   };
 }
 
-function reasoningTokenBudget(targetChars) {
-  const narrationTokens = Math.ceil(Math.max(1, Number(targetChars) || 1) / 1.7);
-  return Math.max(900, Math.min(5200, narrationTokens + 650));
+function finalSchemaForBudget(budget, videoDurationSec) {
+  const duration = Math.max(0, Number(videoDurationSec) || 0);
+  const short = duration <= 60;
+  const medium = duration <= 180;
+  const listMax = short ? 2 : medium ? 4 : 6;
+  const editMax = short ? 3 : medium ? 6 : 10;
+  const noteMax = short ? 2 : medium ? 4 : 6;
+  const textMax = short ? 80 : medium ? 110 : 140;
+  const summaryMax = short ? 140 : medium ? 220 : 300;
+  const shortFieldMax = short ? 70 : medium ? 100 : 120;
+  const emphasisMax = short ? 100 : medium ? 140 : 180;
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      summary: { type: 'string', maxLength: summaryMax },
+      insights: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          topic: { type: 'string', maxLength: shortFieldMax },
+          product_or_subject: { type: 'string', maxLength: shortFieldMax },
+          audience: { type: 'string', maxLength: shortFieldMax },
+          hook: { type: 'string', maxLength: emphasisMax },
+          benefits: { type: 'array', maxItems: listMax, items: { type: 'string', maxLength: textMax } },
+          evidence: { type: 'array', maxItems: listMax, items: { type: 'string', maxLength: textMax } },
+          cta: { type: 'string', maxLength: emphasisMax },
+          conflicts: { type: 'array', maxItems: listMax, items: { type: 'string', maxLength: textMax } },
+        },
+        required: ['topic', 'product_or_subject', 'audience', 'hook', 'benefits', 'evidence', 'cta', 'conflicts'],
+      },
+      narration_script: {
+        type: 'string',
+        minLength: Math.max(1, Math.floor(Number(budget?.min_chars) || 1)),
+        maxLength: Math.max(1, Math.floor(Number(budget?.max_chars) || 1)),
+      },
+      edit_plan: {
+        type: 'array',
+        maxItems: editMax,
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            scene_index: { type: 'integer' },
+            action: { type: 'string', enum: ['keep', 'trim', 'reorder'] },
+            reason: { type: 'string', maxLength: textMax },
+          },
+          required: ['scene_index', 'action', 'reason'],
+        },
+      },
+      edit_notes: { type: 'array', maxItems: noteMax, items: { type: 'string', maxLength: textMax } },
+    },
+    required: ['summary', 'insights', 'narration_script', 'edit_plan', 'edit_notes'],
+  };
+}
+
+function narrationRepairSchemaForBudget(budget) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      narration_script: {
+        type: 'string',
+        minLength: Math.max(1, Math.floor(Number(budget?.min_chars) || 1)),
+        maxLength: Math.max(1, Math.floor(Number(budget?.max_chars) || 1)),
+      },
+    },
+    required: ['narration_script'],
+  };
+}
+
+function reasoningTokenBudget(targetChars, videoDurationSec) {
+  const narrationTokens = Math.ceil(Math.max(1, Number(targetChars) || 1) / 1.6);
+  const duration = Math.max(0, Number(videoDurationSec) || 0);
+  const metadataAllowance = duration <= 60 ? 320 : duration <= 180 ? 520 : 800;
+  return Math.max(520, Math.min(4200, narrationTokens + metadataAllowance));
+}
+
+function narrationOnlyTokenBudget(targetChars) {
+  const narrationTokens = Math.ceil(Math.max(1, Number(targetChars) || 1) / 1.6);
+  return Math.max(260, Math.min(2600, narrationTokens + 100));
 }
 
 function reasoningTimeoutMs(videoDurationSec) {
@@ -284,7 +334,39 @@ function visionTokenBudget(frameCount) {
 
 function outputContractPrompt(userPrompt, videoInfo, frameMeta, budget) {
   const duration = Number(videoInfo?.duration || 0).toFixed(2);
-  return `Bạn là bộ reasoning cuối của Pipeline 1. Output protocol hệ thống có ưu tiên cao hơn format trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH:\n---\n${userPrompt}\n---\n\nDỮ LIỆU THỜI LƯỢNG/VOICE:\n- Video nguồn: ${duration}s.\n- Voice đã chọn: ${budget.voice}.\n- Tốc độ đọc đã chọn: ${budget.speed.toFixed(2)}x.\n- Budget lời thoại: ${budget.min_chars}-${budget.max_chars} ký tự, mục tiêu khoảng ${budget.target_chars} ký tự.\n\nYÊU CẦU BẮT BUỘC:\n- Dùng transcript toàn video và toàn bộ visual evidence theo timeline.\n- Vision chunks đã tạo scene evidence; KHÔNG tạo lại danh sách scenes trong output cuối.\n- Phân tích chủ thể/sản phẩm, đối tượng, hook, lợi ích, bằng chứng, CTA và conflict quan trọng.\n- narration_script là MỘT lời thoại tiếng Việt LIỀN MẠCH đọc từ đầu đến cuối; không SRT, không numbering, không bullet, không nhãn Scene, không chia mini-script theo cảnh.\n- narration_script phải nằm trong budget ${budget.min_chars}-${budget.max_chars} ký tự và ưu tiên gần ${budget.target_chars}.\n- Giữ mạch kể tự nhiên, không lặp lợi ích/CTA để kéo dài nội dung.\n- Không bịa claim hoặc chi tiết không có căn cứ từ transcript/visual evidence.\n- summary tối đa 2 câu; mỗi mảng insights tối đa 5 mục; edit_plan/notes ngắn gọn.\n- RESPONSE chỉ là JSON đúng schema hệ thống.\n\nVideo metadata: ${JSON.stringify(videoInfo || {})}\nVisual sampling timeline: ${JSON.stringify(frameMeta || [])}`;
+  const frameCount = Array.isArray(frameMeta) ? frameMeta.length : 0;
+  return `Bạn là bộ reasoning cuối của Pipeline 1. Output protocol hệ thống có ưu tiên cao hơn format trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH:\n---\n${userPrompt}\n---\n\nDỮ LIỆU THỜI LƯỢNG/VOICE:\n- Video nguồn: ${duration}s.\n- Voice đã chọn: ${budget.voice}.\n- Tốc độ đọc đã chọn: ${budget.speed.toFixed(2)}x.\n- Budget lời thoại: ${budget.min_chars}-${budget.max_chars} ký tự, mục tiêu khoảng ${budget.target_chars} ký tự.\n- Visual sampling: ${frameCount} keyframe đã được Vision rút gọn thành evidence theo chunk.\n\nYÊU CẦU BẮT BUỘC:\n- Dùng transcript toàn video và visual evidence theo timeline.\n- Vision chunks đã tạo scene evidence; KHÔNG tạo lại danh sách scenes trong output cuối.\n- narration_script là MỘT lời thoại tiếng Việt LIỀN MẠCH đọc từ đầu đến cuối; không SRT, không numbering, không bullet, không nhãn Scene, không chia mini-script theo cảnh.\n- narration_script phải nằm trong budget ${budget.min_chars}-${budget.max_chars} ký tự và ưu tiên gần ${budget.target_chars}.\n- Giữ mạch kể tự nhiên, không lặp lợi ích/CTA để kéo dài nội dung.\n- Không bịa claim hoặc chi tiết không có căn cứ từ transcript/visual evidence.\n- Metadata phụ phải cực ngắn: summary súc tích, insights chỉ giữ điểm quan trọng nhất, edit_plan/edit_notes không kể lại transcript/evidence.\n- Ưu tiên hoàn tất narration_script + JSON đúng schema trước mọi metadata phụ.\n- RESPONSE chỉ là JSON đúng schema hệ thống, không giải thích ngoài JSON.`;
+}
+
+function compactReasoningContext(chunkAnalyses) {
+  return (Array.isArray(chunkAnalyses) ? chunkAnalyses : []).map(chunk => {
+    const analysis = chunk?.analysis || {};
+    const scenes = (Array.isArray(analysis.scenes) ? analysis.scenes : []).slice(0, MAX_FRAMES_PER_CHUNK).map(scene => ({
+      time_sec: Number(scene?.time_sec) || 0,
+      visual: compactField(scene?.visual, 120),
+      purpose: compactField(scene?.purpose, 90),
+    }));
+    return {
+      index: Number(chunk?.index) || 0,
+      start_sec: Number(chunk?.start_sec) || 0,
+      end_sec: Number(chunk?.end_sec) || 0,
+      summary: compactField(analysis.summary, 160),
+      scenes,
+      visual_evidence: (Array.isArray(analysis.visual_evidence) ? analysis.visual_evidence : []).slice(0, 4).map(item => compactField(item, 120)),
+      conflicts: (Array.isArray(analysis.conflicts) ? analysis.conflicts : []).slice(0, 2).map(item => compactField(item, 120)),
+    };
+  });
+}
+
+function assertNarrationWithinBudget(value, budget, phase, model) {
+  const narration = compactNarration(value);
+  const minChars = Math.max(1, Math.floor(Number(budget?.min_chars) || 1));
+  const maxChars = Math.max(minChars, Math.floor(Number(budget?.max_chars) || minChars));
+  if (!narration) throw narrationLengthError(phase, model, 0, { min_chars: minChars, max_chars: maxChars });
+  if (narration.length < minChars || narration.length > maxChars) {
+    throw narrationLengthError(phase, model, narration.length, { min_chars: minChars, max_chars: maxChars });
+  }
+  return narration;
 }
 
 function bytesToGiB(value) {
@@ -464,39 +546,46 @@ function parseStructuredResult(result, phase, model, limit) {
   }
 }
 
+function parseFinalReasoningResult(result, phase, model, limit, budget) {
+  const parsed = parseStructuredResult(result, phase, model, limit);
+  parsed.narration_script = assertNarrationWithinBudget(parsed?.narration_script, budget, phase, model);
+  return parsed;
+}
+
 async function runReasoningWithOneRepair(net, endpoint, model, systemPrompt, transcript, visualContext, budget, event, runController, videoDurationSec) {
-  const primaryLimit = reasoningTokenBudget(budget.target_chars);
+  const primaryLimit = reasoningTokenBudget(budget.target_chars, videoDurationSec);
   const timeoutMs = reasoningTimeoutMs(videoDurationSec);
+  const format = finalSchemaForBudget(budget, videoDurationSec);
   const messages = [
     { role: 'system', content: systemPrompt },
-    { role: 'user', content: `TRANSCRIPT SRT TOÀN VIDEO:\n${transcript}\n\nVISUAL TIMELINE JSON THEO CHUNK:\n${JSON.stringify(visualContext)}` },
+    { role: 'user', content: `TRANSCRIPT SRT TOÀN VIDEO:\n${transcript}\n\nVISUAL EVIDENCE JSON ĐÃ RÚT GỌN:\n${JSON.stringify(visualContext)}` },
   ];
   try {
     const result = await chatStream(net, endpoint, model, messages, {
       event,
       phase: 'Global reasoning/remix',
-      format: FINAL_SCHEMA,
+      format,
       timeoutMs,
       numPredict: primaryLimit,
       runController,
     });
-    return parseStructuredResult(result, 'Global reasoning/remix', model, primaryLimit);
+    return parseFinalReasoningResult(result, 'Global reasoning/remix', model, primaryLimit, budget);
   } catch (err) {
-    if (!['OLLAMA_OUTPUT_TRUNCATED', 'OLLAMA_JSON_INVALID'].includes(err?.code) || runController.signal.aborted) throw err;
-    emitProgress(event, `Global reasoning/remix: output chưa hoàn chỉnh (${err.code}); thử lại đúng 1 lần, vẫn giữ narration budget.`, 'warning');
-    const repairPrompt = `${systemPrompt}\n\nLẦN THỬ LẠI BẮT BUỘC:\n- Chỉ trả JSON hợp lệ theo schema.\n- narration_script vẫn phải là một đoạn liền mạch trong khoảng ${budget.min_chars}-${budget.max_chars} ký tự.\n- Rút gọn metadata/insights/edit_plan trước, không kéo dài narration ngoài budget.\n- Không lặp transcript hoặc visual timeline.`;
+    if (!['OLLAMA_OUTPUT_TRUNCATED', 'OLLAMA_JSON_INVALID', 'NARRATION_LENGTH_OUT_OF_BUDGET'].includes(err?.code) || runController.signal.aborted) throw err;
+    emitProgress(event, `Global reasoning/remix: output chưa đạt contract (${err.code}); thử lại đúng 1 lần với JSON tối giản.`, 'warning');
+    const repairPrompt = `${systemPrompt}\n\nLẦN THỬ LẠI BẮT BUỘC:\n- Chỉ trả JSON hợp lệ đúng schema.\n- narration_script phải nằm chính xác trong khoảng ${budget.min_chars}-${budget.max_chars} ký tự.\n- Ưu tiên narration_script; mọi metadata còn lại phải ngắn nhất có thể.\n- Không lặp transcript hoặc visual evidence.`;
     const repaired = await chatStream(net, endpoint, model, [
       { role: 'system', content: repairPrompt },
-      { role: 'user', content: `TRANSCRIPT SRT TOÀN VIDEO:\n${transcript}\n\nVISUAL TIMELINE JSON THEO CHUNK:\n${JSON.stringify(visualContext)}` },
+      { role: 'user', content: `TRANSCRIPT SRT TOÀN VIDEO:\n${transcript}\n\nVISUAL EVIDENCE JSON ĐÃ RÚT GỌN:\n${JSON.stringify(visualContext)}` },
     ], {
       event,
       phase: 'Global reasoning/remix retry',
-      format: FINAL_SCHEMA,
+      format,
       timeoutMs,
       numPredict: primaryLimit,
       runController,
     });
-    return parseStructuredResult(repaired, 'Global reasoning/remix retry', model, primaryLimit);
+    return parseFinalReasoningResult(repaired, 'Global reasoning/remix retry', model, primaryLimit, budget);
   }
 }
 
@@ -680,31 +769,31 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       if (!(audioDurationMs > 0) || !(videoDurationMs > 0)) return { ok: false, error: 'Thiếu duration để fit narration.' };
 
       const budget = narrationRepairBudget(narration, audioDurationMs, videoDurationMs);
-      const limit = reasoningTokenBudget(budget.target_chars);
+      const limit = narrationOnlyTokenBudget(budget.target_chars);
       const prompt = [
         'Bạn chỉ sửa MỘT lời thoại tiếng Việt liền mạch để khớp thời lượng TTS.',
         `Lời thoại hiện tại dài ${narration.length} ký tự.`,
         `Voice đo thực tế: ${(audioDurationMs / 1000).toFixed(2)}s; video: ${(videoDurationMs / 1000).toFixed(2)}s.`,
         `Output bắt buộc nằm trong ${budget.min_chars}-${budget.max_chars} ký tự, mục tiêu khoảng ${budget.target_chars}.`,
+        'Nếu cần dài hơn, mở rộng cách diễn đạt/chuyển ý từ chính nội dung hiện có; không lặp câu máy móc.',
         'Giữ nguyên ý nghĩa, hook, bằng chứng và CTA đã có; không bịa claim mới.',
         'Output là một đoạn narration liên tục: không SRT, không numbering, không bullet, không chia scene.',
         'Không giải thích. Chỉ trả JSON đúng schema.',
       ].join('\n');
-      emitProgress(event, `Narration fit: measured_rate=${budget.measured_chars_per_sec.toFixed(2)} char/s; target=${budget.min_chars}-${budget.max_chars} chars.`, 'info');
+      emitProgress(event, `Narration fit: measured_rate=${budget.measured_chars_per_sec.toFixed(2)} char/s; target=${budget.min_chars}-${budget.max_chars} chars; output_limit=${limit} token.`, 'info');
       const result = await chatStream(net, endpoint, model, [
         { role: 'system', content: prompt },
         { role: 'user', content: narration },
       ], {
         event,
         phase: 'Narration fit',
-        format: NARRATION_REPAIR_SCHEMA,
+        format: narrationRepairSchemaForBudget(budget),
         timeoutMs: 120000,
         numPredict: limit,
         runController,
       });
       const parsed = parseStructuredResult(result, 'Narration fit', model, limit);
-      const repaired = compactNarration(parsed?.narration_script);
-      if (!repaired) return { ok: false, error: 'Narration fit trả về nội dung rỗng.' };
+      const repaired = assertNarrationWithinBudget(parsed?.narration_script, budget, 'Narration fit', model);
       return { ok: true, narration_script: repaired, budget };
     } catch (err) {
       return {
@@ -767,7 +856,9 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       }
 
       const timeoutMs = reasoningTimeoutMs(videoDurationSec);
-      emitProgress(event, `Voice-aware narration budget: video=${videoDurationSec.toFixed(2)}s; voice=${budget.voice}; speed=${budget.speed.toFixed(2)}x; target=${budget.min_chars}-${budget.max_chars} chars; reasoning_timeout=${Math.round(timeoutMs / 1000)}s.`, 'info');
+      const outputLimit = reasoningTokenBudget(budget.target_chars, videoDurationSec);
+      const reasoningContext = compactReasoningContext(chunkAnalyses);
+      emitProgress(event, `Voice-aware narration budget: video=${videoDurationSec.toFixed(2)}s; voice=${budget.voice}; speed=${budget.speed.toFixed(2)}x; target=${budget.min_chars}-${budget.max_chars} chars; reasoning_timeout=${Math.round(timeoutMs / 1000)}s; output_limit=${outputLimit} token.`, 'info');
       emitProgress(event, `Đã hoàn tất ${chunkAnalyses.length} Vision chunk. Chuyển sang compact global reasoning model ${model}.`, 'success');
       const systemPrompt = outputContractPrompt(prompt, payload.video_info, allFrameMeta, budget);
       const finalAnalysis = await runReasoningWithOneRepair(
@@ -776,7 +867,7 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
         model,
         systemPrompt,
         transcript,
-        chunkAnalyses,
+        reasoningContext,
         budget,
         event,
         runController,
@@ -784,8 +875,7 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       );
       if (runController.signal.aborted) throw cancelledError();
 
-      finalAnalysis.narration_script = compactNarration(finalAnalysis.narration_script);
-      if (!finalAnalysis.narration_script) throw new Error('Global reasoning không tạo narration_script hợp lệ.');
+      finalAnalysis.narration_script = assertNarrationWithinBudget(finalAnalysis.narration_script, budget, 'Global reasoning/remix', model);
       const visualScenes = chunkAnalyses.flatMap((chunk, chunkIndex) => {
         const scenes = Array.isArray(chunk?.analysis?.scenes) ? chunk.analysis.scenes : [];
         return scenes.map((scene, sceneIndex) => ({
@@ -795,7 +885,7 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
         }));
       });
       finalAnalysis.scenes = visualScenes;
-      emitProgress(event, `Narration draft: ${finalAnalysis.narration_script.length} ký tự; target=${budget.min_chars}-${budget.max_chars}.`, finalAnalysis.narration_script.length >= budget.min_chars && finalAnalysis.narration_script.length <= budget.max_chars ? 'success' : 'warning');
+      emitProgress(event, `Narration draft: ${finalAnalysis.narration_script.length} ký tự; target=${budget.min_chars}-${budget.max_chars}.`, 'success');
 
       const fingerprint = await sha256File(videoPath);
       return {
@@ -835,5 +925,10 @@ module.exports.__test = {
   narrationRepairBudget,
   normalizedTtsSpeed,
   reasoningTokenBudget,
+  narrationOnlyTokenBudget,
   reasoningTimeoutMs,
+  finalSchemaForBudget,
+  narrationRepairSchemaForBudget,
+  assertNarrationWithinBudget,
+  compactReasoningContext,
 };
