@@ -244,7 +244,7 @@ function syncJobFeedback(appState) {
         const retry = document.createElement('button');
         retry.type = 'button';
         retry.className = 'p1-job-retry';
-        retry.textContent = '↻';
+        retry.textContent = '↻ Chạy lại';
         retry.title = 'Chạy lại Job này';
         retry.setAttribute('aria-label', `Chạy lại ${job.fileName || 'Job lỗi'}`);
         status.appendChild(retry);
