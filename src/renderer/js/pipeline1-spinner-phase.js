@@ -5,7 +5,9 @@
   const seen = new WeakSet();
 
   function sync(now) {
-    document.querySelectorAll('#step1-job-list .p1-job-state-live').forEach((status) => {
+    document.querySelectorAll(
+      '#step1-job-list .p1-job-state.status-processing, #step1-job-list .p1-job-state-live'
+    ).forEach((status) => {
       if (seen.has(status)) return;
       seen.add(status);
       const phase = -(now % PERIOD_MS);
