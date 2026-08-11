@@ -64,7 +64,7 @@ function timeoutError(phase, model, timeoutMs) {
 }
 
 function outputTruncatedError(phase, model, limit) {
-  const err = new Error(`${phase} / ${model}: output chạm giới hạn ${limit} token trước khi JSON hoàn tất.`);
+  const err = new Error(`output chạm giới hạn ${limit} token trước khi JSON hoàn tất.`);
   err.code = 'OLLAMA_OUTPUT_TRUNCATED'; err.phase = phase; err.model = model; err.tokenLimit = limit;
   return err;
 }
@@ -170,6 +170,11 @@ function reasoningTokenBudget(transcript) {
   if (segments >= 14) return 3200;
   if (segments >= 8) return 2800;
   return 2400;
+}
+
+function visionTokenBudget(frameCount) {
+  const count = Math.max(1, Math.min(10, Math.floor(Number(frameCount) || 1)));
+  return Math.min(2200, 1200 + count * 100);
 }
 
 async function runningModels(net, endpoint) {
@@ -376,10 +381,14 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
         ], { event, phase: 'Multimodal analysis', format: FINAL_SCHEMA, timeoutMs: 360000, numPredict: limit, runController });
         finalAnalysis = parseReasoningResult(result, 'Multimodal analysis', model, limit);
       } else {
+        const visionLimit = visionTokenBudget(frames.length);
         const visionResult = await chatStream(net, payload.endpoint, vision.model, [
-          { role: 'system', content: 'Phân tích keyframe video theo timestamp. Chỉ mô tả những gì có căn cứ trực quan và đối chiếu transcript.' },
+          {
+            role: 'system',
+            content: 'Phân tích keyframe video theo timestamp và trả JSON đúng schema. Chỉ mô tả điều có căn cứ trực quan, đối chiếu transcript nhưng không lặp transcript. Giữ thật súc tích: tối đa một scene cho mỗi keyframe; summary tối đa 2 câu; visual, speech_context và purpose mỗi field tối đa 1 câu ngắn; visual_evidence tối đa 6 mục; conflicts tối đa 4 mục; không thêm giải thích ngoài JSON.',
+          },
           { role: 'user', content: `TRANSCRIPT SRT để đối chiếu:\n${transcript}\n\nKeyframe timestamps: ${JSON.stringify(frameMeta)}`, images },
-        ], { event, phase: 'Vision analysis', format: VISION_SCHEMA, timeoutMs: 240000, numPredict: 1200, runController });
+        ], { event, phase: 'Vision analysis', format: VISION_SCHEMA, timeoutMs: 240000, numPredict: visionLimit, runController });
         const visualContext = parseJsonContent(visionResult?.message?.content);
         if (runController.signal.aborted) throw cancelledError();
         await unloadModel(net, payload.endpoint, vision.model, event);
@@ -393,8 +402,12 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       return { ok: true, analysis: finalAnalysis, source_fingerprint: fingerprint, vision_model: vision.model, reasoning_model: reasoningModel, used_vision_fallback: vision.model !== model };
     } catch (err) {
       const type = err?.code === 'P1_CANCELLED' ? 'warning' : 'error';
-      emitProgress(event, `${err?.code === 'P1_CANCELLED' ? 'STOP' : 'FAIL'}: ${err?.message || 'Không thể phân tích video bằng Ollama.'}`, type);
-      return { ok: false, code: err?.code || 'OLLAMA_ANALYSIS_FAILED', phase: err?.phase || null, model: err?.model || null, cancelled: err?.code === 'P1_CANCELLED', error: err?.message || 'Không thể phân tích video bằng Ollama.' };
+      const rawError = String(err?.message || 'Không thể phân tích video bằng Ollama.');
+      const phaseModel = [err?.phase, err?.model].filter(Boolean).join(' / ');
+      const prefix = phaseModel ? `${phaseModel}: ` : '';
+      const normalizedError = prefix && rawError.startsWith(prefix) ? rawError.slice(prefix.length) : rawError;
+      emitProgress(event, `${err?.code === 'P1_CANCELLED' ? 'STOP' : 'FAIL'}: ${prefix}${normalizedError}`, type);
+      return { ok: false, code: err?.code || 'OLLAMA_ANALYSIS_FAILED', phase: err?.phase || null, model: err?.model || null, cancelled: err?.code === 'P1_CANCELLED', error: normalizedError };
     } finally {
       const current = activeRuns.get(runKey);
       if (current?.controller === runController) activeRuns.delete(runKey);
