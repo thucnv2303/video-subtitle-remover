@@ -127,6 +127,7 @@ function installP1ErrorCapture() {
     const current = currentP1Job(appState);
     if (match && current) {
       current.p1ErrorMessage = match[1].trim() || 'Pipeline 1 thất bại.';
+      current.p1ErrorStage ||= 'pipeline';
       current.p1ErrorAt = Date.now();
     }
     return original.apply(this, arguments);
@@ -134,6 +135,15 @@ function installP1ErrorCapture() {
   wrapped.__p1ErrorCaptureWrapped = true;
   window.addLog = wrapped;
   errorLogCaptureInstalled = true;
+}
+
+function p1ErrorDetail(job) {
+  const candidates = [job?.p1ErrorMessage, job?.errorMessage, job?.lastError, job?.error];
+  for (const value of candidates) {
+    if (typeof value === 'string' && value.trim()) return value.trim();
+    if (value?.message && typeof value.message === 'string') return value.message.trim();
+  }
+  return 'Pipeline 1 đã kết thúc với trạng thái lỗi. Chưa có chi tiết lỗi được lưu cho lần chạy này.';
 }
 
 function ensureP1ErrorDialog() {
@@ -185,12 +195,19 @@ function ensureP1ErrorDialog() {
 
   const actions = document.createElement('div');
   actions.className = 'p1-error-dialog-actions';
+
+  const retryButton = document.createElement('button');
+  retryButton.type = 'button';
+  retryButton.className = 'p1-error-dialog-action';
+  retryButton.dataset.p1ErrorRetry = 'true';
+  retryButton.textContent = '↻ Chạy lại';
+
   const closeButton = document.createElement('button');
   closeButton.type = 'button';
   closeButton.className = 'p1-error-dialog-action';
   closeButton.dataset.p1ErrorClose = 'true';
   closeButton.textContent = 'Đóng';
-  actions.appendChild(closeButton);
+  actions.append(retryButton, closeButton);
 
   panel.append(header, jobName, message, meta, actions);
   overlay.appendChild(panel);
@@ -199,9 +216,17 @@ function ensureP1ErrorDialog() {
   const close = () => {
     overlay.classList.remove('is-open');
     overlay.hidden = true;
+    delete overlay.dataset.p1JobId;
   };
 
   overlay.addEventListener('click', event => {
+    const retry = event.target.closest('[data-p1-error-retry="true"]');
+    if (retry) {
+      const appState = state();
+      const job = appState?.jobs?.find(item => item.id === overlay.dataset.p1JobId);
+      if (job && p1State(job) === 'error' && queueFailedP1Job(job)) close();
+      return;
+    }
     if (event.target === overlay || event.target.closest('[data-p1-error-close="true"]')) close();
   });
   document.addEventListener('keydown', event => {
@@ -216,16 +241,17 @@ function openP1ErrorDialog(job) {
   const jobName = overlay.querySelector('[data-p1-error-job="true"]');
   const message = overlay.querySelector('[data-p1-error-message="true"]');
   const meta = overlay.querySelector('[data-p1-error-meta="true"]');
+  const retry = overlay.querySelector('[data-p1-error-retry="true"]');
+  overlay.dataset.p1JobId = job.id || '';
   if (jobName) jobName.textContent = job.fileName || `Job ${job.id || ''}`;
-  if (message) {
-    message.textContent = job.p1ErrorMessage
-      || 'Pipeline 1 đã kết thúc với trạng thái lỗi. Xem Console / Log để biết thêm chi tiết.';
-  }
+  if (message) message.textContent = p1ErrorDetail(job);
   if (meta) {
-    meta.textContent = job.p1ErrorAt
-      ? `Thời điểm ghi nhận: ${new Date(job.p1ErrorAt).toLocaleTimeString('vi-VN', { hour12: false })}`
-      : 'Chi tiết lỗi được lấy từ lần xử lý gần nhất của Job này.';
+    const parts = [];
+    if (job.p1ErrorStage) parts.push(`Giai đoạn: ${job.p1ErrorStage}`);
+    if (job.p1ErrorAt) parts.push(`Thời điểm: ${new Date(job.p1ErrorAt).toLocaleTimeString('vi-VN', { hour12: false })}`);
+    meta.textContent = parts.length ? parts.join(' · ') : 'Chi tiết lỗi được lấy từ lần xử lý gần nhất của Job này.';
   }
+  if (retry) retry.hidden = p1State(job) !== 'error';
   overlay.hidden = false;
   overlay.classList.add('is-open');
   overlay.querySelector('[data-p1-error-close="true"]')?.focus();
@@ -244,23 +270,19 @@ function syncJobFeedback(appState) {
     card.classList.toggle('p1-job-card-processing', processing);
     card.classList.toggle('p1-job-card-error', failed);
 
-    const actions = card.querySelector('.tk-job-card-header > div');
-    const status = actions?.querySelector('.p1-job-state') || actions?.querySelector('span');
-    if (status) {
-      status.classList.add('p1-job-state');
-      status.classList.toggle('p1-job-state-live', processing);
-    }
+    const status = card.querySelector('.p1-job-state');
+    if (status) status.classList.toggle('p1-job-state-live', processing);
 
-    const existingRetry = actions?.querySelector('.p1-job-retry');
-    if (failed && actions && !existingRetry) {
+    const existingRetry = card.querySelector('.p1-job-retry');
+    if (failed && !existingRetry) {
       const retry = document.createElement('button');
       retry.type = 'button';
       retry.className = 'p1-job-retry';
       retry.textContent = '↻ Chạy lại';
       retry.title = 'Chạy lại Job này';
       retry.setAttribute('aria-label', `Chạy lại ${job.fileName || 'Job lỗi'}`);
-      if (status?.nextSibling) actions.insertBefore(retry, status.nextSibling);
-      else actions.appendChild(retry);
+      if (status) status.insertAdjacentElement('afterend', retry);
+      else card.appendChild(retry);
     } else if (!failed && existingRetry) {
       existingRetry.remove();
     }
@@ -280,6 +302,7 @@ function queueFailedP1Job(job) {
   job._p1Cancelled = false;
   job._p1StopRequested = false;
   delete job.p1ErrorMessage;
+  delete job.p1ErrorStage;
   delete job.p1ErrorAt;
 
   window.renderJobList?.();
