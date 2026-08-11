@@ -140,6 +140,15 @@ function installFilePathCompatScript() {
   document.head.appendChild(script);
 }
 
+function installP1SpinnerPhaseScript() {
+  if (document.querySelector('script[data-pipeline1-spinner-phase]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/pipeline1-spinner-phase.js';
+  script.defer = true;
+  script.dataset.pipeline1SpinnerPhase = 'true';
+  document.head.appendChild(script);
+}
+
 function installP1RunUxScript() {
   if (document.querySelector('script[data-pipeline1-run-ux]')) return;
   const script = document.createElement('script');
@@ -160,6 +169,7 @@ function installP2RuntimeScript() {
 
 window.addEventListener('DOMContentLoaded', () => {
   installFilePathCompatScript();
+  installP1SpinnerPhaseScript();
   installP1RunUxScript();
   installP2RuntimeScript();
   let attempts = 0;
