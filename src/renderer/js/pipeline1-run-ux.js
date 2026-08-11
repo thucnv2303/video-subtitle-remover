@@ -236,8 +236,9 @@ function syncJobFeedback(appState) {
     card.classList.toggle('p1-job-card-processing', processing);
     card.classList.toggle('p1-job-card-error', failed);
 
-    const status = card.querySelector('.p1-job-state');
+    const status = card.querySelector('.tk-job-card-header > div > span');
     if (status) {
+      status.classList.add('p1-job-state');
       status.classList.toggle('p1-job-state-live', processing);
       const existingRetry = status.querySelector('.p1-job-retry');
       if (failed && !existingRetry) {
