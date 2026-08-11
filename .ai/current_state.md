@@ -1,66 +1,52 @@
 # Current State
 
 ## Status
-PIPELINE2-MANUAL-REGION-REVISION-002 — OWNER SINGLE-JOB RUNTIME PASS / MULTI-JOB COVERAGE WAITING
+PIPELINE1-MULTIJOB-RESILIENCE-003 — SPINNER / VISION TRUNCATION REVISION CODE REVIEW PASS / OWNER RETEST READY
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Parent P2 branch: `review/PIPELINE2-APPROVED-UI-001`.
-- Exact parent head: `39c2ac7254977c44d2cedb79cabd914fe124c3a7`.
-- Active review branch: `review/PIPELINE2-MANUAL-REGION-REVISION-002`.
-- Draft PR: #43.
-- Current reviewed source commit: `0e20fc0c6300240276da8e4bef16f67186a08889`.
-- Owner-test intake basis: authorized PR #43 review head `b43f16837202051bcebb1e74900b010b4266869e`; GitHub PR head was unchanged when the Owner result was received.
+- Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
+- Draft PR: #44.
+- Starting/base SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
+- Latest Owner-tested head: `5bfe88fa179b297d6fc8ba906a7f3c9a788acd3c`.
+- Latest reviewed source commit: `4f8b6737337abf488e49c58853b5ad3715fdeb7d`.
+- PM incremental review: `4903882317`.
 
-## Owner outcome targeted
-The previous P2 retest proved backend/STTN execution, realtime preview, clean output and P3 success unlock, but remained PARTIAL PASS because:
-1. manual ROI was displaced under the letterboxed portrait layout;
-2. manual regions did not persist independent mask modes;
-3. visible P2 Console contained frame/poll noise.
+## Latest Owner runtime evidence — 2026-08-11
+- Electron file-path correction is runtime effective: `test3.mp4` is now accessed as `F:\test3.mp4`; video-info/frame endpoints return 200 and ASR succeeds with 16 lines.
+- First Job completes vision + qwen reasoning + clone TTS and produces P1 artifacts.
+- `[TTS] OmniVoice released after idle TTS burst.` is observed before the second Job vision phase.
+- Second Job no longer fails on path validation; it fails specifically in fallback `Vision analysis / gemma4:12b` because structured output reaches the fixed 1200-token limit before JSON closes.
+- Owner reports the processing spinner still visibly jerks even though whole-card pulse is gone.
+- Error popup currently duplicates the phase/model prefix.
 
-## Current source revision
-Changed application source relative to the exact parent is limited to:
-- `src/renderer/js/pipeline2-runtime.js`;
-- `src/renderer/js/pipelines/pipeline2-remove.js`.
+## Verified source causes
+1. Fallback vision used a hard `numPredict: 1200` with an 8-keyframe structured schema.
+2. Legacy `renderJobList()` rebuilds Step-1 Job-card DOM repeatedly during processing, restarting CSS animation on replacement spinner nodes.
+3. IPC error text already embedded phase/model while renderer prefixed them again.
 
-Current behavior:
-- ROI source/display conversion uses `canvas-original.getBoundingClientRect()` and letterbox offsets;
-- draw starts outside the rendered video are rejected and the legacy wrapper handler is suppressed while manual drawing is active;
-- runtime observers immediately restore corrected region UI/overlays after legacy list/frame rendering mutates the DOM;
-- new regions inherit the current global mask selector and persist `maskMode` independently;
-- legacy regions fall back to `job.maskMode || 'box'`;
-- the active manual request resolves the current region mask;
-- successful `/api/frame/...` and poll logs plus expected active `/api/preview` 404 lines are suppressed without suppressing unexpected errors.
+## Current correction
+- `p1-vision-ipc.js`: bounded keyframe-sensitive vision budget; 8 frames => 2000 tokens, max 2200; stricter concise vision contract; duplicate phase/model error text normalized.
+- `pipeline1-spinner-phase.js`: renderer-only phase adapter assigns replacement processing status nodes the current 750ms animation phase.
+- `pipeline1-run-ux.css`: spinner consumes `--p1-spinner-phase`; card remains steady.
+- `preload.js`: loads the spinner phase adapter through the real app boot path.
+- Prior file-path, failure-isolation, popup/retry, reasoning repair, timeout, and OmniVoice-release changes remain present.
 
-No backend, preload/python bridge, `pipeline-state.js`, P1, P3, Settings or dependency source is changed by this task.
-
-## Verification evidence
-- Published runtime blob SHA: `f2b39abb2a948eb14e21665f6e0f234a1bef6ae1`; identical local file hash and `node --check`: PASS.
-- Published `pipeline2-remove.js` blob SHA: `67340ba29825ced3b4e5e5c583b591cba0ed2510`; exact local hash match and `node --check`: PASS.
-- Deterministic ROI simulation: <=1 CSS px criterion PASS; latest run maximum error 0.25 px.
-- Mask simulation: `box`, `tight`, legacy fallback `soft` — PASS.
-- Log simulation: frame 200 hidden; preview 404 hidden; preview 500/completion visible — PASS.
-- GitHub compare parent → `0e20fc0...`: final tree contains only the two approved source files plus canonical task documentation.
-- GitHub CI/status checks: none configured.
-- Exact unchanged `src/renderer/js/app.js` blob `99c2cafa509ba2038b98f135156b34271da58c70`: reconstructed byte-identical; `node --check`: PASS.
-- Exact changed-file reconstruction from parent blob hashes to current source/docs: `git diff --check`: PASS.
-
-## Owner runtime result — 2026-08-10
-- Owner reports the fresh Pipeline 2 run completed successfully for a single job and that the observed behavior was generally correct with no new defect reported.
-- This is accepted as Owner runtime PASS for the tested single-job path.
-- Multi-job/batch behavior was explicitly not tested in this run, so it is not claimed as verified.
-- Detailed checklist items not explicitly enumerated by the Owner remain evidence-limited; do not convert this single-job report into a full multi-job P2 release PASS.
-
-## Controlled publication incident
-During PM verification an accidental one-line probe file `.ai/.pm_probe_should_not_exist` was created in commit `78252c198e6790722e92877c17bfee62312877a0` and immediately removed in normal follow-up commit `cec184210ab9a622c5c62163712ff0f44a9ffe5c`. No force/history rewrite was used. GitHub compare `d84d809...` → `cec1842...` reports zero final file differences, and the final PR changed-file set contains no probe file. The incident is therefore contained, but is recorded rather than hidden.
+## Verification
+- GitHub compare `5bfe88fa...` -> `4f8b6737...` contains only active-task spec plus four approved application source files.
+- PM incremental source review PASS `4903882317`.
+- No unresolved inline review threads.
+- GitHub status checks are not configured; no CI PASS claimed.
+- Full Electron runtime/static suite for this exact revision has not been executed by PM; automated/static gate remains PARTIAL.
 
 ## Gates
-- Execution: PASS for source publication.
-- Automated verification: PASS.
-- Code review: PASS.
-- Owner manual app verification: PARTIAL PASS — SINGLE-JOB PASS; MULTI-JOB NOT TESTED.
-- Documentation synchronization: PASS for recording this Owner result.
-- Merge permission: BLOCKED pending required multi-job/batch regression coverage or explicit PM determination that such coverage is outside the release gate.
+- Execution: PASS.
+- Automated/static verification: PARTIAL.
+- Code review: PASS for `4f8b6737...`.
+- Owner manual verification: PARTIAL PASS / RETEST REQUIRED.
+- Documentation synchronization: PASS after publication of this docs commit.
+- Merge permission: BLOCKED.
+- Step 3 progression: BLOCKED.
 
 ## Next permitted action
-Run a controlled multi-job/batch Pipeline 2 regression test on the same reviewed source. Do not modify source and do not merge while that runtime coverage is still missing.
+Owner retests latest PR #44 head. Required remaining evidence: spinner rotation is continuous; `test3.mp4` passes the previous 1200-token vision failure and then reaches qwen reasoning; popup phase/model is not duplicated; qwen completes or fails with the existing finite diagnostic. Do not proceed to Step 3 until these are resolved.

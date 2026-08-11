@@ -1,44 +1,50 @@
 # Active PM Execution Spec
 
-Status: READY_FOR_ANTI_EXECUTION
+Status: CODE_REVIEW_PASS_OWNER_RETEST_READY
 
-Task:
-`PIPELINE2-MANUAL-REGION-REVISION-002`
+Task: `PIPELINE1-MULTIJOB-RESILIENCE-003`
+Repository: `thucnv2303/video-subtitle-remover`
+Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`
+Draft PR: #44
+Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`
+Final source commit: `100e343427264e128acd8cadc67f279faf450e56`
+PM-reviewed docs/head before final gate-sync docs commit: `0435d4146c7d148552f68884aecdf3203cf3ac67`
 
-Parent task:
-`PIPELINE2-RUNTIME-REVISION-001` — Owner retest completed with runtime improvements verified, but manual-region correctness and Console compactness require revision.
+Source scope:
+- `src/renderer/js/pipeline1-run-ux.js`
+- `src/renderer/js/pipelines/pipeline1-ai.js`
 
-Repository:
-`thucnv2303/video-subtitle-remover`
+Owner runtime findings addressed:
+1. selected/detail did not reliably follow actual processing P1 Job;
+2. one P1 Job failure left next Job queued and batch appeared stuck;
+3. Ollama reasoning completed but malformed structured JSON failed parsing.
 
-Authority branch / current P2 checkpoint:
-- Branch: `review/PIPELINE2-APPROVED-UI-001`
-- Draft PR: #42
-- Stacked base under PR #42: `review/BUG-005-P1-FULL-CHAIN` at `97d5a13e77b6919931c251c74fab4c191fa04cec`
-- PM review basis before this task publication: `186c9726d88a99f4438b77002b1487077c0ce712`
+Final behavior:
+- actual processing P1 Job drives selected/detail UI state;
+- failed Job is isolated and next eligible queued P1 Job can start automatically;
+- Owner Stop/Cancel does not auto-resume explicitly stopped work;
+- malformed structured JSON is retried at most once in P1 orchestration;
+- Abort/cancel/timeout/unrelated failures are not retried by malformed-JSON policy;
+- second malformed result fails current Job while queue recovery remains available;
+- no raw AI payload logging;
+- no P2/P3/STTN/Settings changes.
 
-New review branch required:
-`review/PIPELINE2-MANUAL-REGION-REVISION-002`
+Review correction:
+An intermediate renderer mutation of `window.electronAPI.analyzeP1Vision` was rejected and removed. Final retry is in `pipeline1-ai.js`; contextBridge API remains untouched.
 
-Execution / acceptance spec:
-`.ai/task_specs/PIPELINE2-MANUAL-REGION-REVISION-002.md`
+Verified evidence:
+- run-ux blob `1042d3f65b2555feb32ec960345b7d81f903798d`: exact hash + `node --check` PASS;
+- pipeline1-ai blob `9451409b5c594b2f4f67650863b00c7a8b4e1571`: exact hash + `node --check` PASS;
+- failure isolation + running selection simulations PASS;
+- malformed→success exactly 2 calls PASS;
+- malformed twice exactly 2 calls then error PASS;
+- AbortError/timeout/cancelled: no retry PASS;
+- final source diff whitespace hygiene PASS;
+- PR #44 final changed-file scope reviewed: 7 canonical docs + 2 approved source files;
+- GitHub status checks: none configured;
+- unresolved review threads: none;
+- PM code review COMMENT/PASS recorded on PR #44 review id `4897109838`.
 
-Owner retest findings recorded on 2026-08-10:
-- backend/runtime no longer stuck at 0%; STTN processed the video;
-- realtime result preview: PASS by Owner observation;
-- performance materially improved; captured run processed 440 frames in about 38 seconds and reported 11.38 frame/s;
-- engine output reported STTN GPU mode and produced the clean-video output;
-- P2 completion unlocked the matching P3 job;
-- manual ROI overlay appears displaced from the pixels the Owner drew;
-- per-region mask selection is missing; current implementation uses a job-level mask;
-- visible inpaint Console remains noisy with repeated successful `/api/frame/...` requests and expected early `/api/preview` 404 lines.
-
-Execution rule:
-Anti must `git fetch origin`, read this ACTIVE file and the referenced spec from `origin/review/PIPELINE2-APPROVED-UI-001`, and confirm the exact remote HEAD named in the PM dispatch prompt before editing. Local task-spec copies are not authority.
-
-Owner app verification:
-Current retest: PARTIAL PASS / NEEDS_REVISION.
-Fresh verification of the new revision: NOT STARTED.
-
-Merge permission:
-BLOCKED.
+Owner retest: AUTHORIZED / NOT STARTED.
+Merge permission: BLOCKED.
+Step 3 progression: BLOCKED until Owner P1 multi-job PASS is recorded.

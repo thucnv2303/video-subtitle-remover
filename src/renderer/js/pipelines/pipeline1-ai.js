@@ -16,6 +16,14 @@ function _selectRunningJob(job) {
   window.renderJobDetail1?.();
 }
 
+function _rememberP1Error(job, error, stage) {
+  if (!job) return;
+  const message = String(error?.message || error || '').trim();
+  if (message) job.p1ErrorMessage = message;
+  job.p1ErrorStage = stage || job.p1ErrorStage || 'pipeline';
+  job.p1ErrorAt = Date.now();
+}
+
 export async function triggerAutoAiRewrite(job, sourceSrt) {
   const btnRetry = document.getElementById('btn-retry-ai');
   _setBtn(btnRetry, true, '⏳ Đang phân tích video...');
@@ -25,6 +33,8 @@ export async function triggerAutoAiRewrite(job, sourceSrt) {
 
   try {
     if (!sourceSrt?.trim()) throw new Error('Không có SRT đầu vào cho Pipeline 1.');
+    // Malformed/truncated JSON recovery is bounded inside p1-vision-ipc so
+    // visual analysis is not repeated just because the reasoning JSON needs repair.
     const result = await runPipeline1MultimodalAnalysis(job, sourceSrt);
     if (job._p1Cancelled) return { status: 'cancelled' };
     const aiText = result.rewrittenSrt;
@@ -47,6 +57,9 @@ export async function triggerAutoAiRewrite(job, sourceSrt) {
 
     job.p1ArtifactsReady = true;
     job._p1StopRequested = false;
+    delete job.p1ErrorMessage;
+    delete job.p1ErrorStage;
+    delete job.p1ErrorAt;
     _selectRunningJob(job);
     _addLog('[P1] ✅ Analysis/remix artifacts đã sẵn sàng.', 'success');
     return { status: 'ok', result: aiText, analysis: result.analysis, artifacts: result.bundle };
@@ -56,6 +69,7 @@ export async function triggerAutoAiRewrite(job, sourceSrt) {
       _addLog('[P1] ⏹ Pipeline 1 đã dừng theo yêu cầu.', 'warning');
       return { status: 'cancelled' };
     }
+    _rememberP1Error(job, error, 'Phân tích / Remix AI');
     _addLog('[P1] ❌ Phân tích/remix thất bại: ' + error.message, 'error');
     throw error;
   } finally {
@@ -140,6 +154,7 @@ export async function triggerAutoTts(job, srtText) {
       _addLog('[TTS] ⏹ TTS đã dừng theo yêu cầu.', 'warning');
       return { status: 'cancelled' };
     }
+    _rememberP1Error(job, error, 'TTS');
     _addLog('[TTS] ❌ TTS thất bại: ' + error.message, 'error');
     throw error;
   } finally {
