@@ -5,43 +5,38 @@
 
 ## Source/integration verification
 - [x] Dedicated branch and Draft PR #44.
-- [x] Latest reviewed source `fc807c9daa38df62fb885f2c4ff7db4fde4623f3`.
-- [x] Processing whole-card pulse removed; spinner animation remains.
-- [x] `pipeline1-run-ux.js` is loaded from real boot path through preload.
-- [x] Popup/error interaction uses canonical/effective P1 state.
-- [x] Popup has stable `↻ Chạy lại` action and text-only error detail.
-- [x] Queue failure isolation preserved.
-- [x] Reasoning output uses concise schema instructions and transcript-sensitive token budget.
-- [x] Truncation is explicitly detected instead of falling through only as generic JSON syntax failure.
-- [x] At most one reasoning-only repair is allowed for malformed/truncated output.
-- [x] Duplicate renderer-level full multimodal retry removed.
-- [x] Reasoning timeout remains finite at 360 seconds.
-- [x] OmniVoice idle release is debounced; adjacent clone segments can reuse model while idle burst releases cached model/CUDA cache.
-- [x] Observer remains childList/subtree only; no attribute feedback-loop restoration.
-- [x] PM code review PASS `4902998957`.
+- [x] Latest reviewed file-path source `37e6e46a8393ac16cd2a1258979170d4190c51bc`.
+- [x] Owner failing head `51c35e78...` recorded before compatibility fix.
+- [x] Incremental compare changes only task spec, preload, and new `file-path-compat.js`.
+- [x] Preload exposes `webUtils.getPathForFile(file)` through a narrow bridge.
+- [x] Compatibility adapter restores only the legacy `File.prototype.path` getter consumed by existing drag/drop/fallback code.
+- [x] Native dialog `result.filePaths` flow remains untouched.
+- [x] `node --check` PASS for `src/main/preload.js` reviewed source.
+- [x] `node --check` PASS for `src/renderer/js/file-path-compat.js` reviewed source.
+- [x] PM incremental code review PASS `4903672613`.
 - [x] No unresolved inline PR review threads.
 - [ ] GitHub CI/status checks — none configured.
-- [ ] Executed JS/Python static syntax suite for this exact revision — PM environment evidence not yet available; do not claim PASS.
+- [ ] Full Electron runtime path test — Owner required.
 
-## Owner evidence already PASS
+## Previous P1 evidence already retained
 - [x] Multi-job failure isolation: failed Job did not block next Job.
-- [x] Failed Job remains visibly `Lỗi`.
-- [x] Clicking failed Job can open popup.
+- [x] Failed Job can open popup.
+- [x] Reasoning output has finite timeout and bounded repair in reviewed source.
+- [x] OmniVoice idle-release revision remains present in branch.
+- [x] Whole-card pulse removal remains present in branch.
 
-## Fresh Owner retest — REQUIRED
-- [ ] Adding/loading video remains stable; no renderer freeze.
-- [ ] Processing card/badge stays visually steady.
-- [ ] Only the processing spinner rotates.
-- [ ] Exact popup error detail remains readable.
-- [ ] Popup `↻ Chạy lại` is usable.
-- [ ] Retry while another Job is processing becomes queued; active Job continues uninterrupted.
-- [ ] Retried Job starts after current Job completes/errors.
-- [ ] Retry while idle starts normally.
-- [ ] Clone-TTS Job logs `[TTS] OmniVoice released after idle TTS burst.` after its final TTS segment/burst.
-- [ ] Running `test3.mp4` after that clone-TTS Job no longer remains near the 360s reasoning timeout under the same conditions.
-- [ ] If qwen output is truncated/malformed, log shows at most one `Reasoning/remix retry`; vision analysis is not repeated only for JSON repair.
-- [ ] If reasoning cannot finish, failure occurs at finite timeout with explicit phase/model detail and popup remains usable.
-- [ ] Stop/Cancel does not revive explicitly stopped Jobs.
+## Fresh Owner retest — BLOCKING
+- [ ] Add/drag `test3.mp4` and `vn-11110105-...mp4` using the same interaction that failed on `51c35e78...`.
+- [ ] Preview request contains an absolute, drive-qualified Windows source path; it must not be `path=test3.mp4` or another basename-only path.
+- [ ] Preview no longer fails `Video file not found` for an existing source video.
+- [ ] `/api/p1/extract-text` progresses into ASR rather than immediately returning path-not-found.
+- [ ] Retrying a failed Job reuses a valid absolute source path.
+- [ ] Processing card/badge stays steady; only spinner rotates.
+- [ ] Exact popup error detail and popup `↻ Chạy lại` remain usable.
+- [ ] After path gate passes, run clone-TTS Job then `test3.mp4`.
+- [ ] Clone-TTS sequence logs `[TTS] OmniVoice released after idle TTS burst.`.
+- [ ] `test3.mp4` reasoning completes or fails with a bounded explicit diagnostic instead of unexplained near-timeout behavior.
+- [ ] If JSON is truncated/malformed, at most one reasoning-only retry occurs and vision is not repeated solely for repair.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner manual PARTIAL PASS / RETEST READY; documentation sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review PASS; Owner FAIL on prior head / RETEST READY on new head; documentation sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
