@@ -17,7 +17,12 @@ function parseSrtBlocks(srt) {
     const timeLine = lines.find(line => line.includes('-->')) || '';
     const match = timeLine.match(/(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})/);
     const text = lines.filter(line => !/^\d+$/.test(line) && !line.includes('-->')).join(' ').trim();
-    return match ? { index: index + 1, start: match[1].replace('.', ','), end: match[2].replace('.', ','), text } : null;
+    return match ? {
+      index: index + 1,
+      start: match[1].replace('.', ','),
+      end: match[2].replace('.', ','),
+      text,
+    } : null;
   }).filter(Boolean);
 }
 
@@ -34,6 +39,16 @@ function msToSrtTime(ms) {
   const s = Math.floor((safe % 60000) / 1000);
   const milli = safe % 1000;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(milli).padStart(3, '0')}`;
+}
+
+function compactNarration(value) {
+  return String(value || '').replace(/```(?:json)?/gi, '').replace(/\s+/g, ' ').trim();
+}
+
+function narrationToSingleSrt(narration, durationSec) {
+  const text = compactNarration(narration);
+  const durationMs = Math.max(1000, Math.round((Number(durationSec) || 1) * 1000));
+  return `1\n00:00:00,000 --> ${msToSrtTime(durationMs)}\n${text}\n`;
 }
 
 function blobToBase64(blob) {
@@ -169,53 +184,12 @@ async function collectVisualContext(job, sourceBlocks) {
   return { info: { ...info, duration }, frames, chunks };
 }
 
-function normalizeScriptSegments(payload, sourceBlocks, durationSec) {
-  const raw = payload?.script_segments || payload?.remix_script?.segments || payload?.segments || [];
-  if (Array.isArray(raw) && raw.length) {
-    const normalized = raw.map((item, index) => {
-      const text = String(item?.text || item?.voiceover || item?.script || '').trim();
-      if (!text) return null;
-      let start = item?.start || item?.start_time || item?.start_timestamp;
-      let end = item?.end || item?.end_time || item?.end_timestamp;
-      if (!start && Number.isFinite(Number(item?.start_ms))) start = msToSrtTime(Number(item.start_ms));
-      if (!end && Number.isFinite(Number(item?.end_ms))) end = msToSrtTime(Number(item.end_ms));
-      if ((!start || !end) && sourceBlocks[index]) {
-        start = sourceBlocks[index].start;
-        end = sourceBlocks[index].end;
-      }
-      return start && end ? { start: String(start).replace('.', ','), end: String(end).replace('.', ','), text } : null;
-    }).filter(Boolean);
-    if (normalized.length) return normalized;
-  }
-
-  const fallbackText = String(payload?.remix_script?.text || payload?.script || payload?.summary || '').trim();
-  if (!fallbackText) return [];
-  const lines = fallbackText.split(/\n+/).map(line => line.trim()).filter(Boolean);
-  if (sourceBlocks.length) {
-    return sourceBlocks.map((block, index) => ({
-      start: block.start,
-      end: block.end,
-      text: lines[Math.min(index, lines.length - 1)] || fallbackText,
-    }));
-  }
-
-  const durationMs = Math.max(4000, Math.round((Number(durationSec) || 4) * 1000));
-  const segMs = Math.max(2500, Math.floor(durationMs / Math.max(1, lines.length)));
-  return lines.map((text, index) => ({
-    start: msToSrtTime(index * segMs),
-    end: msToSrtTime(Math.min(durationMs, (index + 1) * segMs - 100)),
-    text,
-  }));
-}
-
-function segmentsToSrt(segments) {
-  return segments.map((segment, index) => `${index + 1}\n${segment.start} --> ${segment.end}\n${segment.text}\n`).join('\n');
-}
-
 function artifactRoot(job) {
   const configured = localStorage.getItem('output_dir');
-  const sourceDir = job.filePath.replace(/\\/g, '/').replace(/\/[^/]+$/, '');
-  const root = (configured || sourceDir || '.').replace(/[\\/]$/, '');
+  const normalized = String(job.filePath || '').replace(/\\/g, '/');
+  const slash = normalized.lastIndexOf('/');
+  const sourceDir = slash >= 0 ? normalized.slice(0, slash) : '.';
+  const root = String(configured || sourceDir || '.').replace(/[\\/]$/, '');
   return `${root}/jobs/${job.id}/p1`;
 }
 
@@ -260,6 +234,7 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
   } else {
     job.asrLanguageDetected = job.asrLanguageDetected || 'auto';
   }
+
   const sourceBlocks = parseSrtBlocks(transcriptSrt);
   if (!sourceBlocks.length) throw new Error('Transcript ASR không có segment/timestamp hợp lệ.');
   job.srtContent = transcriptSrt;
@@ -270,7 +245,7 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
   const { info, frames, chunks } = await collectVisualContext(job, sourceBlocks);
   log(`[P1] ✅ Đã lấy ${frames.length} keyframe thích ứng trên ${Number(info.duration || 0).toFixed(1)}s video.`, 'success');
 
-  log('[P1] 🧠 Giai đoạn C — Vision theo chunk + global reasoning...', 'info');
+  log('[P1] 🧠 Giai đoạn C — Vision theo chunk + voice-aware global reasoning...', 'info');
   const unsubscribeProgress = window.electronAPI?.onP1VisionProgress?.((payload) => {
     const message = String(payload?.message || '').trim();
     if (!message) return;
@@ -291,6 +266,8 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
       prompt: config.prompt,
       transcript_srt: transcriptSrt,
       video_path: job.filePath,
+      tts_voice: config.ttsVoice || job.ttsVoice || 'none',
+      tts_speed: Number(config.ttsSpeed || 1),
       video_info: {
         duration: info.duration,
         fps: info.fps,
@@ -303,26 +280,28 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
   } finally {
     if (typeof unsubscribeProgress === 'function') unsubscribeProgress();
   }
+
   if (!visual?.ok) {
     const prefix = [visual?.phase, visual?.model].filter(Boolean).join(' / ');
     throw new Error(`${prefix ? `${prefix}: ` : ''}${visual?.error || 'Phân tích multimodal thất bại.'}`);
   }
 
   const analysis = visual.analysis || {};
-  const scriptSegments = normalizeScriptSegments(analysis, sourceBlocks, info.duration);
+  const narrationScript = compactNarration(analysis.narration_script);
+  const scenes = Array.isArray(analysis.scenes) ? analysis.scenes : [];
   if (!analysis.summary?.trim()) throw new Error('AI không trả về summary phân tích video.');
-  if (!Array.isArray(analysis.scenes) || analysis.scenes.length === 0) throw new Error('AI không trả về scene analysis.');
-  if (!scriptSegments.length) throw new Error('AI không tạo được remix script có timing.');
+  if (!scenes.length) throw new Error('Vision không trả về scene evidence hợp lệ.');
+  if (!narrationScript) throw new Error('AI không tạo được narration_script liền mạch.');
 
-  const rewrittenSrt = segmentsToSrt(scriptSegments);
+  const rewrittenSrt = narrationToSingleSrt(narrationScript, info.duration);
   const sourceMeta = {
     job_id: job.id,
     source_fingerprint: visual.source_fingerprint || '',
     source_duration: Number(info.duration) || 0,
     source_fps: Number(info.fps) || 0,
     source_total_frames: Number(info.total_frames) || 0,
-    artifact_version: 2,
-    analysis_mode: 'multimodal-adaptive-chunks-v2',
+    artifact_version: 3,
+    analysis_mode: 'multimodal-adaptive-continuous-narration-v3',
     asr_language: job.asrLanguageDetected,
     reasoning_model: visual.reasoning_model || config.model,
     vision_model: visual.vision_model || config.model,
@@ -342,7 +321,7 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
     keyframes: chunk.frames.map(({ frame, time_sec }) => ({ frame, time_sec })),
   }));
 
-  const scenes = { ...sourceMeta, scenes: analysis.scenes };
+  const sceneArtifact = { ...sourceMeta, scenes };
   const multimodalTimeline = {
     ...sourceMeta,
     summary: analysis.summary,
@@ -350,27 +329,52 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
     sampling,
     chunks: chunkTimeline,
     keyframes: frames.map(({ frame, time_sec }) => ({ frame, time_sec })),
-    scenes: analysis.scenes,
+    scenes,
     source_transcript_srt: transcriptSrt,
   };
-  const remixScript = { ...sourceMeta, segments: scriptSegments, srt: rewrittenSrt };
-  const editPlan = { ...sourceMeta, plan: analysis.edit_plan || [], notes: analysis.edit_notes || [] };
+  const remixScript = {
+    ...sourceMeta,
+    narration_script: narrationScript,
+    narration_budget: visual.narration_budget || null,
+    segments: [{
+      start: '00:00:00,000',
+      end: msToSrtTime(Math.max(1000, Math.round(Number(info.duration || 1) * 1000))),
+      text: narrationScript,
+    }],
+    srt: rewrittenSrt,
+  };
+  const editPlan = {
+    ...sourceMeta,
+    plan: analysis.edit_plan || [],
+    notes: analysis.edit_notes || [],
+  };
 
   const bundle = {
-    scenes,
+    scenes: sceneArtifact,
     multimodal_timeline: multimodalTimeline,
     remix_script: remixScript,
     edit_plan: editPlan,
   };
   await persistArtifacts(job, bundle, rewrittenSrt);
 
-  job.aiContent = rewrittenSrt;
+  job.aiContent = narrationScript;
+  job.p1Narration = narrationScript;
   job.remixSrt = rewrittenSrt;
   job.p1Analysis = analysis;
   job.p1Artifacts = bundle;
   job.p1AnalysisMode = sourceMeta.analysis_mode;
   job.sourceFingerprint = sourceMeta.source_fingerprint;
-  log(`[P1] ✅ Adaptive multimodal hoàn tất — ${frames.length} keyframe / ${chunks.length} chunk / ${analysis.scenes.length} scene / ${scriptSegments.length} đoạn script; vision=${sourceMeta.vision_model}; reasoning=${sourceMeta.reasoning_model}.`, 'success');
+  log(`[P1] ✅ Adaptive multimodal hoàn tất — ${frames.length} keyframe / ${chunks.length} chunk / ${scenes.length} scene evidence / 1 narration liền mạch ${narrationScript.length} ký tự; vision=${sourceMeta.vision_model}; reasoning=${sourceMeta.reasoning_model}.`, 'success');
 
-  return { sourceSrt: transcriptSrt, rewrittenSrt, analysis, bundle, info, visual };
+  return {
+    sourceSrt: transcriptSrt,
+    narrationScript,
+    rewrittenSrt,
+    analysis,
+    bundle,
+    info,
+    visual,
+  };
 }
+
+export { narrationToSingleSrt, compactNarration };
