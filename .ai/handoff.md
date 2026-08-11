@@ -4,38 +4,44 @@
 `PIPELINE1-CONTINUOUS-NARRATION-006 — Voice-Aware Continuous Narration and Bounded Reasoning`
 
 ## Status
-OWNER FAIL RECORDED / IMPLEMENTATION READY
+SOURCE REVIEW PASS / OWNER RETEST READY / FINAL STATIC WAITING
 
 ## Review basis
-- Failed parent head: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
-- Parent Draft PR: #46.
-- Active revision branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
+- Failed parent: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c` / PR #46 Owner FAIL.
+- Active branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
+- Draft PR: #47.
+- Reviewed source head: `e07c02776a5918be7a4d2c1a72b26ed3138027cc`.
+- PM review: `4905691792`.
 - Exact spec: `.ai/task_specs/PIPELINE1-CONTINUOUS-NARRATION-006.md`.
 
-## Owner runtime evidence
-- 24.30s video ended with 48.10s exported narration after pass 2 (197.9%): Owner FAIL.
-- TTS synthesized 16 separate segments; Owner requires continuous narration from start to finish.
-- Queue continuation itself still works: the next queued Job auto-started after the failed Job.
-- A 17.6s Job completed Vision then remained in qwen3-coder global reasoning at 349s, close to the old 360s phase timeout.
+## Owner evidence that invalidated PR #46
+- 24.30s video -> 48.10s voice after pass 2 (197.9%).
+- Old TTS produced 16 independent speech segments; Owner requires one narration spoken continuously from beginning to end.
+- Next queued Job did auto-start; preserve that behavior.
+- 17.6s Job reached 349s qwen global reasoning after Vision; old 360s reasoning bound is unacceptable for this short input.
 
-## Verified engineering problem
-- Final reasoning is built around `script_segments` rather than one narration string.
-- Selected voice/speed are not part of the final reasoning budget.
-- Legacy `/api/tts-retry` intentionally splits long text into multiple speech clips.
-- PR #46 repair preserves the segmented SRT shape, so duration correction targets the wrong representation.
-- Global reasoning duplicates scene generation already performed by Vision chunks, increasing latency and output size.
+## Current published correction
+- Final qwen schema emits one `narration_script` and compact insights/edit plan; scene evidence is reused from Vision chunks.
+- Source duration + selected voice + selected speed drive an initial narration character budget before TTS.
+- Short video global reasoning timeout = 150s and output budget scales with narration target.
+- P1 continuous TTS uses full text through `/api/tts/generate`, one request per pass; `/api/tts-retry` is removed from this P1 path.
+- Selected speed is applied to the generated track with ffmpeg `atempo`; ffprobe exact file duration is the gate authority.
+- Success requires voice/video ratio 95–100% inclusive.
+- One miss allows exactly one whole-narration fit from measured actual voice rate and exactly one final TTS pass; second miss fails closed.
+- `voice.wav` is the accepted normalized narration audio; `tts_timed.srt` is derived after synthesis for subtitle display only.
+- Automatic sequential queue and PR #46 manual browsing behavior are inherited; no concurrent heavy GPU execution was introduced.
 
-## Approved revision direction
-- One continuous voice-aware narration string from global reasoning.
-- Compact final schema; reuse Vision scene evidence.
-- One full-text `/api/tts/generate` call per pass.
-- Exact generated-audio duration is the gate authority.
-- Subtitle segmentation only after audio generation.
-- At most one whole-script fit + one re-TTS.
-- Preserve safe sequential queue continuation and manual Job browsing; no concurrent heavy GPU inference.
+## Evidence status
+- Local reconstructed syntax checks: PASS for all four changed JS candidates.
+- Deterministic helper verification: PASS.
+- GitHub source/diff review: PASS `4905691792`.
+- CI/status: none configured.
+- Review threads: none unresolved.
+- Exact final-head Node checks + exact `git diff --check`: WAITING.
+- Fresh Owner runtime PR #47: NOT STARTED — READY.
 
 ## Gates
-Execution NOT STARTED; automated/static WAITING; code review WAITING; Owner WAITING; docs sync PASS for failure intake/task definition; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED — READY; docs sync PASS after this publication; merge BLOCKED; Step 3 BLOCKED.
 
 ## Next action
-Implement only the approved task on the active revision branch, then publish source evidence and run PM review before asking Owner to retest.
+Owner checks out the final PR #47 docs/head, runs exact Node/diff commands, then runs the former two-Job failure sequence. Required observations: continuous narration, no segmented speech synthesis, bounded qwen reasoning, 95–100% accepted audio or one-fit fail-closed behavior, automatic next-Job continuation, and manual Job browsing. Record Owner result before any merge decision.
