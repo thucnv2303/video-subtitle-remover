@@ -237,14 +237,65 @@ function syncJobFeedback(appState) {
     card.classList.toggle('p1-job-card-error', failed);
 
     const status = card.querySelector('.p1-job-state');
-    if (status) status.classList.toggle('p1-job-state-live', processing);
+    if (status) {
+      status.classList.toggle('p1-job-state-live', processing);
+      const existingRetry = status.querySelector('.p1-job-retry');
+      if (failed && !existingRetry) {
+        const retry = document.createElement('button');
+        retry.type = 'button';
+        retry.className = 'p1-job-retry';
+        retry.textContent = '↻';
+        retry.title = 'Chạy lại Job này';
+        retry.setAttribute('aria-label', `Chạy lại ${job.fileName || 'Job lỗi'}`);
+        status.appendChild(retry);
+      } else if (!failed && existingRetry) {
+        existingRetry.remove();
+      }
+    }
   });
+}
+
+function queueFailedP1Job(job) {
+  const appState = state();
+  if (!appState || !job || job.status !== 'error') return false;
+  const active = currentP1Job(appState);
+
+  job.pipeline = 1;
+  job.status = 'queued';
+  job.progress = 0;
+  job._p1Cancelled = false;
+  job._p1StopRequested = false;
+  delete job.p1ErrorMessage;
+  delete job.p1ErrorAt;
+
+  window.renderJobList?.();
+  window.updateStartButton?.();
+  window.addLog?.(
+    `[P1] ↻ Đã xếp lại Job lỗi vào hàng đợi: ${job.fileName}${active ? ` (sau ${active.fileName})` : ''}`,
+    'warning'
+  );
+
+  if (!active) recoverStalledP1Queue();
+  return true;
 }
 
 function bindErrorCardClick(queue) {
   if (!queue || queue.dataset.p1ErrorPopupBound === 'true') return;
   queue.dataset.p1ErrorPopupBound = 'true';
   queue.addEventListener('click', event => {
+    const retry = event.target.closest('.p1-job-retry');
+    if (retry) {
+      const card = retry.closest('.tk-job-card');
+      const appState = state();
+      const job = card && appState?.jobs?.find(item => item.id === card.dataset.p1JobId);
+      if (job?.status === 'error') {
+        event.preventDefault();
+        event.stopPropagation();
+        queueFailedP1Job(job);
+      }
+      return;
+    }
+
     if (event.target.closest('button, a, input, select, textarea')) return;
     const card = event.target.closest('.tk-job-card');
     if (!card || !queue.contains(card)) return;
@@ -252,7 +303,7 @@ function bindErrorCardClick(queue) {
     const job = appState?.jobs?.find(item => item.id === card.dataset.p1JobId);
     if (job?.status !== 'error') return;
     setTimeout(() => openP1ErrorDialog(job), 0);
-  });
+  }, true);
 }
 
 function injectStyles() {
