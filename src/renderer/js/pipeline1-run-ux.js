@@ -13,22 +13,26 @@ function p1Jobs(appState) {
   return Array.isArray(appState?.jobs) ? appState.jobs.filter(job => job?.pipeline === 1) : [];
 }
 
+function p1State(job) {
+  return job?.p1Status || job?.status || 'idle';
+}
+
 function hasActiveP1(appState) {
   if (!appState) return false;
   if (appState.pipeline1JobId) return true;
-  return p1Jobs(appState).some(job => ['queued', 'processing'].includes(job.status));
+  return p1Jobs(appState).some(job => ['queued', 'processing'].includes(p1State(job)));
 }
 
 function currentP1Job(appState) {
   if (!appState) return null;
   return appState.jobs?.find(job => job.id === appState.pipeline1JobId)
-    || p1Jobs(appState).find(job => job.status === 'processing')
+    || p1Jobs(appState).find(job => p1State(job) === 'processing')
     || null;
 }
 
 function hasStartableP1(appState) {
   if (!appState?.isBackendReady) return false;
-  return Array.isArray(appState.jobs) && appState.jobs.some(job => job.status === 'idle');
+  return Array.isArray(appState.jobs) && appState.jobs.some(job => ['idle', 'error'].includes(p1State(job)));
 }
 
 function syncRunningJobSelection(appState) {
@@ -48,7 +52,9 @@ function triggerLegacyP1QueueStart(appState, nextJob) {
   if (index < 0) return false;
 
   nextJob.status = 'idle';
+  nextJob.p1Status = 'idle';
   nextJob.progress = 0;
+  nextJob.p1Progress = 0;
   nextJob._p1Cancelled = false;
   nextJob._p1StopRequested = false;
   window.renderJobList?.();
@@ -56,6 +62,7 @@ function triggerLegacyP1QueueStart(appState, nextJob) {
   const card = document.querySelectorAll('#step1-job-list .tk-job-card')[index];
   if (!card) {
     nextJob.status = 'queued';
+    nextJob.p1Status = 'queued';
     window.renderJobList?.();
     return false;
   }
@@ -73,14 +80,14 @@ function triggerLegacyP1QueueStart(appState, nextJob) {
 
 function recoverStalledP1Queue() {
   const appState = state();
-  if (!appState || appState.pipeline1JobId || p1Jobs(appState).some(job => job.status === 'processing')) {
+  if (!appState || appState.pipeline1JobId || p1Jobs(appState).some(job => p1State(job) === 'processing')) {
     if (recoveryTimer) clearTimeout(recoveryTimer);
     recoveryTimer = null;
     recoveryJobId = null;
     return;
   }
 
-  const nextJob = p1Jobs(appState).find(job => job.status === 'queued' && !job._p1Cancelled && !job._p1StopRequested);
+  const nextJob = p1Jobs(appState).find(job => p1State(job) === 'queued' && !job._p1Cancelled && !job._p1StopRequested);
   if (!nextJob) {
     if (recoveryTimer) clearTimeout(recoveryTimer);
     recoveryTimer = null;
@@ -95,11 +102,11 @@ function recoverStalledP1Queue() {
     recoveryTimer = null;
     recoveryJobId = null;
     const latest = state();
-    if (!latest || latest.pipeline1JobId || p1Jobs(latest).some(job => job.status === 'processing')) return;
-    const candidate = p1Jobs(latest).find(job => job.id === nextJob.id && job.status === 'queued' && !job._p1Cancelled && !job._p1StopRequested);
+    if (!latest || latest.pipeline1JobId || p1Jobs(latest).some(job => p1State(job) === 'processing')) return;
+    const candidate = p1Jobs(latest).find(job => job.id === nextJob.id && p1State(job) === 'queued' && !job._p1Cancelled && !job._p1StopRequested);
     if (!candidate) return;
 
-    const hadFailure = p1Jobs(latest).some(job => job.status === 'error');
+    const hadFailure = p1Jobs(latest).some(job => p1State(job) === 'error');
     if (triggerLegacyP1QueueStart(latest, candidate) && hadFailure) {
       window.addLog?.(`[P1] ↪ Job lỗi đã được cô lập; tiếp tục hàng đợi với: ${candidate.fileName}`, 'warning');
     }
@@ -230,40 +237,46 @@ function syncJobFeedback(appState) {
   cards.forEach((card, index) => {
     const job = appState.jobs[index];
     if (!job) return;
-    const processing = job.status === 'processing';
-    const failed = job.status === 'error';
+    const effectiveState = p1State(job);
+    const processing = effectiveState === 'processing';
+    const failed = effectiveState === 'error';
     if (card.dataset.p1JobId !== job.id) card.dataset.p1JobId = job.id;
     card.classList.toggle('p1-job-card-processing', processing);
     card.classList.toggle('p1-job-card-error', failed);
 
-    const status = card.querySelector('.tk-job-card-header > div > span');
+    const actions = card.querySelector('.tk-job-card-header > div');
+    const status = actions?.querySelector('.p1-job-state') || actions?.querySelector('span');
     if (status) {
       status.classList.add('p1-job-state');
       status.classList.toggle('p1-job-state-live', processing);
-      const existingRetry = status.querySelector('.p1-job-retry');
-      if (failed && !existingRetry) {
-        const retry = document.createElement('button');
-        retry.type = 'button';
-        retry.className = 'p1-job-retry';
-        retry.textContent = '↻ Chạy lại';
-        retry.title = 'Chạy lại Job này';
-        retry.setAttribute('aria-label', `Chạy lại ${job.fileName || 'Job lỗi'}`);
-        status.appendChild(retry);
-      } else if (!failed && existingRetry) {
-        existingRetry.remove();
-      }
+    }
+
+    const existingRetry = actions?.querySelector('.p1-job-retry');
+    if (failed && actions && !existingRetry) {
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'p1-job-retry';
+      retry.textContent = '↻ Chạy lại';
+      retry.title = 'Chạy lại Job này';
+      retry.setAttribute('aria-label', `Chạy lại ${job.fileName || 'Job lỗi'}`);
+      if (status?.nextSibling) actions.insertBefore(retry, status.nextSibling);
+      else actions.appendChild(retry);
+    } else if (!failed && existingRetry) {
+      existingRetry.remove();
     }
   });
 }
 
 function queueFailedP1Job(job) {
   const appState = state();
-  if (!appState || !job || job.status !== 'error') return false;
+  if (!appState || !job || p1State(job) !== 'error') return false;
   const active = currentP1Job(appState);
 
   job.pipeline = 1;
   job.status = 'queued';
+  job.p1Status = 'queued';
   job.progress = 0;
+  job.p1Progress = 0;
   job._p1Cancelled = false;
   job._p1StopRequested = false;
   delete job.p1ErrorMessage;
@@ -271,6 +284,7 @@ function queueFailedP1Job(job) {
 
   window.renderJobList?.();
   window.updateStartButton?.();
+  window.pipelineStateGate?.scheduleSync?.();
   window.addLog?.(
     `[P1] ↻ Đã xếp lại Job lỗi vào hàng đợi: ${job.fileName}${active ? ` (sau ${active.fileName})` : ''}`,
     'warning'
@@ -289,7 +303,7 @@ function bindErrorCardClick(queue) {
       const card = retry.closest('.tk-job-card');
       const appState = state();
       const job = card && appState?.jobs?.find(item => item.id === card.dataset.p1JobId);
-      if (job?.status === 'error') {
+      if (p1State(job) === 'error') {
         event.preventDefault();
         event.stopPropagation();
         queueFailedP1Job(job);
@@ -302,8 +316,10 @@ function bindErrorCardClick(queue) {
     if (!card || !queue.contains(card)) return;
     const appState = state();
     const job = appState?.jobs?.find(item => item.id === card.dataset.p1JobId);
-    if (job?.status !== 'error') return;
-    setTimeout(() => openP1ErrorDialog(job), 0);
+    if (p1State(job) !== 'error') return;
+    event.preventDefault();
+    event.stopPropagation();
+    openP1ErrorDialog(job);
   }, true);
 }
 
@@ -402,9 +418,11 @@ async function stopP1(button) {
   }
 
   p1Jobs(appState).forEach(job => {
-    if (job.status === 'queued') {
+    if (p1State(job) === 'queued') {
       job.status = 'idle';
+      job.p1Status = 'idle';
       job.progress = 0;
+      job.p1Progress = 0;
       job._p1Cancelled = true;
     }
   });
