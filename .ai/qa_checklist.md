@@ -5,38 +5,41 @@
 
 ## Source/integration verification
 - [x] Dedicated branch and Draft PR #44.
-- [x] Latest reviewed file-path source `37e6e46a8393ac16cd2a1258979170d4190c51bc`.
-- [x] Owner failing head `51c35e78...` recorded before compatibility fix.
-- [x] Incremental compare changes only task spec, preload, and new `file-path-compat.js`.
-- [x] Preload exposes `webUtils.getPathForFile(file)` through a narrow bridge.
-- [x] Compatibility adapter restores only the legacy `File.prototype.path` getter consumed by existing drag/drop/fallback code.
-- [x] Native dialog `result.filePaths` flow remains untouched.
-- [x] `node --check` PASS for `src/main/preload.js` reviewed source.
-- [x] `node --check` PASS for `src/renderer/js/file-path-compat.js` reviewed source.
-- [x] PM incremental code review PASS `4903672613`.
+- [x] Latest reviewed source `4f8b6737337abf488e49c58853b5ad3715fdeb7d`.
+- [x] Latest Owner-tested head `5bfe88fa...` recorded.
+- [x] Incremental compare from Owner-tested head is limited to active task spec + P1 vision IPC + preload + spinner phase adapter + P1 run-UX CSS.
+- [x] Vision output budget is bounded by keyframe count; 8 keyframes => 2000 tokens, maximum 2200.
+- [x] Vision prompt requests concise schema-complete output.
+- [x] IPC error normalization avoids embedding phase/model twice in returned error text.
+- [x] Spinner phase adapter changes only presentation state and does not mutate Job state.
+- [x] Spinner phase is applied to canonical `status-processing` nodes and consumed through CSS negative animation delay.
+- [x] Spinner adapter is loaded from real preload boot path.
+- [x] Prior Electron file-path compatibility remains present.
+- [x] Prior OmniVoice idle release remains present.
+- [x] PM incremental source review PASS `4903882317`.
 - [x] No unresolved inline PR review threads.
 - [ ] GitHub CI/status checks — none configured.
-- [ ] Full Electron runtime path test — Owner required.
+- [ ] Exact final-revision executable JS/Python/static suite — PM runtime evidence unavailable; automated/static remains PARTIAL.
 
-## Previous P1 evidence already retained
-- [x] Multi-job failure isolation: failed Job did not block next Job.
-- [x] Failed Job can open popup.
-- [x] Reasoning output has finite timeout and bounded repair in reviewed source.
-- [x] OmniVoice idle-release revision remains present in branch.
-- [x] Whole-card pulse removal remains present in branch.
+## Owner evidence already PASS
+- [x] Multi-job failure isolation.
+- [x] Failed Job popup opens.
+- [x] Absolute path resolution: latest run reads `F:\test3.mp4`; metadata/frames/ASR succeed.
+- [x] First Job completes vision + qwen reasoning + TTS in latest sequence.
+- [x] OmniVoice release log appears after clone-TTS burst.
 
 ## Fresh Owner retest — BLOCKING
-- [ ] Add/drag `test3.mp4` and `vn-11110105-...mp4` using the same interaction that failed on `51c35e78...`.
-- [ ] Preview request contains an absolute, drive-qualified Windows source path; it must not be `path=test3.mp4` or another basename-only path.
-- [ ] Preview no longer fails `Video file not found` for an existing source video.
-- [ ] `/api/p1/extract-text` progresses into ASR rather than immediately returning path-not-found.
-- [ ] Retrying a failed Job reuses a valid absolute source path.
-- [ ] Processing card/badge stays steady; only spinner rotates.
-- [ ] Exact popup error detail and popup `↻ Chạy lại` remain usable.
-- [ ] After path gate passes, run clone-TTS Job then `test3.mp4`.
-- [ ] Clone-TTS sequence logs `[TTS] OmniVoice released after idle TTS burst.`.
-- [ ] `test3.mp4` reasoning completes or fails with a bounded explicit diagnostic instead of unexplained near-timeout behavior.
-- [ ] If JSON is truncated/malformed, at most one reasoning-only retry occurs and vision is not repeated solely for repair.
+- [ ] Processing card stays steady.
+- [ ] Spinner rotation is visually continuous with no periodic restart/jump while Job UI updates.
+- [ ] For the same 8-keyframe `test3.mp4`, vision log reports `output_limit=2000 token`.
+- [ ] `test3.mp4` progresses past the prior fixed-1200 vision truncation point.
+- [ ] If vision still fails, failure is bounded/explicit and does not retry indefinitely.
+- [ ] Error popup displays phase/model once, not duplicated.
+- [ ] After vision succeeds, `test3.mp4` reaches qwen reasoning.
+- [ ] qwen reasoning completes or fails within the existing finite timeout with readable exact detail.
+- [ ] Popup `↻ Chạy lại` remains usable.
+- [ ] Retry while another Job is active remains queued and non-preemptive.
+- [ ] Stop/Cancel does not revive explicitly stopped Jobs.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner FAIL on prior head / RETEST READY on new head; documentation sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review PASS; Owner PARTIAL PASS / RETEST REQUIRED; documentation sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.

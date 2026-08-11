@@ -4,36 +4,41 @@
 `PIPELINE1-MULTIJOB-RESILIENCE-003`
 
 ## Status
-FILE-PATH COMPATIBILITY CODE REVIEW PASS — OWNER RETEST READY
+SPINNER / VISION TRUNCATION REVISION CODE REVIEW PASS — OWNER RETEST READY
 
 ## Review basis
 - Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
 - Draft PR: #44.
-- Latest Owner-tested failing head: `51c35e7841b5e44b7571e7fc35390e517bfaa702`.
-- Latest reviewed source: `37e6e46a8393ac16cd2a1258979170d4190c51bc`.
-- PM incremental review: `4903672613`.
+- Latest Owner-tested head: `5bfe88fa179b297d6fc8ba906a7f3c9a788acd3c`.
+- Latest reviewed source: `4f8b6737337abf488e49c58853b5ad3715fdeb7d`.
+- PM review: `4903882317`.
 
 ## Latest Owner evidence
-The latest run never reached the reasoning/VRAM scenario because both Jobs were created with bare filenames. Preview returned 404 and P1 extract-text returned `Video file not found`. Requeue correctly retried the Jobs but could not repair an invalid stored source path.
-
-## Verified root cause
-`app.js` drag/drop and HTML-input fallback use `f.path || f.name`. In the Electron 33 runtime path, `File.path` is no longer available, so the fallback stores only `f.name`. Native Electron dialog selection already uses `result.filePaths` and is not affected.
+- Absolute Windows path handling now works; `test3.mp4` reaches ASR/keyframes from `F:\test3.mp4`.
+- First Job completes P1 and clone TTS.
+- OmniVoice idle release message is observed before the second Job vision run.
+- Second Job fails at fallback `gemma4:12b` vision because the old fixed 1200-token output ceiling is reached before JSON closes.
+- Processing spinner still appears to restart/jump during Job UI updates.
+- Popup repeats phase/model in its error string.
 
 ## Current correction
-- Preload exposes `getPathForFile(file)` backed by Electron `webUtils.getPathForFile`.
-- New renderer compatibility adapter restores the `File.path` getter expected by existing drag/drop/fallback code.
-- Incremental scope is only task spec + preload + compatibility adapter.
-- Prior steady-spinner, queue isolation, popup/retry, structured-output and OmniVoice release revisions remain intact.
+- Vision output headroom is bounded but increased: 8 keyframes => 2000 tokens, max 2200.
+- Vision prompt is explicitly concise to reduce structured-output size.
+- IPC returns normalized error text separately from phase/model.
+- Spinner animation phase is derived from time and applied to replacement status nodes, including canonical `status-processing` nodes.
+- CSS consumes the phase with negative `animation-delay`; whole card remains unanimated.
+- Prior file-path compatibility, queue isolation, popup retry, qwen bounded repair/timeout and OmniVoice release remain intact.
 
-## Verification
-- `node --check` PASS for both changed JS files.
-- PM incremental review PASS `4903672613`.
-- No unresolved inline threads; no GitHub CI statuses configured.
-- Runtime path correctness still requires Owner evidence.
+## Evidence status
+- File-path compatibility: OWNER RUNTIME PASS.
+- OmniVoice idle release mechanism: OWNER RUNTIME OBSERVED.
+- Fixed 1200-token vision cap as current failure cause: OWNER RUNTIME + SOURCE VERIFIED.
+- Spinner restart cause from legacy DOM replacement: SOURCE VERIFIED; current fix requires Owner runtime verification.
+- qwen performance after TTS: WAITING because latest second Job failed before reasoning.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner FAIL on old head / new head RETEST READY; docs sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review PASS; Owner PARTIAL PASS / RETEST REQUIRED; docs sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
 
 ## Next action
-Owner repeats the same two-file add/drag action. Confirm the backend receives absolute drive-qualified paths and ASR proceeds past path validation. Only then continue the prior clone-TTS -> `test3.mp4` stress test.
+Owner tests the latest PR #44 head. First verify smooth spinner and 8-keyframe `output_limit=2000`. Then let `test3.mp4` continue through vision into qwen reasoning and report completion/finite failure plus popup text if any.
