@@ -10,6 +10,7 @@
 - [x] Corrective source commit: `1c028612900b1180aa8c1e66da2d769373793c91`.
 - [x] Corrective compare from `ecb733b...` changes exactly one application source file: `src/main/p1-vision-ipc.js`.
 - [x] No P2/P3/STTN/Settings/backend/TTS-engine source changes.
+- [x] PM corrective source review PASS `4906247596` for logic/scope.
 
 ## Corrective logic review
 - [x] Clone initial narration estimate calibrated closer to observed Owner continuous voice rate.
@@ -38,9 +39,6 @@
 - [ ] `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
 - [ ] GitHub CI/status checks — none configured; absence is not CI PASS.
 
-## PM review — BLOCKING
-- [ ] Final PM review decision for corrective source after exact static/diff evidence.
-
 ## Fresh Owner runtime — BLOCKING
 - [ ] Re-run the same 24.30s + 17.60s two-Job sequence on exact final head.
 - [ ] Job 1 initial narration falls within its initial voice/video character budget before first TTS.
@@ -55,4 +53,4 @@
 - [ ] Before ultimate P1 merge approval, a >60s input demonstrates >8 adaptive samples and multiple Vision chunks with <=8 frames each.
 
 ## Gates
-Execution PASS for corrective source; automated/static PARTIAL; code review WAITING; Owner corrective retest NOT STARTED; documentation synchronization PASS after docs publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review PASS; Owner corrective retest NOT STARTED; documentation synchronization PASS after docs publication; merge BLOCKED; Step 3 BLOCKED.
