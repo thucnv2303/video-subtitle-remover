@@ -7,13 +7,13 @@ PIPELINE1-MULTIJOB-RESILIENCE-003
 Pipeline 1 Multi-Job Failure Isolation, Running-Job Feedback, Error Detail, and Bounded JSON Retry
 
 ## Status
-UX_REVISION_CODE_REVIEW_PASS_OWNER_RETEST_READY
+FREEZE_REGRESSION_FIX_PUBLISHED_REVIEW_PENDING
 
 ## Authority
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
 - Draft PR: #44.
 - Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
-- Latest source commit: `0e988a0cd187633eafb401f30c3f646b1255e2a9`.
+- Latest source commit: `9d958614dc1ca9d7249418f4fd9415bf84f6d56b`.
 
 ## Required outcome
 1. Selected/detail state follows actual processing P1 Job.
@@ -22,34 +22,16 @@ UX_REVISION_CODE_REVIEW_PASS_OWNER_RETEST_READY
 4. Clicking a failed Job shows a readable error popup.
 5. Owner Stop/Cancel does not auto-resume pending work.
 6. Malformed structured JSON is retried exactly once; unrelated/cancel/timeout failures are not retried.
+7. Loading/adding a video must not freeze the renderer.
 
-## Allowed source
-- `src/renderer/js/pipeline1-run-ux.js`
-- `src/renderer/js/pipelines/pipeline1-ai.js`
-- `src/renderer/styles/pipeline1-run-ux.css`
-
-## Current implementation
-- run-UX adapter synchronizes selected/detail state and recovers a stalled queue after a failed Job.
-- Processing card uses blue pulse/glow plus a spinner in the state badge; reduced-motion disables animation.
-- Failed card uses persistent red styling.
-- Standardized final P1 error log is captured onto the active Job before `_finishP1Job` clears the active pointer.
-- Failed-card click opens a modal with safe text-only Job/error/timestamp content.
-- P1 orchestration retains one bounded malformed-JSON retry.
-- Feedback sync avoids repeated attribute writes that could retrigger its MutationObserver.
-
-## Verification
-- exact published run-UX blob `8a08b81e30862716fca21ffcdcb2e7ec54dbece1` matches local reconstruction;
-- `node --check` for exact run-UX JS PASS;
-- GitHub incremental diff review PASS;
-- latest PM review `4898257228` PASS for source through `0e988a0...`;
-- no P2/P3/STTN/Settings/backend source change;
-- no GitHub CI/status checks configured.
+## Freeze regression
+Owner observed app freeze immediately after loading a video on the prior UX head. Root cause is the queue MutationObserver observing attributes while the feedback synchronizer also mutates Job-card dataset/classes. Latest source removes attribute observation and makes Job-id dataset writes conditional.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PASS for available static checks.
-- Code review: PASS.
-- Owner verification: PARTIAL — resume two-job retest on latest head.
-- Documentation sync: PASS after publication/reverification.
+- Automated/static: PASS for current source inspection; runtime still required.
+- Code review: WAITING final post-fix review.
+- Owner verification: FAIL on prior head; RETEST REQUIRED.
+- Documentation sync: PASS for incident intake.
 - Merge: BLOCKED.
 - Step 3: BLOCKED.
