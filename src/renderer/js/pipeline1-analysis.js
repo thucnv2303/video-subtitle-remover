@@ -1,4 +1,8 @@
-const FRAME_SAMPLE_COUNT = 8;
+const TARGET_SAMPLE_INTERVAL_SEC = 4;
+const MIN_SAMPLE_COUNT = 6;
+const SHORT_VIDEO_SAMPLE_COUNT = 8;
+const MAX_FRAMES_PER_VISION_CHUNK = 8;
+const MAX_TOTAL_SAMPLE_COUNT = 80;
 const MAX_VISION_EDGE = 960;
 const VISION_JPEG_QUALITY = 0.72;
 
@@ -64,9 +68,18 @@ async function compressFrameBlob(blob) {
   }
 }
 
-function sampleFrameIndexes(totalFrames, count = FRAME_SAMPLE_COUNT) {
+export function adaptiveSampleCount(durationSec, totalFrames) {
+  const duration = Math.max(0, Number(durationSec) || 0);
   const total = Math.max(1, Math.floor(Number(totalFrames) || 1));
-  const wanted = Math.max(2, Math.min(count, total));
+  let wanted = Math.ceil(duration / TARGET_SAMPLE_INTERVAL_SEC);
+  wanted = Math.max(duration >= 20 ? SHORT_VIDEO_SAMPLE_COUNT : MIN_SAMPLE_COUNT, wanted);
+  wanted = Math.min(MAX_TOTAL_SAMPLE_COUNT, wanted, total);
+  return Math.max(1, wanted);
+}
+
+export function sampleFrameIndexes(totalFrames, count) {
+  const total = Math.max(1, Math.floor(Number(totalFrames) || 1));
+  const wanted = Math.max(1, Math.min(Math.floor(Number(count) || 1), total));
   const indexes = new Set();
   for (let i = 0; i < wanted; i += 1) {
     const ratio = wanted === 1 ? 0 : i / (wanted - 1);
@@ -75,13 +88,59 @@ function sampleFrameIndexes(totalFrames, count = FRAME_SAMPLE_COUNT) {
   return [...indexes];
 }
 
-async function collectVisualContext(job) {
+function sourceBlocksToSrt(blocks) {
+  return blocks.map((block, index) => `${index + 1}\n${block.start} --> ${block.end}\n${block.text}\n`).join('\n');
+}
+
+function overlappingTranscript(sourceBlocks, startSec, endSec) {
+  const startMs = Math.max(0, startSec * 1000);
+  const endMs = Math.max(startMs, endSec * 1000);
+  return sourceBlocks.filter(block => {
+    const blockStart = srtTimeToMs(block.start);
+    const blockEnd = srtTimeToMs(block.end);
+    return blockEnd >= startMs && blockStart <= endMs;
+  });
+}
+
+export function buildVisionChunks(frames, sourceBlocks, durationSec) {
+  const duration = Math.max(0, Number(durationSec) || 0);
+  const ordered = [...(frames || [])].sort((a, b) => Number(a.time_sec) - Number(b.time_sec));
+  const chunks = [];
+  for (let offset = 0; offset < ordered.length; offset += MAX_FRAMES_PER_VISION_CHUNK) {
+    const chunkFrames = ordered.slice(offset, offset + MAX_FRAMES_PER_VISION_CHUNK);
+    const first = Number(chunkFrames[0]?.time_sec || 0);
+    const last = Number(chunkFrames[chunkFrames.length - 1]?.time_sec || first);
+    const previousTime = Number(ordered[offset - 1]?.time_sec);
+    const nextTime = Number(ordered[offset + chunkFrames.length]?.time_sec);
+    const startSec = offset === 0 || !Number.isFinite(previousTime) ? 0 : Math.max(0, (previousTime + first) / 2);
+    const endSec = offset + chunkFrames.length >= ordered.length || !Number.isFinite(nextTime)
+      ? duration
+      : Math.min(duration, (last + nextTime) / 2);
+    const transcriptBlocks = overlappingTranscript(sourceBlocks, startSec, endSec);
+    chunks.push({
+      index: chunks.length,
+      start_sec: Number(startSec.toFixed(3)),
+      end_sec: Number(endSec.toFixed(3)),
+      transcript_srt: sourceBlocksToSrt(transcriptBlocks),
+      frames: chunkFrames,
+    });
+  }
+  return chunks;
+}
+
+async function collectVisualContext(job, sourceBlocks) {
   const info = await window.api.videoInfo(job.filePath);
   if (!info?.total_frames || !info?.fps) throw new Error('Không đọc được metadata video để phân tích hình ảnh.');
-  const indexes = sampleFrameIndexes(info.total_frames);
+  const duration = Number(info.duration) || (Number(info.total_frames) / Number(info.fps));
+  const sampleCount = adaptiveSampleCount(duration, info.total_frames);
+  const indexes = sampleFrameIndexes(info.total_frames, sampleCount);
   const frames = [];
   let originalBytes = 0;
   let encodedChars = 0;
+
+  if (sampleCount >= MAX_TOTAL_SAMPLE_COUNT && Math.ceil(duration / TARGET_SAMPLE_INTERVAL_SEC) > MAX_TOTAL_SAMPLE_COUNT) {
+    log(`[P1] ⚠ Adaptive vision chạm safety cap ${MAX_TOTAL_SAMPLE_COUNT} keyframe cho video ${duration.toFixed(1)}s.`, 'warning');
+  }
 
   for (const frameIndex of indexes) {
     const blob = await window.api.getFrame(frameIndex, job.filePath);
@@ -100,9 +159,14 @@ async function collectVisualContext(job) {
     throw new Error(`Chỉ lấy được ${frames.length}/${indexes.length} keyframe; chưa đủ để phân tích video.`);
   }
 
+  const chunks = buildVisionChunks(frames, sourceBlocks, duration);
   const approxCompressedBytes = encodedChars * 0.75;
-  log(`[P1] 🗜 Keyframe vision: ${frames.length} ảnh; nguồn ${(originalBytes / 1048576).toFixed(2)} MiB → payload khoảng ${(approxCompressedBytes / 1048576).toFixed(2)} MiB; cạnh tối đa ${MAX_VISION_EDGE}px.`, 'info');
-  return { info, frames };
+  log(`[P1] 🧭 Adaptive vision: ${duration.toFixed(1)}s → ${frames.length} keyframe / ${chunks.length} chunk; target≈1 frame/${TARGET_SAMPLE_INTERVAL_SEC}s; max ${MAX_FRAMES_PER_VISION_CHUNK} frame/chunk.`, 'info');
+  log(`[P1] 🗜 Keyframe payload: nguồn ${(originalBytes / 1048576).toFixed(2)} MiB → khoảng ${(approxCompressedBytes / 1048576).toFixed(2)} MiB; cạnh tối đa ${MAX_VISION_EDGE}px.`, 'info');
+  chunks.forEach(chunk => {
+    log(`[P1] 🧩 Vision chunk ${chunk.index + 1}/${chunks.length}: ${chunk.start_sec.toFixed(1)}–${chunk.end_sec.toFixed(1)}s; ${chunk.frames.length} frame; ${parseSrtBlocks(chunk.transcript_srt).length} transcript segment.`, 'info');
+  });
+  return { info: { ...info, duration }, frames, chunks };
 }
 
 function normalizeScriptSegments(payload, sourceBlocks, durationSec) {
@@ -202,11 +266,11 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
   job.asrLineCount = sourceBlocks.length;
   log(`[P1] ✅ ASR input: ${sourceBlocks.length} đoạn, ngôn ngữ=${job.asrLanguageDetected}.`, 'success');
 
-  log('[P1] 🖼 Giai đoạn B — Lấy keyframe từ video gốc...', 'info');
-  const { info, frames } = await collectVisualContext(job);
-  log(`[P1] ✅ Đã lấy ${frames.length} keyframe trên ${Number(info.duration || 0).toFixed(1)}s video.`, 'success');
+  log('[P1] 🖼 Giai đoạn B — Lấy keyframe thích ứng từ video gốc...', 'info');
+  const { info, frames, chunks } = await collectVisualContext(job, sourceBlocks);
+  log(`[P1] ✅ Đã lấy ${frames.length} keyframe thích ứng trên ${Number(info.duration || 0).toFixed(1)}s video.`, 'success');
 
-  log('[P1] 🧠 Giai đoạn C — Phân tích multimodal + xây remix script...', 'info');
+  log('[P1] 🧠 Giai đoạn C — Vision theo chunk + global reasoning...', 'info');
   const unsubscribeProgress = window.electronAPI?.onP1VisionProgress?.((payload) => {
     const message = String(payload?.message || '').trim();
     if (!message) return;
@@ -234,7 +298,7 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
         width: info.width,
         height: info.height,
       },
-      frames,
+      chunks,
     });
   } finally {
     if (typeof unsubscribeProgress === 'function') unsubscribeProgress();
@@ -257,18 +321,34 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
     source_duration: Number(info.duration) || 0,
     source_fps: Number(info.fps) || 0,
     source_total_frames: Number(info.total_frames) || 0,
-    artifact_version: 1,
-    analysis_mode: 'multimodal-keyframes-v1',
+    artifact_version: 2,
+    analysis_mode: 'multimodal-adaptive-chunks-v2',
     asr_language: job.asrLanguageDetected,
     reasoning_model: visual.reasoning_model || config.model,
     vision_model: visual.vision_model || config.model,
   };
+
+  const sampling = {
+    target_interval_sec: TARGET_SAMPLE_INTERVAL_SEC,
+    frame_count: frames.length,
+    max_frames_per_chunk: MAX_FRAMES_PER_VISION_CHUNK,
+    hard_frame_cap: MAX_TOTAL_SAMPLE_COUNT,
+    chunk_count: chunks.length,
+  };
+  const chunkTimeline = chunks.map(chunk => ({
+    index: chunk.index,
+    start_sec: chunk.start_sec,
+    end_sec: chunk.end_sec,
+    keyframes: chunk.frames.map(({ frame, time_sec }) => ({ frame, time_sec })),
+  }));
 
   const scenes = { ...sourceMeta, scenes: analysis.scenes };
   const multimodalTimeline = {
     ...sourceMeta,
     summary: analysis.summary,
     insights: analysis.insights || {},
+    sampling,
+    chunks: chunkTimeline,
     keyframes: frames.map(({ frame, time_sec }) => ({ frame, time_sec })),
     scenes: analysis.scenes,
     source_transcript_srt: transcriptSrt,
@@ -290,7 +370,7 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
   job.p1Artifacts = bundle;
   job.p1AnalysisMode = sourceMeta.analysis_mode;
   job.sourceFingerprint = sourceMeta.source_fingerprint;
-  log(`[P1] ✅ Multimodal analysis hoàn tất — ${analysis.scenes.length} scene, ${scriptSegments.length} đoạn script; vision=${sourceMeta.vision_model}; reasoning=${sourceMeta.reasoning_model}.`, 'success');
+  log(`[P1] ✅ Adaptive multimodal hoàn tất — ${frames.length} keyframe / ${chunks.length} chunk / ${analysis.scenes.length} scene / ${scriptSegments.length} đoạn script; vision=${sourceMeta.vision_model}; reasoning=${sourceMeta.reasoning_model}.`, 'success');
 
   return { sourceSrt: transcriptSrt, rewrittenSrt, analysis, bundle, info, visual };
 }

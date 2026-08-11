@@ -1,52 +1,56 @@
 # Current State
 
 ## Status
-PIPELINE1-MULTIJOB-RESILIENCE-003 — SPINNER / VISION TRUNCATION REVISION CODE REVIEW PASS / OWNER RETEST READY
+PIPELINE1-ADAPTIVE-VISION-004 — SOURCE REVIEW PASS / STATIC + OWNER RETEST WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
-- Draft PR: #44.
-- Starting/base SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
-- Latest Owner-tested head: `5bfe88fa179b297d6fc8ba906a7f3c9a788acd3c`.
-- Latest reviewed source commit: `4f8b6737337abf488e49c58853b5ad3715fdeb7d`.
-- PM incremental review: `4903882317`.
+- Parent review branch/head: `review/PIPELINE1-MULTIJOB-RESILIENCE-003@4508eaed5be1130519e57f927f761976dd5a5458`.
+- Active review branch: `review/PIPELINE1-ADAPTIVE-VISION-004`.
+- Draft PR: #45.
+- Current reviewed source commit: `1bde0d6db589f53406de4038f2781d9c3164fbd9`.
+- PM source review: `4904434998`.
 
-## Latest Owner runtime evidence — 2026-08-11
-- Electron file-path correction is runtime effective: `test3.mp4` is now accessed as `F:\test3.mp4`; video-info/frame endpoints return 200 and ASR succeeds with 16 lines.
-- First Job completes vision + qwen reasoning + clone TTS and produces P1 artifacts.
-- `[TTS] OmniVoice released after idle TTS burst.` is observed before the second Job vision phase.
-- Second Job no longer fails on path validation; it fails specifically in fallback `Vision analysis / gemma4:12b` because structured output reaches the fixed 1200-token limit before JSON closes.
-- Owner reports the processing spinner still visibly jerks even though whole-card pulse is gone.
-- Error popup currently duplicates the phase/model prefix.
+## Owner requirement
+Pipeline 1 must not use one fixed keyframe count for every video. Visual evidence must scale automatically with the input video duration while each model request remains bounded.
 
-## Verified source causes
-1. Fallback vision used a hard `numPredict: 1200` with an 8-keyframe structured schema.
-2. Legacy `renderJobList()` rebuilds Step-1 Job-card DOM repeatedly during processing, restarting CSS animation on replacement spinner nodes.
-3. IPC error text already embedded phase/model while renderer prefixed them again.
+## Current implementation
+- Renderer sampling baseline: approximately one keyframe per 4 seconds.
+- Short-video floor: 6 frames, with at least 8 for videos around 20–30 seconds when source frame count permits.
+- Hard total safety ceiling: 80 sampled frames.
+- Maximum per Vision request: 8 frames.
+- Frames are distributed across the complete video timeline, including first/last coverage.
+- Evidence beyond one safe request is split into ordered chronological Vision chunks.
+- Each chunk receives only SRT blocks overlapping its time range.
+- Vision chunks produce structured visual evidence only; they do not generate the final remix script.
+- After all chunks succeed, exactly one global reasoning stage receives the full source transcript plus ordered structured chunk evidence and produces the existing final P1 schema.
+- `multimodal_timeline.json` records sampling/chunk provenance without base64 images; artifact version is now 2 and analysis mode is `multimodal-adaptive-chunks-v2`.
 
-## Current correction
-- `p1-vision-ipc.js`: bounded keyframe-sensitive vision budget; 8 frames => 2000 tokens, max 2200; stricter concise vision contract; duplicate phase/model error text normalized.
-- `pipeline1-spinner-phase.js`: renderer-only phase adapter assigns replacement processing status nodes the current 750ms animation phase.
-- `pipeline1-run-ux.css`: spinner consumes `--p1-spinner-phase`; card remains steady.
-- `preload.js`: loads the spinner phase adapter through the real app boot path.
-- Prior file-path, failure-isolation, popup/retry, reasoning repair, timeout, and OmniVoice-release changes remain present.
+## Deterministic verification evidence
+PASS from PM simulation:
+- 24 s -> 8 frames / 1 chunk.
+- 60 s -> 15 frames / 2 chunks.
+- 300 s -> 75 frames / 10 chunks.
+- 400 s -> 80-frame safety cap / 10 chunks.
+- Every simulated chunk has <=8 frames; coverage begins at 0 and final chunk ends at video duration.
+- Transcript overlap simulation: a segment spanning a chunk boundary is included in both adjacent chunks; non-overlapping segments are excluded.
 
-## Verification
-- GitHub compare `5bfe88fa...` -> `4f8b6737...` contains only active-task spec plus four approved application source files.
-- PM incremental source review PASS `4903882317`.
-- No unresolved inline review threads.
-- GitHub status checks are not configured; no CI PASS claimed.
-- Full Electron runtime/static suite for this exact revision has not been executed by PM; automated/static gate remains PARTIAL.
+## Verification limits
+- PM source/diff review: PASS `4904434998`.
+- Exact final `node --check` of both published JS blobs: WAITING.
+- Exact final diff-hygiene command: WAITING.
+- GitHub CI/status checks: none configured.
+- Owner real-app adaptive runtime: NOT STARTED.
+- Parent PR #44 runtime evidence remains inherited, including path compatibility and OmniVoice release; it is not converted into adaptive-runtime PASS.
 
 ## Gates
 - Execution: PASS.
-- Automated/static verification: PARTIAL.
-- Code review: PASS for `4f8b6737...`.
-- Owner manual verification: PARTIAL PASS / RETEST REQUIRED.
-- Documentation synchronization: PASS after publication of this docs commit.
+- Automated/static verification: PARTIAL / WAITING exact final commands.
+- Code review: PASS for source logic/scope at `1bde0d6...`.
+- Owner manual app verification: NOT STARTED.
+- Documentation synchronization: PASS for dynamic state after the docs commit containing this file; architecture narrative follow-up is tracked in the active task spec.
 - Merge permission: BLOCKED.
 - Step 3 progression: BLOCKED.
 
 ## Next permitted action
-Owner retests latest PR #44 head. Required remaining evidence: spinner rotation is continuous; `test3.mp4` passes the previous 1200-token vision failure and then reaches qwen reasoning; popup phase/model is not duplicated; qwen completes or fails with the existing finite diagnostic. Do not proceed to Step 3 until these are resolved.
+Run exact static checks on the final adaptive head, then Owner runtime tests a short video and a >60-second video. Do not merge or start Step 3 until adaptive sampling/chunk/global-reasoning behavior is runtime verified and the Owner result is recorded.
