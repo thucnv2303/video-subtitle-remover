@@ -7,7 +7,7 @@ PIPELINE1-MULTIJOB-RESILIENCE-003
 Pipeline 1 Multi-Job Failure Isolation, Running-Job Feedback, Error Detail, and Bounded JSON Retry
 
 ## Status
-FREEZE_REGRESSION_FIX_PUBLISHED_REVIEW_PENDING
+FREEZE_FIX_CODE_REVIEW_PASS_OWNER_RETEST_READY
 
 ## Authority
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
@@ -22,16 +22,22 @@ FREEZE_REGRESSION_FIX_PUBLISHED_REVIEW_PENDING
 4. Clicking a failed Job shows a readable error popup.
 5. Owner Stop/Cancel does not auto-resume pending work.
 6. Malformed structured JSON is retried exactly once; unrelated/cancel/timeout failures are not retried.
-7. Loading/adding a video must not freeze the renderer.
+7. Adding/loading a video must not freeze the renderer.
 
-## Freeze regression
-Owner observed app freeze immediately after loading a video on the prior UX head. Root cause is the queue MutationObserver observing attributes while the feedback synchronizer also mutates Job-card dataset/classes. Latest source removes attribute observation and makes Job-id dataset writes conditional.
+## Freeze regression and correction
+Prior UX head froze when Owner loaded a video. The queue MutationObserver observed attributes while feedback synchronization mutated Job-card attributes/classes. Latest source observes only child-list/subtree changes and conditionally writes the Job-id dataset.
+
+## Verification
+- Source commit `9d958614...` changes only `src/renderer/js/pipeline1-run-ux.js`.
+- Diff is two narrow changes: conditional dataset assignment and removal of attribute observation.
+- PM post-regression review PASS: `4902045575`.
+- No P2/P3/STTN/Settings/backend source changes.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PASS for current source inspection; runtime still required.
-- Code review: WAITING final post-fix review.
-- Owner verification: FAIL on prior head; RETEST REQUIRED.
-- Documentation sync: PASS for incident intake.
+- Automated/static: PASS for available source/static review.
+- Code review: PASS.
+- Owner verification: FAIL on prior head; RETEST READY on latest head.
+- Documentation sync: PASS after publication/reverification.
 - Merge: BLOCKED.
 - Step 3: BLOCKED.
