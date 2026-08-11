@@ -1,11 +1,13 @@
 const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
+const { execFile } = require('child_process');
 
 const activeRuns = new Map();
 const MAX_FRAMES_PER_CHUNK = 8;
 const MAX_CHUNKS = 10;
 const MAX_CHUNK_IMAGE_CHARS = 12 * 1024 * 1024;
+const NARRATION_TARGET_RATIO = 0.975;
 
 const FINAL_SCHEMA = {
   type: 'object',
@@ -14,33 +16,61 @@ const FINAL_SCHEMA = {
     insights: {
       type: 'object',
       properties: {
-        topic: { type: 'string' }, product_or_subject: { type: 'string' }, audience: { type: 'string' }, hook: { type: 'string' },
-        benefits: { type: 'array', items: { type: 'string' } }, evidence: { type: 'array', items: { type: 'string' } },
-        cta: { type: 'string' }, conflicts: { type: 'array', items: { type: 'string' } },
+        topic: { type: 'string' },
+        product_or_subject: { type: 'string' },
+        audience: { type: 'string' },
+        hook: { type: 'string' },
+        benefits: { type: 'array', items: { type: 'string' } },
+        evidence: { type: 'array', items: { type: 'string' } },
+        cta: { type: 'string' },
+        conflicts: { type: 'array', items: { type: 'string' } },
       },
       required: ['topic', 'product_or_subject', 'audience', 'hook', 'benefits', 'evidence', 'cta', 'conflicts'],
     },
-    scenes: { type: 'array', items: { type: 'object', properties: {
-      index: { type: 'integer' }, time_sec: { type: 'number' }, visual: { type: 'string' }, speech_context: { type: 'string' }, purpose: { type: 'string' },
-    }, required: ['index', 'time_sec', 'visual', 'speech_context', 'purpose'] } },
-    script_segments: { type: 'array', items: { type: 'object', properties: {
-      start: { type: 'string' }, end: { type: 'string' }, text: { type: 'string' },
-    }, required: ['start', 'end', 'text'] } },
-    edit_plan: { type: 'array', items: { type: 'object', properties: {
-      scene_index: { type: 'integer' }, action: { type: 'string', enum: ['keep', 'trim', 'reorder'] }, reason: { type: 'string' },
-    }, required: ['scene_index', 'action', 'reason'] } },
+    narration_script: { type: 'string' },
+    edit_plan: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          scene_index: { type: 'integer' },
+          action: { type: 'string', enum: ['keep', 'trim', 'reorder'] },
+          reason: { type: 'string' },
+        },
+        required: ['scene_index', 'action', 'reason'],
+      },
+    },
     edit_notes: { type: 'array', items: { type: 'string' } },
   },
-  required: ['summary', 'insights', 'scenes', 'script_segments', 'edit_plan', 'edit_notes'],
+  required: ['summary', 'insights', 'narration_script', 'edit_plan', 'edit_notes'],
+};
+
+const NARRATION_REPAIR_SCHEMA = {
+  type: 'object',
+  properties: {
+    narration_script: { type: 'string' },
+  },
+  required: ['narration_script'],
 };
 
 const VISION_SCHEMA = {
   type: 'object',
   properties: {
     summary: { type: 'string' },
-    scenes: { type: 'array', items: { type: 'object', properties: {
-      index: { type: 'integer' }, time_sec: { type: 'number' }, visual: { type: 'string' }, speech_context: { type: 'string' }, purpose: { type: 'string' },
-    }, required: ['index', 'time_sec', 'visual', 'speech_context', 'purpose'] } },
+    scenes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          index: { type: 'integer' },
+          time_sec: { type: 'number' },
+          visual: { type: 'string' },
+          speech_context: { type: 'string' },
+          purpose: { type: 'string' },
+        },
+        required: ['index', 'time_sec', 'visual', 'speech_context', 'purpose'],
+      },
+    },
     visual_evidence: { type: 'array', items: { type: 'string' } },
     conflicts: { type: 'array', items: { type: 'string' } },
   },
@@ -56,19 +86,26 @@ function localOllamaUrl(rawEndpoint, pathname) {
   const url = new URL(raw.includes('://') ? raw : `http://${raw}`);
   if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Endpoint Ollama phải dùng HTTP hoặc HTTPS.');
   if (!['localhost', '127.0.0.1', '::1'].includes(url.hostname.toLowerCase())) throw new Error('Pipeline 1 chỉ cho phép Ollama local.');
-  url.pathname = pathname; url.search = ''; url.hash = '';
+  url.pathname = pathname;
+  url.search = '';
+  url.hash = '';
   return url.toString();
 }
 
 function timeoutError(phase, model, timeoutMs) {
   const err = new Error(`${phase} với model ${model} quá thời gian ${Math.round(timeoutMs / 1000)} giây.`);
-  err.code = 'OLLAMA_PHASE_TIMEOUT'; err.phase = phase; err.model = model;
+  err.code = 'OLLAMA_PHASE_TIMEOUT';
+  err.phase = phase;
+  err.model = model;
   return err;
 }
 
 function outputTruncatedError(phase, model, limit) {
   const err = new Error(`output chạm giới hạn ${limit} token trước khi JSON hoàn tất.`);
-  err.code = 'OLLAMA_OUTPUT_TRUNCATED'; err.phase = phase; err.model = model; err.tokenLimit = limit;
+  err.code = 'OLLAMA_OUTPUT_TRUNCATED';
+  err.phase = phase;
+  err.model = model;
+  err.tokenLimit = limit;
   return err;
 }
 
@@ -91,7 +128,9 @@ async function fetchJson(net, url, options = {}, timeoutMs = 120000, phase = 'Ol
   } catch (err) {
     if (controller.signal.aborted) throw timeoutError(phase, 'local', timeoutMs);
     throw err;
-  } finally { clearTimeout(timeout); }
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function parseJsonContent(value) {
@@ -100,15 +139,22 @@ function parseJsonContent(value) {
   if (!text) throw new Error('AI trả về nội dung rỗng.');
   const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
   try { return JSON.parse(cleaned); } catch {
-    const first = cleaned.indexOf('{'), last = cleaned.lastIndexOf('}');
+    const first = cleaned.indexOf('{');
+    const last = cleaned.lastIndexOf('}');
     if (first >= 0 && last > first) return JSON.parse(cleaned.slice(first, last + 1));
     throw new Error('AI không trả về JSON hợp lệ.');
   }
 }
 
+function compactNarration(value) {
+  return String(value || '').replace(/```(?:json)?/gi, '').replace(/\s+/g, ' ').trim();
+}
+
 async function modelInfo(net, endpoint, model) {
   return fetchJson(net, localOllamaUrl(endpoint, '/api/show'), {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model, verbose: false }),
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, verbose: false }),
   }, 15000, `Đọc capability ${model}`);
 }
 
@@ -130,7 +176,8 @@ async function findVisionModel(net, endpoint, preferredModel, event) {
   const tags = await fetchJson(net, localOllamaUrl(endpoint, '/api/tags'), {}, 10000, 'Quét model Ollama');
   const candidates = Array.isArray(tags?.models) ? tags.models
     .map(item => ({ name: item?.name || item?.model, size: Number(item?.size) || Number.MAX_SAFE_INTEGER }))
-    .filter(item => item.name && item.name !== preferredModel).sort((a, b) => a.size - b.size) : [];
+    .filter(item => item.name && item.name !== preferredModel)
+    .sort((a, b) => a.size - b.size) : [];
   for (const candidate of candidates.slice(0, 20)) {
     try {
       const info = await modelInfo(net, endpoint, candidate.name);
@@ -139,15 +186,20 @@ async function findVisionModel(net, endpoint, preferredModel, event) {
         emitProgress(event, `Vision model được chọn: ${modelLabel(info, candidate.name)}.`, 'success');
         return { model: candidate.name, capabilities: caps, fallback: true, info };
       }
-    } catch (err) { emitProgress(event, `Bỏ qua ${candidate.name}: ${err?.message || 'không đọc được capability'}.`, 'warning'); }
+    } catch (err) {
+      emitProgress(event, `Bỏ qua ${candidate.name}: ${err?.message || 'không đọc được capability'}.`, 'warning');
+    }
   }
   return { model: null, capabilities: preferredCaps, fallback: false, info: null };
 }
 
 function sha256File(filePath) {
   return new Promise((resolve, reject) => {
-    const hash = crypto.createHash('sha256'); const stream = fs.createReadStream(filePath);
-    stream.on('data', chunk => hash.update(chunk)); stream.on('error', reject); stream.on('end', () => resolve(hash.digest('hex')));
+    const hash = crypto.createHash('sha256');
+    const stream = fs.createReadStream(filePath);
+    stream.on('data', chunk => hash.update(chunk));
+    stream.on('error', reject);
+    stream.on('end', () => resolve(hash.digest('hex')));
   });
 }
 
@@ -155,10 +207,15 @@ function compactFrames(frames, maxFrames = MAX_FRAMES_PER_CHUNK) {
   const safe = Array.isArray(frames) ? frames.slice(0, maxFrames) : [];
   let totalChars = 0;
   return safe.map(frame => {
-    const image = String(frame?.image_base64 || ''); totalChars += image.length;
+    const image = String(frame?.image_base64 || '');
+    totalChars += image.length;
     if (!image) return null;
     if (totalChars > MAX_CHUNK_IMAGE_CHARS) throw new Error('Dữ liệu ảnh của một Vision chunk vượt giới hạn 12 MB sau nén.');
-    return { frame: Number(frame?.frame) || 0, time_sec: Number(frame?.time_sec) || 0, image_base64: image };
+    return {
+      frame: Number(frame?.frame) || 0,
+      time_sec: Number(frame?.time_sec) || 0,
+      image_base64: image,
+    };
   }).filter(Boolean);
 }
 
@@ -177,24 +234,61 @@ function compactChunks(rawChunks) {
   });
 }
 
-function outputContractPrompt(userPrompt, videoInfo, frameMeta) {
-  return `Bạn là bộ reasoning cuối của Pipeline 1. Output protocol hệ thống có ưu tiên cao hơn format trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH:\n---\n${userPrompt}\n---\n\nYÊU CẦU BẮT BUỘC:\n- Dùng transcript toàn video và toàn bộ visual evidence theo timeline.\n- Phân tích chủ thể/sản phẩm, đối tượng, hook, lợi ích, bằng chứng, CTA và chi tiết trực quan quan trọng.\n- Nếu transcript mâu thuẫn hình ảnh, ghi trong insights.conflicts.\n- Viết lại lời thoại tiếng Việt tự nhiên, phù hợp TTS.\n- script_segments phải nằm trong thời lượng video.\n- Không bịa thông tin không có căn cứ.\n- RESPONSE phải tuân theo JSON schema hệ thống.\n- Giữ output súc tích: summary <= 2 câu; mỗi scene field <= 1 câu ngắn; mỗi script segment <= 2 câu ngắn; edit_notes tối đa 5 mục.\n- Không thêm giải thích ngoài JSON.\n\nVideo metadata: ${JSON.stringify(videoInfo || {})}\nVisual sampling timeline: ${JSON.stringify(frameMeta || [])}`;
+function normalizedTtsSpeed(rawSpeed) {
+  const value = Number(rawSpeed);
+  if (!Number.isFinite(value)) return 1;
+  return Math.max(0.5, Math.min(2, value));
 }
 
-function bytesToGiB(value) { return (Number(value || 0) / (1024 ** 3)).toFixed(1); }
+function voiceCharsPerSecond(voice) {
+  const normalized = String(voice || '').toLowerCase();
+  if (normalized.startsWith('clone:')) return 13.5;
+  if (normalized.includes('neural')) return 14.5;
+  return 13.5;
+}
 
-function reasoningTokenBudget(transcript) {
-  const segments = (String(transcript || '').match(/-->/g) || []).length;
-  if (segments >= 40) return 4000;
-  if (segments >= 20) return 3600;
-  if (segments >= 14) return 3200;
-  if (segments >= 8) return 2800;
-  return 2400;
+function narrationBudget(videoDurationSec, voice, speed) {
+  const duration = Math.max(1, Number(videoDurationSec) || 1);
+  const ttsSpeed = normalizedTtsSpeed(speed);
+  const rate = voiceCharsPerSecond(voice);
+  const minChars = Math.max(40, Math.round(duration * 0.95 * rate * ttsSpeed));
+  const maxChars = Math.max(minChars + 10, Math.round(duration * 1.00 * rate * ttsSpeed));
+  const targetChars = Math.max(minChars, Math.min(maxChars, Math.round(duration * NARRATION_TARGET_RATIO * rate * ttsSpeed)));
+  return {
+    voice: String(voice || 'none'),
+    speed: ttsSpeed,
+    estimated_chars_per_sec: rate,
+    min_chars: minChars,
+    max_chars: maxChars,
+    target_chars: targetChars,
+    target_ratio: NARRATION_TARGET_RATIO,
+  };
+}
+
+function reasoningTokenBudget(targetChars) {
+  const narrationTokens = Math.ceil(Math.max(1, Number(targetChars) || 1) / 1.7);
+  return Math.max(900, Math.min(5200, narrationTokens + 650));
+}
+
+function reasoningTimeoutMs(videoDurationSec) {
+  const duration = Math.max(0, Number(videoDurationSec) || 0);
+  if (duration <= 60) return 150000;
+  if (duration <= 180) return 210000;
+  return 300000;
 }
 
 function visionTokenBudget(frameCount) {
   const count = Math.max(1, Math.min(MAX_FRAMES_PER_CHUNK, Math.floor(Number(frameCount) || 1)));
   return Math.min(2200, 1200 + count * 100);
+}
+
+function outputContractPrompt(userPrompt, videoInfo, frameMeta, budget) {
+  const duration = Number(videoInfo?.duration || 0).toFixed(2);
+  return `Bạn là bộ reasoning cuối của Pipeline 1. Output protocol hệ thống có ưu tiên cao hơn format trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH:\n---\n${userPrompt}\n---\n\nDỮ LIỆU THỜI LƯỢNG/VOICE:\n- Video nguồn: ${duration}s.\n- Voice đã chọn: ${budget.voice}.\n- Tốc độ đọc đã chọn: ${budget.speed.toFixed(2)}x.\n- Budget lời thoại: ${budget.min_chars}-${budget.max_chars} ký tự, mục tiêu khoảng ${budget.target_chars} ký tự.\n\nYÊU CẦU BẮT BUỘC:\n- Dùng transcript toàn video và toàn bộ visual evidence theo timeline.\n- Vision chunks đã tạo scene evidence; KHÔNG tạo lại danh sách scenes trong output cuối.\n- Phân tích chủ thể/sản phẩm, đối tượng, hook, lợi ích, bằng chứng, CTA và conflict quan trọng.\n- narration_script là MỘT lời thoại tiếng Việt LIỀN MẠCH đọc từ đầu đến cuối; không SRT, không numbering, không bullet, không nhãn Scene, không chia mini-script theo cảnh.\n- narration_script phải nằm trong budget ${budget.min_chars}-${budget.max_chars} ký tự và ưu tiên gần ${budget.target_chars}.\n- Giữ mạch kể tự nhiên, không lặp lợi ích/CTA để kéo dài nội dung.\n- Không bịa claim hoặc chi tiết không có căn cứ từ transcript/visual evidence.\n- summary tối đa 2 câu; mỗi mảng insights tối đa 5 mục; edit_plan/notes ngắn gọn.\n- RESPONSE chỉ là JSON đúng schema hệ thống.\n\nVideo metadata: ${JSON.stringify(videoInfo || {})}\nVisual sampling timeline: ${JSON.stringify(frameMeta || [])}`;
+}
+
+function bytesToGiB(value) {
+  return (Number(value || 0) / (1024 ** 3)).toFixed(1);
 }
 
 async function runningModels(net, endpoint) {
@@ -203,10 +297,13 @@ async function runningModels(net, endpoint) {
 }
 
 function startModelMonitor(net, endpoint, event, model, phase) {
-  let stopped = false, polling = false, lastSignature = '';
+  let stopped = false;
+  let polling = false;
+  let lastSignature = '';
   const progressKey = `ollama:${phase.toLowerCase().replace(/\s+/g, '-')}`;
   const poll = async () => {
-    if (stopped || polling) return; polling = true;
+    if (stopped || polling) return;
+    polling = true;
     try {
       const models = await runningModels(net, endpoint);
       const active = models.find(item => (item?.name || item?.model) === model);
@@ -220,31 +317,47 @@ function startModelMonitor(net, endpoint, event, model, phase) {
         lastSignature = 'not-loaded';
         emitProgress(event, `${phase}: đang chờ Ollama load ${model}...`, 'info', { progress_key: progressKey });
       }
-    } catch { /* telemetry cannot fail inference */ } finally { polling = false; }
+    } catch {
+      // Telemetry cannot fail inference.
+    } finally {
+      polling = false;
+    }
   };
-  poll(); const timer = setInterval(poll, 4000);
-  return () => { stopped = true; clearInterval(timer); };
+  poll();
+  const timer = setInterval(poll, 4000);
+  return () => {
+    stopped = true;
+    clearInterval(timer);
+  };
 }
 
 async function unloadModel(net, endpoint, model, event) {
   emitProgress(event, `Giải phóng model ${model} trước global reasoning...`);
   try {
     await fetchJson(net, localOllamaUrl(endpoint, '/api/generate'), {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model, prompt: '', stream: false, keep_alive: 0 }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, prompt: '', stream: false, keep_alive: 0 }),
     }, 30000, `Unload ${model}`);
     const deadline = Date.now() + 12000;
     while (Date.now() < deadline) {
       const active = await runningModels(net, endpoint).catch(() => []);
-      if (!active.some(item => (item?.name || item?.model) === model)) { emitProgress(event, `Đã giải phóng ${model}.`, 'success'); return; }
+      if (!active.some(item => (item?.name || item?.model) === model)) {
+        emitProgress(event, `Đã giải phóng ${model}.`, 'success');
+        return;
+      }
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
     emitProgress(event, `${model} vẫn còn trong /api/ps sau yêu cầu unload; tiếp tục với cảnh báo.`, 'warning');
-  } catch (err) { emitProgress(event, `Không xác nhận được unload ${model}: ${err?.message || err}.`, 'warning'); }
+  } catch (err) {
+    emitProgress(event, `Không xác nhận được unload ${model}: ${err?.message || err}.`, 'warning');
+  }
 }
 
 async function chatStream(net, endpoint, model, messages, { event, phase, format, timeoutMs, numPredict, runController }) {
   if (runController.signal.aborted) throw cancelledError();
-  const started = Date.now(); const progressKey = `ollama:${phase.toLowerCase().replace(/\s+/g, '-')}`;
+  const started = Date.now();
+  const progressKey = `ollama:${phase.toLowerCase().replace(/\s+/g, '-')}`;
   const timeout = setTimeout(() => {
     if (!runController.signal.aborted) runController.abort({ type: 'timeout', phase, model, timeoutMs });
   }, timeoutMs);
@@ -253,21 +366,39 @@ async function chatStream(net, endpoint, model, messages, { event, phase, format
 
   try {
     const response = await net.fetch(localOllamaUrl(endpoint, '/api/chat'), {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: runController.signal,
-      body: JSON.stringify({ model, messages, stream: true, format, think: false, keep_alive: 0, options: { temperature: 0.2, num_predict: numPredict } }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: runController.signal,
+      body: JSON.stringify({
+        model,
+        messages,
+        stream: true,
+        format,
+        think: false,
+        keep_alive: 0,
+        options: { temperature: 0.2, num_predict: numPredict },
+      }),
     });
     if (!response.ok) {
-      const text = await response.text(); let detail = text;
+      const text = await response.text();
+      let detail = text;
       try { detail = JSON.parse(text)?.error || text; } catch { /* keep text */ }
       throw new Error(`${phase} / ${model}: HTTP ${response.status} ${detail || ''}`.trim());
     }
     if (!response.body?.getReader) throw new Error(`${phase} / ${model}: response stream không khả dụng.`);
 
-    const reader = response.body.getReader(); const decoder = new TextDecoder();
-    let pending = '', content = '', chunkCount = 0, firstOutputAt = null, finalChunk = null;
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let pending = '';
+    let content = '';
+    let chunkCount = 0;
+    let firstOutputAt = null;
+    let finalChunk = null;
     const consume = (line) => {
-      const trimmed = line.trim(); if (!trimmed) return;
-      const item = JSON.parse(trimmed); if (item?.error) throw new Error(`${phase} / ${model}: ${item.error}`);
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      const item = JSON.parse(trimmed);
+      if (item?.error) throw new Error(`${phase} / ${model}: ${item.error}`);
       const part = item?.message?.content;
       if (typeof part === 'string' && part) {
         content += part;
@@ -277,21 +408,29 @@ async function chatStream(net, endpoint, model, messages, { event, phase, format
         }
       }
       chunkCount += 1;
-      if (chunkCount % 25 === 0) emitProgress(event, `${phase}: ${model} đang sinh output... ${((Date.now() - started) / 1000).toFixed(0)}s.`, 'info', { progress_key: progressKey });
+      if (chunkCount % 25 === 0) {
+        emitProgress(event, `${phase}: ${model} đang sinh output... ${((Date.now() - started) / 1000).toFixed(0)}s.`, 'info', { progress_key: progressKey });
+      }
       if (item?.done) finalChunk = item;
     };
 
     while (true) {
-      const { done, value } = await reader.read(); if (done) break;
+      const { done, value } = await reader.read();
+      if (done) break;
       pending += decoder.decode(value, { stream: true });
-      const lines = pending.split(/\r?\n/); pending = lines.pop() || '';
+      const lines = pending.split(/\r?\n/);
+      pending = lines.pop() || '';
       for (const line of lines) consume(line);
     }
-    pending += decoder.decode(); if (pending.trim()) consume(pending);
+    pending += decoder.decode();
+    if (pending.trim()) consume(pending);
     if (!content.trim()) throw new Error(`${phase} / ${model}: Ollama kết thúc nhưng không trả content.`);
+
     const evalCount = Number(finalChunk?.eval_count || 0);
     const doneReason = String(finalChunk?.done_reason || '').toLowerCase();
-    if (doneReason === 'length' || (evalCount >= numPredict && doneReason !== 'stop')) throw outputTruncatedError(phase, model, numPredict);
+    if (doneReason === 'length' || (evalCount >= numPredict && doneReason !== 'stop')) {
+      throw outputTruncatedError(phase, model, numPredict);
+    }
     const elapsed = ((Date.now() - started) / 1000).toFixed(1);
     const evalDuration = Number(finalChunk?.eval_duration || 0);
     const tokPerSec = evalDuration > 0 ? (evalCount / (evalDuration / 1e9)).toFixed(1) : '?';
@@ -300,11 +439,16 @@ async function chatStream(net, endpoint, model, messages, { event, phase, format
   } catch (err) {
     if (runController.signal.aborted) {
       const reason = runController.signal.reason;
-      if (reason && typeof reason === 'object' && reason.type === 'timeout') throw timeoutError(reason.phase || phase, reason.model || model, reason.timeoutMs || timeoutMs);
+      if (reason && typeof reason === 'object' && reason.type === 'timeout') {
+        throw timeoutError(reason.phase || phase, reason.model || model, reason.timeoutMs || timeoutMs);
+      }
       throw cancelledError();
     }
     throw err;
-  } finally { clearTimeout(timeout); stopMonitor(); }
+  } finally {
+    clearTimeout(timeout);
+    stopMonitor();
+  }
 }
 
 function parseStructuredResult(result, phase, model, limit) {
@@ -312,32 +456,47 @@ function parseStructuredResult(result, phase, model, limit) {
     return parseJsonContent(result?.message?.content);
   } catch (err) {
     const wrapped = new Error(`${phase} / ${model}: JSON output không hợp lệ — ${err?.message || err}`);
-    wrapped.code = 'OLLAMA_JSON_INVALID'; wrapped.phase = phase; wrapped.model = model; wrapped.tokenLimit = limit;
+    wrapped.code = 'OLLAMA_JSON_INVALID';
+    wrapped.phase = phase;
+    wrapped.model = model;
+    wrapped.tokenLimit = limit;
     throw wrapped;
   }
 }
 
-async function runReasoningWithOneRepair(net, endpoint, model, systemPrompt, transcript, visualContext, event, runController) {
-  const primaryLimit = reasoningTokenBudget(transcript);
+async function runReasoningWithOneRepair(net, endpoint, model, systemPrompt, transcript, visualContext, budget, event, runController, videoDurationSec) {
+  const primaryLimit = reasoningTokenBudget(budget.target_chars);
+  const timeoutMs = reasoningTimeoutMs(videoDurationSec);
   const messages = [
     { role: 'system', content: systemPrompt },
     { role: 'user', content: `TRANSCRIPT SRT TOÀN VIDEO:\n${transcript}\n\nVISUAL TIMELINE JSON THEO CHUNK:\n${JSON.stringify(visualContext)}` },
   ];
   try {
     const result = await chatStream(net, endpoint, model, messages, {
-      event, phase: 'Global reasoning/remix', format: FINAL_SCHEMA, timeoutMs: 360000, numPredict: primaryLimit, runController,
+      event,
+      phase: 'Global reasoning/remix',
+      format: FINAL_SCHEMA,
+      timeoutMs,
+      numPredict: primaryLimit,
+      runController,
     });
     return parseStructuredResult(result, 'Global reasoning/remix', model, primaryLimit);
   } catch (err) {
     if (!['OLLAMA_OUTPUT_TRUNCATED', 'OLLAMA_JSON_INVALID'].includes(err?.code) || runController.signal.aborted) throw err;
-    emitProgress(event, `Global reasoning/remix: output chưa hoàn chỉnh (${err.code}); thử lại đúng 1 lần với output ngắn hơn.`, 'warning');
-    const repairPrompt = `${systemPrompt}\n\nLẦN THỬ LẠI BẮT BUỘC:\n- Chỉ trả JSON hợp lệ theo schema.\n- Rút gọn mạnh mọi field mô tả.\n- Không lặp transcript hay visual timeline.\n- Ưu tiên đủ closing bracket/object hơn độ dài nội dung.`;
-    const repairLimit = Math.min(4400, primaryLimit + 400);
+    emitProgress(event, `Global reasoning/remix: output chưa hoàn chỉnh (${err.code}); thử lại đúng 1 lần, vẫn giữ narration budget.`, 'warning');
+    const repairPrompt = `${systemPrompt}\n\nLẦN THỬ LẠI BẮT BUỘC:\n- Chỉ trả JSON hợp lệ theo schema.\n- narration_script vẫn phải là một đoạn liền mạch trong khoảng ${budget.min_chars}-${budget.max_chars} ký tự.\n- Rút gọn metadata/insights/edit_plan trước, không kéo dài narration ngoài budget.\n- Không lặp transcript hoặc visual timeline.`;
     const repaired = await chatStream(net, endpoint, model, [
       { role: 'system', content: repairPrompt },
       { role: 'user', content: `TRANSCRIPT SRT TOÀN VIDEO:\n${transcript}\n\nVISUAL TIMELINE JSON THEO CHUNK:\n${JSON.stringify(visualContext)}` },
-    ], { event, phase: 'Global reasoning/remix retry', format: FINAL_SCHEMA, timeoutMs: 360000, numPredict: repairLimit, runController });
-    return parseStructuredResult(repaired, 'Global reasoning/remix retry', model, repairLimit);
+    ], {
+      event,
+      phase: 'Global reasoning/remix retry',
+      format: FINAL_SCHEMA,
+      timeoutMs,
+      numPredict: primaryLimit,
+      runController,
+    });
+    return parseStructuredResult(repaired, 'Global reasoning/remix retry', model, primaryLimit);
   }
 }
 
@@ -361,7 +520,14 @@ async function analyzeVisionChunks(net, endpoint, model, chunks, event, runContr
         content: `CHUNK RANGE: ${chunk.start_sec.toFixed(3)}s–${chunk.end_sec.toFixed(3)}s\nTRANSCRIPT SRT TRONG CHUNK:\n${chunk.transcript_srt || '(không có lời thoại trong khoảng này)'}\n\nKeyframe timestamps: ${JSON.stringify(frameMeta)}`,
         images,
       },
-    ], { event, phase, format: VISION_SCHEMA, timeoutMs: 240000, numPredict: limit, runController });
+    ], {
+      event,
+      phase,
+      format: VISION_SCHEMA,
+      timeoutMs: 240000,
+      numPredict: limit,
+      runController,
+    });
     const analysis = parseStructuredResult(result, phase, model, limit);
     results.push({
       index: chunk.index,
@@ -375,37 +541,201 @@ async function analyzeVisionChunks(net, endpoint, model, chunks, event, runContr
   return results;
 }
 
+function runCommand(command, args, timeoutMs = 120000) {
+  return new Promise((resolve, reject) => {
+    execFile(command, args, { windowsHide: true, timeout: timeoutMs }, (error, stdout, stderr) => {
+      if (error) {
+        const detail = String(stderr || error.message || '').trim();
+        reject(new Error(detail || `${command} thất bại.`));
+        return;
+      }
+      resolve({ stdout: String(stdout || ''), stderr: String(stderr || '') });
+    });
+  });
+}
+
+function atempoFilter(speed) {
+  let remaining = normalizedTtsSpeed(speed);
+  const parts = [];
+  while (remaining > 2.0) {
+    parts.push('atempo=2.0');
+    remaining /= 2.0;
+  }
+  while (remaining < 0.5) {
+    parts.push('atempo=0.5');
+    remaining /= 0.5;
+  }
+  parts.push(`atempo=${remaining.toFixed(6)}`);
+  return parts.join(',');
+}
+
+async function probeAudioDurationMs(filePath) {
+  const result = await runCommand('ffprobe', [
+    '-v', 'error',
+    '-show_entries', 'format=duration',
+    '-of', 'default=noprint_wrappers=1:nokey=1',
+    filePath,
+  ], 30000);
+  const seconds = Number(result.stdout.trim());
+  if (!Number.isFinite(seconds) || seconds <= 0) throw new Error('ffprobe không đọc được duration audio TTS.');
+  return Math.round(seconds * 1000);
+}
+
+async function prepareNarrationAudio(payload = {}) {
+  const sourcePath = String(payload.source_path || '').trim();
+  const artifactDir = String(payload.artifact_dir || '').trim();
+  const speed = normalizedTtsSpeed(payload.speed);
+  if (!sourcePath || !fs.existsSync(sourcePath)) return { ok: false, error: 'Không tìm thấy audio TTS nguồn.' };
+  if (!artifactDir) return { ok: false, error: 'Artifact directory đang trống.' };
+
+  fs.mkdirSync(artifactDir, { recursive: true });
+  const target = path.join(artifactDir, 'voice.wav');
+  const tempTarget = path.join(artifactDir, 'voice.preparing.wav');
+  try { if (fs.existsSync(tempTarget)) fs.unlinkSync(tempTarget); } catch { /* best effort */ }
+
+  const args = ['-y', '-hide_banner', '-loglevel', 'error', '-i', sourcePath, '-vn'];
+  if (Math.abs(speed - 1) >= 0.001) args.push('-filter:a', atempoFilter(speed));
+  args.push('-c:a', 'pcm_s16le', tempTarget);
+  await runCommand('ffmpeg', args, 180000);
+  if (!fs.existsSync(tempTarget) || fs.statSync(tempTarget).size <= 0) {
+    throw new Error('ffmpeg không tạo được audio narration đã chuẩn hóa.');
+  }
+  if (fs.existsSync(target)) fs.unlinkSync(target);
+  fs.renameSync(tempTarget, target);
+  const durationMs = await probeAudioDurationMs(target);
+  return {
+    ok: true,
+    audio_path: target,
+    duration_ms: durationMs,
+    speed,
+    adjusted: Math.abs(speed - 1) >= 0.001,
+  };
+}
+
+function narrationRepairBudget(narration, audioDurationMs, videoDurationMs) {
+  const text = compactNarration(narration);
+  const audioSec = Math.max(0.001, Number(audioDurationMs) / 1000);
+  const videoSec = Math.max(0.001, Number(videoDurationMs) / 1000);
+  const measuredCharsPerSec = Math.max(1, text.length / audioSec);
+  const minChars = Math.max(30, Math.round(measuredCharsPerSec * videoSec * 0.95));
+  const maxChars = Math.max(minChars + 10, Math.round(measuredCharsPerSec * videoSec * 1.00));
+  const targetChars = Math.max(minChars, Math.min(maxChars, Math.round(measuredCharsPerSec * videoSec * NARRATION_TARGET_RATIO)));
+  return {
+    measured_chars_per_sec: measuredCharsPerSec,
+    min_chars: minChars,
+    max_chars: maxChars,
+    target_chars: targetChars,
+  };
+}
+
 module.exports = function registerP1VisionIPC({ ipcMain, net }) {
   ipcMain.handle('p1:persistAudio', async (event, payload = {}) => {
     try {
-      const sourcePath = String(payload.source_path || '').trim(), artifactDir = String(payload.artifact_dir || '').trim();
+      const sourcePath = String(payload.source_path || '').trim();
+      const artifactDir = String(payload.artifact_dir || '').trim();
       if (!sourcePath || !fs.existsSync(sourcePath)) return { ok: false, error: 'Không tìm thấy audio TTS nguồn.' };
       if (!artifactDir) return { ok: false, error: 'Artifact directory đang trống.' };
       const ext = path.extname(sourcePath).toLowerCase() || '.mp3';
-      if (!['.mp3','.wav','.m4a','.aac','.ogg','.flac','.opus'].includes(ext)) return { ok: false, error: 'Định dạng audio TTS không hợp lệ.' };
-      fs.mkdirSync(artifactDir, { recursive: true }); const target = path.join(artifactDir, `voice${ext}`); fs.copyFileSync(sourcePath, target);
+      if (!['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.opus'].includes(ext)) return { ok: false, error: 'Định dạng audio TTS không hợp lệ.' };
+      fs.mkdirSync(artifactDir, { recursive: true });
+      const target = path.join(artifactDir, `voice${ext}`);
+      fs.copyFileSync(sourcePath, target);
       return { ok: true, audio_path: target };
-    } catch (err) { return { ok: false, error: err?.message || 'Không thể lưu audio Pipeline 1.' }; }
+    } catch (err) {
+      return { ok: false, error: err?.message || 'Không thể lưu audio Pipeline 1.' };
+    }
+  });
+
+  ipcMain.handle('p1:prepareNarrationAudio', async (event, payload = {}) => {
+    try {
+      return await prepareNarrationAudio(payload);
+    } catch (err) {
+      return { ok: false, error: err?.message || 'Không thể chuẩn hóa audio narration.' };
+    }
   });
 
   ipcMain.handle('ollama:p1CancelVision', async (event) => {
-    const key = event.sender.id; const run = activeRuns.get(key);
+    const key = event.sender.id;
+    const run = activeRuns.get(key);
     if (!run) return { ok: true, cancelled: false, message: 'Không có Ollama P1 request đang chạy.' };
     if (!run.controller.signal.aborted) run.controller.abort('owner-stop');
     emitProgress(event, 'Đã nhận yêu cầu dừng multimodal inference.', 'warning');
     return { ok: true, cancelled: true };
   });
 
+  ipcMain.handle('ollama:p1FitNarration', async (event, payload = {}) => {
+    const runKey = event.sender.id;
+    const previous = activeRuns.get(runKey);
+    if (previous && !previous.controller.signal.aborted) previous.controller.abort('superseded');
+    const runController = new AbortController();
+    activeRuns.set(runKey, { controller: runController });
+    try {
+      const model = String(payload.model || '').trim();
+      const endpoint = payload.endpoint;
+      const narration = compactNarration(payload.narration_script);
+      const audioDurationMs = Number(payload.audio_duration_ms) || 0;
+      const videoDurationMs = Number(payload.video_duration_ms) || 0;
+      if (!model) return { ok: false, error: 'Chưa chọn reasoning model cho narration fit.' };
+      if (!narration) return { ok: false, error: 'Narration hiện tại đang trống.' };
+      if (!(audioDurationMs > 0) || !(videoDurationMs > 0)) return { ok: false, error: 'Thiếu duration để fit narration.' };
+
+      const budget = narrationRepairBudget(narration, audioDurationMs, videoDurationMs);
+      const limit = reasoningTokenBudget(budget.target_chars);
+      const prompt = [
+        'Bạn chỉ sửa MỘT lời thoại tiếng Việt liền mạch để khớp thời lượng TTS.',
+        `Lời thoại hiện tại dài ${narration.length} ký tự.`,
+        `Voice đo thực tế: ${(audioDurationMs / 1000).toFixed(2)}s; video: ${(videoDurationMs / 1000).toFixed(2)}s.`,
+        `Output bắt buộc nằm trong ${budget.min_chars}-${budget.max_chars} ký tự, mục tiêu khoảng ${budget.target_chars}.`,
+        'Giữ nguyên ý nghĩa, hook, bằng chứng và CTA đã có; không bịa claim mới.',
+        'Output là một đoạn narration liên tục: không SRT, không numbering, không bullet, không chia scene.',
+        'Không giải thích. Chỉ trả JSON đúng schema.',
+      ].join('\n');
+      emitProgress(event, `Narration fit: measured_rate=${budget.measured_chars_per_sec.toFixed(2)} char/s; target=${budget.min_chars}-${budget.max_chars} chars.`, 'info');
+      const result = await chatStream(net, endpoint, model, [
+        { role: 'system', content: prompt },
+        { role: 'user', content: narration },
+      ], {
+        event,
+        phase: 'Narration fit',
+        format: NARRATION_REPAIR_SCHEMA,
+        timeoutMs: 120000,
+        numPredict: limit,
+        runController,
+      });
+      const parsed = parseStructuredResult(result, 'Narration fit', model, limit);
+      const repaired = compactNarration(parsed?.narration_script);
+      if (!repaired) return { ok: false, error: 'Narration fit trả về nội dung rỗng.' };
+      return { ok: true, narration_script: repaired, budget };
+    } catch (err) {
+      return {
+        ok: false,
+        code: err?.code || 'NARRATION_FIT_FAILED',
+        phase: err?.phase || 'Narration fit',
+        model: err?.model || null,
+        cancelled: err?.code === 'P1_CANCELLED',
+        error: err?.message || 'Không thể fit narration.',
+      };
+    } finally {
+      const current = activeRuns.get(runKey);
+      if (current?.controller === runController) activeRuns.delete(runKey);
+    }
+  });
+
   ipcMain.handle('ollama:p1AnalyzeVision', async (event, payload = {}) => {
     const runKey = event.sender.id;
     const previous = activeRuns.get(runKey);
     if (previous && !previous.controller.signal.aborted) previous.controller.abort('superseded');
-    const runController = new AbortController(); activeRuns.set(runKey, { controller: runController });
+    const runController = new AbortController();
+    activeRuns.set(runKey, { controller: runController });
 
     try {
-      const model = String(payload.model || '').trim(), prompt = String(payload.prompt || '').trim();
-      const transcript = String(payload.transcript_srt || '').trim(), videoPath = String(payload.video_path || '').trim();
+      const model = String(payload.model || '').trim();
+      const prompt = String(payload.prompt || '').trim();
+      const transcript = String(payload.transcript_srt || '').trim();
+      const videoPath = String(payload.video_path || '').trim();
       const chunks = compactChunks(payload.chunks);
+      const videoDurationSec = Math.max(0, Number(payload.video_info?.duration) || 0);
+      const budget = narrationBudget(videoDurationSec, payload.tts_voice, payload.tts_speed);
       if (!model) return { ok: false, error: 'Chưa chọn model Ollama.' };
       if (!prompt) return { ok: false, error: 'Prompt Pipeline 1 đang trống.' };
       if (!transcript) return { ok: false, error: 'ASR transcript đang trống.' };
@@ -416,7 +746,14 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       const tags = await fetchJson(net, localOllamaUrl(payload.endpoint, '/api/tags'), {}, 10000, 'Ollama preflight');
       emitProgress(event, `Ollama reachable; ${Array.isArray(tags?.models) ? tags.models.length : 0} model local.`, 'success');
       const vision = await findVisionModel(net, payload.endpoint, model, event);
-      if (!vision.model) return { ok: false, code: 'NO_VISION_MODEL', error: `Model ${model} không hỗ trợ vision và không tìm thấy model vision nào khác trong Ollama local.`, selected_model_capabilities: vision.capabilities };
+      if (!vision.model) {
+        return {
+          ok: false,
+          code: 'NO_VISION_MODEL',
+          error: `Model ${model} không hỗ trợ vision và không tìm thấy model vision nào khác trong Ollama local.`,
+          selected_model_capabilities: vision.capabilities,
+        };
+      }
       if (runController.signal.aborted) throw cancelledError();
 
       const allFrameMeta = chunks.flatMap(chunk => chunk.frames.map(({ frame, time_sec }) => ({ frame, time_sec, chunk_index: chunk.index })));
@@ -429,16 +766,43 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
         if (runController.signal.aborted) throw cancelledError();
       }
 
-      emitProgress(event, `Đã hoàn tất ${chunkAnalyses.length} Vision chunk. Chuyển sang global reasoning model ${model}.`, 'success');
-      const systemPrompt = outputContractPrompt(prompt, payload.video_info, allFrameMeta);
-      const finalAnalysis = await runReasoningWithOneRepair(net, payload.endpoint, model, systemPrompt, transcript, chunkAnalyses, event, runController);
+      const timeoutMs = reasoningTimeoutMs(videoDurationSec);
+      emitProgress(event, `Voice-aware narration budget: video=${videoDurationSec.toFixed(2)}s; voice=${budget.voice}; speed=${budget.speed.toFixed(2)}x; target=${budget.min_chars}-${budget.max_chars} chars; reasoning_timeout=${Math.round(timeoutMs / 1000)}s.`, 'info');
+      emitProgress(event, `Đã hoàn tất ${chunkAnalyses.length} Vision chunk. Chuyển sang compact global reasoning model ${model}.`, 'success');
+      const systemPrompt = outputContractPrompt(prompt, payload.video_info, allFrameMeta, budget);
+      const finalAnalysis = await runReasoningWithOneRepair(
+        net,
+        payload.endpoint,
+        model,
+        systemPrompt,
+        transcript,
+        chunkAnalyses,
+        budget,
+        event,
+        runController,
+        videoDurationSec
+      );
       if (runController.signal.aborted) throw cancelledError();
+
+      finalAnalysis.narration_script = compactNarration(finalAnalysis.narration_script);
+      if (!finalAnalysis.narration_script) throw new Error('Global reasoning không tạo narration_script hợp lệ.');
+      const visualScenes = chunkAnalyses.flatMap((chunk, chunkIndex) => {
+        const scenes = Array.isArray(chunk?.analysis?.scenes) ? chunk.analysis.scenes : [];
+        return scenes.map((scene, sceneIndex) => ({
+          ...scene,
+          index: Number.isFinite(Number(scene?.index)) ? Number(scene.index) : sceneIndex,
+          chunk_index: chunkIndex,
+        }));
+      });
+      finalAnalysis.scenes = visualScenes;
+      emitProgress(event, `Narration draft: ${finalAnalysis.narration_script.length} ký tự; target=${budget.min_chars}-${budget.max_chars}.`, finalAnalysis.narration_script.length >= budget.min_chars && finalAnalysis.narration_script.length <= budget.max_chars ? 'success' : 'warning');
 
       const fingerprint = await sha256File(videoPath);
       return {
         ok: true,
         analysis: finalAnalysis,
         visual_chunks: chunkAnalyses,
+        narration_budget: budget,
         source_fingerprint: fingerprint,
         vision_model: vision.model,
         reasoning_model: model,
@@ -451,10 +815,25 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       const prefix = phaseModel ? `${phaseModel}: ` : '';
       const normalizedError = prefix && rawError.startsWith(prefix) ? rawError.slice(prefix.length) : rawError;
       emitProgress(event, `${err?.code === 'P1_CANCELLED' ? 'STOP' : 'FAIL'}: ${prefix}${normalizedError}`, type);
-      return { ok: false, code: err?.code || 'OLLAMA_ANALYSIS_FAILED', phase: err?.phase || null, model: err?.model || null, cancelled: err?.code === 'P1_CANCELLED', error: normalizedError };
+      return {
+        ok: false,
+        code: err?.code || 'OLLAMA_ANALYSIS_FAILED',
+        phase: err?.phase || null,
+        model: err?.model || null,
+        cancelled: err?.code === 'P1_CANCELLED',
+        error: normalizedError,
+      };
     } finally {
       const current = activeRuns.get(runKey);
       if (current?.controller === runController) activeRuns.delete(runKey);
     }
   });
+};
+
+module.exports.__test = {
+  narrationBudget,
+  narrationRepairBudget,
+  normalizedTtsSpeed,
+  reasoningTokenBudget,
+  reasoningTimeoutMs,
 };
