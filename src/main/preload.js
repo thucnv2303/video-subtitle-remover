@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   openFile: (filters) => ipcRenderer.invoke('dialog:openFile', filters),
@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   analyzeP1Vision: (payload) => ipcRenderer.invoke('ollama:p1AnalyzeVision', payload),
   cancelP1Vision: (payload) => ipcRenderer.invoke('ollama:p1CancelVision', payload),
   persistP1Audio: (payload) => ipcRenderer.invoke('p1:persistAudio', payload),
+  getPathForFile: (file) => webUtils.getPathForFile(file),
   openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
@@ -130,6 +131,15 @@ function installOllamaModelScanner() {
   return true;
 }
 
+function installFilePathCompatScript() {
+  if (document.querySelector('script[data-file-path-compat]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/file-path-compat.js';
+  script.defer = false;
+  script.dataset.filePathCompat = 'true';
+  document.head.appendChild(script);
+}
+
 function installP1RunUxScript() {
   if (document.querySelector('script[data-pipeline1-run-ux]')) return;
   const script = document.createElement('script');
@@ -149,6 +159,7 @@ function installP2RuntimeScript() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  installFilePathCompatScript();
   installP1RunUxScript();
   installP2RuntimeScript();
   let attempts = 0;
