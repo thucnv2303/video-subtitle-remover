@@ -4,56 +4,49 @@
 PIPELINE1-MULTIJOB-RESILIENCE-003
 
 ## Name
-Pipeline 1 Multi-Job Failure Isolation, Running-Job Feedback, Failed-Job Retry/Error Detail, and Reasoning/GPU Resilience
+Pipeline 1 Multi-Job Resilience, File-Path Compatibility, Reasoning/GPU Resilience, and Failed-Job Recovery
 
 ## Status
-REASONING_GPU_RESILIENCE_CODE_REVIEW_PASS_OWNER_RETEST_READY
+FILE_PATH_COMPATIBILITY_CODE_REVIEW_PASS_OWNER_RETEST_READY
 
 ## Authority
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
 - Draft PR: #44.
 - Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
-- Latest reviewed source commit: `fc807c9daa38df62fb885f2c4ff7db4fde4623f3`.
-- PM review: `4902998957`.
+- Latest Owner-tested failing head: `51c35e7841b5e44b7571e7fc35390e517bfaa702`.
+- Latest reviewed source commit: `37e6e46a8393ac16cd2a1258979170d4190c51bc`.
+- PM incremental review: `4903672613`.
 
-## Owner-confirmed runtime state
-- Multi-job failure isolation: PASS.
-- Failed-card popup opens: PASS.
-- Prior popup detail/retry affordance: revision required; current popup retry/detail source published.
-- Processing card: FAIL in prior test because whole card pulsed/blinked.
-- `test3.mp4`: prior malformed JSON failure near old 2200-token output ceiling; later retry showed qwen reasoning still producing output at 336s after a clone-TTS Job had completed.
+## Latest Owner runtime result
+- Backend startup and GPU detection: PASS.
+- Both selected Jobs reached queue execution but failed before ASR because their stored input paths were bare filenames.
+- Preview evidence: `/api/video-info?path=vn-...mp4` -> 404 `Video file not found`.
+- P1 evidence: `/api/p1/extract-text` -> application error `Video file not found` for both Jobs.
+- Retry/requeue mechanism ran, but re-used the same invalid path and failed again.
+
+## Root cause
+Existing drag/drop and HTML File-input fallback code uses `f.path || f.name`. With Electron 33, that legacy `File.path` value is unavailable in this path, so only `f.name` is stored. Backend APIs require the absolute local filesystem path.
 
 ## Current implementation
-1. Processing card/badge is steady; only spinner rotates.
-2. P1 reasoning structured output is explicitly concise.
-3. Reasoning token budget scales with transcript segment count; 16 segments use 3200 tokens instead of the old fixed 2200.
-4. Truncated output is detected explicitly from final Ollama metadata/token ceiling and reported as `OLLAMA_OUTPUT_TRUNCATED`.
-5. Malformed/truncated reasoning gets at most one reasoning-only repair using existing visual context.
-6. Renderer no longer repeats the entire multimodal chain for the same malformed JSON failure.
-7. Reasoning remains bounded by a finite 360s timeout.
-8. OmniVoice model is cached across adjacent clone-TTS segments but scheduled for release after 6s idle; release drops the global model reference, runs GC, empties CUDA cache, and attempts CUDA IPC collection.
-9. Exact P1 error detail + stage/time and popup `↻ Chạy lại` remain preserved.
-10. Failure isolation, canonical `p1Status`, Stop/Cancel guards and active-job non-preemption remain preserved.
-
-## Root-cause confidence
-- Whole-card blinking: VERIFIED IN SOURCE.
-- Old malformed JSON/output ceiling relationship: STRONGLY SUPPORTED by Owner error timing + old `num_predict=2200`; fresh runtime required.
-- Slow second-job reasoning caused by persistent OmniVoice GPU residency: STRONGLY SUPPORTED by source + Owner sequencing, but not yet runtime-proven. Fresh sequential TTS→test3 retest is the acceptance evidence.
+1. Preload imports Electron `webUtils` and exposes only `getPathForFile(file)` through contextBridge.
+2. New `file-path-compat.js` defines a compatibility getter for `File.prototype.path` backed by that bridge.
+3. Existing `app.js` drag/drop and fallback logic therefore receives an absolute path again without a broad app.js rewrite.
+4. Native `dialog.showOpenDialog()` flow using `result.filePaths` is unchanged.
+5. Previous P1 queue isolation, popup retry/error detail, steady spinner, bounded reasoning repair, and OmniVoice idle release remain preserved.
 
 ## Verification
-- GitHub incremental scope reviewed directly.
-- PM code review PASS `4902998957` for source `fc807c9d...`.
+- Incremental compare `51c35e78...` -> `37e6e46a...` contains exactly task spec + preload + new compatibility adapter.
+- `node --check` PASS for changed preload and compatibility adapter source.
+- PM review PASS `4903672613`.
 - No unresolved inline review threads.
-- GitHub CI/status checks: none configured.
-- Automated/static gate remains PARTIAL because PM environment has no full Electron/Python runtime execution evidence for this revision.
+- No GitHub CI/status checks configured.
 
 ## Owner retest acceptance
-- Processing card stays steady; spinner alone rotates.
-- Clone-TTS sequence logs `[TTS] OmniVoice released after idle TTS burst.` before later reasoning needs GPU.
-- `test3.mp4` reasoning no longer sits near the 360s timeout under the same sequence, OR it fails at the finite timeout with precise popup detail rather than hanging indefinitely.
-- If structured JSON is truncated/malformed, at most one reasoning-only retry occurs; vision analysis is not repeated solely for JSON repair.
-- Popup contains exact error and usable `↻ Chạy lại`.
-- Retry queues behind active Job and runs when scheduler becomes free.
+- Add/drag the same two videos using the same UI interaction as the failed run.
+- Preview request must carry an absolute Windows path such as `F:\...\test3.mp4`, not `test3.mp4` alone.
+- Preview must no longer return `Video file not found` for an existing source file.
+- `/api/p1/extract-text` must advance into ASR rather than immediately fail on path existence.
+- After path acceptance passes, continue the prior clone-TTS -> `test3.mp4` reasoning/VRAM stress sequence.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner PARTIAL PASS / RETEST READY; documentation sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review PASS; Owner FAIL on previous head / RETEST READY on new source; documentation sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
