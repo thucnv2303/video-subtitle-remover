@@ -232,7 +232,7 @@ function syncJobFeedback(appState) {
     if (!job) return;
     const processing = job.status === 'processing';
     const failed = job.status === 'error';
-    card.dataset.p1JobId = job.id;
+    if (card.dataset.p1JobId !== job.id) card.dataset.p1JobId = job.id;
     card.classList.toggle('p1-job-card-processing', processing);
     card.classList.toggle('p1-job-card-error', failed);
 
@@ -399,7 +399,7 @@ function install() {
   const queue = document.getElementById('step1-job-list');
   if (queue) {
     bindErrorCardClick(queue);
-    new MutationObserver(() => syncButton(button)).observe(queue, { childList: true, subtree: true, attributes: true });
+    new MutationObserver(() => syncButton(button)).observe(queue, { childList: true, subtree: true });
   }
 
   syncButton(button);
