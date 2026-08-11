@@ -6,25 +6,23 @@
 ## Source/scope
 - [x] Dedicated review branch and Draft PR #44.
 - [x] Latest source commit `eb9eaf11e0a2c7b1b66c779dd5e55fc74d902fcf`.
-- [x] New runtime-wiring source change limited to `src/main/preload.js` and `src/renderer/js/pipeline1-run-ux.js`.
+- [x] Runtime-wiring delta limited to `src/main/preload.js` and `src/renderer/js/pipeline1-run-ux.js`.
 - [x] No P2/P3/STTN/Settings/backend algorithm changes.
 
-## Integration checks
+## Integration/code review
 - [x] Prior revision invalidated because `pipeline1-run-ux.js` was not loaded by the app.
 - [x] Preload now injects `js/pipeline1-run-ux.js` on DOMContentLoaded.
 - [x] Prior `.p1-job-state` selector did not exist in real Job markup.
 - [x] run-UX now targets `.tk-job-card-header > div > span` and assigns `.p1-job-state`.
 - [x] Observer fix remains childList/subtree only.
-- [x] Failed-card click handler still uses capture phase.
-- [x] Failed Job retry still transitions only that Job to queued.
+- [x] Failed-card click handler uses capture phase.
+- [x] Failed Job retry transitions only that Job to queued.
 - [x] Active Job is not cancelled/replaced by retry.
+- [x] GitHub compare Owner-tested `ffd7984...` → source `eb9eaf11...` changes only two source files.
+- [x] PM code review PASS `4902725025`.
+- [ ] GitHub CI/status checks — none configured.
 
-## Final review — REQUIRED BEFORE OWNER RETEST
-- [ ] Exact current preload/run-UX syntax/static verification.
-- [ ] Final GitHub diff/scope review.
-- [ ] Confirm PR head and canonical docs are synchronized.
-
-## Owner retest — BLOCKED UNTIL FINAL REVIEW PASS
+## Owner retest — READY
 - [ ] Adding video does not freeze renderer.
 - [ ] Processing Job receives glow/spinner.
 - [ ] Clicking failed Job body opens error popup.
@@ -36,4 +34,4 @@
 - [ ] Stop/Cancel does not revive explicitly stopped Jobs.
 
 ## Gates
-Execution PASS; automated/static WAITING; code review WAITING; Owner FAIL on prior head / RETEST BLOCKED; documentation sync PASS for current intake; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL (source/diff verified, no configured CI); code review PASS; Owner manual verification RETEST READY; documentation sync PASS; merge BLOCKED; Step 3 BLOCKED.
