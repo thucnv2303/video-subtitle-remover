@@ -38,10 +38,15 @@ function hasStartableP1(appState) {
 function syncRunningJobSelection(appState) {
   const current = currentP1Job(appState);
   if (!current) return;
-  if (appState.pipeline1SelectedJobId === current.id && appState.activeJobId === current.id) return;
+
+  const selectedExists = Boolean(
+    appState.pipeline1SelectedJobId
+    && appState.jobs?.some(job => job.id === appState.pipeline1SelectedJobId)
+  );
+  if (selectedExists) return;
 
   appState.pipeline1SelectedJobId = current.id;
-  appState.activeJobId = current.id;
+  if (!appState.activeJobId) appState.activeJobId = current.id;
   window.renderJobList?.();
   window.renderJobDetail1?.();
 }
