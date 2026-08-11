@@ -4,33 +4,25 @@
 `PIPELINE1-MULTIJOB-RESILIENCE-003`
 
 ## Status
-UX REVISION CODE REVIEW PASS / OWNER RETEST READY
+FREEZE REGRESSION FIX PUBLISHED / FINAL REVIEW PENDING
 
 ## Review basis
 - Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
 - Draft PR: #44.
-- Latest source commit: `0e988a0cd187633eafb401f30c3f646b1255e2a9`.
+- Latest source commit: `9d958614dc1ca9d7249418f4fd9415bf84f6d56b`.
 
-## Current source
-- `src/renderer/js/pipeline1-run-ux.js`: queue recovery, active-Job selection, active/error card synchronization, safe error capture + popup.
-- `src/renderer/js/pipelines/pipeline1-ai.js`: one bounded malformed-JSON retry.
-- `src/renderer/styles/pipeline1-run-ux.css`: processing pulse/spinner, failed-card state, error modal, reduced-motion support.
+## Owner failure intake — 2026-08-11
+App became unresponsive immediately after loading a video on the prior UX head. Backend startup/health/GPU/WebSocket appeared normal beforehand.
 
-## Owner feedback incorporated
-- Processing Job needs clearer visible feedback.
-- Failed Job click should expose error details.
+## Root cause / correction
+The P1 queue MutationObserver watched attributes while feedback synchronization changed Job-card dataset/classes. This created a self-triggering observer loop when Job cards were inserted. Latest source observes only child-list/subtree changes and conditionally sets `data-p1-job-id`.
 
-## Verification
-- run-UX exact blob/hash match `8a08b81e30862716fca21ffcdcb2e7ec54dbece1`.
-- exact run-UX `node --check` PASS.
-- GitHub source diff reviewed; final feedback hardening removes repeated title writes from the observer loop.
-- Latest PM code review PASS: review `4898257228`, source through `0e988a0...`.
-- Prior multi-job isolation + bounded JSON retry preserved.
-- No P2/P3/STTN/Settings/backend source change.
+## Preserved behavior
+Active Job pulse/spinner, failed-Job popup, queue failure isolation, Stop/Cancel guard and bounded malformed-JSON retry remain present.
 
 ## Gates
-Execution PASS; automated/static PASS for available checks; code review PASS; Owner verification PARTIAL/RETEST READY; docs sync PASS after publication/reverification; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PASS for current source inspection; code review WAITING final post-fix review; Owner verification FAIL on prior head / RETEST REQUIRED; docs sync PASS for current intake; merge BLOCKED; Step 3 BLOCKED.
 
 ## Next action
-Owner updates the existing Owner-test worktree to latest PR #44 head and resumes two-job P1 retest. Confirm active-card animation/status, failed-card popup, queue continuation and Stop behavior.
+Finish final GitHub review of source commit `9d958614...`. If PASS, Owner reruns add-video first, then the same two-job P1 scenario on latest PR #44 head.
