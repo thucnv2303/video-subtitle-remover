@@ -6,57 +6,45 @@
 ## Source/scope
 - [x] Dedicated branch `review/PIPELINE1-CONTINUOUS-NARRATION-006` from exact failed parent `68c750524f9604b7799d97a2b5604d87368f889c`.
 - [x] Draft PR #47 targets `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
-- [x] Application-source changes limited to `src/main/p1-vision-ipc.js`, `src/main/preload.js`, `src/renderer/js/pipeline1-analysis.js`, `src/renderer/js/pipelines/pipeline1-ai.js`.
-- [x] No P2/P3/STTN/Settings/backend/TTS-engine source changes.
-- [x] PM source/diff review PASS `4905691792` at source head `e07c02776a5918be7a4d2c1a72b26ed3138027cc`.
+- [x] Prior source review PASS `4905691792` at source head `e07c02776a5918be7a4d2c1a72b26ed3138027cc`.
+- [x] No P2/P3/STTN/Settings/backend/TTS-engine source changes in the published revision.
 
-## Product/logic review
-- [x] Final reasoning returns one `narration_script`, not per-scene `script_segments`.
-- [x] Final reasoning does not regenerate Vision scene descriptions; Vision evidence remains scene authority.
-- [x] Source duration, selected voice and selected speed are passed before narration generation.
-- [x] Initial narration target is bounded around 97.5% of source duration.
-- [x] Short-input global reasoning timeout is 150s, not the old 360s.
-- [x] P1 continuous narration path contains no `/api/tts-retry` call.
-- [x] One full-text `/api/tts/generate` call site is used for each TTS pass.
-- [x] Selected reading speed is applied after synthesis via ffmpeg `atempo` without changing video speed.
-- [x] ffprobe exact output-file duration is used for the narration duration gate.
-- [x] Success gate is inclusive 95–100% of source duration.
-- [x] Pass 1 outside range can invoke exactly one whole-narration fit based on measured chars/sec and exactly one re-TTS.
-- [x] Pass 2 outside range throws before `p1ArtifactsReady=true`.
-- [x] Subtitle timing is generated after continuous audio exists; subtitle chunks do not create separate speech synthesis requests.
-- [x] Queue runner source is unchanged; inherited sequential failure isolation/auto-advance remains intended.
-- [x] Manual Job browsing correction from PR #46 is inherited.
+## Fresh Owner runtime — RESULT: FAIL on `5d247d8ee37fc8370a3f05983eeac7cfc850e444`
+- [x] Job 1 used continuous full-text `/api/tts/generate`.
+- [x] Job 1 pass 1 measured exact voice duration: `16.52s / 24.30s = 68.0%`.
+- [x] Repair budget was computed as `391–412` characters.
+- [ ] Repair output respected the computed budget. **FAIL: returned 280 chars again.**
+- [ ] Out-of-budget repair was blocked before final TTS. **FAIL: final TTS was still executed.**
+- [x] Pass 2 failed closed at `16.52s / 68.0%`; P1 did not report success.
+- [x] Queue isolation/auto-advance worked: Job 2 started automatically after Job 1 failed.
+- [x] Job 2 adaptive Vision completed: 6 keyframes / 1 chunk; Vision phase ~28.3s.
+- [ ] Job 2 compact global reasoning completed within the 150s bound. **FAIL: qwen timed out at 150s after first output at 55.5s.**
 
-## Deterministic/local candidate checks completed
-- [x] `node --check` PASS on the four locally reconstructed changed JS candidates before publication.
-- [x] Narration budget ordering PASS for 17.6s, 24.3s, 60s and 300s examples.
-- [x] Short reasoning timeout helper returns 150s for <=60s input.
-- [x] Selected speed clamp helper stays within 0.5x–2.0x.
-- [x] Measured repair example: 480 chars / 48.0s voice against 24.3s video derives a new ~95–100% character window and ~97.5% target.
-- [x] Static source scan: `/api/tts-retry` absent from new P1 AI path; `/api/tts/generate` present once at full-text TTS request helper.
+## Verified blockers from runtime + source
+- [ ] Narration repair schema enforces dynamic `minLength` / `maxLength` from measured repair budget.
+- [ ] Handler explicitly rejects repaired narration outside computed min/max before any re-TTS.
+- [ ] Initial narration output is also explicitly validated against its voice-aware budget before synthesis or has a documented bounded tolerance.
+- [ ] Short-video final schema caps nonessential arrays/string sizes.
+- [ ] Short-video output token floor is reduced from current 900-token minimum to a budget proportional to the required compact artifact.
+- [ ] Selected reasoning model remains unchanged; no silent fallback.
+- [ ] One whole-narration repair maximum + one final TTS maximum remain enforced.
+- [ ] Continuous full-text TTS and subtitle-after-synthesis behavior remain intact.
 
-## Exact final-head static checks — BLOCKING FOR MERGE
-- [ ] `node --check src/main/p1-vision-ipc.js`.
-- [ ] `node --check src/main/preload.js`.
-- [ ] `node --check src/renderer/js/pipeline1-analysis.js`.
-- [ ] `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
-- [ ] `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
-- [ ] GitHub CI/status checks — none configured; absence is recorded, not treated as CI PASS.
+## Corrective static verification required
+- [ ] Exact `node --check` on every JS file changed by the corrective source commit.
+- [ ] Deterministic test: 280-char repair is rejected for a 391–412 window before re-TTS.
+- [ ] Deterministic test: repaired text inside range is accepted.
+- [ ] Deterministic test: short-input final token/schema budget is bounded.
+- [ ] Exact `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
+- [ ] PM full-file + diff review of corrective source.
 
-## Fresh Owner runtime — BLOCKING
-- [ ] Re-run previous two-Job sequence on exact PR #47 final docs/head.
-- [ ] Job 1/24.30s: log shows `Voice-aware narration budget` with selected voice + speed before global reasoning.
-- [ ] Job 1: global reasoning returns one continuous narration; UI content is coherent from start to finish rather than 16 mini-scripts.
-- [ ] Job 1: backend shows one `/api/tts/generate` request per TTS pass and no `/api/tts-retry` / `Segments after expansion` P1 narration flow.
-- [ ] Job 1: final accepted voice is >=95% and <=100% of source duration, or after exactly one fit/re-TTS Job becomes error and P2 stays locked.
-- [ ] If narration fit occurs, it rewrites the whole narration once; no repeat loop.
-- [ ] `voice.wav` plays continuously without synthetic gaps caused by subtitle segmentation.
-- [ ] `tts_timed.srt` may contain display chunks, but audio synthesis remains one continuous speech track.
-- [ ] Short-input global reasoning completes/fails within the new 150s reasoning bound; it must not remain active near the old ~349/360s behavior.
-- [ ] After Job 1 finishes or fails, Job 2 auto-starts without manual intervention.
-- [ ] While Job A processes, user may click Job B and detail remains on B while A continues processing.
-- [ ] Existing file-path, adaptive Vision, failed-Job popup/retry and spinner behavior do not regress.
-- [ ] Before ultimate P1 merge approval, a >60s input demonstrates >8 adaptive samples and multiple Vision chunks with <=8 frames each.
+## Next Owner retest after corrective review PASS
+- [ ] Re-run the same 24.30s Job 1 and 17.60s Job 2 sequence.
+- [ ] Job 1 repair, if needed, must actually move narration into the measured target range before the second TTS request.
+- [ ] Final accepted voice ratio must be 95–100% inclusive, otherwise fail closed after one correction only.
+- [ ] Job 2 global reasoning must complete within its bound or return an earlier deterministic bounded-output failure rather than spend the whole timeout on oversized JSON.
+- [ ] Queue auto-advance and manual Job browsing remain functional.
+- [ ] Before ultimate P1 merge approval, >60s adaptive coverage still requires >8 samples and multiple <=8-frame chunks.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED — READY; documentation synchronization PASS after final docs publication; merge BLOCKED; Step 3 BLOCKED.
+Execution NEEDS REVISION; automated/static WAITING; code review INVALIDATED by Owner FAIL; Owner FAIL on `5d247d8...`; documentation synchronization PASS for failure intake; merge BLOCKED; Step 3 BLOCKED.
