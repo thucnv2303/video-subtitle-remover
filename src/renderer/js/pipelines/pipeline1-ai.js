@@ -16,6 +16,14 @@ function _selectRunningJob(job) {
   window.renderJobDetail1?.();
 }
 
+function _rememberP1Error(job, error, stage) {
+  if (!job) return;
+  const message = String(error?.message || error || '').trim();
+  if (message) job.p1ErrorMessage = message;
+  job.p1ErrorStage = stage || job.p1ErrorStage || 'pipeline';
+  job.p1ErrorAt = Date.now();
+}
+
 function _isMalformedJsonError(error) {
   const message = String(error?.message || error || '');
   return /Expected .* after array element in JSON|Unexpected token .* in JSON|JSON at position \d+|JSON.*line \d+ column \d+|AI không trả về JSON hợp lệ/i.test(message);
@@ -69,6 +77,9 @@ export async function triggerAutoAiRewrite(job, sourceSrt) {
 
     job.p1ArtifactsReady = true;
     job._p1StopRequested = false;
+    delete job.p1ErrorMessage;
+    delete job.p1ErrorStage;
+    delete job.p1ErrorAt;
     _selectRunningJob(job);
     _addLog('[P1] ✅ Analysis/remix artifacts đã sẵn sàng.', 'success');
     return { status: 'ok', result: aiText, analysis: result.analysis, artifacts: result.bundle };
@@ -78,6 +89,7 @@ export async function triggerAutoAiRewrite(job, sourceSrt) {
       _addLog('[P1] ⏹ Pipeline 1 đã dừng theo yêu cầu.', 'warning');
       return { status: 'cancelled' };
     }
+    _rememberP1Error(job, error, 'Phân tích / Remix AI');
     _addLog('[P1] ❌ Phân tích/remix thất bại: ' + error.message, 'error');
     throw error;
   } finally {
@@ -162,6 +174,7 @@ export async function triggerAutoTts(job, srtText) {
       _addLog('[TTS] ⏹ TTS đã dừng theo yêu cầu.', 'warning');
       return { status: 'cancelled' };
     }
+    _rememberP1Error(job, error, 'TTS');
     _addLog('[TTS] ❌ TTS thất bại: ' + error.message, 'error');
     throw error;
   } finally {
