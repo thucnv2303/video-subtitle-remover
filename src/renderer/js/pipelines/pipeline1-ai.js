@@ -11,6 +11,7 @@ import { runPipeline1MultimodalAnalysis } from '../pipeline1-analysis.js';
 const P1_NARRATION_MIN_RATIO = 0.95;
 const P1_NARRATION_MAX_RATIO = 1.00;
 const P1_NARRATION_TARGET_RATIO = 0.975;
+const LEGACY_TTS_EXPORT_TAIL_MS = 1000;
 
 function _selectRunningJob(job) {
   const state = window._appState;
@@ -57,6 +58,14 @@ function _repairScale(audioDurationMs, videoDurationMs) {
   return ratio > 0 ? P1_NARRATION_TARGET_RATIO / ratio : 1;
 }
 
+function _exportedAudioDurationMs(ttsData) {
+  const exact = Number(ttsData?.exported_audio_duration_ms);
+  if (Number.isFinite(exact) && exact > 0) return exact;
+  const legacy = Number(ttsData?.audio_duration_ms);
+  if (Number.isFinite(legacy) && legacy > 0) return legacy + LEGACY_TTS_EXPORT_TAIL_MS;
+  return 0;
+}
+
 async function _sourceVideoDurationMs(job) {
   const candidates = [
     job?.p1Artifacts?.multimodal_timeline?.source_duration,
@@ -91,9 +100,11 @@ async function _requestTts(job, srtText, voice, refAudio) {
   if (data.status !== 'ok' || !data.audio_path) {
     throw new Error(data.error || 'TTS không trả về audio hợp lệ.');
   }
-  if (!(Number(data.audio_duration_ms) > 0)) {
+  const exportedDurationMs = _exportedAudioDurationMs(data);
+  if (!(exportedDurationMs > 0)) {
     throw new Error('TTS không trả về duration audio hợp lệ.');
   }
+  data.exported_audio_duration_ms = exportedDurationMs;
   return data;
 }
 
@@ -126,8 +137,8 @@ async function _repairScriptForDuration(job, srtText, audioDurationMs, videoDura
   const prompt = [
     'Bạn đang sửa lời thoại SRT để khớp thời lượng voice với video nguồn.',
     `Video nguồn dài ${(videoDurationMs / 1000).toFixed(2)} giây.`,
-    `Voice lần 1 dài ${(audioDurationMs / 1000).toFixed(2)} giây (${_durationPct(ratio)} thời lượng video).`,
-    `Mục tiêu cuối: voice phải nằm trong 95% đến 100% thời lượng video, ưu tiên khoảng ${(P1_NARRATION_TARGET_RATIO * 100).toFixed(1)}%.`,
+    `Voice export lần 1 dài ${(audioDurationMs / 1000).toFixed(2)} giây (${_durationPct(ratio)} thời lượng video).`,
+    `Mục tiêu cuối: voice export phải nằm trong 95% đến 100% thời lượng video, ưu tiên khoảng ${(P1_NARRATION_TARGET_RATIO * 100).toFixed(1)}%.`,
     direction,
     'BẮT BUỘC giữ nguyên chính xác số segment, số thứ tự và timestamp SRT.',
     'Giữ nguyên ý nghĩa, hook, bằng chứng và CTA có căn cứ; không bịa thêm claim hoặc thông tin mới.',
@@ -215,7 +226,7 @@ async function _persistAcceptedTts(job, ttsData) {
     job.p1ArtifactPaths.voice = persisted.audio_path;
   }
   job.ttsTimedSrt = ttsData.srt_content || _buildTimedSrt(job.remixSrt, job.srtContent);
-  job.ttsAudioDurMs = Number(ttsData.audio_duration_ms) || 0;
+  job.ttsAudioDurMs = _exportedAudioDurationMs(ttsData);
   job.ttsSegmentsTiming = ttsData.segments_timing || [];
   job.karaokeAss = ttsData.karaoke_ass || null;
   job._ttsTriggered = true;
@@ -311,12 +322,13 @@ export async function triggerAutoTts(job, srtText) {
     let ttsData = await _requestTts(job, acceptedSrt, voice, refAudio);
     if (ttsData?.status === 'cancelled' || job._p1Cancelled) return { status: 'cancelled' };
 
-    let ratio = _durationRatio(ttsData.audio_duration_ms, videoDurationMs);
-    _addLog(`[TTS] ⏱ Duration gate pass 1: video=${_durationSec(videoDurationMs)}, voice=${_durationSec(ttsData.audio_duration_ms)}, ratio=${_durationPct(ratio)}; yêu cầu 95–100%.`, _durationInWindow(ttsData.audio_duration_ms, videoDurationMs) ? 'success' : 'warning');
+    let exportedDurationMs = _exportedAudioDurationMs(ttsData);
+    let ratio = _durationRatio(exportedDurationMs, videoDurationMs);
+    _addLog(`[TTS] ⏱ Duration gate pass 1: video=${_durationSec(videoDurationMs)}, voice-export=${_durationSec(exportedDurationMs)}, ratio=${_durationPct(ratio)}; yêu cầu 95–100%.`, _durationInWindow(exportedDurationMs, videoDurationMs) ? 'success' : 'warning');
 
     let repairedSrt = null;
-    if (!_durationInWindow(ttsData.audio_duration_ms, videoDurationMs)) {
-      repairedSrt = await _repairScriptForDuration(job, acceptedSrt, ttsData.audio_duration_ms, videoDurationMs);
+    if (!_durationInWindow(exportedDurationMs, videoDurationMs)) {
+      repairedSrt = await _repairScriptForDuration(job, acceptedSrt, exportedDurationMs, videoDurationMs);
       if (job._p1Cancelled || !repairedSrt) return { status: 'cancelled' };
       await _syncRepairedRemixArtifacts(job, repairedSrt);
       acceptedSrt = repairedSrt;
@@ -324,12 +336,13 @@ export async function triggerAutoTts(job, srtText) {
       _addLog('[TTS] 🔁 Tạo lại voice lần cuối từ script đã fit duration...', 'info');
       ttsData = await _requestTts(job, acceptedSrt, voice, refAudio);
       if (ttsData?.status === 'cancelled' || job._p1Cancelled) return { status: 'cancelled' };
-      ratio = _durationRatio(ttsData.audio_duration_ms, videoDurationMs);
-      _addLog(`[TTS] ⏱ Duration gate pass 2: video=${_durationSec(videoDurationMs)}, voice=${_durationSec(ttsData.audio_duration_ms)}, ratio=${_durationPct(ratio)}; yêu cầu 95–100%.`, _durationInWindow(ttsData.audio_duration_ms, videoDurationMs) ? 'success' : 'error');
+      exportedDurationMs = _exportedAudioDurationMs(ttsData);
+      ratio = _durationRatio(exportedDurationMs, videoDurationMs);
+      _addLog(`[TTS] ⏱ Duration gate pass 2: video=${_durationSec(videoDurationMs)}, voice-export=${_durationSec(exportedDurationMs)}, ratio=${_durationPct(ratio)}; yêu cầu 95–100%.`, _durationInWindow(exportedDurationMs, videoDurationMs) ? 'success' : 'error');
     }
 
-    if (!_durationInWindow(ttsData.audio_duration_ms, videoDurationMs)) {
-      throw new Error(`TTS duration không đạt gate sau tối đa 1 lần sửa script: video=${_durationSec(videoDurationMs)}, voice=${_durationSec(ttsData.audio_duration_ms)}, ratio=${_durationPct(ratio)}; yêu cầu 95–100%.`);
+    if (!_durationInWindow(exportedDurationMs, videoDurationMs)) {
+      throw new Error(`TTS duration không đạt gate sau tối đa 1 lần sửa script: video=${_durationSec(videoDurationMs)}, voice-export=${_durationSec(exportedDurationMs)}, ratio=${_durationPct(ratio)}; yêu cầu 95–100%.`);
     }
 
     await _persistAcceptedTts(job, ttsData);
@@ -338,7 +351,7 @@ export async function triggerAutoTts(job, srtText) {
       window.renderVoiceSegments([{ text: 'Pipeline 1 TTS', audio_path: job.ttsAudioPath }]);
     }
 
-    _addLog(`[TTS] ✅ Duration gate PASS: voice=${_durationSec(job.ttsAudioDurMs)} / video=${_durationSec(videoDurationMs)} (${_durationPct(ratio)}).`, 'success');
+    _addLog(`[TTS] ✅ Duration gate PASS: voice-export=${_durationSec(job.ttsAudioDurMs)} / video=${_durationSec(videoDurationMs)} (${_durationPct(ratio)}).`, 'success');
     _addLog(`[TTS] ✅ TTS hoàn tất: ${job.ttsAudioPath}`, 'success');
     return { status: 'ok', audio_path: job.ttsAudioPath, repairedSrt };
   } catch (error) {
@@ -401,4 +414,4 @@ function _setBtn(button, disabled, text) {
   button.textContent = text;
 }
 
-export { _durationRatio, _durationInWindow, _repairScale };
+export { _durationRatio, _durationInWindow, _repairScale, _exportedAudioDurationMs };
