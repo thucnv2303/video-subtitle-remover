@@ -1,38 +1,44 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-ADAPTIVE-VISION-004 — Adaptive Keyframe Sampling and Hierarchical Vision`
+`PIPELINE1-FINAL-RUNTIME-GUARDS-005 — Manual Job Browsing and Narration Duration Gate`
 
 ## Status
-SOURCE REVIEW PASS / STATIC + OWNER RETEST WAITING
+CODE REVIEW PASS / STATIC + OWNER RETEST WAITING
 
 ## Review basis
-- Parent: `review/PIPELINE1-MULTIJOB-RESILIENCE-003@4508eaed5be1130519e57f927f761976dd5a5458`.
-- Review branch: `review/PIPELINE1-ADAPTIVE-VISION-004`.
-- Draft PR: #45.
-- Reviewed source: `1bde0d6db589f53406de4038f2781d9c3164fbd9`.
-- PM review: `4904434998`.
+- Parent adaptive head: `review/PIPELINE1-ADAPTIVE-VISION-004@0f668866dba2a38053080627872229e9ed85addd`.
+- Review branch: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
+- Draft PR: #46.
+- Reviewed source: `d9dcd665295a6ca2583644e2ffb39e6421f79f32`.
+- PM review: `4904862077`.
 
-## What changed
-The previous fixed-eight P1 visual sampling is replaced by duration-aware sampling. Short videos retain useful evidence; longer videos automatically receive more keyframes. Evidence is bounded to 80 total frames and 8 per Vision request. Larger evidence sets are processed in chronological chunks; each chunk receives only overlapping transcript segments and returns structured visual evidence. One global reasoning pass then consumes the complete transcript plus all ordered chunk evidence to create the final P1 analysis/remix contract.
+## Latest Owner evidence
+- Adaptive P1 processed all Jobs in the latest supplied run.
+- Owner reports a processing Job prevents browsing/holding another Job selection.
+- Owner reports generated narration may exceed source-video duration after TTS.
+- Required final voice rule: exported track ratio must be 95–100% of source duration.
+- Supplied run does not yet prove adaptive behavior on a >60s input.
 
-## Deterministic evidence
-- 24s -> 8 frames / 1 chunk.
-- 60s -> 15 / 2.
-- 300s -> 75 / 10.
-- 400s -> capped 80 / 10.
-- Per-chunk frame maximum and whole-duration coverage: PASS.
-- Transcript overlap slicing: PASS.
-- Source/diff review: PASS.
+## Current correction
+- Run-UX no longer overwrites a valid manual `pipeline1SelectedJobId` every 250ms.
+- AI/TTS phase synchronization also preserves a valid manual selection.
+- Execution authority remains separate through the running Job / `activeJobId`.
+- TTS duration gate uses source metadata and normalized exported audio duration, including the current legacy +1000ms export tail.
+- First out-of-range TTS triggers one script-fit repair only.
+- Repair preserves SRT segment count/timestamps and synchronizes remix SRT/JSON artifacts.
+- One final TTS regeneration follows; a second out-of-range result fails closed with exact duration diagnostic.
 
-## Evidence still missing
-- Exact final Node syntax checks on the published blobs.
-- Exact final diff hygiene command.
-- Owner Electron runtime on short + >60s video.
-- Runtime proof that all chunks finish before the single global reasoning and before P1->P2 unlock.
+## Evidence status
+- Duration helper simulation: PASS.
+- Source/diff review: PASS `4904862077`.
+- Exact final Node checks: WAITING.
+- Exact diff hygiene: WAITING.
+- Owner runtime PR #46: NOT STARTED.
+- GitHub CI/status checks: none configured.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED; docs sync PASS after this publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED; docs sync PASS after final publication; merge BLOCKED; Step 3 BLOCKED.
 
 ## Next action
-Static-check the exact adaptive head, then Owner tests one short and one longer input. Do not merge or start Step 3 before Owner PASS is recorded.
+Static-check exact PR #46 head, then Owner retests manual browsing plus a narration-duration case. Keep the pending >60s adaptive sampling runtime check in the final merge gate.
