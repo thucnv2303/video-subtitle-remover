@@ -63,6 +63,12 @@ function timeoutError(phase, model, timeoutMs) {
   return err;
 }
 
+function outputTruncatedError(phase, model, limit) {
+  const err = new Error(`${phase} / ${model}: output chạm giới hạn ${limit} token trước khi JSON hoàn tất.`);
+  err.code = 'OLLAMA_OUTPUT_TRUNCATED'; err.phase = phase; err.model = model; err.tokenLimit = limit;
+  return err;
+}
+
 function cancelledError() {
   const err = new Error('Pipeline 1 đã được người dùng dừng.');
   err.code = 'P1_CANCELLED';
@@ -154,10 +160,17 @@ function compactFrames(frames) {
 }
 
 function outputContractPrompt(userPrompt, videoInfo, frameMeta) {
-  return `Bạn là bộ phân tích multimodal của Pipeline 1. Output protocol của hệ thống có ưu tiên cao hơn format được nhắc trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH:\n---\n${userPrompt}\n---\n\nYÊU CẦU BẮT BUỘC:\n- Dùng đồng thời transcript và keyframe.\n- Phân tích video gốc: chủ thể/sản phẩm, đối tượng, hook, lợi ích, bằng chứng, CTA và chi tiết trực quan quan trọng.\n- Nếu transcript mâu thuẫn hình ảnh, ghi trong insights.conflicts.\n- Viết lại lời thoại tiếng Việt tự nhiên, phù hợp TTS.\n- script_segments phải nằm trong thời lượng video.\n- Không bịa thông tin không có căn cứ.\n- RESPONSE phải tuân theo JSON schema hệ thống.\n\nVideo metadata: ${JSON.stringify(videoInfo || {})}\nKeyframe timestamps: ${JSON.stringify(frameMeta || [])}`;
+  return `Bạn là bộ phân tích multimodal của Pipeline 1. Output protocol của hệ thống có ưu tiên cao hơn format được nhắc trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH:\n---\n${userPrompt}\n---\n\nYÊU CẦU BẮT BUỘC:\n- Dùng đồng thời transcript và keyframe.\n- Phân tích video gốc: chủ thể/sản phẩm, đối tượng, hook, lợi ích, bằng chứng, CTA và chi tiết trực quan quan trọng.\n- Nếu transcript mâu thuẫn hình ảnh, ghi trong insights.conflicts.\n- Viết lại lời thoại tiếng Việt tự nhiên, phù hợp TTS.\n- script_segments phải nằm trong thời lượng video.\n- Không bịa thông tin không có căn cứ.\n- RESPONSE phải tuân theo JSON schema hệ thống.\n- Giữ output súc tích: summary <= 2 câu; mỗi scene field <= 1 câu ngắn; mỗi script segment <= 2 câu ngắn; edit_notes tối đa 5 mục.\n- Không thêm giải thích ngoài JSON.\n\nVideo metadata: ${JSON.stringify(videoInfo || {})}\nKeyframe timestamps: ${JSON.stringify(frameMeta || [])}`;
 }
 
 function bytesToGiB(value) { return (Number(value || 0) / (1024 ** 3)).toFixed(1); }
+
+function reasoningTokenBudget(transcript) {
+  const segments = (String(transcript || '').match(/-->/g) || []).length;
+  if (segments >= 14) return 3200;
+  if (segments >= 8) return 2800;
+  return 2400;
+}
 
 async function runningModels(net, endpoint) {
   const result = await fetchJson(net, localOllamaUrl(endpoint, '/api/ps'), {}, 5000, 'Đọc model đang chạy');
@@ -211,7 +224,7 @@ async function chatStream(net, endpoint, model, messages, { event, phase, format
     if (!runController.signal.aborted) runController.abort({ type: 'timeout', phase, model, timeoutMs });
   }, timeoutMs);
   const stopMonitor = startModelMonitor(net, endpoint, event, model, phase);
-  emitProgress(event, `${phase}: gửi request tới ${model}; timeout=${Math.round(timeoutMs / 1000)}s.`, 'info', { progress_key: progressKey });
+  emitProgress(event, `${phase}: gửi request tới ${model}; timeout=${Math.round(timeoutMs / 1000)}s; output_limit=${numPredict} token.`, 'info', { progress_key: progressKey });
 
   try {
     const response = await net.fetch(localOllamaUrl(endpoint, '/api/chat'), {
@@ -251,8 +264,13 @@ async function chatStream(net, endpoint, model, messages, { event, phase, format
     }
     pending += decoder.decode(); if (pending.trim()) consume(pending);
     if (!content.trim()) throw new Error(`${phase} / ${model}: Ollama kết thúc nhưng không trả content.`);
+    const evalCount = Number(finalChunk?.eval_count || 0);
+    const doneReason = String(finalChunk?.done_reason || '').toLowerCase();
+    if (doneReason === 'length' || (evalCount >= numPredict && doneReason !== 'stop')) {
+      throw outputTruncatedError(phase, model, numPredict);
+    }
     const elapsed = ((Date.now() - started) / 1000).toFixed(1);
-    const evalCount = Number(finalChunk?.eval_count || 0), evalDuration = Number(finalChunk?.eval_duration || 0);
+    const evalDuration = Number(finalChunk?.eval_duration || 0);
     const tokPerSec = evalDuration > 0 ? (evalCount / (evalDuration / 1e9)).toFixed(1) : '?';
     emitProgress(event, `${phase}: ${model} hoàn tất trong ${elapsed}s; output_tokens=${evalCount || '?'}, tốc độ=${tokPerSec} tok/s.`, 'success', { progress_key: progressKey, progress_done: true });
     return { message: { content }, metrics: finalChunk || {} };
@@ -264,6 +282,40 @@ async function chatStream(net, endpoint, model, messages, { event, phase, format
     }
     throw err;
   } finally { clearTimeout(timeout); stopMonitor(); }
+}
+
+function parseReasoningResult(result, phase, model, limit) {
+  try {
+    return parseJsonContent(result?.message?.content);
+  } catch (err) {
+    const wrapped = new Error(`${phase} / ${model}: JSON output không hợp lệ — ${err?.message || err}`);
+    wrapped.code = 'OLLAMA_JSON_INVALID'; wrapped.phase = phase; wrapped.model = model; wrapped.tokenLimit = limit;
+    throw wrapped;
+  }
+}
+
+async function runReasoningWithOneRepair(net, endpoint, model, systemPrompt, transcript, visualContext, event, runController) {
+  const primaryLimit = reasoningTokenBudget(transcript);
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: `TRANSCRIPT SRT:\n${transcript}\n\nVISUAL ANALYSIS JSON:\n${JSON.stringify(visualContext)}` },
+  ];
+  try {
+    const result = await chatStream(net, endpoint, model, messages, {
+      event, phase: 'Reasoning/remix', format: FINAL_SCHEMA, timeoutMs: 360000, numPredict: primaryLimit, runController,
+    });
+    return parseReasoningResult(result, 'Reasoning/remix', model, primaryLimit);
+  } catch (err) {
+    if (!['OLLAMA_OUTPUT_TRUNCATED', 'OLLAMA_JSON_INVALID'].includes(err?.code) || runController.signal.aborted) throw err;
+    emitProgress(event, `Reasoning/remix: output chưa hoàn chỉnh (${err.code}); thử lại reasoning đúng 1 lần với output ngắn hơn.`, 'warning');
+    const repairPrompt = `${systemPrompt}\n\nLẦN THỬ LẠI BẮT BUỘC:\n- Chỉ trả JSON hợp lệ theo schema.\n- Rút gọn mạnh mọi field mô tả.\n- Không lặp lại transcript hay visual context.\n- Ưu tiên đủ closing bracket/object hơn độ dài nội dung.`;
+    const repairLimit = Math.min(3600, primaryLimit + 400);
+    const repaired = await chatStream(net, endpoint, model, [
+      { role: 'system', content: repairPrompt },
+      { role: 'user', content: `TRANSCRIPT SRT:\n${transcript}\n\nVISUAL ANALYSIS JSON:\n${JSON.stringify(visualContext)}` },
+    ], { event, phase: 'Reasoning/remix retry', format: FINAL_SCHEMA, timeoutMs: 360000, numPredict: repairLimit, runController });
+    return parseReasoningResult(repaired, 'Reasoning/remix retry', model, repairLimit);
+  }
 }
 
 module.exports = function registerP1VisionIPC({ ipcMain, net }) {
@@ -318,10 +370,11 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
 
       let finalAnalysis; const reasoningModel = model;
       if (vision.model === model) {
+        const limit = reasoningTokenBudget(transcript);
         const result = await chatStream(net, payload.endpoint, model, [
           { role: 'system', content: systemPrompt }, { role: 'user', content: `TRANSCRIPT SRT:\n${transcript}`, images },
-        ], { event, phase: 'Multimodal analysis', format: FINAL_SCHEMA, timeoutMs: 300000, numPredict: 2200, runController });
-        finalAnalysis = parseJsonContent(result?.message?.content);
+        ], { event, phase: 'Multimodal analysis', format: FINAL_SCHEMA, timeoutMs: 360000, numPredict: limit, runController });
+        finalAnalysis = parseReasoningResult(result, 'Multimodal analysis', model, limit);
       } else {
         const visionResult = await chatStream(net, payload.endpoint, vision.model, [
           { role: 'system', content: 'Phân tích keyframe video theo timestamp. Chỉ mô tả những gì có căn cứ trực quan và đối chiếu transcript.' },
@@ -332,10 +385,7 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
         await unloadModel(net, payload.endpoint, vision.model, event);
         if (runController.signal.aborted) throw cancelledError();
         emitProgress(event, `Chuyển sang reasoning model ${model} với visual context đã rút gọn.`);
-        const reasoningResult = await chatStream(net, payload.endpoint, model, [
-          { role: 'system', content: systemPrompt }, { role: 'user', content: `TRANSCRIPT SRT:\n${transcript}\n\nVISUAL ANALYSIS JSON:\n${JSON.stringify(visualContext)}` },
-        ], { event, phase: 'Reasoning/remix', format: FINAL_SCHEMA, timeoutMs: 360000, numPredict: 2200, runController });
-        finalAnalysis = parseJsonContent(reasoningResult?.message?.content);
+        finalAnalysis = await runReasoningWithOneRepair(net, payload.endpoint, model, systemPrompt, transcript, visualContext, event, runController);
       }
 
       if (runController.signal.aborted) throw cancelledError();
