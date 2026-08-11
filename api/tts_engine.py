@@ -8,6 +8,8 @@ import json
 import tempfile
 import traceback
 import re
+import gc
+import threading
 from pathlib import Path
 
 # Add OmniVoice repo to path if available locally
@@ -18,6 +20,11 @@ if os.path.isdir(_omnivoice_repo) and _omnivoice_repo not in sys.path:
 # Try to import OmniVoice
 _omnivoice_available = False
 _model = None
+_model_lock = threading.RLock()
+_release_timer = None
+_active_generations = 0
+_IDLE_RELEASE_SECONDS = 6.0
+
 
 def _check_omnivoice():
     """Check if OmniVoice is installed and available"""
@@ -30,11 +37,60 @@ def _check_omnivoice():
     return _omnivoice_available
 
 
+def _cancel_scheduled_release():
+    global _release_timer
+    with _model_lock:
+        timer = _release_timer
+        _release_timer = None
+    if timer is not None:
+        timer.cancel()
+
+
+def release_model():
+    """Release cached OmniVoice model after a completed TTS burst."""
+    global _model, _release_timer
+    with _model_lock:
+        if _active_generations > 0:
+            return False
+        _release_timer = None
+        if _model is None:
+            return True
+        _model = None
+
+    gc.collect()
+    try:
+        import torch
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            try:
+                torch.cuda.ipc_collect()
+            except Exception:
+                pass
+    except Exception:
+        pass
+    print("[TTS] OmniVoice released after idle TTS burst.", flush=True)
+    return True
+
+
+def _schedule_idle_release(delay_seconds=_IDLE_RELEASE_SECONDS):
+    """Debounce release so multi-segment clone TTS does not reload per segment."""
+    global _release_timer
+    _cancel_scheduled_release()
+    with _model_lock:
+        if _active_generations > 0 or _model is None:
+            return
+        timer = threading.Timer(delay_seconds, release_model)
+        timer.daemon = True
+        _release_timer = timer
+        timer.start()
+
+
 def load_model(device="cuda", dtype="float16"):
     """Load OmniVoice model (lazy initialization)"""
     global _model
-    if _model is not None:
-        return _model
+    with _model_lock:
+        if _model is not None:
+            return _model
     
     try:
         import torch
@@ -44,11 +100,13 @@ def load_model(device="cuda", dtype="float16"):
         device_map = device if torch.cuda.is_available() else "cpu"
         
         print(f"[TTS] Loading OmniVoice model on {device_map}...", flush=True)
-        _model = OmniVoice.from_pretrained(
+        loaded = OmniVoice.from_pretrained(
             "k2-fsa/OmniVoice",
             device_map=device_map,
             dtype=torch_dtype
         )
+        with _model_lock:
+            _model = loaded
         print(f"[TTS] OmniVoice loaded successfully!", flush=True)
         return _model
     except ImportError as e:
@@ -74,34 +132,46 @@ def generate_speech(text, ref_audio_path=None, output_path=None, language="vi"):
     Returns:
         Path to generated audio file, or None on failure
     """
-    model = load_model()
-    if model is None:
-        return None
-    
-    if output_path is None:
-        output_path = tempfile.mktemp(suffix='.wav')
-    
+    global _active_generations
+    _cancel_scheduled_release()
+    with _model_lock:
+        _active_generations += 1
+
     try:
-        kwargs = {
-            "text": text,
-            "language": language,
-        }
-        if ref_audio_path and os.path.exists(ref_audio_path):
-            kwargs["ref_audio"] = ref_audio_path
+        model = load_model()
+        if model is None:
+            return None
         
-        # model.generate() returns a list of numpy arrays
-        audios = model.generate(**kwargs)
+        if output_path is None:
+            output_path = tempfile.mktemp(suffix='.wav')
         
-        # Save first audio to file using model's sampling rate
-        import soundfile as sf
-        sf.write(output_path, audios[0], model.sampling_rate)
-        
-        print(f"[TTS] Generated: {output_path} ({len(text)} chars)", flush=True)
-        return output_path
-    except Exception as e:
-        print(f"[TTS] Error generating speech: {e}", flush=True)
-        traceback.print_exc()
-        return None
+        try:
+            kwargs = {
+                "text": text,
+                "language": language,
+            }
+            if ref_audio_path and os.path.exists(ref_audio_path):
+                kwargs["ref_audio"] = ref_audio_path
+            
+            # model.generate() returns a list of numpy arrays
+            audios = model.generate(**kwargs)
+            
+            # Save first audio to file using model's sampling rate
+            import soundfile as sf
+            sf.write(output_path, audios[0], model.sampling_rate)
+            
+            print(f"[TTS] Generated: {output_path} ({len(text)} chars)", flush=True)
+            return output_path
+        except Exception as e:
+            print(f"[TTS] Error generating speech: {e}", flush=True)
+            traceback.print_exc()
+            return None
+    finally:
+        with _model_lock:
+            _active_generations = max(0, _active_generations - 1)
+            should_schedule = _active_generations == 0
+        if should_schedule:
+            _schedule_idle_release()
 
 
 def parse_srt(srt_path):
