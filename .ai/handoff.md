@@ -4,35 +4,32 @@
 `PIPELINE1-MULTIJOB-RESILIENCE-003`
 
 ## Status
-CANONICAL P1 ERROR-STATE FIX CODE REVIEW PASS / OWNER RETEST READY
+ERROR DETAIL + POPUP RETRY REVISION / OWNER RETEST READY AFTER PM REVIEW
 
 ## Review basis
 - Starting SHA: `5db876b00160415b465d10cd117b44d33ae15159`.
 - Review branch: `review/PIPELINE1-MULTIJOB-RESILIENCE-003`.
 - Draft PR: #44.
-- Latest reviewed source: `ecf2a10f7e29cbb2bc2f2c67e51df394c7de22d2`.
+- Latest source: `c4cfdae61ed121a66fd22887a2391059163508d8`.
 
-## Latest Owner failure
-Owner exact-head test `094a1b9...`: failed Job showed `Lỗi`, but no popup and no `Chạy lại` action.
-
-## Verified root cause
-Visible P1 state is owned by `pipeline-state.js`. On failure it stores `p1Status=error` then resets legacy `status=idle`. Prior run-UX looked only at legacy status. The pipeline-state synchronizer also rewrites the status-chip text, deleting any retry control nested in that chip.
+## Latest Owner evidence
+- Failed Job popup now opens.
+- Popup text is too generic.
+- No visible usable retry action in tested build.
+- Multi-job failure isolation is effective: failed Job did not block the next Job; next Job completed P1.
+- Exact observed error: malformed AI JSON at position 6625, line 151 column 10.
 
 ## Current correction
-- run-UX reads effective state from `p1Status || status`;
-- popup/retry use canonical P1 error state;
-- retry is a sibling of status chip;
-- retry sets both canonical/legacy state queued and does not preempt active Job;
-- previous boot wiring, real-DOM selector, observer freeze fix, active feedback and bounded JSON retry are retained.
+- Pipeline1 AI/TTS catch paths persist exact error message + stage + timestamp on the Job.
+- Popup reads those persisted fields using text-only rendering.
+- Popup includes explicit `↻ Chạy lại`, making retry independent from the periodically rebuilt card/status DOM.
+- Retry uses existing canonical queue path and preserves active-job non-preemption.
 
 ## Verification
-Source diff inspected directly; PM code review `4902799500` PASS. No GitHub CI/status checks are configured. Owner runtime remains required.
-
-## Controlled PM metadata incident
-PR body was accidentally replaced by `noop` during verification and immediately restored. Source/refs/history were unaffected. Incident is contained and recorded.
+GitHub compare from previous Owner-tested docs head to current source changes only `pipeline1-run-ux.js` and `pipeline1-ai.js`. Owner log independently verifies multi-job continuation. No CI/status checks are configured.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner RETEST READY; docs sync PASS; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static PARTIAL; code review WAITING final current-source review; Owner PARTIAL PASS; docs sync PASS; merge BLOCKED; Step 3 BLOCKED.
 
 ## Next action
-Owner tests latest PR #44 head for popup, retry action, queue-behind-active, retry auto-start, processing feedback, and add-video stability.
+PM completes current-source code review, then Owner retests popup exact error detail and popup `Chạy lại`, including retry-behind-active behavior.
