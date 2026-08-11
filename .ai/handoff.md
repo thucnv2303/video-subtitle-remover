@@ -4,41 +4,42 @@
 `PIPELINE1-CONTINUOUS-NARRATION-006 — Voice-Aware Continuous Narration and Bounded Reasoning`
 
 ## Status
-OWNER RUNTIME FAIL / NEEDS REVISION
+CORRECTIVE SOURCE PUBLISHED / STATIC + PM REVIEW WAITING
 
 ## Review basis
-- Parent failed: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c` / PR #46 Owner FAIL.
 - Active branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
 - Draft PR: #47.
-- Owner-tested head: `5d247d8ee37fc8370a3f05983eeac7cfc850e444`.
-- Previous source review: `4905691792` at `e07c02776a5918be7a4d2c1a72b26ed3138027cc`.
-- Exact spec: `.ai/task_specs/PIPELINE1-CONTINUOUS-NARRATION-006.md`.
+- Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
+- Owner-failed tested head: `5d247d8ee37fc8370a3f05983eeac7cfc850e444`.
+- Failure-intake head before correction: `ecb733b660c11106410c5f84f999b74439fb48d1`.
+- Corrective source commit: `1c028612900b1180aa8c1e66da2d769373793c91`.
 
-## Fresh Owner runtime evidence
-- Job 1: 24.30s source; pass-1 continuous voice 16.52s (68.0%).
-- Measured repair target correctly computed 391–412 chars, but qwen returned the same 280-char narration. Current handler accepted it and ran pass 2; pass 2 stayed 16.52s/68.0% and failed.
-- Queue isolation still works: Job 2 auto-started after Job 1 failed.
-- Job 2: 17.60s source; Vision finished in 28.3s. qwen started output after 55.5s but did not complete before the 150s bound and failed with `OLLAMA_PHASE_TIMEOUT`.
+## Owner failure evidence
+- Job 1: 24.30s source; pass-1 continuous voice 16.52s (68.0%). Measured target 391–412 chars, but qwen returned the same 280-char narration; prior code accepted it for pass 2.
+- Job 2: 17.60s source; Vision finished in 28.3s. qwen first output after 55.5s but did not finish before the 150s safety timeout.
+- Queue failure isolation/auto-advance continued to work.
 
-## Verified engineering defects
-1. Narration length constraints are prompt-only. Repair schema/handler does not enforce computed min/max character bounds before final TTS.
-2. Final short-video reasoning remains too permissive: token floor is 900 and insight/edit arrays are structurally unbounded, allowing the selected 30B model to spend the full 150s on nonessential JSON.
-3. The fail-closed behavior itself is correct; the corrective work is to enforce output shape/length earlier and reduce final reasoning work.
+## Corrective source now present
+- Dynamic final schema enforces narration `minLength/maxLength` from voice/video budget.
+- Dynamic narration-fit schema enforces measured repair `minLength/maxLength`.
+- Code explicitly validates narration length after parsing; bad repair is rejected before any final re-TTS.
+- Clone initial budget baseline adjusted toward observed Owner voice rate.
+- Short final JSON metadata is structurally bounded and `additionalProperties:false` is used for compact objects.
+- Short global reasoning output budget floor reduced from 900 to 520 tokens; narration-only fit uses its own 260-token floor.
+- Vision evidence sent to qwen is compacted before global reasoning.
+- qwen3-coder:30b remains the selected reasoning model; no model swap.
+- Continuous full-text TTS, max one fit + one final TTS, queue auto-advance, manual Job browsing and P2 fail-closed behavior remain unchanged.
 
-## Preserved behavior
-- One full-text `/api/tts/generate` call per pass.
-- No segmented `/api/tts-retry` P1 narration path in the supplied log.
-- Automatic sequential queue continuation works.
-- P2 remains locked on P1 failure.
-
-## Next correction
-- Add structural + explicit character validation for initial and repaired narration.
-- Reject out-of-budget repair before re-TTS.
-- Shrink/bound final JSON metadata and lower the short-narration output budget while retaining the Owner-selected reasoning model.
-- Keep max one repair + one final TTS and do not touch P2/P3/TTS-engine.
+## Evidence status
+- Compare `ecb733b... -> 1c028612...`: exactly one source file changed (`src/main/p1-vision-ipc.js`).
+- Direct GitHub full-file/targeted inspection completed for corrective symbols.
+- Deterministic helper evidence: 280 chars rejected for 391–412; short output budget < old 900-token floor.
+- Exact Node syntax + exact diff-check: WAITING.
+- PM final review: WAITING.
+- Fresh Owner runtime: NOT STARTED.
 
 ## Gates
-Execution NEEDS REVISION; automated/static WAITING; code review INVALIDATED; Owner FAIL on `5d247d8...`; docs sync PASS after failure-intake commits; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS for corrective source; automated/static PARTIAL; code review WAITING; Owner corrective retest NOT STARTED; docs sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
 
 ## Next action
-Implement the narrow corrective revision on PR #47, publish source separately, verify exact diff/static evidence, PM review, then authorize another Owner retest.
+Run exact final-head static checks, complete PM review, then Owner retests the same 24.30s + 17.60s queue. Do not merge or start Step 3 before fresh Owner PASS is recorded.
