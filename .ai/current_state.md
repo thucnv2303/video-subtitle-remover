@@ -1,56 +1,47 @@
 # Current State
 
 ## Status
-PIPELINE1-ADAPTIVE-VISION-004 — SOURCE REVIEW PASS / STATIC + OWNER RETEST WAITING
+PIPELINE1-FINAL-RUNTIME-GUARDS-005 — CODE REVIEW PASS / STATIC + OWNER RETEST WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Parent review branch/head: `review/PIPELINE1-MULTIJOB-RESILIENCE-003@4508eaed5be1130519e57f927f761976dd5a5458`.
-- Active review branch: `review/PIPELINE1-ADAPTIVE-VISION-004`.
-- Draft PR: #45.
-- Current reviewed source commit: `1bde0d6db589f53406de4038f2781d9c3164fbd9`.
-- PM source review: `4904434998`.
+- Parent adaptive branch/head: `review/PIPELINE1-ADAPTIVE-VISION-004@0f668866dba2a38053080627872229e9ed85addd`.
+- Active review branch: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
+- Draft PR: #46.
+- Current reviewed source commit: `d9dcd665295a6ca2583644e2ffb39e6421f79f32`.
+- PM source review: `4904862077`.
 
-## Owner requirement
-Pipeline 1 must not use one fixed keyframe count for every video. Visual evidence must scale automatically with the input video duration while each model request remains bounded.
+## Latest Owner runtime evidence — 2026-08-11
+- Owner reports all Jobs in the latest adaptive run completed successfully; fixed-8 Vision truncation no longer blocked this run.
+- New UI defect: while one Job processes, Owner cannot keep another Job selected for inspection because periodic/phase synchronization forces selection back to the running Job.
+- New severe product defect: generated narration can be longer than the source video after TTS.
+- Owner requirement: successful exported narration track must be between 95% and 100% of source-video duration.
+- Long-video (>60s) adaptive runtime coverage is still not evidenced by the supplied run and remains a separate verification item.
 
-## Current implementation
-- Renderer sampling baseline: approximately one keyframe per 4 seconds.
-- Short-video floor: 6 frames, with at least 8 for videos around 20–30 seconds when source frame count permits.
-- Hard total safety ceiling: 80 sampled frames.
-- Maximum per Vision request: 8 frames.
-- Frames are distributed across the complete video timeline, including first/last coverage.
-- Evidence beyond one safe request is split into ordered chronological Vision chunks.
-- Each chunk receives only SRT blocks overlapping its time range.
-- Vision chunks produce structured visual evidence only; they do not generate the final remix script.
-- After all chunks succeed, exactly one global reasoning stage receives the full source transcript plus ordered structured chunk evidence and produces the existing final P1 schema.
-- `multimodal_timeline.json` records sampling/chunk provenance without base64 images; artifact version is now 2 and analysis mode is `multimodal-adaptive-chunks-v2`.
+## Verified causes and corrections
+1. `pipeline1-run-ux.js` synchronized the processing Job into `pipeline1SelectedJobId` every 250ms. It now preserves any valid manual selection and auto-selects the processing Job only when no valid selection exists.
+2. `pipeline1-ai.js` phase transitions also forced selection to the running Job. They now preserve an existing valid manual selection while keeping `activeJobId` as execution authority.
+3. P1 previously accepted TTS output without comparing narration duration to source duration. It now enforces `0.95 <= exported_voice_duration / source_video_duration <= 1.00`.
+4. Current `/api/tts-retry` legacy duration metadata excludes a fixed 1000ms exported silence tail; the gate normalizes that tail and prefers an explicit exact exported-duration field if one becomes available later.
+5. If pass 1 is outside range, one bounded script-fit call is allowed. It must preserve exact SRT segment count/timestamps, synchronize `remix_script.srt` and `remix_script.json`, then regenerate TTS exactly once.
+6. If pass 2 remains outside range, P1 fails closed; `p1ArtifactsReady` is not set true and P2 must remain locked.
 
-## Deterministic verification evidence
-PASS from PM simulation:
-- 24 s -> 8 frames / 1 chunk.
-- 60 s -> 15 frames / 2 chunks.
-- 300 s -> 75 frames / 10 chunks.
-- 400 s -> 80-frame safety cap / 10 chunks.
-- Every simulated chunk has <=8 frames; coverage begins at 0 and final chunk ends at video duration.
-- Transcript overlap simulation: a segment spanning a chunk boundary is included in both adjacent chunks; non-overlapping segments are excluded.
-
-## Verification limits
-- PM source/diff review: PASS `4904434998`.
-- Exact final `node --check` of both published JS blobs: WAITING.
-- Exact final diff-hygiene command: WAITING.
+## Verification
+- Deterministic duration helper simulation PASS: 94% reject; 95% accept; 100% accept; 101% reject; 120% input maps to 81.25% text-scale target toward 97.5%; legacy 9000ms + 1000ms tail normalizes to 10000ms.
+- PM full source/diff review PASS `4904862077`.
+- Exact final `node --check` for both changed JS files: WAITING.
+- Exact final `git diff --check`: WAITING.
 - GitHub CI/status checks: none configured.
-- Owner real-app adaptive runtime: NOT STARTED.
-- Parent PR #44 runtime evidence remains inherited, including path compatibility and OmniVoice release; it is not converted into adaptive-runtime PASS.
+- Owner runtime on PR #46: NOT STARTED.
 
 ## Gates
 - Execution: PASS.
 - Automated/static verification: PARTIAL / WAITING exact final commands.
-- Code review: PASS for source logic/scope at `1bde0d6...`.
-- Owner manual app verification: NOT STARTED.
-- Documentation synchronization: PASS for dynamic state after the docs commit containing this file; architecture narrative follow-up is tracked in the active task spec.
+- Code review: PASS for source logic/scope at `d9dcd665...`.
+- Owner manual app verification: NOT STARTED on PR #46.
+- Documentation synchronization: PASS after publication of the docs commit containing this file.
 - Merge permission: BLOCKED.
 - Step 3 progression: BLOCKED.
 
 ## Next permitted action
-Run exact static checks on the final adaptive head, then Owner runtime tests a short video and a >60-second video. Do not merge or start Step 3 until adaptive sampling/chunk/global-reasoning behavior is runtime verified and the Owner result is recorded.
+Run exact static checks on PR #46 head, then Owner retests manual Job browsing during processing and a narration case that previously exceeded video duration. A successful narration must log a final exported voice ratio within 95–100%. Also retain the pending >60s adaptive sampling runtime check before final merge approval.
