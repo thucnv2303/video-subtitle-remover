@@ -393,14 +393,16 @@ function finalSchemaForBudget(budget, videoDurationSec) {
 }
 
 function narrationRepairSchemaForBudget(budget) {
+  const minChars = Math.max(1, Math.floor(Number(budget?.min_chars) || 1));
+  const maxChars = Math.max(minChars, Math.floor(Number(budget?.max_chars) || minChars));
   return {
     type: 'object',
     additionalProperties: false,
     properties: {
       narration_script: {
         type: 'string',
-        minLength: 1,
-        maxLength: Math.max(1, Math.floor(Number(budget?.max_chars) || 1)),
+        minLength: minChars,
+        maxLength: maxChars,
       },
     },
     required: ['narration_script'],
