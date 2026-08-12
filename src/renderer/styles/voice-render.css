@@ -1,0 +1,421 @@
+.voice-render-page {
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 14% 8%, rgba(124, 58, 237, 0.10), transparent 28%),
+    var(--bg);
+}
+
+.voice-render-page.active {
+  display: block;
+}
+
+.voice-render-page .hidden {
+  display: none !important;
+}
+
+.voice-render-shell {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 36px 0 48px;
+}
+
+.voice-render-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.voice-render-header h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.voice-render-header p {
+  max-width: 720px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.voice-render-eyebrow {
+  color: #a78bfa;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.voice-render-engine-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(167, 139, 250, 0.24);
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.09);
+  color: #ddd6fe;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.voice-render-engine-pill span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.11);
+}
+
+.voice-render-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.voice-render-panel {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(15, 15, 24, 0.78);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.16);
+  padding: 22px;
+}
+
+.voice-render-panel-title,
+.voice-render-panel-title > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.voice-render-panel-title {
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.voice-render-panel-title h2 {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.voice-render-step {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(124, 58, 237, 0.18);
+  color: #c4b5fd;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.voice-render-meta {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.voice-render-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.voice-render-field > span {
+  color: #d4d4d8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.voice-render-field textarea,
+.voice-render-field select {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-radius: 9px;
+  background: rgba(5, 5, 11, 0.72);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.voice-render-field textarea:focus,
+.voice-render-field select:focus {
+  border-color: rgba(139, 92, 246, 0.64);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.11);
+}
+
+.voice-render-field textarea:disabled,
+.voice-render-field select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.voice-render-field textarea {
+  min-height: 260px;
+  padding: 14px;
+  resize: vertical;
+  font: inherit;
+  line-height: 1.65;
+}
+
+.voice-render-field select {
+  height: 40px;
+  padding: 0 11px;
+}
+
+.voice-render-field small,
+.voice-render-voice-help {
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.voice-render-voice-help {
+  min-height: 34px;
+  margin: -6px 0 16px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.voice-render-voice-help strong {
+  color: #c4b5fd;
+}
+
+.voice-render-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.voice-render-actions,
+.voice-render-result-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 4px;
+}
+
+.voice-render-btn {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+}
+
+.voice-render-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.voice-render-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.voice-render-btn.primary {
+  min-width: 132px;
+  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.22);
+}
+
+.voice-render-btn.primary-soft {
+  border-color: rgba(139, 92, 246, 0.28);
+  background: rgba(124, 58, 237, 0.15);
+  color: #ddd6fe;
+}
+
+.voice-render-btn.secondary {
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.voice-render-result-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-render-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.voice-render-status.idle {
+  background: rgba(113, 113, 122, 0.13);
+  color: #a1a1aa;
+}
+
+.voice-render-status.working {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+
+.voice-render-status.success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+
+.voice-render-status.error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+.voice-render-empty {
+  display: flex;
+  min-height: 300px;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 34px 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.09);
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.voice-render-empty strong {
+  margin: 16px 0 5px;
+  font-size: 14px;
+}
+
+.voice-render-empty p {
+  max-width: 300px;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.voice-render-wave {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+}
+
+.voice-render-wave i {
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(#a78bfa, #7c3aed);
+  opacity: 0.72;
+}
+
+.voice-render-wave i:nth-child(1),
+.voice-render-wave i:nth-child(7) { height: 15px; }
+.voice-render-wave i:nth-child(2),
+.voice-render-wave i:nth-child(6) { height: 27px; }
+.voice-render-wave i:nth-child(3),
+.voice-render-wave i:nth-child(5) { height: 38px; }
+.voice-render-wave i:nth-child(4) { height: 48px; }
+
+.voice-render-result {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.voice-render-result audio {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.voice-render-output-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.voice-render-output-card span {
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.voice-render-output-card code {
+  overflow-wrap: anywhere;
+  color: #d4d4d8;
+  font: 11px/1.55 Consolas, monospace;
+}
+
+.voice-render-result-actions {
+  margin-top: auto;
+}
+
+.voice-render-note {
+  margin-top: 18px;
+  padding: 12px 13px;
+  border-left: 2px solid rgba(139, 92, 246, 0.55);
+  border-radius: 0 8px 8px 0;
+  background: rgba(124, 58, 237, 0.055);
+}
+
+.voice-render-note strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #c4b5fd;
+  font-size: 11px;
+}
+
+.voice-render-note p {
+  color: var(--text-dim);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .voice-render-shell {
+    width: min(100% - 28px, 760px);
+    padding-top: 24px;
+  }
+
+  .voice-render-header {
+    flex-direction: column;
+  }
+
+  .voice-render-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .voice-render-field textarea {
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 620px) {
+  .voice-render-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .voice-render-actions,
+  .voice-render-result-actions {
+    flex-direction: column-reverse;
+  }
+
+  .voice-render-btn {
+    width: 100%;
+  }
+}
