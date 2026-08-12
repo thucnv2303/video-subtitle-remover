@@ -65,7 +65,7 @@
             <h1>Voice Render</h1>
             <p>Render nhanh một file giọng nói bằng OmniVoice. Công cụ này không tạo Job và không tác động Pipeline 1/2/3.</p>
           </div>
-          <div class="voice-render-engine-pill"><span></span> OmniVoice</div>
+          <div id="voice-render-engine-pill" class="voice-render-engine-pill checking"><span></span><b>Đang kiểm tra OmniVoice</b></div>
         </header>
 
         <div class="voice-render-grid">
@@ -163,6 +163,31 @@
     }
   }
 
+  async function refreshEngineStatus() {
+    const pill = document.getElementById('voice-render-engine-pill');
+    const label = pill?.querySelector('b');
+    if (!pill || !label) return;
+    pill.classList.remove('ready', 'unavailable');
+    pill.classList.add('checking');
+    label.textContent = 'Đang kiểm tra OmniVoice';
+    try {
+      if (!window.api?.getTTSStatus) throw new Error('TTS API chưa sẵn sàng');
+      const status = await window.api.getTTSStatus();
+      pill.classList.remove('checking');
+      if (status?.available) {
+        pill.classList.add('ready');
+        label.textContent = status?.model_loaded ? 'OmniVoice đã nạp' : 'OmniVoice sẵn sàng';
+      } else {
+        pill.classList.add('unavailable');
+        label.textContent = 'OmniVoice chưa sẵn sàng';
+      }
+    } catch {
+      pill.classList.remove('checking');
+      pill.classList.add('unavailable');
+      label.textContent = 'Backend TTS chưa kết nối';
+    }
+  }
+
   function getRefAudioPath() {
     const value = document.getElementById('voice-render-voice')?.value || 'default';
     if (!value.startsWith('clone:')) return null;
@@ -248,10 +273,12 @@
       setStatus('success', 'Hoàn tất');
       window.addLog?.(`[Voice Render] Hoàn tất: ${result.audio_path}`, 'success');
       window.showToast?.('Đã render voice.', 'success');
+      refreshEngineStatus();
     } catch (error) {
       setStatus('error', 'Lỗi render');
       window.addLog?.(`[Voice Render] ${error?.message || error}`, 'error');
       window.showToast?.(error?.message || 'Không thể render voice.', 'error');
+      refreshEngineStatus();
     } finally {
       setRendering(false);
     }
@@ -269,6 +296,7 @@
     item.addEventListener('click', (event) => {
       event.preventDefault();
       populateVoices();
+      refreshEngineStatus();
       activatePage('voice-render');
     });
 
@@ -286,6 +314,7 @@
     text?.addEventListener('input', updateCount);
     document.getElementById('voice-render-refresh-voices')?.addEventListener('click', () => {
       populateVoices();
+      refreshEngineStatus();
       window.showToast?.('Đã làm mới danh sách giọng.', 'info');
     });
     document.getElementById('voice-render-start')?.addEventListener('click', renderVoice);
@@ -296,6 +325,7 @@
     });
     updateCount();
     populateVoices();
+    refreshEngineStatus();
   }
 
   function init() {
