@@ -879,6 +879,29 @@ function narrationRepairBudget(narration, audioDurationMs, videoDurationMs) {
   };
 }
 
+function evidenceRecomposePrompt(narration, budget, audioDurationMs, videoDurationMs, retryReason = '') {
+  const retry = retryReason
+    ? `Lần trước bị code từ chối (${retryReason}). Lần này phải sửa đúng lỗi đó, không né validation.`
+    : 'Đây là lần recomposition evidence-backed đầu tiên.';
+  return [
+    'Bạn đang RECOMPOSE TOÀN BỘ narration tiếng Việt cho Pipeline 1 để khớp thời lượng TTS đã đo.',
+    `Narration hiện tại: ${narration.length} ký tự; voice đo thật ${(audioDurationMs / 1000).toFixed(2)}s; video ${(videoDurationMs / 1000).toFixed(2)}s.`,
+    `Hard target theo measured voice rate: ${budget.min_chars}-${budget.max_chars} ký tự, ưu tiên khoảng ${budget.target_chars}.`,
+    retry,
+    'Bạn có FULL TRANSCRIPT và VISUAL EVIDENCE đã được Vision trích xuất. Phải tận dụng các chi tiết có căn cứ từ cả hai nguồn để phủ đủ timeline.',
+    'Được mô tả hành động, vật thể, quy trình hoặc diễn biến nhìn thấy rõ trong visual evidence, kể cả vùng transcript ít lời.',
+    'Được thêm câu chuyển ý tự nhiên để nối các evidence đã có.',
+    'CẤM bịa claim, số liệu, công dụng, nguyên liệu, tên sản phẩm, lợi ích hoặc chi tiết không có căn cứ trong transcript/visual evidence.',
+    'CẤM lặp câu, lặp CTA/kết luận, diễn đạt vòng vo hoặc filler chỉ để đủ ký tự.',
+    'CTA/kết luận tối đa một lần ở cuối nếu evidence/narration hiện tại có căn cứ.',
+    'Giữ nhất quán chủ thể/sản phẩm/nguyên liệu. Nếu evidence mâu thuẫn, dùng diễn đạt trung tính.',
+    'Chỉ tiếng Việt tự nhiên, không ký tự CJK lạc ngữ cảnh.',
+    'Output là MỘT narration liền mạch, không SRT, không numbering, không bullet, không chia scene.',
+    'Nếu evidence thực sự không đủ để đạt hard target mà không bịa/lặp/filler, vẫn ưu tiên đúng sự thật; code sẽ fail closed.',
+    'Không giải thích. Chỉ trả JSON đúng schema.',
+  ].join('\n');
+}
+
 module.exports = function registerP1VisionIPC({ ipcMain, net }) {
   ipcMain.handle('p1:persistAudio', async (event, payload = {}) => {
     try {
@@ -926,12 +949,69 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       const narration = compactNarration(payload.narration_script);
       const audioDurationMs = Number(payload.audio_duration_ms) || 0;
       const videoDurationMs = Number(payload.video_duration_ms) || 0;
+      const transcript = String(payload.transcript_srt || '').trim();
+      const visualContext = payload.visual_context && typeof payload.visual_context === 'object'
+        ? payload.visual_context
+        : null;
+      const evidenceMode = Boolean(transcript && visualContext);
       if (!model) return { ok: false, error: 'Chưa chọn reasoning model cho narration fit.' };
       if (!narration) return { ok: false, error: 'Narration hiện tại đang trống.' };
       if (!(audioDurationMs > 0) || !(videoDurationMs > 0)) return { ok: false, error: 'Thiếu duration để fit narration.' };
 
       const budget = narrationRepairBudget(narration, audioDurationMs, videoDurationMs);
       const limit = narrationOnlyTokenBudget(budget.target_chars);
+
+      if (evidenceMode) {
+        emitProgress(event, `Narration evidence-fit: measured_rate=${budget.measured_chars_per_sec.toFixed(2)} char/s; hard_target=${budget.min_chars}-${budget.max_chars} chars; transcript=${transcript.length} chars; output_limit=${limit} token.`, 'info');
+        let lastError = null;
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          const phase = attempt === 0 ? 'Narration evidence-fit' : 'Narration evidence-fit retry';
+          const prompt = evidenceRecomposePrompt(
+            narration,
+            budget,
+            audioDurationMs,
+            videoDurationMs,
+            lastError ? `${lastError.code || 'FAILED'}: ${lastError.message || lastError}` : ''
+          );
+          try {
+            const result = await chatStream(net, endpoint, model, [
+              { role: 'system', content: prompt },
+              {
+                role: 'user',
+                content: `NARRATION HIỆN TẠI:\n${narration}\n\nFULL TRANSCRIPT SRT:\n${transcript}\n\nVISUAL EVIDENCE JSON:\n${JSON.stringify(visualContext)}`,
+              },
+            ], {
+              event,
+              phase,
+              format: narrationRepairSchemaForBudget(budget),
+              timeoutMs: 150000,
+              numPredict: limit,
+              runController,
+            });
+            const parsed = parseStructuredResult(result, phase, model, limit);
+            const durationRepaired = assertNarrationWithinBudget(parsed?.narration_script, budget, phase, model);
+            const checked = assertNarrationQuality(durationRepaired, phase, model);
+            emitProgress(event, `${phase}: PASS; narration=${checked.narration.length} chars; ${qualitySummary(checked.report)}.`, 'success');
+            return {
+              ok: true,
+              narration_script: checked.narration,
+              budget,
+              quality: checked.report,
+              evidence_backed: true,
+              attempts: attempt + 1,
+            };
+          } catch (err) {
+            lastError = err;
+            const retryable = ['OLLAMA_OUTPUT_TRUNCATED', 'OLLAMA_JSON_INVALID', 'NARRATION_LENGTH_OUT_OF_BUDGET', 'NARRATION_QUALITY_FAILED'].includes(err?.code);
+            if (attempt === 0 && retryable && !runController.signal.aborted) {
+              emitProgress(event, `${phase}: chưa đạt contract (${err.code}); retry evidence-backed đúng 1 lần.`, 'warning');
+              continue;
+            }
+            throw err;
+          }
+        }
+      }
+
       const prompt = [
         'Bạn chỉ sửa MỘT lời thoại tiếng Việt liền mạch để khớp thời lượng TTS.',
         `Lời thoại hiện tại dài ${narration.length} ký tự.`,
@@ -963,7 +1043,7 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
         phase: 'Narration fit quality',
         requireFullBudget: true,
       });
-      return { ok: true, narration_script: quality.narration, budget, quality: quality.report };
+      return { ok: true, narration_script: quality.narration, budget, quality: quality.report, evidence_backed: false };
     } catch (err) {
       return {
         ok: false,
