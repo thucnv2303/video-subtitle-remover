@@ -1,5 +1,21 @@
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
+async function cancelAnyP1Vision(payload) {
+  const results = await Promise.allSettled([
+    ipcRenderer.invoke('ollama:p1CancelVision', payload),
+    ipcRenderer.invoke('ollama:p1CancelStandardVision', payload),
+  ]);
+  for (const result of results) {
+    if (result.status === 'fulfilled' && result.value?.cancelled) return result.value;
+  }
+  for (const result of results) {
+    if (result.status === 'fulfilled' && result.value?.ok) return result.value;
+  }
+  const failure = results.find(result => result.status === 'rejected');
+  if (failure) throw failure.reason;
+  return { ok: true, cancelled: false };
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
   openFile: (filters) => ipcRenderer.invoke('dialog:openFile', filters),
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
@@ -11,7 +27,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   analyzeP1Vision: (payload) => ipcRenderer.invoke('ollama:p1AnalyzeVision', payload),
   analyzeP1StandardVision: (payload) => ipcRenderer.invoke('ollama:p1AnalyzeStandardVision', payload),
   fitP1Narration: (payload) => ipcRenderer.invoke('ollama:p1FitNarration', payload),
-  cancelP1Vision: (payload) => ipcRenderer.invoke('ollama:p1CancelVision', payload),
+  cancelP1Vision: (payload) => cancelAnyP1Vision(payload),
   cancelP1StandardVision: (payload) => ipcRenderer.invoke('ollama:p1CancelStandardVision', payload),
   persistP1Audio: (payload) => ipcRenderer.invoke('p1:persistAudio', payload),
   prepareP1NarrationAudio: (payload) => ipcRenderer.invoke('p1:prepareNarrationAudio', payload),
