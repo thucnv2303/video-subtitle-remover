@@ -236,23 +236,64 @@ function buildSemanticEditPlan(remixBeats, scenes) {
       beat_index: Number(beat.beat_index),
       role: String(beat.role || ''),
       message: String(beat.message || ''),
+      narration_text: String(beat.narration_text || ''),
       edit_action: String(beat.edit_action || ''),
       source_scene_indexes: sourceSceneIndexes,
       source_ranges: sourceRanges,
       target_duration_sec: Number(Number(beat.target_duration_sec || 0).toFixed(3)),
+      evidence_basis: String(beat.evidence_basis || ''),
       reason: String(beat.reason || ''),
     };
   });
 }
 
+function standardArtifacts({ sourceMeta, analysis, scenes, sampling, chunkTimeline, frames, transcriptSrt, narrationScript, rewrittenSrt, visual }) {
+  const standardMeta = { ...sourceMeta, semantic_remix_enabled: false };
+  return {
+    scenes: { ...standardMeta, scenes },
+    multimodal_timeline: {
+      ...standardMeta,
+      summary: analysis.summary,
+      insights: analysis.insights || {},
+      sampling,
+      chunks: chunkTimeline,
+      keyframes: frames.map(({ frame, time_sec }) => ({ frame, time_sec })),
+      scenes,
+      source_transcript_srt: transcriptSrt,
+    },
+    remix_script: {
+      ...standardMeta,
+      narration_script: narrationScript,
+      narration_budget: visual.narration_budget || null,
+      segments: [{
+        start: '00:00:00,000',
+        end: msToSrtTime(Math.max(1000, Math.round(Number(sourceMeta.source_duration || 1) * 1000))),
+        text: narrationScript,
+      }],
+      srt: rewrittenSrt,
+    },
+    edit_plan: {
+      ...standardMeta,
+      semantic_remix_enabled: false,
+      authoritative: false,
+      plan: [],
+      notes: analysis.edit_notes || [],
+    },
+  };
+}
+
 export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
   const config = job?.p1Config || {};
+  const semanticRemixEnabled = Boolean(config.semanticRemixEnabled);
   if (!job?.filePath) throw new Error('Job không có video nguồn.');
   if (config.provider !== 'ollama') {
     throw new Error('P1 multimodal hiện yêu cầu Ollama local để phân tích keyframe. Chưa cho phép text-only fallback mở khóa P2.');
   }
-  if (!window.electronAPI?.analyzeP1Vision) {
-    throw new Error('Bridge phân tích Vision chưa sẵn sàng.');
+  const analyzeVision = semanticRemixEnabled
+    ? window.electronAPI?.analyzeP1Vision
+    : window.electronAPI?.analyzeP1StandardVision;
+  if (!analyzeVision) {
+    throw new Error(`Bridge phân tích ${semanticRemixEnabled ? 'Semantic Remix' : 'kịch bản bình thường'} chưa sẵn sàng.`);
   }
 
   let transcriptSrt = String(sourceSrt || '').trim();
@@ -277,8 +318,8 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
   log('[P1] 🖼 Giai đoạn B — Lấy keyframe thích ứng từ video gốc...', 'info');
   const { info, frames, chunks } = await collectVisualContext(job, sourceBlocks);
   log(`[P1] ✅ Đã lấy ${frames.length} keyframe thích ứng trên ${Number(info.duration || 0).toFixed(1)}s video.`, 'success');
+  log(`[P1] 🧠 Giai đoạn C — ScriptMode=${semanticRemixEnabled ? 'semantic-remix' : 'standard'}; Vision theo chunk + global reasoning...`, 'info');
 
-  log('[P1] 🧠 Giai đoạn C — Vision theo chunk + semantic remix reasoning...', 'info');
   const unsubscribeProgress = window.electronAPI?.onP1VisionProgress?.((payload) => {
     const message = String(payload?.message || '').trim();
     if (!message) return;
@@ -293,7 +334,7 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
 
   let visual;
   try {
-    visual = await window.electronAPI.analyzeP1Vision({
+    visual = await analyzeVision({
       endpoint: config.endpoint,
       model: config.model,
       prompt: config.prompt,
@@ -322,20 +363,10 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
   const analysis = visual.analysis || {};
   const narrationScript = compactNarration(analysis.narration_script);
   const scenes = Array.isArray(analysis.scenes) ? analysis.scenes : [];
-  const remixBeats = Array.isArray(analysis.remix_beats) ? analysis.remix_beats : [];
-  const remixStrategy = analysis.remix_strategy || {};
-  const semanticTargetDurationSec = Number(remixStrategy.target_duration_sec) || 0;
   if (!analysis.summary?.trim()) throw new Error('AI không trả về summary phân tích video.');
-  if (!analysis.video_profile || !analysis.product_profile || !analysis.customer_profile) {
-    throw new Error('AI chưa trả đủ video/product/customer profile.');
-  }
-  if (!scenes.length) throw new Error('Vision không trả về canonical scene evidence hợp lệ.');
-  if (!remixBeats.length) throw new Error('AI không tạo được remix_beats hợp lệ.');
-  if (!(semanticTargetDurationSec > 0)) throw new Error('AI không tạo được semantic target duration hợp lệ.');
+  if (!scenes.length) throw new Error('Vision không trả về scene evidence hợp lệ.');
   if (!narrationScript) throw new Error('AI không tạo được narration_script liền mạch.');
 
-  const editPlanItems = buildSemanticEditPlan(remixBeats, scenes);
-  const rewrittenSrt = narrationToSingleSrt(narrationScript, semanticTargetDurationSec);
   const sourceMeta = {
     job_id: job.id,
     source_fingerprint: visual.source_fingerprint || '',
@@ -343,12 +374,12 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
     source_fps: Number(info.fps) || 0,
     source_total_frames: Number(info.total_frames) || 0,
     artifact_version: 4,
-    analysis_mode: 'multimodal-semantic-remix-v4',
+    analysis_mode: semanticRemixEnabled ? 'multimodal-semantic-remix-v4' : 'multimodal-standard-script-v4',
+    semantic_remix_enabled: semanticRemixEnabled,
     asr_language: job.asrLanguageDetected,
     reasoning_model: visual.reasoning_model || config.model,
     vision_model: visual.vision_model || config.model,
   };
-
   const sampling = {
     target_interval_sec: TARGET_SAMPLE_INTERVAL_SEC,
     frame_count: frames.length,
@@ -363,64 +394,94 @@ export async function runPipeline1MultimodalAnalysis(job, sourceSrt = null) {
     keyframes: chunk.frames.map(({ frame, time_sec }) => ({ frame, time_sec })),
   }));
 
-  const sceneArtifact = { ...sourceMeta, scenes };
-  const multimodalTimeline = {
-    ...sourceMeta,
-    summary: analysis.summary,
-    sampling,
-    chunks: chunkTimeline,
-    keyframes: frames.map(({ frame, time_sec }) => ({ frame, time_sec })),
-    scenes,
-    video_profile: analysis.video_profile,
-    product_profile: analysis.product_profile,
-    customer_profile: analysis.customer_profile,
-    semantic_coverage: analysis.semantic_coverage || null,
-    source_transcript_srt: transcriptSrt,
-  };
-  const remixScript = {
-    ...sourceMeta,
-    remix_strategy: remixStrategy,
-    remix_beats: remixBeats,
-    narration_script: narrationScript,
-    narration_budget: visual.narration_budget || null,
-    source_duration_sec: Number(info.duration) || 0,
-    semantic_target_duration_sec: semanticTargetDurationSec,
-    semantic_coverage: analysis.semantic_coverage || null,
-    segments: [{
-      start: '00:00:00,000',
-      end: msToSrtTime(Math.max(1000, Math.round(semanticTargetDurationSec * 1000))),
-      text: narrationScript,
-    }],
-    srt: rewrittenSrt,
-  };
-  const editPlan = {
-    ...sourceMeta,
-    target_duration_sec: semanticTargetDurationSec,
-    remix_strategy: remixStrategy,
-    plan: editPlanItems,
-    notes: analysis.edit_notes || [],
-  };
+  let rewrittenSrt;
+  let bundle;
+  if (!semanticRemixEnabled) {
+    rewrittenSrt = narrationToSingleSrt(narrationScript, info.duration);
+    bundle = standardArtifacts({
+      sourceMeta,
+      analysis,
+      scenes,
+      sampling,
+      chunkTimeline,
+      frames,
+      transcriptSrt,
+      narrationScript,
+      rewrittenSrt,
+      visual,
+    });
+    job.p1SemanticTargetDurationSec = null;
+    log(`[P1] ✅ Standard script v4 hoàn tất — ${frames.length} keyframe / ${chunks.length} chunk / 1 narration liền mạch ${narrationScript.length} ký tự; semantic edit plan=OFF.`, 'success');
+  } else {
+    const remixBeats = Array.isArray(analysis.remix_beats) ? analysis.remix_beats : [];
+    const remixStrategy = analysis.remix_strategy || {};
+    const semanticTargetDurationSec = Number(remixStrategy.target_duration_sec) || 0;
+    if (!analysis.video_profile || !analysis.product_profile || !analysis.customer_profile) {
+      throw new Error('AI chưa trả đủ video/product/customer profile.');
+    }
+    if (!remixBeats.length) throw new Error('AI không tạo được remix_beats hợp lệ.');
+    if (!(semanticTargetDurationSec > 0)) throw new Error('AI không tạo được semantic target duration hợp lệ.');
 
-  const bundle = {
-    scenes: sceneArtifact,
-    multimodal_timeline: multimodalTimeline,
-    remix_script: remixScript,
-    edit_plan: editPlan,
-  };
+    const editPlanItems = buildSemanticEditPlan(remixBeats, scenes);
+    rewrittenSrt = narrationToSingleSrt(narrationScript, semanticTargetDurationSec);
+    const semanticMeta = { ...sourceMeta, semantic_remix_enabled: true };
+    bundle = {
+      scenes: { ...semanticMeta, scenes },
+      multimodal_timeline: {
+        ...semanticMeta,
+        summary: analysis.summary,
+        sampling,
+        chunks: chunkTimeline,
+        keyframes: frames.map(({ frame, time_sec }) => ({ frame, time_sec })),
+        scenes,
+        video_profile: analysis.video_profile,
+        product_profile: analysis.product_profile,
+        customer_profile: analysis.customer_profile,
+        semantic_coverage: analysis.semantic_coverage || null,
+        source_transcript_srt: transcriptSrt,
+      },
+      remix_script: {
+        ...semanticMeta,
+        remix_strategy: remixStrategy,
+        remix_beats: remixBeats,
+        narration_script: narrationScript,
+        narration_budget: visual.narration_budget || null,
+        source_duration_sec: Number(info.duration) || 0,
+        semantic_target_duration_sec: semanticTargetDurationSec,
+        semantic_coverage: analysis.semantic_coverage || null,
+        narrated_target_duration_sec: Number(analysis.semantic_coverage?.narrated_target_duration_sec || 0),
+        predicted_narration_duration_sec: Number(analysis.semantic_coverage?.predicted_narration_duration_sec || 0),
+        segments: [{
+          start: '00:00:00,000',
+          end: msToSrtTime(Math.max(1000, Math.round(semanticTargetDurationSec * 1000))),
+          text: narrationScript,
+        }],
+        srt: rewrittenSrt,
+      },
+      edit_plan: {
+        ...semanticMeta,
+        authoritative: true,
+        target_duration_sec: semanticTargetDurationSec,
+        remix_strategy: remixStrategy,
+        plan: editPlanItems,
+        notes: analysis.edit_notes || [],
+      },
+    };
+    job.p1SemanticTargetDurationSec = semanticTargetDurationSec;
+    log(
+      `[P1] ✅ Semantic remix v4 hoàn tất — ${frames.length} keyframe / ${chunks.length} chunk / ${scenes.length} scene / ${remixBeats.length} beat; target=${semanticTargetDurationSec.toFixed(1)}s từ source=${Number(info.duration || 0).toFixed(1)}s; narration=${narrationScript.length} ký tự.`,
+      'success'
+    );
+  }
+
   await persistArtifacts(job, bundle, rewrittenSrt);
-
   job.aiContent = narrationScript;
   job.p1Narration = narrationScript;
   job.remixSrt = rewrittenSrt;
   job.p1Analysis = analysis;
   job.p1Artifacts = bundle;
   job.p1AnalysisMode = sourceMeta.analysis_mode;
-  job.p1SemanticTargetDurationSec = semanticTargetDurationSec;
   job.sourceFingerprint = sourceMeta.source_fingerprint;
-  log(
-    `[P1] ✅ Semantic remix v4 hoàn tất — ${frames.length} keyframe / ${chunks.length} chunk / ${scenes.length} scene / ${remixBeats.length} beat; target=${semanticTargetDurationSec.toFixed(1)}s từ source=${Number(info.duration || 0).toFixed(1)}s; narration=${narrationScript.length} ký tự; vision=${sourceMeta.vision_model}; reasoning=${sourceMeta.reasoning_model}.`,
-    'success'
-  );
 
   return {
     sourceSrt: transcriptSrt,
