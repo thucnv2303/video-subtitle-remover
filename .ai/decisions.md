@@ -38,9 +38,21 @@ On 2026-08-12 the Owner approved replacing the hard P1 95–100% original-video 
 
 Pipeline 3 is the final timeline/voice-fit authority. It preserves clean-video playback speed by default. A strongly short voice (<90% of the final mixing-video duration) remains at natural speed; a moderate 90–115% mismatch may create a separate pitch-preserving P3-derived voice and rescaled P3 subtitle timing; >115% is not silently stretched and requires explicit revision/warning. P3 must never overwrite P1 `voice.wav` or P1 `tts_timed.srt`. These initial auto-fit limits remain subject to Owner listening verification before merge.
 
-## D-013 — Pipeline 1 is a semantic remix planner, not a transcript translator
-On 2026-08-12 the Owner clarified that Pipeline 1 must understand the original video as a marketing/storytelling asset before writing a new script. Full timestamped ASR transcript and adaptive Vision evidence are both reasoning inputs, but neither source alone is sufficient authority for the final narration.
+## D-013 — Pipeline 1 semantic remix is not transcript translation
+On 2026-08-12 the Owner clarified that Semantic Remix must understand the original video as a marketing/storytelling asset before writing a new script. Full timestamped ASR transcript and adaptive Vision evidence are both reasoning inputs. Semantic mode requires canonical source scenes -> video profile -> product/subject profile -> target-customer profile -> strategy -> ordered beats -> grounded continuous narration -> beat-to-source provenance.
 
-The required semantic flow is: canonical source-scene evidence -> video profile -> product/subject profile -> target-customer profile -> deliberate remix strategy with intended target duration -> ordered remix beats -> one grounded continuous narration -> beat-to-source-scene/time-range edit plan.
+A shorter semantic narration is acceptable only when coherent with its own remix strategy/beat timeline. Accidental summarization or line-by-line translation is not acceptable. Owner semantic runtime/artifact verification remains mandatory before P3 semantic cut/reorder work.
 
-A shorter narration is acceptable only when it is explained by an explicit remix strategy/target duration; accidental summarization or line-by-line translation is not an acceptable substitute. Pipeline 1 must preserve source provenance for every remix beat so Pipeline 3 can later cut/reorder the clean video without rediscovering semantic evidence. Task 007 publishes artifact contract version 4 / `multimodal-semantic-remix-v4`; Owner semantic runtime/artifact verification remains mandatory before merge or before authorizing the P3 semantic cut/reorder executor.
+## D-014 — Semantic Remix is opt-in; Standard Script remains default
+On 2026-08-12 the Owner explicitly required the richer scene-based Semantic Remix to be a user-selected feature rather than replacing normal Pipeline 1 script generation.
+
+Decision:
+- new runs default to Standard Script (`semanticRemixEnabled=false`);
+- the user must explicitly enable Semantic Remix before Start;
+- Start snapshots mode per idle Job so later UI changes do not alter a running Job;
+- Standard mode uses the known pre-semantic multimodal reasoning behavior and never publishes authoritative P3 scene-reorder instructions;
+- only Semantic mode may publish `multimodal-semantic-remix-v4` and an authoritative candidate `edit_plan.json`;
+- semantic results are fail-closed on BUG-036 evidence/timeline/claim/coverage guards before artifact acceptance;
+- this decision does not change P2 or authorize P3 semantic editing.
+
+This preserves the working normal-script product path while making advanced semantic remix an explicit capability with stricter validation.
