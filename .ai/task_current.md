@@ -1,49 +1,52 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-CONTINUOUS-NARRATION-006
+PIPELINE1-SEMANTIC-REMIX-007
 
 ## Name
-Pipeline 1 Continuous Narration — P1/P3 Duration Responsibility Redesign
+Pipeline 1 Semantic Remix — Profiles, Remix Beats and P3 Scene Mapping
 
 ## Status
-BUG034_SOURCE_PUBLISHED_PM_REVIEW_PASS_STATIC_AND_OWNER_RUNTIME_WAITING
+IMPLEMENTATION_AUTHORIZED_SOURCE_NOT_YET_PUBLISHED
 
 ## Authority
-- Branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
-- Draft PR: #47.
-- Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
-- Approved BUG-034 spec: `c046adca8394652cae94fb47821ac8927cb62f74`.
-- P1 source: `97a8e31350b9a0ff40d93207d3de8164b98b458a`.
-- P3 source: `55faf3e734120edec93ba22798599eaf16b6be13`.
-- PM review: `4912891690` — PASS logic/scope only.
+- Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
+- Starting ref: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
+- Exact spec: `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`.
+- Spec commit: `b0597b40e3a3411280344c94ba961644cb6c5d9a`.
+- ACTIVE pointer: `.ai/task_specs/ACTIVE.md` at `602ce0781eed359a0145f65b0ec10c392407d320`.
 
 ## User outcome
-A good P1 narration must not fail merely because it is much shorter than the original video. P1 produces grounded natural narration/TTS; P3 owns final duration alignment after the final video timeline is known.
+Pipeline 1 must understand the original video as a marketing/storytelling asset, not merely translate or summarize source speech. It must combine scene Vision evidence + transcript/voice context to derive video/product/customer understanding, create a deliberate remix strategy, write a new narration, and emit a beat-to-source-scene/time-range edit plan that Pipeline 3 can consume.
 
-## Implemented
-1. P1 no longer requires 95–100% source occupancy.
-2. P1 does not launch evidence-fit/second TTS solely for duration occupancy.
-3. P1 logs duration telemetry; outside 90–110% is warning only.
-4. P1 blocks only pathological overlength above 150% of source duration.
-5. P1 late retry retains same-session reuse of valid analysis/TTS checkpoint.
-6. P3 preserves clean-video playback speed; no `adjustVideoTempo()` for voice matching.
-7. P3 keeps natural voice below 90% occupancy.
-8. P3 may derive pitch-preserving voice between 90–115% occupancy.
-9. P3 blocks automatic stretch above 115%.
-10. P3 derived audio/SRT live under sibling `p3/` and do not overwrite P1 artifacts.
-11. P3 rescales subtitle timing using measured derived-audio duration.
+## Required implementation
+1. Make scene indexes globally unique across all Vision chunks and derive deterministic source windows around evidence points.
+2. Require structured `video_profile`, `product_profile`, `customer_profile`.
+3. Require `remix_strategy` with explicit recommended `target_duration_sec` and rationale.
+4. Require ordered `remix_beats` with role, message, source scene indexes, edit action, target duration and reason.
+5. Validate all scene references before artifact persistence/TTS.
+6. Keep one continuous narration, grounded by transcript + visual evidence, not literal translation-only output.
+7. Persist artifact version 4 / `multimodal-semantic-remix-v4`.
+8. `edit_plan.json` must map every beat to deterministic source time ranges for later P3 cut/reorder implementation.
+9. Preserve BUG-034 policy: no hard P1 minimum occupancy and no second duration-fill reasoning/TTS loop.
+
+## Scope allowed
+- `src/main/p1-vision-ipc.js`
+- `src/renderer/js/pipeline1-analysis.js`
+- `src/renderer/js/pipelines/pipeline1-ai.js` only if needed for semantic target telemetry
+- affected canonical `.ai/`
+
+## Scope forbidden
+No P2 changes, no P3 cut/reorder implementation yet, no backend TTS rewrite, no new dependency, no CV scene-boundary dependency, no broad UI redesign.
 
 ## Verification required
-- Exact final `git rev-parse HEAD`.
-- `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
-- `node --check src/renderer/js/pipelines/pipeline3-finalize.js`.
-- `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
-- Same 97.57s P1 case completes after one valid full-text TTS without `Narration evidence-fit`.
-- Underlength P1 warning does not block P2 handoff.
-- P3 listening/runtime tests at representative <0.90, ~0.90, ~1.00, ~1.10–1.15 and >1.15 ratios.
-- P3 preserves video speed and P1 artifacts.
-- Adjusted P3 subtitle timing follows derived voice.
+- exact source commit SHA;
+- `node --check` for every changed JS file;
+- `git diff --check 9981da334ca10fd845c971241d541894d736c13b..HEAD`;
+- PM exact diff/full-file review;
+- fresh 97.57s Owner runtime with v4 artifacts;
+- artifact proof of meaningful profiles + multiple valid remix beat mappings;
+- exact tested `git rev-parse HEAD`.
 
 ## Gates
-Execution PASS; automated/static WAITING; code review PASS logic/scope; Owner verification WAITING; docs sync PASS after final canonical sync; merge BLOCKED.
+Execution IN PROGRESS; automated/static WAITING; code review WAITING; Owner verification NOT STARTED; docs final sync WAITING; merge BLOCKED.
