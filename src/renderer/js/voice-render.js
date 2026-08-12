@@ -271,6 +271,14 @@
       populateVoices();
       activatePage('voice-render');
     });
+
+    document.querySelectorAll(`.nav-item:not(#${NAV_ID})`).forEach((existingItem) => {
+      if (existingItem.dataset.voiceRenderExitBound === 'true') return;
+      existingItem.dataset.voiceRenderExitBound = 'true';
+      existingItem.addEventListener('click', () => {
+        document.getElementById(PAGE_ID)?.classList.remove('active');
+      });
+    });
   }
 
   function bindPage() {
