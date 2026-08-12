@@ -192,5 +192,44 @@ Semantic scene cut/reorder execution is NOT implemented by task 007. It remains 
 ## 7. SOURCE IDENTITY
 Every artifact remains traceable to the same Job/source fingerprint. P3 must not mutate P1/P2 source artifacts. Standard-vs-Semantic mode must remain explicit; P3 must never infer Semantic authority from file presence alone.
 
-## 8. CURRENT VERIFICATION STATUS
-Corrective opt-in/BUG-036 source is published on Draft PR #48. Static exact-head verification, final PM corrective review and Owner two-mode verification are still required. Merge remains blocked.
+## 8. STANDALONE UTILITIES — OUTSIDE THE THREE PIPELINES
+Standalone app utilities may reuse shared engines only when they remain outside the video Job lifecycle and do not mutate pipeline artifacts or gates.
+
+### Voice Render — VOICE-RENDER-TAB-008
+```text
+USER TEXT
+  + language
+  + optional saved clone reference
+  + chosen WAV output path
+          ↓
+existing POST /api/tts/generate
+          ↓
+existing OmniVoice TTS engine
+          ↓
+standalone WAV file
+```
+
+Voice Render source:
+```text
+src/main/preload.js                    # loads isolated renderer utility
+src/renderer/js/voice-render.js        # standalone UI/state/render orchestration
+src/renderer/styles/voice-render.css   # isolated utility styling
+```
+
+Voice Render invariants:
+- sidebar destination is below Home and before Settings;
+- uses OmniVoice default or saved clone references from existing `tts_voices` settings storage;
+- does not create a P1/P2/P3 Job;
+- does not read/write pipeline status or downstream gates;
+- does not attach generated audio to video automatically;
+- does not create or mutate P1/P2/P3 artifacts;
+- does not require a new backend or TTS-engine contract for the demo;
+- backend `voice_name` is omitted so the utility stays on the existing OmniVoice route;
+- output is a user-selected standalone WAV file.
+
+This utility can share the OmniVoice engine implementation with Pipeline 1 without becoming part of Pipeline 1.
+
+## 9. CURRENT VERIFICATION STATUS
+- Parent corrective opt-in/BUG-036 source remains on Draft PR #48 with its own static and Owner two-mode verification still required.
+- Standalone Voice Render demo is published on Draft PR #49. Node syntax for its changed JavaScript has been checked by Project Manager; final exact-head docs/source review and Owner real-app visual/runtime verification remain required.
+- Merge remains blocked until the relevant task gates pass.
