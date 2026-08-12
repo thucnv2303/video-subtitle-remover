@@ -4,50 +4,51 @@
 PIPELINE1-CONTINUOUS-NARRATION-006
 
 ## Name
-Pipeline 1 Voice-Aware Continuous Narration, Bounded Reasoning, and Narration Quality Gate
+Pipeline 1 Voice-Aware Continuous Narration, Bounded Reasoning, Narration Quality Gate, and Evidence-Aware Duration Control
 
 ## Status
-BUG033_DIAGNOSIS_REQUIRED_BEFORE_FURTHER_SOURCE_FIX
+BUG033_SOURCE_PUBLISHED_PM_REVIEW_PASS_STATIC_AND_OWNER_RUNTIME_WAITING
 
 ## Authority
 - Active branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
 - Draft PR: #47.
 - Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
-- BUG-032 source correction: `a0e6165dfd88561bf3140907b6d578782a2ccebf`.
-- Current diagnosis state: no further source change is permitted until BUG-033 root-cause questions are answered with evidence.
+- Approved BUG-033 spec: `fb9aed75de3c15a83c8aecec7b8cb0a55e09a198`.
+- Evidence-aware IPC source: `77f5e2186ddb4660c9ba35de245bc8b86d297f33`.
+- Duration-controller/resume renderer source: `da3644f3e81ac3a3927d64baca9365745541f4ec`.
+- PM source review: `4912637906` — PASS logic/scope only.
 
-## Fresh Owner evidence — BUG-033
-- 97.57s source.
-- Vision plan: 25 keyframes / 4 chunks / 8,8,8,1 frames.
-- Transcript segment occurrences in those chunks: 17 / 18 / 22 / 2.
-- Global reasoning produced 601-char narration while the soft target was 1529–1610 chars.
-- Quality gate passed that narration.
-- Full-text TTS pass 1: 35.27s = 36.1% of video.
-- Measured duration-fit budget: 1579–1663 chars.
-- Narration-fit returned only 735 chars and failed hard validation before final TTS.
+## Problem closed at source level
+Fresh 97.57s Owner evidence showed 601-char narration -> 35.27s/36.1%, measured target 1579–1663, then narration-only fit returned 735 chars. The measured rate was close to the configured clone estimate; the large correction failed because the fit phase no longer had the full transcript and Vision evidence needed to add grounded content.
 
-## Verified diagnosis so far
-1. The measured clone voice rate is close to the configured estimate, so this failure is not primarily caused by a gross TTS-rate estimate error.
-2. Initial global reasoning is allowed by current design to return far below the soft lower target.
-3. Global reasoning has full transcript + compact visual evidence.
-4. Measured narration-fit currently receives only the short narration + audio/video durations, not the original transcript/visual evidence.
-5. Therefore a large expansion request can be impossible to satisfy without either repeating/filler or inventing content.
-6. Schema/length validation can reject a bad candidate but cannot solve missing grounded content.
+## Implemented BUG-033 controller
+1. Large duration misses now call the existing P1 fit IPC with full persisted transcript + compact persisted Vision evidence + current narration + measured audio/video duration.
+2. IPC evidence mode computes the measured hard range and validates both length and deterministic quality before returning a candidate.
+3. One bounded evidence-backed retry is allowed for JSON/truncation/length/quality contract failure; no unbounded loop.
+4. Near misses that require <=5% correction use whole-audio pitch-preserving tempo adjustment and remeasurement instead of an AI rewrite.
+5. At most two full-text TTS syntheses are allowed; pass 2 may receive only the same small final tempo correction, then fail closed if still outside 95–100%.
+6. A pass-1 checkpoint is kept in Job memory and written to `p1_checkpoint.json` for audit/recovery.
+7. Same-session retry can bypass ASR/keyframes/Vision/global reasoning when source fingerprint + model + prompt signature still match.
+8. If voice/reference/speed also match and pass-1 audio remains reusable, retry skips pass-1 TTS as well. Voice changes invalidate TTS only.
+9. Once final TTS may replace `voice.wav`, pass-1 reuse is conservatively disabled.
+10. Legacy `/api/ai-rewrite` is not used because verified backend constraints explicitly oppose the required large expansion.
 
-## Questions that must be answered before implementation
-- Transcript chars/words/semantic density?
-- Speech-active duration vs silence/music/visual-only time?
-- Longest no-speech gaps?
-- Unique grounded visual evidence per chunk?
-- Is 95–100% voice occupancy mandatory for sparse-source videos?
-- May AI narrate visible actions/details absent from speech if Vision supports them?
-- What kinds of explanatory transitions are allowed vs filler?
-- Should per-voice measured speaking rate be calibrated/cached before first narration generation?
-- What severe-underlength threshold should trigger full-evidence recomposition before TTS?
-- Which artifacts/checkpoints are reused on late-stage retry so ASR/Vision/reasoning do not rerun?
+## Source scope
+Compare `fb9aed75... -> da3644f3...` changes exactly:
+- `src/main/p1-vision-ipc.js` (+81/-1)
+- `src/renderer/js/pipelines/pipeline1-ai.js` (+264/-16)
+No P2/P3/STTN/Settings/backend/TTS-engine source changes.
 
-## Next permitted action
-Diagnose the existing saved P1 artifacts for transcript length, speech occupancy, source silence/gaps, and visual evidence richness; then define the approved duration-controller and resume acceptance criteria. Do not patch source again before that evidence is available.
+## Verification required before release
+- Exact final docs/head `git rev-parse HEAD`.
+- `node --check src/main/p1-vision-ipc.js`.
+- `node --check src/main/preload.js`.
+- `node --check src/renderer/js/pipeline1-analysis.js`.
+- `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
+- `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
+- Fresh Owner 97.57s runtime: large miss must log evidence-fit hard target, produce candidate inside range/quality before TTS2, use <=2 full-text TTS requests, and finish at 95–100%.
+- Resume runtime: after a late duration-control failure, retry with unchanged dependencies must log reuse of multimodal artifacts and must not rerun Adaptive Vision/global reasoning; if pass-1 remains reusable it must also log reuse of pass-1 measurement.
+- Queue isolation: a second queued Job still auto-advances if the first fails.
 
 ## Gates
-Execution NEEDS_MORE_EVIDENCE; automated/static WAITING for next approved source; code review not release-ready for BUG-033; Owner runtime FAIL on duration behavior; docs sync PASS after this update; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS for source publication; automated/static WAITING; PM code review PASS logic/scope; Owner runtime WAITING; docs sync PASS after canonical update; merge BLOCKED; Step 3 BLOCKED.
