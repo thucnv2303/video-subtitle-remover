@@ -1,74 +1,69 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-SEMANTIC-REMIX-007
+VOICE-RENDER-TAB-008
 
 ## Name
-Pipeline 1 Optional Semantic Remix — Standard Script Default + Guarded Scene Remix
+Standalone OmniVoice Voice Render Tab Demo
 
 ## Status
-CORRECTIVE_SOURCE_PUBLISHED_PM_REVIEW_PASS_STATIC_AND_OWNER_TWO_MODE_WAITING
+SOURCE_PUBLISHED_STATIC_AND_OWNER_RUNTIME_WAITING
 
 ## Authority
-- Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
-- Draft PR: #48.
-- Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
-- Exact spec: `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`.
-- Corrective source reviewed at `7b217c7b73e98375bcf5ff2bcb24a92c8fa61796`.
-- PM review `4915748131` — PASS logic/scope only.
+- Repository: `thucnv2303/video-subtitle-remover`.
+- Branch: `review/VOICE-RENDER-TAB-008-demo`.
+- Starting parent: `review/PIPELINE1-SEMANTIC-REMIX-007@0b3ee3a63f06d17334b2c295491c50039326febb`.
+- Exact spec: `.ai/task_specs/VOICE-RENDER-TAB-008.md`.
+- Latest application-source correction: `8f50811e6578f41119714ce157eb3987d3b1ce63`.
 
 ## User outcome
-Semantic Remix is a user-selected advanced feature, not a replacement for normal script generation.
-
-- Default/OFF: Standard Script.
-- Explicit ON: Semantic Remix by scene.
+Provide an independent Voice Render workspace directly below Home. The user can type text, choose OmniVoice/default or an existing clone voice, choose language and output WAV path, render, preview and open the file without entering any video-processing pipeline.
 
 ## Implemented
-1. P1 has a compact Semantic Remix checkbox and preference `p1_semantic_remix_enabled`, default false.
-2. Start snapshots the mode into each idle Job as `job.p1Config.semanticRemixEnabled`.
-3. Fresh Start clears prior duration checkpoint to prevent cross-mode analysis resume.
-4. Standard mode uses the exact pre-semantic multimodal reasoning implementation from the starting ref, isolated under distinct IPC handlers.
-5. Existing Stop bridge cancels both Standard and Semantic inference.
-6. Standard artifacts use `multimodal-standard-script-v4`, `semantic_remix_enabled:false`; semantic edit plan is non-authoritative and empty.
-7. Semantic mode alone uses `multimodal-semantic-remix-v4` and may publish an authoritative P3 candidate scene plan.
-8. BUG-036 prompt now explicitly requires coherent target/beat/narration timing and correct action-to-scene grounding.
-9. Renderer semantic guard rejects target/beat duration mismatch, nonexistent or semantically unsupported scene mappings for guarded actions, CTA away from available final-result evidence, selected unsupported hard claims and narration coverage outside 70–130% of beat duration.
-10. Guard runs before semantic artifact persistence/TTS, so known-bad semantic plans fail closed.
-11. BUG-034 remains: no hard 95–100% original-source occupancy gate and no extra LLM/TTS pass solely to fill source duration.
-12. P2/P3/TTS engine/dependencies remain untouched by corrective source.
+1. Added isolated renderer module `src/renderer/js/voice-render.js`.
+2. Added isolated stylesheet `src/renderer/styles/voice-render.css`.
+3. `src/main/preload.js` loads the new tool without changing `index.html` or legacy `app.js`.
+4. The new sidebar item is inserted after Home and before Settings.
+5. The page is mounted dynamically and owns only local render state.
+6. Saved clone voices are read from existing `localStorage.tts_voices`; clone management remains in Settings.
+7. Render uses existing `window.api.post('/api/tts/generate', ...)` and sends explicit `output_path` plus optional `ref_audio_path`.
+8. `voice_name` is not sent so backend routing remains OmniVoice-only for this utility.
+9. Existing Electron `saveFile` and `openPath` bridges are reused.
+10. Idle/rendering/success/error states and duplicate-submit protection are implemented.
+11. A navigation isolation fix removes the dynamic Voice Render page when an existing Home/Settings item is activated, avoiding dual-active pages caused by the legacy static NodeList snapshot.
+
+## Explicitly unchanged
+- no `api/server.py` change;
+- no `api/tts_engine.py` change;
+- no P1 source change;
+- no P2 source change;
+- no P3 source change;
+- no shared Job/state change;
+- no dependency change.
 
 ## Verification required
-Exact final head must be shown with:
-- `git rev-parse HEAD`;
-- `node --check src/main/main.js`;
+Static/source on exact final head:
 - `node --check src/main/preload.js`;
-- `node --check src/main/p1-standard-vision-ipc.js`;
-- `node --check src/main/p1-standard-vision-wrapper.js`;
-- `node --check src/renderer/js/pipeline1-run-config.js`;
-- `node --check src/renderer/js/pipeline1-analysis.js`;
-- `node --check src/renderer/js/pipeline1-semantic-validator.js`;
-- recommended regression `node --check src/renderer/js/pipelines/pipeline1-ai.js`;
-- `git diff --check 9981da334ca10fd845c971241d541894d736c13b..HEAD`.
+- `node --check src/renderer/js/voice-render.js`;
+- `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`;
+- inspect exact changed-file scope and full source/diff.
 
-Owner runtime A — Standard/default OFF:
-- control defaults OFF;
-- log says `ScriptMode=standard`;
-- normal continuous script/TTS completes;
-- artifacts identify standard v4 and non-authoritative empty semantic plan;
-- P1→P2 gate remains valid.
+Owner runtime after code review:
+1. Sidebar order is Home → Voice Render → Settings.
+2. Voice Render → Home/Settings navigation leaves exactly one active page.
+3. Default OmniVoice renders a short Vietnamese sample to the chosen WAV location.
+4. Audio player plays the generated output and Open file works.
+5. If a saved clone voice exists, select it and confirm clone voice output.
+6. P1/P2/P3 job/status state is unchanged before/after standalone render.
+7. Error path remains retryable and does not alter pipeline state.
 
-Owner runtime B — Semantic ON:
-- explicitly enable before Start;
-- log says `ScriptMode=semantic-remix`;
-- same/equivalent 97.57s source;
-- result either passes deterministic guard with coherent scene/timing/claim artifacts or fails closed before accepted semantic artifact/TTS/downstream unlock;
-- if pass, inspect four fresh v4 JSON artifacts.
-
-## Known limits
-- Semantic lexical guard reduces known BUG-036 failure classes but cannot prove all marketing/visual interpretation correctness; Owner artifact review remains required.
-- Scene windows are midpoint evidence windows, not CV scene boundaries.
-- GitHub currently reports PR mergeable false; merge remains blocked independently of other gates.
-- No CI/status checks are configured.
+## Parent task relationship
+`PIPELINE1-SEMANTIC-REMIX-007` / PR #48 remains separate upstream work. This demo does not satisfy or change its static, Owner Standard, Owner Semantic, P3, or merge gates.
 
 ## Gates
-Execution PASS; automated/static WAITING; code review PASS logic/scope; Owner Standard NOT STARTED; Owner Semantic NOT STARTED after correction; documentation synchronization PASS; P3 semantic cut/reorder BLOCKED; merge BLOCKED.
+- Execution: PASS for source publication.
+- Automated/static verification: WAITING.
+- Code review: IN PROGRESS.
+- Owner visual/runtime verification: NOT STARTED.
+- Documentation synchronization: IN PROGRESS until handoff sync completes.
+- Merge permission: BLOCKED.
