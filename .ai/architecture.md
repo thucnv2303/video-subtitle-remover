@@ -33,63 +33,95 @@ p3Status: locked | ready
 
 A new upload belongs to P1. P2/P3 stay locked until their upstream artifact gates pass.
 
-## 2. PIPELINE 1 — ADAPTIVE ANALYSIS + NATURAL CONTINUOUS NARRATION
+## 2. PIPELINE 1 — SEMANTIC REMIX + NATURAL CONTINUOUS NARRATION
 
 ```text
 ORIGINAL VIDEO
-  ├─ audio -> P1 Whisper ASR
+  ├─ audio -> P1 Whisper ASR with timestamps
   └─ duration/FPS/frame metadata
           ↓
 adaptive keyframe/chunk plan
           ↓
 chronological Vision evidence
           ↓
-compact global reasoning
-  ├─ full transcript
-  ├─ ordered Vision evidence
+canonical scene inventory
+  ├─ global unique scene index
+  ├─ chunk index
+  ├─ evidence timestamp
+  └─ deterministic source start/end window
+          ↓
+semantic global reasoning
+  ├─ full timestamped transcript
+  ├─ canonical Vision scene inventory
+  ├─ visual evidence/conflicts
   ├─ source duration
   ├─ selected voice/speed
   └─ user prompt intent
           ↓
+video_profile
+product_profile
+customer_profile
+          ↓
+remix_strategy
+  ├─ objective / angle / hook / story arc / CTA
+  ├─ deliberate target_duration_sec
+  └─ rationale
+          ↓
+ordered remix_beats
+  ├─ content role + message
+  ├─ source_scene_indexes[]
+  ├─ keep | trim | reorder | montage
+  └─ target_duration_sec + reason
+          ↓
 ONE grounded `narration_script`
+          ↓
+P1 v4 semantic artifacts
           ↓
 ONE full-text TTS
   ├─ selected P1 voice/speed
   ├─ exact duration measured
-  └─ quality/artifact validation
+  └─ narration quality/artifact validation
           ↓
 P1 duration telemetry
-  ├─ underlength: warning/telemetry only
-  ├─ 90–110%: normal telemetry band
-  └─ >150% source duration: pathological overlength FAIL
-          ↓
-P1 artifacts + subtitle timing
           ↓
 P2 may become READY
 ```
 
-### P1 invariants
+### P1 semantic invariants
 - P1 analyzes the ORIGINAL video only.
+- P1 is not a transcript-translation or transcript-summary feature. The narration must be the result of video/product/customer understanding and an explicit remix strategy.
 - Adaptive Vision remains bounded; no chunk receives more than 8 sampled frames and the existing total safety cap remains in force.
+- Vision chunk scene indexes are not trusted as global authority. Code assigns globally unique canonical scene indexes after all Vision chunks finish.
+- Canonical scene start/end windows are deterministic midpoint windows around sampled evidence timestamps. They are an MVP edit map, not claimed as CV-detected scene boundaries.
+- Every remix beat must reference at least one canonical source scene that actually exists.
+- The semantic edit plan must preserve beat-to-source-scene/time-range provenance so P3 does not need to rediscover evidence.
+- Product/customer claims must remain grounded in transcript or visual evidence; unknown/conflicting facts must not silently become claims.
+- `remix_strategy.target_duration_sec` is the intended remix timeline and may be shorter than the original source when the strategy deliberately removes/reorders content.
 - The speech authority is one coherent `narration_script`, not separately synthesized scene segments.
-- `/api/tts/generate` is used for continuous narration; legacy segmented `/api/tts-retry` is not the P1 narration path.
-- Narration character budget is guidance/telemetry, not proof of audio duration.
-- P1 no longer requires voice to occupy 95–100% of the original timeline.
-- A short coherent narration may intentionally leave visual/music/silent coverage.
+- `/api/tts/generate` remains the continuous-narration path; legacy segmented `/api/tts-retry` is not the P1 narration path.
+- Narration character budget is guidance/ceiling telemetry, not proof of final audio duration and not a hard minimum occupancy target.
+- P1 does not require voice to occupy 95–100% of the original timeline.
 - Normal P1 completion does not run a second LLM duration-fill request or a second TTS solely for occupancy.
-- Measured voice/source ratio outside 90–110% is a warning, not a failure, unless pathological overlength exceeds 150%.
-- Narration quality, valid TTS artifact, source identity and required P1 artifacts remain blocking.
+- Measured voice/source ratio outside 90–110% remains telemetry/warning; pathological voice/source ratio above 150% remains the inherited P1 safety block.
+- Narration quality, semantic contract validity, valid TTS artifact, source identity and required P1 artifacts remain blocking.
 - Same-session late TTS/finalization retry may reuse valid analysis/TTS checkpoints when dependency signatures match.
 
-### P1 artifacts
-P1 artifacts live under `jobs/<job_id>/p1/`, including:
-- `scenes.json`
-- `multimodal_timeline.json`
-- `remix_script.json`
-- `edit_plan.json`
-- `remix_script.srt`
-- `voice.wav`
-- `tts_timed.srt`
+### P1 artifact contract — version 4
+P1 artifacts live under `jobs/<job_id>/p1/` and use:
+
+```text
+artifact_version: 4
+analysis_mode: multimodal-semantic-remix-v4
+```
+
+Artifacts include:
+- `scenes.json`: canonical globally indexed source-scene evidence with source windows;
+- `multimodal_timeline.json`: source transcript + sampling provenance + scene inventory + video/product/customer profiles;
+- `remix_script.json`: remix strategy + target duration + ordered remix beats + continuous narration + provenance;
+- `edit_plan.json`: target duration + ordered beat plan + source scene indexes/time ranges for P3;
+- `remix_script.srt`: semantic narration preview timing;
+- `voice.wav`: natural P1 narration audio when TTS enabled;
+- `tts_timed.srt`: subtitle timing against actual P1 voice when TTS enabled.
 
 P1 outputs are immutable inputs to later pipelines.
 
@@ -103,21 +135,25 @@ P2 must preserve timeline compatibility: no narration generation, no final mix, 
 
 ## 4. PIPELINE 3 — FINAL TIMELINE + VOICE FIT + RENDER
 
-Pipeline 3 reads approved P1 artifacts plus P2 clean video. P3 owns final cut/mix/subtitle/render decisions and therefore owns final voice/video duration alignment.
+Pipeline 3 reads approved P1 semantic artifacts plus P2 clean video. P3 owns final cut/reorder/mix/subtitle/render decisions and therefore owns final voice/video duration alignment.
 
-Current BUG-034 voice-fit path:
+The v4 `edit_plan.json` is the semantic source for future P3 scene selection/reordering. Task 007 prepares this contract only; it does not implement the new P3 cut/reorder executor yet.
+
+Current inherited BUG-034 voice-fit path:
 
 ```text
 P2 clean/final-mix video
       +
-P1 voice.wav + P1 tts_timed.srt
+P1 edit plan + voice.wav + P1 tts_timed.srt
+          ↓
+P3 establishes final video timeline
           ↓
 probe actual mixing-video duration
           ↓
 voice/video ratio
   ├─ <0.90
   │    keep natural P1 voice
-  │    remaining video may carry visuals/music/silence
+  │    remaining timeline may carry visuals/music/silence
   ├─ ~1.00
   │    use P1 voice directly
   ├─ 0.90–1.15 mismatch
@@ -132,10 +168,10 @@ mix + burn subtitle + final render
 
 ### P3 invariants
 - Preserve clean-video playback speed by default. Voice matching must not call `adjustVideoTempo()`.
+- P3 may cut/reorder only according to validated P1 edit-plan provenance; it must not invent source-scene references.
 - Initial automatic P3 voice-fit range is 0.90–1.15 and remains subject to Owner listening validation before release.
 - Strong underlength is not stretched extremely to occupy the timeline.
 - Overlength above 1.15 is not silently distorted.
-- P3 may use the existing pitch-preserving ffmpeg audio-preparation bridge; no new audio dependency is introduced by BUG-034.
 - Any adjusted voice is a NEW P3 artifact and never overwrites P1 `voice.wav`.
 - If P3 changes voice tempo, subtitle timing must follow the measured derived audio before burn-in.
 
@@ -147,12 +183,16 @@ jobs/<job_id>/p3/
 └── tts_timed.srt
 ```
 
-Runtime fields may include `p3VoiceAudioPath`, `p3VoiceDurMs`, `p3VoiceTempo`, `p3TimedSrt`, and `p3TimedSrtPath`.
-
 ## 5. SOURCE IDENTITY & BOUNDARIES
 
-Every pipeline artifact must preserve or remain traceable to the same job/source identity. Pipeline 3 must not mutate P1/P2 source artifacts. P2 clean video remains the video basis; P3 creates only derived finalization artifacts and final output.
+Every pipeline artifact must preserve or remain traceable to the same job/source identity. Pipeline 3 must not mutate P1/P2 source artifacts. P2 clean video remains the clean video basis; P3 creates only derived finalization artifacts and final output.
 
 ## 6. CURRENT VERIFICATION STATUS
 
-BUG-034 source implementation is published on PR #47. PM logic/scope review passed at source head `55faf3e734120edec93ba22798599eaf16b6be13`, but static checks and Owner runtime/listening verification remain required. Merge remains blocked.
+PIPELINE1-SEMANTIC-REMIX-007 source is published on Draft PR #48 on top of `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
+
+Published task-007 source commits:
+- `862e68d5c47447f0033817145757429f38cf830f` — semantic reasoning schema, canonical scene inventory, semantic validation;
+- `4a2712c41ad26284e4ecfb2a1f955606051729e8` — v4 semantic artifact persistence and beat-to-source-range edit plan.
+
+Direct GitHub diff/full-source review is in progress/logic-reviewed, but exact-head local Node syntax checks and fresh Owner semantic runtime/artifact verification are still required. Merge remains blocked.
