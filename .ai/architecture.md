@@ -2,30 +2,28 @@
 
 ## 1. CURRENT IMPLEMENTATION — CODE OBSERVED
 
-Dự án dùng Electron + renderer ES6 Modules với bridge pattern để tương thích code legacy.
+The app uses Electron with renderer ES6 Modules plus legacy compatibility bridges.
 
 ```text
 src/renderer/
-├── index.html
 └── js/
-    ├── app.js                       (legacy queue/navigation/UI coordinator)
-    ├── pipeline-state.js            (P1/P2/P3 compatibility state + handoff gate)
-    ├── pipeline1-run-config.js       (snapshot ASR/AI/TTS/voice/speed for each P1 run)
-    ├── pipeline1-analysis.js         (adaptive keyframes/chunks + P1 artifact builder)
-    ├── pipeline1-artifact-gate.js    (fail-closed guard before P2 handoff)
+    ├── app.js
+    ├── pipeline-state.js
+    ├── pipeline1-run-config.js
+    ├── pipeline1-analysis.js
+    ├── pipeline1-artifact-gate.js
     └── pipelines/
-        ├── pipeline1-ai.js           (P1 reasoning → continuous narration → TTS chain)
+        ├── pipeline1-ai.js
         ├── pipeline2-remove.js
         └── pipeline3-finalize.js
 
 src/main/
 ├── main.js
-├── preload.js                       (contextBridge for P1 Vision/narration/audio IPC)
-└── p1-vision-ipc.js                 (Ollama Vision chunks + compact global reasoning + narration fit + audio preparation)
+├── preload.js
+└── p1-vision-ipc.js
 ```
 
-### Compatibility pipeline state
-Until the shared legacy job runner is fully refactored, each job keeps independent lifecycle fields:
+Compatibility lifecycle remains:
 
 ```text
 p1Status: idle | queued | processing | finished | error
@@ -33,136 +31,128 @@ p2Status: locked | ready | queued | processing | finished | error
 p3Status: locked | ready
 ```
 
-Rules:
-- new upload belongs to P1; P2/P3 remain locked;
-- P1 queued/processing/error/cancel never unlocks P2;
-- P1 success -> `p1Status=finished`, `p2Status=ready`, `p3Status=locked`;
-- P2 does not accept direct upload and performs subtitle-removal-only behavior;
-- P2 success -> `p2Status=finished`, `p3Status=ready`;
-- this remains a compatibility layer around legacy shared `state.jobs`, not the final artifact-store model.
+A new upload belongs to P1. P2/P3 stay locked until their upstream artifact gates pass.
 
-## 2. PIPELINE 1 CURRENT CANDIDATE — ADAPTIVE VISION + CONTINUOUS NARRATION V3
-
-`PIPELINE1-CONTINUOUS-NARRATION-006` supersedes the segmented narration/duration-fit candidate from PR #46.
+## 2. PIPELINE 1 — ADAPTIVE ANALYSIS + NATURAL CONTINUOUS NARRATION
 
 ```text
 ORIGINAL VIDEO
-  ├─ audio -> P1 Whisper ASR (language=auto)
-  └─ duration/FPS/frame-count metadata
+  ├─ audio -> P1 Whisper ASR
+  └─ duration/FPS/frame metadata
           ↓
-adaptive keyframe planner
-  ├─ baseline ≈ 1 keyframe / 4 seconds
-  ├─ short-video minimum evidence
-  ├─ hard total safety cap = 80 frames
-  └─ max 8 frames / Vision chunk
+adaptive keyframe/chunk plan
           ↓
-chronological Vision chunks
-  ├─ each chunk gets overlapping timestamped transcript only
-  ├─ each chunk returns structured scene/visual evidence only
-  └─ any chunk failure fails P1; no silent evidence drop
+chronological Vision evidence
           ↓
-compact GLOBAL reasoning
-  ├─ full source transcript
-  ├─ ordered Vision evidence from all chunks
+compact global reasoning
+  ├─ full transcript
+  ├─ ordered Vision evidence
   ├─ source duration
-  ├─ selected TTS voice
-  ├─ selected TTS speed
-  └─ user prompt intent/style
+  ├─ selected voice/speed
+  └─ user prompt intent
           ↓
-voice-aware final JSON
-  ├─ summary / compact insights
-  ├─ ONE continuous `narration_script`
-  └─ compact edit plan / notes
+ONE grounded `narration_script`
           ↓
-full-text TTS pass
-  ├─ `/api/tts/generate` exactly once for the whole narration
-  ├─ selected speed applied with ffmpeg `atempo`
-  └─ ffprobe exact generated-file duration
+ONE full-text TTS
+  ├─ selected P1 voice/speed
+  ├─ exact duration measured
+  └─ quality/artifact validation
           ↓
-95–100% of source duration?
-  ├─ YES -> accept `voice.wav`
-  └─ NO  -> measured chars/sec -> ONE whole-narration fit -> ONE final TTS pass
-                    └─ second miss -> P1 FAIL / P2 stays locked
+P1 duration telemetry
+  ├─ underlength: warning/telemetry only
+  ├─ 90–110%: normal telemetry band
+  └─ >150% source duration: pathological overlength FAIL
           ↓
-post-synthesis subtitle display timing
-  └─ `tts_timed.srt` may be split for readable subtitle display;
-     this segmentation never causes separate speech synthesis clips/gaps
-          ↓
-jobs/<job_id>/p1/
-  ├─ scenes.json
-  ├─ multimodal_timeline.json
-  ├─ remix_script.json
-  ├─ edit_plan.json
-  ├─ remix_script.srt
-  ├─ voice.wav
-  └─ tts_timed.srt
-          ↓
-p1ArtifactsReady=true only after required narration/TTS gates succeed
+P1 artifacts + subtitle timing
           ↓
 P2 may become READY
 ```
 
-### Adaptive Vision invariants
-- fixed `FRAME_SAMPLE_COUNT = 8` is not the global sampling authority;
-- evidence scales with source duration but remains bounded;
-- first/last timeline coverage is retained by distributed sampling;
-- no Vision request receives more than 8 sampled frames;
-- current total evidence ceiling is 80 frames / 10 chunks; this is a safety bound, not unlimited-video coverage;
-- global reasoning starts only after all Vision chunks succeed;
-- global reasoning receives the complete transcript, so chunking does not replace whole-video linguistic context;
-- `multimodal_timeline.json` records sampling/chunk provenance and never stores base64 images;
-- no local vision-capable Ollama model means P1 fails closed; transcript-only fallback cannot unlock P2.
+### P1 invariants
+- P1 analyzes the ORIGINAL video only.
+- Adaptive Vision remains bounded; no chunk receives more than 8 sampled frames and the existing total safety cap remains in force.
+- The speech authority is one coherent `narration_script`, not separately synthesized scene segments.
+- `/api/tts/generate` is used for continuous narration; legacy segmented `/api/tts-retry` is not the P1 narration path.
+- Narration character budget is guidance/telemetry, not proof of audio duration.
+- P1 no longer requires voice to occupy 95–100% of the original timeline.
+- A short coherent narration may intentionally leave visual/music/silent coverage.
+- Normal P1 completion does not run a second LLM duration-fill request or a second TTS solely for occupancy.
+- Measured voice/source ratio outside 90–110% is a warning, not a failure, unless pathological overlength exceeds 150%.
+- Narration quality, valid TTS artifact, source identity and required P1 artifacts remain blocking.
+- Same-session late TTS/finalization retry may reuse valid analysis/TTS checkpoints when dependency signatures match.
 
-### Continuous narration invariants
-- the speech authority is one coherent `narration_script`, not a list of per-scene speech segments;
-- selected voice/speed and source duration are known before final narration generation;
-- final qwen reasoning does not regenerate Vision scene descriptions;
-- for short inputs (<=60s), current global reasoning timeout is 150s; longer inputs use bounded larger timeouts;
-- the initial narration character budget targets approximately 97.5% of source duration and is an estimate, not the final gate authority;
-- exact generated audio file duration after selected-speed processing is the final authority;
-- accepted ratio is inclusive `0.95 <= voice_duration / source_duration <= 1.00`;
-- first miss allows exactly one whole-narration rewrite using the measured actual voice rate and exactly one final TTS pass;
-- no video speed manipulation and no voice truncation are allowed to satisfy the gate;
-- Pipeline 1 does not call legacy `/api/tts-retry` for continuous narration; that endpoint's segment expansion/gap behavior is not part of the P1 v3 path;
-- subtitle display chunks may be derived after speech synthesis, but speech itself is synthesized continuously;
-- queue processing remains safe sequential auto-advance; simultaneous Gemma/Qwen/OmniVoice heavy GPU jobs are not introduced.
+### P1 artifacts
+P1 artifacts live under `jobs/<job_id>/p1/`, including:
+- `scenes.json`
+- `multimodal_timeline.json`
+- `remix_script.json`
+- `edit_plan.json`
+- `remix_script.srt`
+- `voice.wav`
+- `tts_timed.srt`
 
-### P1 artifact version 3
-All current P1 JSON artifacts carry source identity metadata. For this candidate:
+P1 outputs are immutable inputs to later pipelines.
+
+## 3. PIPELINE 2 — SUBTITLE REMOVAL ONLY
+
+Pipeline 2 receives the ORIGINAL video and only removes burned-in subtitles.
+
+Output: `clean_video.mp4`.
+
+P2 must preserve timeline compatibility: no narration generation, no final mix, no automatic speed change for voice matching, no unrelated crop/reorder.
+
+## 4. PIPELINE 3 — FINAL TIMELINE + VOICE FIT + RENDER
+
+Pipeline 3 reads approved P1 artifacts plus P2 clean video. P3 owns final cut/mix/subtitle/render decisions and therefore owns final voice/video duration alignment.
+
+Current BUG-034 voice-fit path:
 
 ```text
-artifact_version: 3
-analysis_mode: multimodal-adaptive-continuous-narration-v3
+P2 clean/final-mix video
+      +
+P1 voice.wav + P1 tts_timed.srt
+          ↓
+probe actual mixing-video duration
+          ↓
+voice/video ratio
+  ├─ <0.90
+  │    keep natural P1 voice
+  │    remaining video may carry visuals/music/silence
+  ├─ ~1.00
+  │    use P1 voice directly
+  ├─ 0.90–1.15 mismatch
+  │    create pitch-preserving derived P3 voice
+  │    re-measure duration
+  │    rescale subtitle timing
+  └─ >1.15
+       block automatic stretch; require revision/warning
+          ↓
+mix + burn subtitle + final render
 ```
 
-`remix_script.json` contains the authoritative `narration_script`, narration budget/provenance, and compatibility timing metadata. `voice.wav` is the normalized accepted speech track. `tts_timed.srt` is derived after audio generation.
+### P3 invariants
+- Preserve clean-video playback speed by default. Voice matching must not call `adjustVideoTempo()`.
+- Initial automatic P3 voice-fit range is 0.90–1.15 and remains subject to Owner listening validation before release.
+- Strong underlength is not stretched extremely to occupy the timeline.
+- Overlength above 1.15 is not silently distorted.
+- P3 may use the existing pitch-preserving ffmpeg audio-preparation bridge; no new audio dependency is introduced by BUG-034.
+- Any adjusted voice is a NEW P3 artifact and never overwrites P1 `voice.wav`.
+- If P3 changes voice tempo, subtitle timing must follow the measured derived audio before burn-in.
 
-Current limitation: adaptive sampling remains duration-driven and uniformly distributed rather than CV scene-boundary/content-density driven. Very long inputs that reach the 80-frame cap need a future scene-aware prioritization refinement; the cap must not be silently removed.
+Derived artifacts when adjustment is required:
 
-## 3. TARGET PRODUCT ARCHITECTURE
+```text
+jobs/<job_id>/p3/
+├── voice.wav
+└── tts_timed.srt
+```
 
-### Pipeline 1: Analysis, Script and Voice
-- Analyze ORIGINAL video only.
-- ASR + adaptive visual evidence + insights + coherent narration + TTS + subtitle timing + edit plan.
-- Artifacts: `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`, narration audio, SRT.
-- Strict rule: no subtitle removal, no video cutting, no final render.
+Runtime fields may include `p3VoiceAudioPath`, `p3VoiceDurMs`, `p3VoiceTempo`, `p3TimedSrt`, and `p3TimedSrtPath`.
 
-### Pipeline 2: Subtitle Removal
-- Input is ORIGINAL video.
-- Only remove hard/burned-in subtitles; support automatic/manual region selection.
-- Output: `clean_video.mp4`.
-- Timeline contract: no trimming, scene reordering, speed changes or automatic crop. Original scene timecodes remain valid or deterministically mappable.
-- Exact allowed tolerance for duration/FPS/frame count/timebase is still NOT YET VERIFIED and must be established before P3 relies on it.
+## 5. SOURCE IDENTITY & BOUNDARIES
 
-### Pipeline 3: Video Remix and Finalize
-- Read approved P1 artifacts plus P2 `clean_video.mp4`.
-- Use original source timecodes/edit plan for cut/reorder where approved.
-- Mix accepted narration/background audio, burn final SRT, render final video.
-- Strict rule: do not modify P1/P2 outputs; block when source identity does not match.
+Every pipeline artifact must preserve or remain traceable to the same job/source identity. Pipeline 3 must not mutate P1/P2 source artifacts. P2 clean video remains the video basis; P3 creates only derived finalization artifacts and final output.
 
-## 4. ARTIFACT BOUNDARIES & SOURCE IDENTITY
+## 6. CURRENT VERIFICATION STATUS
 
-P1 artifacts live at `jobs/<job_id>/p1/`.
-Every pipeline artifact must retain `job_id`, `source_fingerprint`, source duration, FPS/timebase where applicable, and artifact version.
-
-Pipeline 2 `clean_video.mp4` must remain timeline-compatible with the original. Pipeline 3 must verify P1/P2 source identity before combining them.
+BUG-034 source implementation is published on PR #47. PM logic/scope review passed at source head `55faf3e734120edec93ba22798599eaf16b6be13`, but static checks and Owner runtime/listening verification remain required. Merge remains blocked.
