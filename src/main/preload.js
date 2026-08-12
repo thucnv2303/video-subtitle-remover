@@ -187,11 +187,21 @@ function installP2RuntimeScript() {
   document.head.appendChild(script);
 }
 
+function installVoiceRenderScript() {
+  if (document.querySelector('script[data-voice-render]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/voice-render.js';
+  script.defer = true;
+  script.dataset.voiceRender = 'true';
+  document.head.appendChild(script);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   installFilePathCompatScript();
   installP1SpinnerPhaseScript();
   installP1RunUxScript();
   installP2RuntimeScript();
+  installVoiceRenderScript();
   let attempts = 0;
   const timer = setInterval(() => {
     attempts += 1;
