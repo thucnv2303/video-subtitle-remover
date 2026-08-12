@@ -7,51 +7,43 @@
 - [x] Active branch `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
 - [x] Draft PR #47 targets `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
 - [x] Base SHA `68c750524f9604b7799d97a2b5604d87368f889c`.
-- [x] Prior corrective source `1c028612900b1180aa8c1e66da2d769373793c91`.
-- [x] Narration-quality source commit `00e80aea06d526b34518dd069f9b1c581c80e77c`.
-- [x] Compare `131f35c... -> 00e80aea...` changes exactly one application source file: `src/main/p1-vision-ipc.js`.
-- [x] No P2/P3/STTN/Settings/backend/TTS-engine source changes in the quality correction.
-- [x] PM narration-quality source review PASS `4912002868` for logic/scope.
+- [x] Owner-failed quality-gate head `0e327f353b7be15483576233aaed126813542158`.
+- [x] BUG-032 failure-intake docs commit `13f492d4fb3c39c5173adcc56c6858b23d03a082`.
+- [x] BUG-032 source correction `a0e6165dfd88561bf3140907b6d578782a2ccebf`.
+- [x] Compare `13f492d4... -> a0e6165d...` changes exactly one source file, `src/main/p1-vision-ipc.js`, with 4 additions / 2 deletions.
+- [x] PM BUG-032 source review `4912221026` PASS for logic/scope.
+- [x] No P2/P3/STTN/Settings/backend/TTS-engine source changes in BUG-032 correction.
 
-## Previously verified runtime/static evidence
-- [x] Owner reported corrective two-Job run successful.
-- [x] Owner prior static command bundle: all four requested `node --check` commands returned clean.
-- [x] Owner prior `git diff --check 68c750...HEAD` returned clean.
-- [x] >60s runtime input: `97.57s`.
-- [x] Adaptive sampling: `25` keyframes / `4` chunks.
-- [x] Chunk frame counts: `8 / 8 / 8 / 1`, all <=8.
-- [x] All four Vision chunks completed.
-- [x] Global qwen reasoning completed in `48.2s`.
-- [x] Continuous full-text TTS produced `94.62s / 97.57s = 97.0%`.
-- [x] P1 completed and unlocked P2 on the >60s run.
+## Previously closed coverage
+- [x] Owner prior two-Job corrective run reported successful.
+- [x] Prior static bundle: four requested `node --check` commands clean.
+- [x] Prior `git diff --check` clean.
+- [x] >60s adaptive runtime: 97.57s input.
+- [x] Adaptive sampling: 25 keyframes / 4 chunks / 8,8,8,1 frames.
+- [x] All Vision chunks completed.
+- [x] Prior bounded qwen long-run completed in 48.2s.
+- [x] Continuous full-text TTS architecture observed.
+- [x] Prior successful long-run duration: 94.62s / 97.57s = 97.0%.
+- [x] BUG-031 quality gate detects CJK/repeated long sentences/repeated long phrases.
 
-## BUG-031 evidence — narration quality
-- [x] Owner-provided 97.57s narration contains a repeated tail/CTA/value block multiple times.
-- [x] Narration contains stray CJK text (`饱满`).
-- [x] Narration hit the exact prior upper bound `1610/1610`, consistent with padding pressure from hard length constraints.
-- [x] Duration PASS does not count as narration-quality PASS.
+## BUG-032 runtime evidence
+- [x] Quality-first initial narration may be naturally short: observed 575 chars.
+- [x] First TTS measured 33.98s / 97.57s = 34.8%.
+- [x] Measured duration-fit budget computed 1568–1651 chars.
+- [x] Pre-fix duration-fit returned 575 chars and failed post-parse hard validation before final TTS.
+- [x] Root cause: shared repair schema had `minLength:1` for duration-fit.
 
-## Quality-gate correction logic review
-- [x] Initial narration lower char target is soft; schema only requires non-empty text and enforces the upper bound before measured TTS.
-- [x] Prompt explicitly forbids padding/filler/repeated CTA/conclusion and prioritizes natural narration over hitting the soft minimum.
-- [x] Prompt requires natural Vietnamese and forbids stray CJK/Han/Japanese/Korean output.
-- [x] Prompt requires consistent subject/product/ingredient naming and neutral wording when evidence conflicts.
-- [x] Deterministic quality gate detects CJK characters.
-- [x] Deterministic quality gate detects exact repeated long sentences.
-- [x] Deterministic quality gate detects high-similarity repeated long sentences.
-- [x] Deterministic quality gate detects repeated exact 10-word phrases.
-- [x] Initial bad narration gets at most one narration-only quality repair without rerunning Vision.
-- [x] Duration-fit output is still hard-validated against measured character range.
-- [x] Duration-fit output is quality-validated again before final re-TTS.
-- [x] A quality repair that still fails deterministic checks is rejected; P1 fails closed.
-- [x] Continuous `/api/tts/generate`, bounded duration fit, queue auto-advance, manual Job browsing and P2 fail-closed behavior remain in scope and unchanged.
+## BUG-032 corrective logic review
+- [x] `narrationRepairSchemaForBudget()` uses `budget.min_chars` as schema `minLength` when supplied.
+- [x] `maxLength` is clamped to at least `minLength`.
+- [x] Quality-cleanup callers that provide only `max_chars` retain soft `minLength:1`.
+- [x] Measured duration-fit caller passes the full budget and therefore receives a hard schema range.
+- [x] Post-parse `assertNarrationWithinBudget()` still revalidates the hard measured range.
+- [x] Quality validation still runs before any final re-TTS candidate is accepted.
+- [x] No extra retry loop or Vision rerun introduced.
 
-## Deterministic quality evidence
-- [x] Owner bad narration sample is rejected with `CJK_CHARACTERS`, `REPEATED_SENTENCE`, `REPEATED_LONG_PHRASE`.
-- [x] Clean Vietnamese narration sample passes the same deterministic gate.
-
-## Exact static checks — BLOCKING ON NEW FINAL HEAD
-- [ ] `git rev-parse HEAD` equals the exact final docs/head supplied for retest.
+## Exact static checks — BLOCKING ON FINAL DOCS/HEAD
+- [ ] `git rev-parse HEAD` equals the exact final head supplied for retest.
 - [ ] `node --check src/main/p1-vision-ipc.js`.
 - [ ] `node --check src/main/preload.js`.
 - [ ] `node --check src/renderer/js/pipeline1-analysis.js`.
@@ -59,18 +51,16 @@
 - [ ] `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
 - [ ] GitHub CI/status checks — none configured; absence is not CI PASS.
 
-## Fresh Owner quality retest — BLOCKING
-- [ ] Re-run the same uploaded 97.57s video or equivalent on the exact new final head.
-- [ ] `Narration quality` log reports PASS directly or exactly one bounded quality repair before TTS.
-- [ ] Quality repair does not rerun Vision.
-- [ ] Final narration has no repeated tail/value block/CTA padding.
-- [ ] Final narration contains no stray CJK characters.
-- [ ] Final narration is coherent natural Vietnamese with consistent subject/product/ingredient naming and no obvious factual contradiction.
+## Fresh Owner runtime — BLOCKING
+- [ ] Re-run the same 97.57s input or equivalent on exact final head.
+- [ ] Initial narration quality gate passes directly or uses at most one narration-only quality repair without rerunning Vision.
+- [ ] If first TTS is outside 95–100%, measured duration-fit logs a hard target range.
+- [ ] Duration-fit candidate is inside that logged hard range before final TTS; the previous 575-for-1568–1651 failure must not recur.
+- [ ] Duration-fit candidate also passes narration quality: no repeated tail/CTA padding, no stray CJK, coherent Vietnamese, no obvious subject/ingredient contradiction.
 - [ ] CTA/conclusion appears at most once.
-- [ ] If first TTS duration misses 95–100%, measured narration fit remains bounded and final candidate passes both hard range + quality before final re-TTS.
 - [ ] Final successful voice ratio is 95–100% inclusive.
 - [ ] No segmented `/api/tts-retry` narration path reappears.
 - [ ] P1 completes and unlocks P2 only after all gates pass.
 
 ## Gates
-Execution PASS for quality correction; automated/static WAITING on new final head; code review PASS for logic/scope (`4912002868`); Owner quality retest WAITING; documentation synchronization PASS after publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS for BUG-032 correction; automated/static WAITING; code review PASS for logic/scope (`4912221026`); Owner retest WAITING; documentation synchronization PASS; merge BLOCKED; Step 3 BLOCKED.
