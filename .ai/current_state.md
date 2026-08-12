@@ -1,66 +1,56 @@
 # Current State
 
 ## Status
-PIPELINE1-CONTINUOUS-NARRATION-006 — QUALITY-GATE CODE REVIEW PASS / STATIC + OWNER RETEST WAITING
+PIPELINE1-CONTINUOUS-NARRATION-006 — OWNER QUALITY RETEST FAIL / BUG-032 / NEEDS REVISION
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Active review branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
 - Active Draft PR: #47.
 - Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
-- Prior corrective source: `1c028612900b1180aa8c1e66da2d769373793c91` / PM review `4906247596`.
+- Owner-tested quality-gate head: `0e327f353b7be15483576233aaed126813542158`.
 - Narration-quality source commit: `00e80aea06d526b34518dd069f9b1c581c80e77c`.
-- PM narration-quality review: `4912002868` — PASS for logic/scope, not release PASS.
+- PM narration-quality review: `4912002868` — prior logic/scope PASS, now invalidated for release readiness by BUG-032 runtime failure.
 - Task spec: `.ai/task_specs/PIPELINE1-CONTINUOUS-NARRATION-006.md`.
 
-## Owner evidence now closed
-1. Short two-Job corrective run: Owner reported both Jobs successful.
-2. Static verification on the prior tested/docs head: all four requested `node --check` commands and `git diff --check 68c750...HEAD` returned clean.
-3. Long-video runtime: `97.57s` source -> `25` adaptive keyframes / `4` chunks with frame counts `8/8/8/1`; all Vision chunks completed.
-4. Long-video global reasoning completed in `48.2s`; continuous TTS produced `94.62s`, ratio `97.0%`; P1 completed and unlocked P2.
-5. Therefore adaptive >60s coverage, multi-chunk <=8-frame behavior, bounded global reasoning, continuous TTS and final duration gate all have Owner runtime evidence.
+## Owner runtime evidence already closed
+1. Prior corrective two-Job run: Owner reported both Jobs successful.
+2. Prior static bundle: four requested `node --check` commands and `git diff --check` clean.
+3. Long-video technical coverage: `97.57s` source -> `25` adaptive keyframes / `4` chunks / frame counts `8/8/8/1`; all Vision chunks completed.
+4. Long-video qwen reasoning previously completed in `48.2s`.
+5. Prior full-text TTS duration PASS: `94.62s / 97.57s = 97.0%`.
+6. BUG-031 quality defect was then corrected with a deterministic narration-quality gate and a soft initial lower-character target.
 
-## New Owner blocker — BUG-031
-The same 97.57s run produced a `1610`-character narration at the exact upper character bound. The ending repeated the same value/CTA sentences multiple times and contained stray CJK text (`饱满`). Duration passed, but narration quality failed. Merge remains blocked.
+## Fresh Owner failure — BUG-032
+On the new quality-gate head, the same 97.57s class of input produced:
+- initial narration: `575` chars;
+- TTS pass 1: `33.98s`, ratio `34.8%`;
+- measured duration-fit budget: `1568–1651` chars;
+- narration-fit result: still `575` chars;
+- post-parse hard validator rejected it before final TTS: `narration 575 ký tự nằm ngoài budget 1568-1651 ký tự`.
 
 ## Verified root cause
-- Existing code constrained narration length and duration but did not have a deterministic narration-quality gate.
-- The initial JSON schema treated the lower character bound as hard, encouraging the model to pad text to satisfy length.
-- Prompt-only instructions against repetition were insufficient.
+- `narrationRepairSchemaForBudget()` was changed for soft quality-repair use so `minLength` became `1`.
+- The same helper is also used by `ollama:p1FitNarration` for measured duration-fit.
+- Therefore duration-fit still had a hard post-parse validator, but its structured schema no longer carried the measured hard minimum.
+- This allowed qwen to legally return the original 575-char narration under schema, after which code rejected it.
 
-## Quality-gate correction published and reviewed
-Source commit `00e80aea...` changes only `src/main/p1-vision-ipc.js` relative to prior head `131f35c...`.
-
-1. Initial narration lower bound is now soft: schema only enforces non-empty + upper bound before measured TTS. The model is explicitly told not to pad to the minimum.
-2. Deterministic quality report rejects:
-   - CJK/Han/Japanese/Korean characters in Vietnamese narration;
-   - exact repeated long sentences;
-   - high-similarity repeated long sentences;
-   - repeated exact 10-word phrases.
-3. Initial narration is quality-checked before artifacts/TTS. If bad, one narration-only quality repair is allowed without rerunning Vision.
-4. Duration-fit narration is revalidated for both hard measured duration character range and narration quality before final re-TTS.
-5. Quality repair explicitly requires one CTA/conclusion maximum, no filler, no repeated wording, Vietnamese-only output and subject/ingredient consistency.
-6. If quality remains bad after the bounded repair, P1 fails closed rather than accepting low-quality narration.
-7. No P2/P3/STTN/Settings/backend/TTS-engine source changes.
-
-## Verification evidence
-- GitHub compare `131f35c... -> 00e80aea...`: exactly one application source file changed, `src/main/p1-vision-ipc.js`.
-- Direct GitHub full-source inspection completed for the quality-gate implementation.
-- Deterministic helper simulation on the Owner-provided repeated/CJK narration reports FAIL with `CJK_CHARACTERS`, `REPEATED_SENTENCE`, and `REPEATED_LONG_PHRASE`; a clean Vietnamese narration reports PASS.
-- PM narration-quality code review PASS for logic/scope: `4912002868`.
-- Review risk: deterministic heuristics do not prove factual semantic consistency; Owner must inspect narration content during retest.
-- GitHub CI/status checks: none configured.
-- Exact Node syntax/diff checks on the new quality-gate final head: WAITING.
-- Fresh Owner runtime on the quality-gate final head: WAITING.
+## Corrective direction
+Keep two distinct semantics while reusing one safe helper:
+1. If `budget.min_chars` is supplied, schema must enforce that hard `minLength` and corresponding `maxLength`.
+2. If only `max_chars` is supplied by quality cleanup, schema keeps `minLength: 1`.
+3. Duration-fit remains hard-bounded before and after model output.
+4. Quality cleanup remains soft-min and quality-first.
+5. No P2/P3/STTN/Settings/backend/TTS-engine changes.
 
 ## Gates
-- Execution: PASS for published correction.
-- Automated/static verification: WAITING on the new final head.
-- Code review: PASS for logic/scope (`4912002868`).
-- Owner manual app verification: WAITING fresh narration-quality retest.
-- Documentation synchronization: PASS after this update.
+- Execution: NEEDS_REVISION.
+- Automated/static verification: WAITING after corrective source publication.
+- Code review: INVALIDATED for release readiness by BUG-032; fresh review required after correction.
+- Owner manual app verification: FAIL on `0e327f353b7be15483576233aaed126813542158`.
+- Documentation synchronization: PASS after this failure intake update.
 - Merge permission: BLOCKED.
 - Step 3 progression: BLOCKED.
 
 ## Next permitted action
-Run exact static checks on the new final docs/head, then Owner retests the uploaded 97.57s video (or equivalent) and confirms: no repeated tail, no stray CJK, natural continuous Vietnamese narration, no obvious subject/ingredient contradiction, final successful voice remains 95–100%, and P1 completes. Do not merge or begin Step 3 until this evidence is recorded and PM explicitly approves merge.
+Publish the narrow BUG-032 source correction in `src/main/p1-vision-ipc.js`, inspect the exact diff/full file, run or obtain exact static checks, then Owner retests the same 97.57s case. Do not merge or begin Step 3 before fresh Owner PASS is recorded.
