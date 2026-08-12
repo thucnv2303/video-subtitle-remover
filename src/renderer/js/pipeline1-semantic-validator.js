@@ -11,7 +11,8 @@ function normalizeText(value) {
 
 function containsAny(text, terms) {
   const normalized = normalizeText(text);
-  return terms.some(term => normalized.includes(normalizeText(term)));
+  const normalizedTerms = terms.map(normalizeText).filter(Boolean);
+  return normalizedTerms.some(term => normalized.includes(term));
 }
 
 function sceneEvidenceText(scene) {
@@ -27,12 +28,12 @@ const PROCESS_RULES = [
   {
     id: 'steam',
     beatTerms: ['hap', 'steam'],
-    evidenceTerms: ['steam', 'steamer', 'hap', '蒸'],
+    evidenceTerms: ['steam', 'steamer', 'hap'],
   },
   {
     id: 'bake',
     beatTerms: ['nuong', 'bake', 'oven'],
-    evidenceTerms: ['bake', 'baked', 'oven', 'nuong', '烤'],
+    evidenceTerms: ['bake', 'baked', 'oven', 'nuong'],
   },
   {
     id: 'wash-peel-soak',
