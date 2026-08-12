@@ -1,44 +1,40 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-FINAL-RUNTIME-GUARDS-005 — Manual Job Browsing and Narration Duration Gate`
+`PIPELINE1-CONTINUOUS-NARRATION-006 — P1/P3 Duration Responsibility Redesign`
 
 ## Status
-CODE REVIEW PASS / STATIC + OWNER RETEST WAITING
+BUG-034 SOURCE PUBLISHED / PM LOGIC-SCOPE REVIEW PASS / STATIC + OWNER RUNTIME WAITING
 
 ## Review basis
-- Parent adaptive head: `review/PIPELINE1-ADAPTIVE-VISION-004@0f668866dba2a38053080627872229e9ed85addd`.
-- Review branch: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
-- Draft PR: #46.
-- Reviewed source: `d9dcd665295a6ca2583644e2ffb39e6421f79f32`.
-- PM review: `4904862077`.
+- Branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
+- Draft PR: #47.
+- Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
+- Approved spec: `c046adca8394652cae94fb47821ac8927cb62f74`.
+- P1 source: `97a8e31350b9a0ff40d93207d3de8164b98b458a`.
+- P3 source: `55faf3e734120edec93ba22798599eaf16b6be13`.
+- PM review: `4912891690` — PASS logic/scope only.
 
-## Latest Owner evidence
-- Adaptive P1 processed all Jobs in the latest supplied run.
-- Owner reports a processing Job prevents browsing/holding another Job selection.
-- Owner reports generated narration may exceed source-video duration after TTS.
-- Required final voice rule: exported track ratio must be 95–100% of source duration.
-- Supplied run does not yet prove adaptive behavior on a >60s input.
+## Why BUG-034 exists
+Fresh Owner runtime produced a valid 613-char narration and 35.91s continuous TTS for a 97.57s source, then spent 150s on a second duration-fill reasoning request and failed. This proved that exact original-video occupancy was the wrong P1 completion contract.
 
-## Current correction
-- Run-UX no longer overwrites a valid manual `pipeline1SelectedJobId` every 250ms.
-- AI/TTS phase synchronization also preserves a valid manual selection.
-- Execution authority remains separate through the running Job / `activeJobId`.
-- TTS duration gate uses source metadata and normalized exported audio duration, including the current legacy +1000ms export tail.
-- First out-of-range TTS triggers one script-fit repair only.
-- Repair preserves SRT segment count/timestamps and synchronizes remix SRT/JSON artifacts.
-- One final TTS regeneration follows; a second out-of-range result fails closed with exact duration diagnostic.
+## New behavior
+- P1 quality/artifact validity is blocking; underlength occupancy is not.
+- P1 one-TTS normal path, duration telemetry, warnings outside 90–110%, fail only above 150% overlength.
+- P3 is final duration authority and keeps video pacing unchanged.
+- P3 leaves strongly short voice natural, derives a fitted voice only for 0.90–1.15 ratio, blocks >1.15, and rescales subtitles when it changes voice tempo.
+- P3 derived artifacts are separate from P1 inputs.
 
 ## Evidence status
-- Duration helper simulation: PASS.
-- Source/diff review: PASS `4904862077`.
-- Exact final Node checks: WAITING.
-- Exact diff hygiene: WAITING.
-- Owner runtime PR #46: NOT STARTED.
-- GitHub CI/status checks: none configured.
-
-## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED; docs sync PASS after final publication; merge BLOCKED; Step 3 BLOCKED.
+- Exact source delta from spec head: two files only, P1 AI and P3 finalize.
+- PM direct source review: PASS logic/scope.
+- No GitHub CI statuses configured.
+- Exact-head static checks: WAITING.
+- Owner P1 runtime: WAITING.
+- Owner P3 listening/runtime verification: WAITING.
 
 ## Next action
-Static-check exact PR #46 head, then Owner retests manual browsing plus a narration-duration case. Keep the pending >60s adaptive sampling runtime check in the final merge gate.
+Owner tests exact final docs/head. The 97.57s P1 case must complete after first valid TTS and must not emit `Narration evidence-fit`. Then P3 must be verified at short, near-match, modest speed-up/slowdown and over-limit ratios, with no video retiming and no overwrite of P1 artifacts.
+
+## Gates
+Execution PASS; automated/static WAITING; code review PASS logic/scope; Owner verification WAITING; documentation synchronization PASS after final sync; merge BLOCKED.

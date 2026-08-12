@@ -1,59 +1,49 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-FINAL-RUNTIME-GUARDS-005
+PIPELINE1-CONTINUOUS-NARRATION-006
 
 ## Name
-Pipeline 1 Manual Job Browsing and Narration Duration Gate
+Pipeline 1 Continuous Narration — P1/P3 Duration Responsibility Redesign
 
 ## Status
-CODE_REVIEW_PASS_STATIC_AND_OWNER_RETEST_WAITING
+BUG034_SOURCE_PUBLISHED_PM_REVIEW_PASS_STATIC_AND_OWNER_RUNTIME_WAITING
 
 ## Authority
-- Parent: `review/PIPELINE1-ADAPTIVE-VISION-004@0f668866dba2a38053080627872229e9ed85addd`.
-- Review branch: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
-- Draft PR: #46.
-- Current reviewed source: `d9dcd665295a6ca2583644e2ffb39e6421f79f32`.
-- PM review: `4904862077`.
-- Exact task spec: `.ai/task_specs/PIPELINE1-FINAL-RUNTIME-GUARDS-005.md`.
+- Branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
+- Draft PR: #47.
+- Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
+- Approved BUG-034 spec: `c046adca8394652cae94fb47821ac8927cb62f74`.
+- P1 source: `97a8e31350b9a0ff40d93207d3de8164b98b458a`.
+- P3 source: `55faf3e734120edec93ba22798599eaf16b6be13`.
+- PM review: `4912891690` — PASS logic/scope only.
 
-## Owner outcome
-Before P1 can be approved for merge:
-1. User must be able to inspect another Job while a different Job continues processing.
-2. Final exported narration track must never exceed source video duration and may be shorter by at most 5%: accepted ratio `0.95..1.00`.
+## User outcome
+A good P1 narration must not fail merely because it is much shorter than the original video. P1 produces grounded natural narration/TTS; P3 owns final duration alignment after the final video timeline is known.
 
-## Source scope
-- `src/renderer/js/pipeline1-run-ux.js`
-- `src/renderer/js/pipelines/pipeline1-ai.js`
+## Implemented
+1. P1 no longer requires 95–100% source occupancy.
+2. P1 does not launch evidence-fit/second TTS solely for duration occupancy.
+3. P1 logs duration telemetry; outside 90–110% is warning only.
+4. P1 blocks only pathological overlength above 150% of source duration.
+5. P1 late retry retains same-session reuse of valid analysis/TTS checkpoint.
+6. P3 preserves clean-video playback speed; no `adjustVideoTempo()` for voice matching.
+7. P3 keeps natural voice below 90% occupancy.
+8. P3 may derive pitch-preserving voice between 90–115% occupancy.
+9. P3 blocks automatic stretch above 115%.
+10. P3 derived audio/SRT live under sibling `p3/` and do not overwrite P1 artifacts.
+11. P3 rescales subtitle timing using measured derived-audio duration.
 
-No P2/P3/STTN/Settings/backend/TTS-engine source changes.
-
-## Implementation
-1. Periodic run-UX synchronization preserves an existing valid `pipeline1SelectedJobId`.
-2. Processing Job is auto-selected only if there is no valid manual selection.
-3. AI/TTS phase transitions preserve manual detail selection; `activeJobId` still identifies execution authority.
-4. Source duration comes from P1 artifact metadata with video-info fallback.
-5. Exported TTS duration is normalized from the current backend contract: prefer `exported_audio_duration_ms`, otherwise legacy `audio_duration_ms + 1000ms` fixed export tail.
-6. Success gate is inclusive 95% through 100% of source duration.
-7. Outside range on pass 1 triggers exactly one configured-model script-fit request targeting 97.5%.
-8. Repaired output must keep exact SRT segment count and timestamps.
-9. Repaired `remix_script.srt` and `remix_script.json` are synchronized before final success.
-10. TTS regenerates exactly once after repair.
-11. Pass 2 outside range throws a readable error; P1 remains not ready and P2 stays locked.
-12. No video speed manipulation or voice truncation is used.
-
-## Verification completed
-- Deterministic duration helper simulation: PASS for 94/95/100/101%, 120% repair-scale, and legacy export-tail normalization.
-- Source/diff review: PASS `4904862077`.
-- Scope compare: task spec + exactly two approved application source files before canonical docs sync.
-
-## Verification still required
-- Exact `node --check src/renderer/js/pipeline1-run-ux.js`.
-- Exact `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
-- Exact `git diff --check 0f668866dba2a38053080627872229e9ed85addd..HEAD`.
-- Owner runtime: select Job B while Job A processes and detail remains on B.
-- Owner runtime: overlong/underlong narration enters one repair and final successful exported ratio is 95–100%, or fails closed after pass 2.
-- Pending adaptive long-video runtime: >60s input must demonstrate >8 samples/multiple bounded Vision chunks before final merge approval.
+## Verification required
+- Exact final `git rev-parse HEAD`.
+- `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
+- `node --check src/renderer/js/pipelines/pipeline3-finalize.js`.
+- `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
+- Same 97.57s P1 case completes after one valid full-text TTS without `Narration evidence-fit`.
+- Underlength P1 warning does not block P2 handoff.
+- P3 listening/runtime tests at representative <0.90, ~0.90, ~1.00, ~1.10–1.15 and >1.15 ratios.
+- P3 preserves video speed and P1 artifacts.
+- Adjusted P3 subtitle timing follows derived voice.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner NOT STARTED on PR #46; documentation sync PASS after final docs publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static WAITING; code review PASS logic/scope; Owner verification WAITING; docs sync PASS after final canonical sync; merge BLOCKED.

@@ -1,47 +1,63 @@
 # Current State
 
 ## Status
-PIPELINE1-FINAL-RUNTIME-GUARDS-005 — CODE REVIEW PASS / STATIC + OWNER RETEST WAITING
+PIPELINE1-CONTINUOUS-NARRATION-006 — BUG-034 SOURCE PUBLISHED / PM LOGIC-SCOPE REVIEW PASS / STATIC + OWNER RUNTIME WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Parent adaptive branch/head: `review/PIPELINE1-ADAPTIVE-VISION-004@0f668866dba2a38053080627872229e9ed85addd`.
-- Active review branch: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
-- Draft PR: #46.
-- Current reviewed source commit: `d9dcd665295a6ca2583644e2ffb39e6421f79f32`.
-- PM source review: `4904862077`.
+- Active review branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
+- Active Draft PR: #47.
+- Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
+- BUG-034 approved spec: `c046adca8394652cae94fb47821ac8927cb62f74`.
+- P1 duration-policy source: `97a8e31350b9a0ff40d93207d3de8164b98b458a`.
+- P3 derived-voice source: `55faf3e734120edec93ba22798599eaf16b6be13`.
+- PM review: `4912891690` — PASS logic/scope only, not release PASS.
 
-## Latest Owner runtime evidence — 2026-08-11
-- Owner reports all Jobs in the latest adaptive run completed successfully; fixed-8 Vision truncation no longer blocked this run.
-- New UI defect: while one Job processes, Owner cannot keep another Job selected for inspection because periodic/phase synchronization forces selection back to the running Job.
-- New severe product defect: generated narration can be longer than the source video after TTS.
-- Owner requirement: successful exported narration track must be between 95% and 100% of source-video duration.
-- Long-video (>60s) adaptive runtime coverage is still not evidenced by the supplied run and remains a separate verification item.
+## Fresh Owner evidence that drove BUG-034
+97.57s input completed Vision/global reasoning and produced a quality-clean 613-char narration. Full-text TTS pass 1 measured 35.91s = 36.8%. The prior BUG-033 controller then launched a second qwen evidence-fit toward 1582–1666 chars and timed out after 150s. The failure was caused by treating original-video voice occupancy as a blocking P1 contract after usable P1 artifacts already existed.
 
-## Verified causes and corrections
-1. `pipeline1-run-ux.js` synchronized the processing Job into `pipeline1SelectedJobId` every 250ms. It now preserves any valid manual selection and auto-selects the processing Job only when no valid selection exists.
-2. `pipeline1-ai.js` phase transitions also forced selection to the running Job. They now preserve an existing valid manual selection while keeping `activeJobId` as execution authority.
-3. P1 previously accepted TTS output without comparing narration duration to source duration. It now enforces `0.95 <= exported_voice_duration / source_video_duration <= 1.00`.
-4. Current `/api/tts-retry` legacy duration metadata excludes a fixed 1000ms exported silence tail; the gate normalizes that tail and prefers an explicit exact exported-duration field if one becomes available later.
-5. If pass 1 is outside range, one bounded script-fit call is allowed. It must preserve exact SRT segment count/timestamps, synchronize `remix_script.srt` and `remix_script.json`, then regenerate TTS exactly once.
-6. If pass 2 remains outside range, P1 fails closed; `p1ArtifactsReady` is not set true and P2 must remain locked.
+## Published BUG-034 correction
+### Pipeline 1
+- Normal successful P1 path performs one continuous full-text TTS and measures exact duration.
+- The 95–100% hard minimum is removed from P1 completion.
+- Underlength is telemetry/warning only; no evidence-fit or second TTS is called solely to fill timeline.
+- Material mismatch outside 90–110% logs a warning.
+- Only pathological overlength `voice/source > 1.50` is blocked at P1.
+- Same-session retry keeps analysis/TTS checkpoint reuse; new checkpoint purpose is `TTS_FINALIZE`, while legacy `DURATION_CONTROL` checkpoints remain readable in-session.
 
-## Verification
-- Deterministic duration helper simulation PASS: 94% reject; 95% accept; 100% accept; 101% reject; 120% input maps to 81.25% text-scale target toward 97.5%; legacy 9000ms + 1000ms tail normalizes to 10000ms.
-- PM full source/diff review PASS `4904862077`.
-- Exact final `node --check` for both changed JS files: WAITING.
-- Exact final `git diff --check`: WAITING.
-- GitHub CI/status checks: none configured.
-- Owner runtime on PR #46: NOT STARTED.
+### Pipeline 3
+- P3 preserves clean-video playback speed by default; `adjustVideoTempo()` is no longer called for voice matching.
+- P3 probes the actual video used for final mixing.
+- Voice ratio `<0.90`: keep natural P1 voice and allow remaining visual/music/silence coverage.
+- Ratio `0.90–1.15`: P3 may create a pitch-preserving derived voice using the existing audio-preparation bridge.
+- Ratio `>1.15`: automatic stretch is blocked with explicit diagnostic.
+- Derived P3 audio is written under sibling `p3/voice.wav`; P1 `voice.wav` is not overwritten.
+- When voice tempo changes, subtitle timestamps are rescaled to measured derived-audio duration and persisted as `p3/tts_timed.srt`.
+
+## Scope/review evidence
+Compare `c046adca... -> 55faf3e7...` changes exactly two source files:
+- `src/renderer/js/pipelines/pipeline1-ai.js`: +31 / -71.
+- `src/renderer/js/pipelines/pipeline3-finalize.js`: +189 / -70.
+No P2/STTN/backend/TTS-engine/dependency source change in BUG-034.
+
+PM reviewed exact source head `55faf3e734120edec93ba22798599eaf16b6be13` and recorded review `4912891690` as PASS for logic/scope only.
+
+## Verification status
+- GitHub source/diff review: PASS logic/scope.
+- GitHub commit status checks: none configured; absence is not CI PASS.
+- Exact final-head Node syntax: WAITING.
+- Exact final-head `git diff --check`: WAITING.
+- Owner P1 97.57s runtime: WAITING.
+- Owner P3 listening/runtime coverage: WAITING.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: PARTIAL / WAITING exact final commands.
-- Code review: PASS for source logic/scope at `d9dcd665...`.
-- Owner manual app verification: NOT STARTED on PR #46.
-- Documentation synchronization: PASS after publication of the docs commit containing this file.
+- Execution: PASS for BUG-034 source publication.
+- Automated/static verification: WAITING.
+- Code review: PASS logic/scope (`4912891690`), not release PASS.
+- Owner manual app verification: WAITING fresh BUG-034 retest.
+- Documentation synchronization: PASS after final canonical sync.
 - Merge permission: BLOCKED.
-- Step 3 progression: BLOCKED.
+- Step 3 release progression: BLOCKED until required Owner P3 verification passes.
 
 ## Next permitted action
-Run exact static checks on PR #46 head, then Owner retests manual Job browsing during processing and a narration case that previously exceeded video duration. A successful narration must log a final exported voice ratio within 95–100%. Also retain the pending >60s adaptive sampling runtime check before final merge approval.
+Owner checks out the exact final docs/head, runs static checks, then reruns the 97.57s P1 case. Required P1 proof: after first valid TTS, log shows duration telemetry and P1 completion; no `Narration evidence-fit` request occurs. Then run P3 voice-fit/listening cases below 0.90, around 0.90/1.00/1.10–1.15, and above 1.15, verifying video speed remains unchanged and any adjusted voice/SRT are P3-derived artifacts. Do not merge before Owner PASS is recorded in canonical `.ai/`.
