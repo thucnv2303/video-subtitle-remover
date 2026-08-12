@@ -1,45 +1,45 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-CONTINUOUS-NARRATION-006 — Voice-Aware Continuous Narration and Bounded Reasoning`
+`PIPELINE1-CONTINUOUS-NARRATION-006 — Voice-Aware Continuous Narration, Bounded Reasoning, and Narration Quality Gate`
 
 ## Status
-CORRECTIVE CODE REVIEW PASS / FINAL STATIC + OWNER RETEST WAITING
+QUALITY-GATE CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING
 
 ## Review basis
 - Active branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
 - Draft PR: #47.
 - Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
-- Owner-failed tested head: `5d247d8ee37fc8370a3f05983eeac7cfc850e444`.
-- Corrective source commit: `1c028612900b1180aa8c1e66da2d769373793c91`.
-- PM corrective source review: `4906247596` — PASS for logic/scope.
+- New quality-gate source commit: `00e80aea06d526b34518dd069f9b1c581c80e77c`.
 
-## Owner failure evidence
-- Job 1: 24.30s source; pass-1 continuous voice 16.52s (68.0%). Measured target 391–412 chars, but qwen returned the same 280-char narration; prior code accepted it for pass 2.
-- Job 2: 17.60s source; Vision finished in 28.3s. qwen first output after 55.5s but did not finish before the 150s safety timeout.
-- Queue failure isolation/auto-advance continued to work.
+## Evidence closed before this correction
+- Owner prior two-Job corrective runtime PASS.
+- Prior static command bundle PASS.
+- >60s adaptive coverage PASS: 97.57s video -> 25 keyframes / 4 chunks / frame counts 8,8,8,1.
+- All four Vision chunks completed; qwen global reasoning completed in 48.2s.
+- Continuous TTS duration PASS: 94.62s / 97.57s = 97.0%; P1 completed and unlocked P2.
 
-## Corrective source now reviewed
-- Dynamic final schema enforces narration `minLength/maxLength` from voice/video budget.
-- Dynamic narration-fit schema enforces measured repair `minLength/maxLength`.
-- Explicit code validation rejects out-of-range initial/repair narration before TTS/re-TTS.
-- Clone initial budget baseline adjusted toward observed Owner continuous voice rate.
-- Short final JSON metadata is structurally bounded and disallows additional properties.
-- Short global reasoning output floor reduced from 900 to 520 tokens; narration-only fit uses a 260-token minimum.
-- Vision evidence sent to qwen is compacted before global reasoning.
-- qwen3-coder:30b remains selected; 150s short-video timeout remains finite.
-- Continuous full-text TTS, max one fit + one final TTS, queue auto-advance, manual Job browsing and P2 fail-closed behavior remain unchanged.
+## New blocker and correction
+The 97.57s narration itself failed quality: repeated ending/CTA filler and stray CJK (`饱满`) despite duration PASS.
+
+Commit `00e80aea...` adds a deterministic narration quality gate in `src/main/p1-vision-ipc.js` only:
+- initial lower char bound becomes soft so the model is not forced to pad;
+- prompt forbids filler/repeated CTA and requires natural Vietnamese/subject consistency;
+- code detects CJK, repeated long sentences, near-duplicate long sentences and repeated 10-word phrases;
+- bad initial narration gets one narration-only repair without rerunning Vision;
+- duration-fit output is rechecked for hard measured range + quality before final re-TTS;
+- remaining quality failure fails P1 closed.
 
 ## Evidence status
-- Compare `ecb733b... -> 1c028612...`: exactly one source file changed (`src/main/p1-vision-ipc.js`).
-- Direct GitHub full-file/targeted inspection completed.
-- Deterministic helper evidence: 280 chars rejected for 391–412; short output budget < old 900-token floor.
-- PM corrective review PASS `4906247596`.
-- Exact Node syntax + exact diff-check: WAITING.
-- Fresh Owner runtime: NOT STARTED.
+- Compare `131f35c... -> 00e80aea...`: one source file changed (`src/main/p1-vision-ipc.js`).
+- Direct GitHub full-source review completed.
+- Deterministic helper simulation catches the Owner bad sample and accepts a clean sample.
+- GitHub CI/status: none configured.
+- Exact new-head Node syntax + diff check: WAITING.
+- Fresh Owner narration-quality runtime: WAITING.
 
 ## Gates
-Execution PASS; automated/static PARTIAL; code review PASS; Owner corrective retest NOT STARTED; docs sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS; automated/static WAITING; code review WAITING final confirmation; Owner verification WAITING; docs sync PASS after publication; merge BLOCKED; Step 3 BLOCKED.
 
 ## Next action
-Run exact final-head static checks, then Owner retests the same 24.30s + 17.60s queue. Do not merge or start Step 3 before fresh Owner PASS is recorded.
+Owner fetches the final docs/head, runs exact syntax/diff checks, records `git rev-parse HEAD`, then reruns the 97.57s video or equivalent. Required outcome: no repeated tail, no stray CJK, one natural continuous Vietnamese narration, successful final voice ratio 95–100%, P1 completion. Do not merge or start Step 3 before fresh PASS is recorded.
