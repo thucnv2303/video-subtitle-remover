@@ -65,7 +65,7 @@
             <h1>Voice Render</h1>
             <p>Render nhanh một file giọng nói bằng OmniVoice. Công cụ này không tạo Job và không tác động Pipeline 1/2/3.</p>
           </div>
-          <div id="voice-render-engine-pill" class="voice-render-engine-pill checking"><span></span><b>Đang kiểm tra OmniVoice</b></div>
+          <div id="voice-render-engine-pill" class="voice-render-engine-pill"><span></span><b>Đang kiểm tra OmniVoice</b></div>
         </header>
 
         <div class="voice-render-grid">
@@ -163,28 +163,38 @@
     }
   }
 
-  async function refreshEngineStatus() {
+  function setEngineStatus(kind, text) {
     const pill = document.getElementById('voice-render-engine-pill');
     const label = pill?.querySelector('b');
-    if (!pill || !label) return;
-    pill.classList.remove('ready', 'unavailable');
-    pill.classList.add('checking');
-    label.textContent = 'Đang kiểm tra OmniVoice';
+    const dot = pill?.querySelector('span');
+    if (!pill || !label || !dot) return;
+    label.textContent = text;
+    if (kind === 'ready') {
+      dot.style.background = 'var(--green)';
+      dot.style.boxShadow = '0 0 0 4px rgba(34, 197, 94, 0.11)';
+      return;
+    }
+    if (kind === 'unavailable') {
+      dot.style.background = 'var(--red)';
+      dot.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.11)';
+      return;
+    }
+    dot.style.background = 'var(--text-dim)';
+    dot.style.boxShadow = '0 0 0 4px rgba(113, 113, 122, 0.10)';
+  }
+
+  async function refreshEngineStatus() {
+    setEngineStatus('checking', 'Đang kiểm tra OmniVoice');
     try {
       if (!window.api?.getTTSStatus) throw new Error('TTS API chưa sẵn sàng');
       const status = await window.api.getTTSStatus();
-      pill.classList.remove('checking');
       if (status?.available) {
-        pill.classList.add('ready');
-        label.textContent = status?.model_loaded ? 'OmniVoice đã nạp' : 'OmniVoice sẵn sàng';
+        setEngineStatus('ready', status?.model_loaded ? 'OmniVoice đã nạp' : 'OmniVoice sẵn sàng');
       } else {
-        pill.classList.add('unavailable');
-        label.textContent = 'OmniVoice chưa sẵn sàng';
+        setEngineStatus('unavailable', 'OmniVoice chưa sẵn sàng');
       }
     } catch {
-      pill.classList.remove('checking');
-      pill.classList.add('unavailable');
-      label.textContent = 'Backend TTS chưa kết nối';
+      setEngineStatus('unavailable', 'Backend TTS chưa kết nối');
     }
   }
 
