@@ -1,57 +1,50 @@
 # Current State
 
 ## Status
-PIPELINE1-SEMANTIC-REMIX-007 — IMPLEMENTATION AUTHORIZED / SOURCE NOT YET PUBLISHED
+PIPELINE1-SEMANTIC-REMIX-007 — SOURCE PUBLISHED / PM LOGIC-SCOPE REVIEW PASS / STATIC + OWNER SEMANTIC RUNTIME WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Active review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
-- Starting source/docs ref: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
-- Parent Draft PR: #47.
-- New task spec: `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`.
-- Spec commit: `b0597b40e3a3411280344c94ba961644cb6c5d9a`.
-- ACTIVE pointer commit: `602ce0781eed359a0145f65b0ec10c392407d320`.
+- Draft PR: #48.
+- Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
+- Exact task spec: `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`.
+- Semantic reasoning source commit: `862e68d5c47447f0033817145757429f38cf830f`.
+- Semantic artifact source commit: `4a2712c41ad26284e4ecfb2a1f955606051729e8`.
+- PM direct source review: `4913808619` — PASS logic/scope only, not release PASS.
 
-## Fresh Owner requirement
-The current P1 is only partially aligned with the product goal. It already uses adaptive Vision + full transcript, but the final contract is still too compact and may collapse a >90s source into a ~37–40s narration without proving whether that is a deliberate remix strategy or an accidental summary.
+## Published semantic-remix v4 behavior
+- P1 still uses full timestamped ASR transcript + adaptive Vision evidence from the original video.
+- Vision chunk-local scene indexes are replaced by code-assigned globally unique canonical scene indexes.
+- Each canonical scene stores `chunk_index`, `time_sec`, and deterministic midpoint `start_sec/end_sec` source windows.
+- Global reasoning now requires `video_profile`, `product_profile`, `customer_profile`, `remix_strategy`, ordered `remix_beats`, one grounded continuous `narration_script`, and `edit_notes`.
+- Prompt explicitly forbids translation/summary-only output and requires a new script derived from video/product/customer understanding and a deliberate remix strategy.
+- Every remix beat must reference existing canonical source scenes and carry role/message/edit action/target duration/reason.
+- Code rejects empty/duplicate/invalid beat mappings and invalid semantic target duration before P1 artifacts/TTS can be accepted.
+- `artifact_version: 4`, `analysis_mode: multimodal-semantic-remix-v4`.
+- `edit_plan.json` maps each ordered beat to deterministic source ranges for later P3 cut/reorder implementation.
+- `remix_strategy.target_duration_sec` is the explicit intended remix duration, so a short narration can be evaluated against a deliberate remix plan instead of against original source occupancy alone.
 
-Owner requires P1 to explicitly analyze and derive:
-1. scene-level video evidence;
-2. video profile;
-3. product/subject profile;
-4. target-customer profile;
-5. remix strategy and recommended target duration;
-6. ordered remix beats;
-7. a new narration grounded in transcript + Vision evidence;
-8. a P3-consumable mapping from each remix beat back to source scene indexes/time ranges.
+## Preserved behavior
+- BUG-034 remains inherited: no hard 95–100% P1 minimum occupancy and no second LLM/TTS call solely to fill original timeline.
+- P2 remains subtitle-removal only.
+- P3 semantic cut/reorder execution is not implemented in task 007; task 007 only prepares the validated contract it will later consume.
+- No P2/P3/backend/dependency source file changed in PR #48 task-007 source delta.
 
-## Verified current-source gap
-- Adaptive sampling/Vision is real and is not transcript-only.
-- Current global reasoning schema contains compact `summary`, `insights`, one `narration_script`, `edit_plan` and notes.
-- Current `insights` has only compact fields such as topic/product/audience/hook/benefits/evidence/cta.
-- Current `edit_plan` only carries `{scene_index, action, reason}` and does not require beat-level narrative role/message/target duration/source ranges.
-- Scene indexes are currently reused from each Vision chunk and then combined, so they are not guaranteed globally unique for a future P3 semantic edit map.
-- `pipeline1-analysis.js` currently persists artifact version 3 and stores narration as one full-source segment rather than an explicit semantic remix timeline.
-
-## Approved upgrade contract
-P1 v4 becomes `multimodal-semantic-remix-v4` and must require:
-- `video_profile`;
-- `product_profile`;
-- `customer_profile`;
-- `remix_strategy` with explicit `target_duration_sec`;
-- ordered `remix_beats` with source scene indexes + edit action + target duration;
-- one grounded continuous `narration_script`;
-- deterministic edit-plan source ranges derived from globally unique scene evidence.
-
-Character duration remains guidance/telemetry. P1 must not reintroduce the BUG-033 duration-fill loop. BUG-034 P1/P3 duration responsibility remains inherited.
+## Review caveats
+- Midpoint scene windows are an MVP deterministic mapping around sampled Vision evidence, not CV-accurate scene boundaries.
+- Structural validation cannot prove every semantic/marketing inference is factually correct; Owner must inspect generated v4 artifacts.
+- No GitHub CI/status checks are configured for the source head.
+- ChatGPT could not execute exact-head Node checks in its runtime because direct git network access is unavailable; static verification therefore remains WAITING rather than assumed PASS.
 
 ## Gates
-- Execution: IN PROGRESS — implementation authorized, no source commit yet.
+- Execution: PASS for source publication.
 - Automated/static verification: WAITING.
-- Code review: WAITING.
+- Code review: PASS logic/scope (`4913808619`), not release PASS.
 - Owner semantic artifact/runtime verification: NOT STARTED.
-- Documentation synchronization: PASS for task activation; final sync WAITING after source publication.
+- Documentation synchronization: PASS after task-007 architecture/dynamic-state sync.
 - Merge permission: BLOCKED.
+- P3 semantic cut/reorder progression: BLOCKED until task-007 Owner verification passes.
 
 ## Next permitted action
-Implement only the exact remote semantic-remix spec on `review/PIPELINE1-SEMANTIC-REMIX-007`, publish a separate source commit, run static verification, then PM reviews the exact diff/full files before Owner reruns the 97.57s case and inspects v4 artifacts. Do not merge parent PR #47 or the new task based on source publication alone.
+Owner checks out the exact final PR #48 head, runs required Node/diff checks, then reruns the same/equivalent 97.57s video. Required runtime proof is not merely P1 completion: inspect `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, and `edit_plan.json` and verify meaningful video/product/customer profiles, an intentional remix target duration, multiple ordered remix beats, and valid beat-to-source-scene/time-range mappings. Exact tested `git rev-parse HEAD` is mandatory. Do not merge before Owner PASS is recorded.
