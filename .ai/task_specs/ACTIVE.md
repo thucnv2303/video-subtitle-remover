@@ -1,82 +1,73 @@
 # Active PM Execution Spec
 
-Status: CORRECTIVE_SOURCE_PUBLISHED_PM_REVIEW_PASS_STATIC_AND_OWNER_TWO_MODE_WAITING
+Status: PM_DIRECT_EDIT_SOURCE_PUBLISHED_STATIC_AND_OWNER_RUNTIME_WAITING
 
-Task: `PIPELINE1-SEMANTIC-REMIX-007`
+Task: `VOICE-RENDER-TAB-008`
 Repository: `thucnv2303/video-subtitle-remover`
-Review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`
-Draft PR: #48
-Starting/base SHA: `9981da334ca10fd845c971241d541894d736c13b`
-Exact spec: `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`
+Review branch: `review/VOICE-RENDER-TAB-008-demo`
+Starting parent: `review/PIPELINE1-SEMANTIC-REMIX-007@0b3ee3a63f06d17334b2c295491c50039326febb`
+Exact spec: `.ai/task_specs/VOICE-RENDER-TAB-008.md`
+
+## Execution authority
+Owner has directed the Project Manager to perform GitHub source work directly and not dispatch Anti for current/future implementation work unless the Owner later changes that instruction.
+
+No external executor is assigned to this task.
+Do not generate or use an Anti execution prompt as task authority.
+
+All direct application-source edits must remain on a dedicated review branch, be re-read/reviewed from GitHub, and remain blocked from merge until required gates pass.
 
 ## Current product contract
-Semantic Remix is optional and defaults OFF.
+Voice Render is a standalone OmniVoice utility directly below Home and before Settings.
 
-### Standard Script — DEFAULT/OFF
-- preference `p1_semantic_remix_enabled` defaults false;
-- Start snapshots `job.p1Config.semanticRemixEnabled=false` for each idle Job;
-- uses isolated pre-semantic multimodal reasoning under distinct Standard IPC handlers;
-- produces one normal continuous narration/TTS;
-- artifacts use `artifact_version: 4`, `analysis_mode: multimodal-standard-script-v4`, `semantic_remix_enabled:false`;
-- `edit_plan.json` is non-authoritative with an empty plan.
+It may:
+- accept text;
+- select language;
+- use OmniVoice default or a saved clone reference;
+- choose an output WAV path;
+- call the existing `POST /api/tts/generate` contract;
+- preview/open the generated audio.
 
-### Semantic Remix — explicit ON
-- uses the semantic v4 scene/profile/strategy/beat path;
-- artifacts use `analysis_mode: multimodal-semantic-remix-v4`, `semantic_remix_enabled:true`;
-- BUG-036 deterministic validation runs before accepted semantic artifact persistence/TTS;
-- invalid target/beat timing, guarded action-to-scene mismatches, CTA/final-scene mismatches, selected unsupported claims, or narration coverage outside 70–130% of summed beat duration fail closed.
+It must not:
+- create or mutate video Jobs;
+- read/write P1/P2/P3 status or gates;
+- attach audio to video automatically;
+- change P1/P2/P3 artifacts;
+- modify backend TTS routing/engine for this demo;
+- add dependencies.
 
-BUG-034 remains inherited: P1 does not force narration to occupy 95–100% of original source duration and does not add another LLM/TTS pass solely to fill source duration.
+## Current source scope
+Application source currently approved/changed only:
+- `src/main/preload.js`;
+- `src/renderer/js/voice-render.js`;
+- `src/renderer/styles/voice-render.css`.
 
-P2 remains subtitle-removal only. P3 semantic cut/reorder remains blocked/not implemented in task 007.
+Latest application-source correction before docs sync:
+`8f50811e6578f41119714ce157eb3987d3b1ce63`
 
-## Review state
-- Corrective source has been published on this review branch.
-- PM logic/scope review is PASS; this is not release PASS.
-- Canonical review basis records latest corrective source review through `7b217c7b73e98375bcf5ff2bcb24a92c8fa61796`.
-- No new application-source edit is authorized by this ACTIVE routing file.
+## Next permitted action
+Project Manager must:
+1. finish documentation synchronization;
+2. open a Draft PR against `review/PIPELINE1-SEMANTIC-REMIX-007`;
+3. verify exact final HEAD, changed files and diff;
+4. run/obtain static syntax and diff-check evidence where available;
+5. review the final source directly;
+6. only then permit Owner real-app test if no blocker exists.
 
-## Next executor action — VERIFICATION ONLY
-After `git fetch origin`, read this file and the exact spec directly from `origin/review/PIPELINE1-SEMANTIC-REMIX-007`.
-The supervisor prompt must provide the exact expected remote HEAD. If the fetched remote HEAD differs, STOP and report the mismatch.
+## Required Owner runtime after code review
+- sidebar order Home → Voice Render → Settings;
+- navigation leaves only one page active;
+- default OmniVoice renders short Vietnamese text to selected WAV path;
+- generated audio plays and file opens;
+- saved clone voice path works when available;
+- P1/P2/P3 Job/status state remains unchanged before and after render.
 
-Do not edit source or `.ai/` files. Do not commit or push.
-
-Run and report exactly:
-- `git rev-parse HEAD`
-- `node --check src/main/main.js`
-- `node --check src/main/preload.js`
-- `node --check src/main/p1-standard-vision-ipc.js`
-- `node --check src/main/p1-standard-vision-wrapper.js`
-- `node --check src/renderer/js/pipeline1-run-config.js`
-- `node --check src/renderer/js/pipeline1-analysis.js`
-- `node --check src/renderer/js/pipeline1-semantic-validator.js`
-- recommended regression: `node --check src/renderer/js/pipelines/pipeline1-ai.js`
-- `git diff --check 9981da334ca10fd845c971241d541894d736c13b..HEAD`
-
-On any unexpected condition or failed command: STOP. Do not self-repair, patch, restore, reset, clean, amend, rebase, or invent another command.
-
-## Owner verification after static PASS
-A. Standard/default OFF:
-- control defaults OFF;
-- runtime log shows `ScriptMode=standard`;
-- normal continuous narration/TTS completes;
-- artifacts identify Standard v4;
-- `edit_plan.json` is non-authoritative and empty;
-- normal P1 -> P2 gate remains valid.
-
-B. Semantic ON:
-- explicitly enable before Start;
-- runtime log shows `ScriptMode=semantic-remix`;
-- use the same/equivalent 97.57s source;
-- result either passes the deterministic guard with coherent scene/timing/claim artifacts or fails closed before accepted semantic artifact/TTS/downstream unlock;
-- if it passes, inspect fresh `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, and `edit_plan.json`.
+## Parent task
+PR #48 / `PIPELINE1-SEMANTIC-REMIX-007` remains an independent upstream review with its own unresolved static and Owner runtime gates. This task does not satisfy those gates.
 
 ## Gates
-- Execution: PASS for published corrective source.
+- Execution: PASS for source publication.
 - Automated/static verification: WAITING.
-- Code review: PASS logic/scope only.
-- Owner Standard verification: NOT STARTED.
-- Owner Semantic verification: NOT STARTED after correction.
-- P3 semantic cut/reorder: BLOCKED.
-- Merge permission: BLOCKED until all required gates PASS and PM explicitly approves merge.
+- Code review: IN PROGRESS.
+- Owner visual/runtime verification: NOT STARTED.
+- Documentation synchronization: IN PROGRESS until final re-read.
+- Merge permission: BLOCKED.
