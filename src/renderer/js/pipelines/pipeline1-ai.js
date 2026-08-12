@@ -4,14 +4,17 @@ import '../pipeline1-artifact-gate.js';
 import { runPipeline1MultimodalAnalysis, narrationToSingleSrt, compactNarration } from '../pipeline1-analysis.js';
 
 /**
- * Pipeline 1 analysis + evidence-aware continuous narration + TTS.
- * P1 must fail when required analysis/artifacts/TTS fail.
+ * Pipeline 1 analysis + grounded continuous narration + natural TTS.
+ * P1 validates narration/TTS artifacts but does not force voice to fill the source timeline.
  */
 
 const P1_NARRATION_MIN_RATIO = 0.95;
 const P1_NARRATION_MAX_RATIO = 1.00;
 const P1_NARRATION_TARGET_RATIO = 0.975;
 const P1_SMALL_TEMPO_MAX_DELTA = 0.05;
+const P1_DURATION_WARN_MIN_RATIO = 0.90;
+const P1_DURATION_WARN_MAX_RATIO = 1.10;
+const P1_PATHOLOGICAL_MAX_RATIO = 1.50;
 
 function _selectRunningJob(job) {
   const state = window._appState;
@@ -100,7 +103,7 @@ async function _sourceVideoDurationMs(job) {
 
   const info = await window.api.videoInfo(job.filePath);
   const seconds = Number(info?.duration) || 0;
-  if (!(seconds > 0)) throw new Error('Không đọc được thời lượng video nguồn để kiểm tra voice.');
+  if (!(seconds > 0)) throw new Error('Không đọc được thời lượng video nguồn để ghi telemetry voice.');
   return seconds * 1000;
 }
 
@@ -147,7 +150,7 @@ function _voiceSignature(job, voice, refAudio) {
 
 function _canResumeAnalysis(job) {
   const checkpoint = job?._p1DurationCheckpoint;
-  if (!checkpoint || checkpoint.resume_stage !== 'DURATION_CONTROL') return false;
+  if (!checkpoint || !['DURATION_CONTROL', 'TTS_FINALIZE'].includes(checkpoint.resume_stage)) return false;
   if (!job?.p1Artifacts || !job?.p1Analysis || !compactNarration(job?.p1Narration)) return false;
   const fingerprint = _sourceFingerprint(job);
   if (!fingerprint || checkpoint.source_fingerprint !== fingerprint) return false;
@@ -239,12 +242,13 @@ async function _requestContinuousTts(job, narration, voice, refAudio) {
   };
 }
 
+// Legacy BUG-033 helpers are retained for compatibility/tests but are not called by the normal P1 path.
 async function _applySmallTempoCorrection(job, ttsData, videoDurationMs, label) {
   if (!window.electronAPI?.prepareP1NarrationAudio) throw new Error('Bridge tempo correction chưa sẵn sàng.');
   const audioDurationMs = Number(ttsData?.exported_audio_duration_ms) || 0;
   const factor = _tempoCorrectionFactor(audioDurationMs, videoDurationMs);
   if (!_canSmallTempoCorrect(audioDurationMs, videoDurationMs)) return null;
-  _addLog(`[TTS] 🎚 ${label}: hiệu chỉnh tempo toàn audio ${factor.toFixed(4)}x để nhắm ${_durationPct(P1_NARRATION_TARGET_RATIO)}; không viết lại narration.`, 'info');
+  _addLog(`[TTS] 🎚 ${label}: hiệu chỉnh tempo toàn audio ${factor.toFixed(4)}x.`, 'info');
   const adjusted = await window.electronAPI.prepareP1NarrationAudio({
     source_path: ttsData.audio_path,
     artifact_dir: job.p1ArtifactDir,
@@ -364,7 +368,6 @@ async function _fitNarrationOnce(job, narration, audioDurationMs, videoDurationM
   }
 
   const localBudget = _measuredNarrationBudget(narration, audioDurationMs, videoDurationMs);
-  _addLog(`[TTS] 🧠 Large duration miss: recompose TOÀN BÀI từ transcript + Vision evidence; measured_rate=${localBudget.measured_chars_per_sec.toFixed(2)} char/s; target=${localBudget.min_chars}-${localBudget.max_chars}.`, 'warning');
   const result = await window.electronAPI.fitP1Narration({
     endpoint: config.endpoint || 'http://localhost:11434/api/chat',
     model,
@@ -379,11 +382,10 @@ async function _fitNarrationOnce(job, narration, audioDurationMs, videoDurationM
     throw new Error(result?.error || 'Evidence-backed narration fit không trả về lời thoại hợp lệ.');
   }
   if (result.evidence_backed !== true) {
-    throw new Error('Duration controller không xác nhận evidence-backed fit; đã chặn final TTS.');
+    throw new Error('Duration controller không xác nhận evidence-backed fit.');
   }
   const repaired = compactNarration(result.narration_script);
   if (!repaired) throw new Error('Evidence-backed narration fit trả về lời thoại rỗng.');
-  _addLog(`[TTS] 📝 Evidence-fit: ${compactNarration(narration).length} → ${repaired.length} ký tự; target=${result?.budget?.min_chars || '?'}-${result?.budget?.max_chars || '?'}; attempts=${result?.attempts || 1}.`, 'info');
   return { narration: repaired, budget: result.budget || localBudget, quality: result.quality || null };
 }
 
@@ -423,7 +425,7 @@ export async function triggerAutoAiRewrite(job, sourceSrt) {
     const resumeAnalysis = _canResumeAnalysis(job);
     let result;
     if (resumeAnalysis) {
-      _addLog('[P1] ↩ Resume duration-control: tái sử dụng ASR + Vision + global reasoning đã hợp lệ; không chạy lại multimodal.', 'success');
+      _addLog('[P1] ↩ Resume TTS/finalize: tái sử dụng ASR + Vision + global reasoning đã hợp lệ; không chạy lại multimodal.', 'success');
       result = {
         narrationScript: compactNarration(job.p1Narration),
         rewrittenSrt: job.remixSrt,
@@ -484,7 +486,7 @@ export async function triggerAutoAiRewrite(job, sourceSrt) {
 export async function triggerAutoTts(job, narrationText) {
   const voice = job.ttsVoice || job.p1Config?.ttsVoice || localStorage.getItem('tts_voice') || 'none';
   if (!voice || voice === 'none') throw new Error('TTS đã được bật nhưng chưa chọn giọng đọc.');
-  let narration = compactNarration(narrationText);
+  const narration = compactNarration(narrationText);
   if (!narration) throw new Error('Không có narration liền mạch để tạo TTS.');
   if (job._ttsRunning) throw new Error('TTS đang chạy cho Job này.');
   if (job._p1Cancelled) return { status: 'cancelled' };
@@ -504,7 +506,7 @@ export async function triggerAutoTts(job, narrationText) {
     const checkpoint = job._p1DurationCheckpoint;
     const reusePass1 = Boolean(
       checkpoint
-      && checkpoint.resume_stage === 'DURATION_CONTROL'
+      && ['DURATION_CONTROL', 'TTS_FINALIZE'].includes(checkpoint.resume_stage)
       && checkpoint.analysis_signature === analysisSignature
       && checkpoint.voice_signature === voiceSignature
       && checkpoint.pass1_reusable === true
@@ -522,13 +524,13 @@ export async function triggerAutoTts(job, narrationText) {
         tts_speed: _ttsSpeed(job),
         resumed: true,
       };
-      _addLog(`[TTS] ↩ Resume: tái sử dụng TTS pass 1 đã đo ${_durationSec(ttsData.exported_audio_duration_ms)}; không synthesize lại.`, 'success');
+      _addLog(`[TTS] ↩ Resume: tái sử dụng continuous TTS đã đo ${_durationSec(ttsData.exported_audio_duration_ms)}; không synthesize lại.`, 'success');
     } else {
       ttsData = await _requestContinuousTts(job, narration, voice, refAudio);
       if (ttsData?.status === 'cancelled' || job._p1Cancelled) return { status: 'cancelled' };
       await _persistDurationCheckpoint(job, {
         stage: 'TTS_PASS1_DONE',
-        resume_stage: 'DURATION_CONTROL',
+        resume_stage: 'TTS_FINALIZE',
         source_fingerprint: _sourceFingerprint(job),
         analysis_signature: analysisSignature,
         voice_signature: voiceSignature,
@@ -540,60 +542,18 @@ export async function triggerAutoTts(job, narrationText) {
       });
     }
 
-    let exportedDurationMs = Number(ttsData.exported_audio_duration_ms) || 0;
-    let ratio = _durationRatio(exportedDurationMs, videoDurationMs);
-    _addLog(`[TTS] ⏱ Continuous duration gate pass 1: video=${_durationSec(videoDurationMs)}, voice=${_durationSec(exportedDurationMs)}, ratio=${_durationPct(ratio)}; yêu cầu 95–100%.`, _durationInWindow(exportedDurationMs, videoDurationMs) ? 'success' : 'warning');
-
-    if (!_durationInWindow(exportedDurationMs, videoDurationMs) && _canSmallTempoCorrect(exportedDurationMs, videoDurationMs)) {
-      const adjusted = await _applySmallTempoCorrection(job, ttsData, videoDurationMs, 'Pass 1 near-miss');
-      if (adjusted) {
-        ttsData = adjusted;
-        exportedDurationMs = Number(ttsData.exported_audio_duration_ms) || 0;
-        ratio = _durationRatio(exportedDurationMs, videoDurationMs);
-        _addLog(`[TTS] ⏱ Duration gate sau tempo correction: voice=${_durationSec(exportedDurationMs)}, ratio=${_durationPct(ratio)}.`, _durationInWindow(exportedDurationMs, videoDurationMs) ? 'success' : 'warning');
-        await _persistDurationCheckpoint(job, {
-          ...(job._p1DurationCheckpoint || {}),
-          pass1_audio_path: ttsData.audio_path,
-          pass1_audio_duration_ms: exportedDurationMs,
-          pass1_reusable: true,
-        });
-      }
+    const exportedDurationMs = Number(ttsData.exported_audio_duration_ms) || 0;
+    const ratio = _durationRatio(exportedDurationMs, videoDurationMs);
+    if (ratio > P1_PATHOLOGICAL_MAX_RATIO) {
+      throw new Error(`Narration voice dài bất thường: voice=${_durationSec(exportedDurationMs)}, source=${_durationSec(videoDurationMs)}, ratio=${_durationPct(ratio)}; P1 chặn khi vượt ${_durationPct(P1_PATHOLOGICAL_MAX_RATIO)}.`);
     }
 
-    if (!_durationInWindow(exportedDurationMs, videoDurationMs)) {
-      const repaired = await _fitNarrationOnce(job, narration, exportedDurationMs, videoDurationMs);
-      if (job._p1Cancelled || !repaired) return { status: 'cancelled' };
-      narration = repaired.narration;
-      await _syncNarrationArtifacts(job, narration, videoDurationMs, repaired.budget);
-
-      await _persistDurationCheckpoint(job, {
-        ...(job._p1DurationCheckpoint || {}),
-        stage: 'FINAL_TTS_PENDING',
-        resume_stage: 'DURATION_CONTROL',
-        narration,
-        pass1_reusable: false,
-      });
-      _addLog('[TTS] 🔁 Tạo lại TOÀN BỘ narration evidence-backed lần cuối; đây là TTS pass 2/2.', 'info');
-      ttsData = await _requestContinuousTts(job, narration, voice, refAudio);
-      if (ttsData?.status === 'cancelled' || job._p1Cancelled) return { status: 'cancelled' };
-      exportedDurationMs = Number(ttsData.exported_audio_duration_ms) || 0;
-      ratio = _durationRatio(exportedDurationMs, videoDurationMs);
-      _addLog(`[TTS] ⏱ Continuous duration gate pass 2: video=${_durationSec(videoDurationMs)}, voice=${_durationSec(exportedDurationMs)}, ratio=${_durationPct(ratio)}; yêu cầu 95–100%.`, _durationInWindow(exportedDurationMs, videoDurationMs) ? 'success' : 'warning');
-
-      if (!_durationInWindow(exportedDurationMs, videoDurationMs) && _canSmallTempoCorrect(exportedDurationMs, videoDurationMs)) {
-        const adjusted = await _applySmallTempoCorrection(job, ttsData, videoDurationMs, 'Pass 2 near-miss');
-        if (adjusted) {
-          ttsData = adjusted;
-          exportedDurationMs = Number(ttsData.exported_audio_duration_ms) || 0;
-          ratio = _durationRatio(exportedDurationMs, videoDurationMs);
-          _addLog(`[TTS] ⏱ Final gate sau tempo correction: voice=${_durationSec(exportedDurationMs)}, ratio=${_durationPct(ratio)}.`, _durationInWindow(exportedDurationMs, videoDurationMs) ? 'success' : 'error');
-        }
-      }
-    }
-
-    if (!_durationInWindow(exportedDurationMs, videoDurationMs)) {
-      throw new Error(`Continuous narration không đạt duration gate sau controller bị chặn ở tối đa 2 TTS: video=${_durationSec(videoDurationMs)}, voice=${_durationSec(exportedDurationMs)}, ratio=${_durationPct(ratio)}; yêu cầu 95–100%.`);
-    }
+    const telemetryType = ratio < P1_DURATION_WARN_MIN_RATIO || ratio > P1_DURATION_WARN_MAX_RATIO ? 'warning' : 'success';
+    _addLog(
+      `[TTS] ⏱ P1 duration telemetry: source=${_durationSec(videoDurationMs)}, voice=${_durationSec(exportedDurationMs)}, ratio=${_durationPct(ratio)}. `
+      + 'P1 không ép voice lấp đầy timeline; final alignment thuộc Pipeline 3.',
+      telemetryType
+    );
 
     await _syncNarrationArtifacts(job, narration, videoDurationMs);
     await _persistAcceptedTts(job, ttsData, narration);
@@ -612,8 +572,7 @@ export async function triggerAutoTts(job, narrationText) {
       window.renderVoiceSegments([{ text: narration, audio_path: job.ttsAudioPath }]);
     }
 
-    _addLog(`[TTS] ✅ Continuous duration gate PASS: voice=${_durationSec(job.ttsAudioDurMs)} / video=${_durationSec(videoDurationMs)} (${_durationPct(ratio)}).`, 'success');
-    _addLog(`[TTS] ✅ TTS liền mạch hoàn tất: ${job.ttsAudioPath}`, 'success');
+    _addLog(`[TTS] ✅ P1 continuous TTS hoàn tất: ${job.ttsAudioPath}`, 'success');
     return { status: 'ok', audio_path: job.ttsAudioPath, narration };
   } catch (error) {
     job._ttsTriggered = false;
@@ -621,11 +580,12 @@ export async function triggerAutoTts(job, narrationText) {
       _addLog('[TTS] ⏹ TTS đã dừng theo yêu cầu.', 'warning');
       return { status: 'cancelled' };
     }
-    if (job._p1DurationCheckpoint?.resume_stage === 'DURATION_CONTROL') {
-      job._p1DurationCheckpoint.stage = 'DURATION_CONTROL_FAILED';
+    if (['DURATION_CONTROL', 'TTS_FINALIZE'].includes(job._p1DurationCheckpoint?.resume_stage)) {
+      job._p1DurationCheckpoint.stage = 'TTS_FINALIZE_FAILED';
+      job._p1DurationCheckpoint.resume_stage = 'TTS_FINALIZE';
       await _persistDurationCheckpoint(job, job._p1DurationCheckpoint);
     }
-    _rememberP1Error(job, error, 'Duration control / Continuous narration TTS');
+    _rememberP1Error(job, error, 'Continuous narration TTS');
     _addLog('[TTS] ❌ TTS thất bại: ' + error.message, 'error');
     throw error;
   } finally {
