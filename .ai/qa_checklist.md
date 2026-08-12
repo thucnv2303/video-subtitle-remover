@@ -1,82 +1,120 @@
 # QA Checklist
 
 ## Active task
-`PIPELINE1-CONTINUOUS-NARRATION-006 — BUG-034 P1/P3 Duration Responsibility Redesign`
+`PIPELINE1-SEMANTIC-REMIX-007 — Profiles, Remix Beats and P3 Scene Mapping`
 
 ## Review basis
-- [x] Active branch `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
-- [x] Draft PR #47 targets `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
-- [x] Base SHA `68c750524f9604b7799d97a2b5604d87368f889c`.
-- [x] BUG-034 approved spec `c046adca8394652cae94fb47821ac8927cb62f74`.
-- [x] P1 source `97a8e31350b9a0ff40d93207d3de8164b98b458a`.
-- [x] P3 source `55faf3e734120edec93ba22798599eaf16b6be13`.
-- [x] Source compare from spec head changes exactly two files: P1 AI + P3 finalize.
-- [x] PM review `4912891690` PASS logic/scope only.
-- [x] No P2/STTN/backend/TTS-engine/dependency source changes in BUG-034.
+- [x] Active branch `review/PIPELINE1-SEMANTIC-REMIX-007`.
+- [x] Draft PR #48 targets `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
+- [x] Base SHA `9981da334ca10fd845c971241d541894d736c13b`.
+- [x] Exact spec `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`.
+- [x] Semantic reasoning source `862e68d5c47447f0033817145757429f38cf830f`.
+- [x] Semantic artifact source `4a2712c41ad26284e4ecfb2a1f955606051729e8`.
+- [x] PM review `4913808619` PASS logic/scope only.
+- [x] Task-007 application source changes are limited to `src/main/p1-vision-ipc.js` and `src/renderer/js/pipeline1-analysis.js`.
+- [x] No P2/P3/backend/TTS-engine/dependency source change in task 007.
 
-## Owner failure evidence
-- [x] 97.57s source / 25 adaptive keyframes / 4 Vision chunks.
-- [x] Global reasoning 38.8s produced quality-clean 613-char narration.
-- [x] Full-text TTS pass 1 measured 35.91s = 36.8%.
-- [x] Prior controller launched a second evidence-fit toward 1582–1666 chars.
-- [x] Second qwen request timed out at 150s and failed the Job.
-- [x] Product diagnosis: hard original-video occupancy is the wrong P1 completion gate.
+## Semantic remix source logic review
+### Evidence + scene inventory
+- [x] P1 still receives full timestamped transcript and adaptive Vision evidence from the original video.
+- [x] Vision chunk-local scene indexes are not used as global authority.
+- [x] Code assigns globally unique canonical scene indexes after all Vision chunks complete.
+- [x] Canonical scenes carry `chunk_index`, `time_sec`, deterministic `start_sec`, and `end_sec`.
+- [x] Source windows are bounded to source duration and positive-length.
+- [x] Midpoint windows are explicitly treated as MVP deterministic evidence windows, not CV scene-boundary detection.
 
-## BUG-034 source logic review
-### P1
-- [x] Normal successful P1 path no longer calls evidence-fit for duration occupancy.
-- [x] Normal successful P1 path no longer calls a second TTS solely for occupancy.
-- [x] P1 underlength is non-blocking.
-- [x] P1 duration outside 90–110% logs warning telemetry.
-- [x] P1 blocks only pathological overlength above 150% measured ratio.
-- [x] P1 continuous narration remains one full-text TTS artifact.
-- [x] Same-session late retry can reuse valid analysis/TTS checkpoint.
-- [x] Legacy `DURATION_CONTROL` checkpoint remains compatible while new checkpoint purpose is `TTS_FINALIZE`.
+### Semantic reasoning contract
+- [x] Global reasoning requires `video_profile`.
+- [x] Global reasoning requires `product_profile`.
+- [x] Global reasoning requires `customer_profile`.
+- [x] Global reasoning requires `remix_strategy` with deliberate `target_duration_sec` and rationale.
+- [x] Global reasoning requires ordered `remix_beats`.
+- [x] Prompt explicitly rejects transcript translation/summary-only behavior.
+- [x] Narration must be newly composed from transcript + Vision evidence + semantic strategy.
+- [x] Product/customer claims must remain grounded; unknown/conflicting facts cannot silently become claims.
+- [x] Narration remains one continuous Vietnamese script.
+- [x] Existing CJK/repetition quality gates remain active.
 
-### P3
-- [x] P3 no longer calls `adjustVideoTempo()` for voice matching.
-- [x] P3 probes the actual video used for final mixing.
-- [x] Ratio <0.90 keeps natural P1 voice.
-- [x] Ratio 0.90–1.15 may use pitch-preserving derived voice.
-- [x] Ratio >1.15 blocks automatic stretch.
-- [x] Derived voice is written under sibling `p3/voice.wav`, not over P1 voice.
-- [x] Derived subtitle timing is scaled to measured adjusted duration and written as `p3/tts_timed.srt`.
-- [x] Final burn uses the derived timing when voice was adjusted.
+### Beat/reference validation
+- [x] Empty beat plan is rejected.
+- [x] Duplicate `beat_index` is rejected.
+- [x] Invalid beat role/action is rejected.
+- [x] Missing `source_scene_indexes` is rejected.
+- [x] A beat referencing a nonexistent canonical scene is rejected.
+- [x] Invalid/non-positive semantic target duration is rejected.
+- [x] Semantic target above the configured safety ceiling is rejected.
+
+### Artifact v4 contract
+- [x] `artifact_version: 4`.
+- [x] `analysis_mode: multimodal-semantic-remix-v4`.
+- [x] `scenes.json` persists canonical globally indexed scene evidence + source windows.
+- [x] `multimodal_timeline.json` persists source transcript, scene provenance, and video/product/customer profiles.
+- [x] `remix_script.json` persists remix strategy, target duration, ordered beats, narration, and semantic coverage.
+- [x] `edit_plan.json` maps each beat to source scene indexes and deterministic source time ranges.
+- [x] `remix_script.srt` preview duration uses semantic target duration rather than automatically forcing original source duration.
+
+### BUG-034 regression invariants
+- [x] P1 does not restore a hard 95–100% original-video voice occupancy minimum.
+- [x] Normal successful P1 does not launch another LLM request solely to fill original timeline.
+- [x] Normal successful P1 does not launch a second TTS solely for occupancy.
+- [x] P3 remains final timeline/voice-fit authority.
+- [x] P2 remains subtitle-removal only.
 
 ## Exact static checks — BLOCKING
-- [ ] `git rev-parse HEAD` equals exact final review head.
-- [ ] `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
-- [ ] `node --check src/renderer/js/pipelines/pipeline3-finalize.js`.
-- [ ] Recommended regression syntax: `node --check src/main/p1-vision-ipc.js` and `node --check src/renderer/js/pipeline1-analysis.js`.
-- [ ] `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
+- [ ] `git rev-parse HEAD` equals the exact PR #48 head being tested.
+- [ ] `node --check src/main/p1-vision-ipc.js`.
+- [ ] `node --check src/renderer/js/pipeline1-analysis.js`.
+- [ ] Recommended regression syntax: `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
+- [ ] `git diff --check 9981da334ca10fd845c971241d541894d736c13b..HEAD`.
 - [ ] GitHub CI/status: none configured; absence is not CI PASS.
 
-## Fresh Owner P1 runtime — BLOCKING
-- [ ] Re-run same/equivalent 97.57s video on exact final head.
-- [ ] Vision/global reasoning completes and narration quality gate remains clean.
-- [ ] Exactly one normal full-text TTS request is made.
-- [ ] P1 logs `P1 duration telemetry` with source duration, voice duration and ratio.
-- [ ] For a ~36.8% voice, P1 logs warning but DOES NOT emit `Narration evidence-fit`.
-- [ ] Underlength alone does not fail P1 or block P2 readiness.
-- [ ] P1 artifacts include valid `voice.wav` and `tts_timed.srt`.
-- [ ] A deliberately pathological >150% voice is blocked if a practical fixture is available.
+## Fresh Owner semantic runtime — BLOCKING
+Use the same/equivalent ~97.57s source on the exact final PR #48 head.
 
-## Owner P3 runtime/listening — BLOCKING
-- [ ] Ratio <0.90: voice remains natural; no P3 voice stretch; video duration/playback speed unchanged.
-- [ ] Ratio around 0.90: derived voice path works and remains listenable.
-- [ ] Ratio around 1.00: no unnecessary adjustment.
-- [ ] Ratio around 1.10–1.15: derived voice remains intelligible/natural enough for Owner acceptance.
-- [ ] Ratio >1.15: P3 explicitly refuses automatic stretch; no silent distortion.
-- [ ] When adjusted, P3 creates `p3/voice.wav` and does not alter P1 `voice.wav`.
-- [ ] When adjusted, P3 creates/rescales `p3/tts_timed.srt` and burned subtitle follows adjusted voice.
-- [ ] P3 does not create/use `_tempo.mp4` for voice matching.
-- [ ] Final video uses P2 clean video pacing by default.
+### Runtime flow
+- [ ] ASR completes with timestamped source transcript.
+- [ ] Adaptive Vision completes all planned chunks.
+- [ ] Log reports canonical semantic scene inventory with globally indexed scenes.
+- [ ] Global semantic remix reasoning completes.
+- [ ] P1 produces one continuous narration and one normal full-text TTS when TTS is enabled.
+- [ ] A short voice relative to the original source only produces duration telemetry/warning and does NOT emit `Narration evidence-fit` solely for occupancy.
+- [ ] P1 completes and downstream gate behavior remains valid when semantic artifacts/TTS are valid.
+
+### `scenes.json`
+- [ ] `artifact_version == 4` and `analysis_mode == multimodal-semantic-remix-v4`.
+- [ ] Scene indexes are unique across the whole video.
+- [ ] Scene indexes referenced by remix beats exist.
+- [ ] Every scene used by a beat has valid `start_sec < end_sec` within source duration.
+- [ ] Scene descriptions correspond plausibly to the actual video evidence.
+
+### `multimodal_timeline.json`
+- [ ] Contains source transcript provenance.
+- [ ] Contains meaningful `video_profile`, not generic filler.
+- [ ] Contains meaningful `product_profile`, with unsupported facts left unknown/neutral.
+- [ ] Contains meaningful `customer_profile`, grounded in available evidence rather than invented demographics/claims.
+- [ ] Profiles reflect both visual evidence and transcript content rather than transcript-only translation.
+
+### `remix_script.json`
+- [ ] Contains deliberate `remix_strategy.target_duration_sec` and rationale.
+- [ ] Target duration is explainable as a remix decision, not merely equal to accidental narration length.
+- [ ] Contains multiple ordered `remix_beats` when the source contains multiple meaningful sections.
+- [ ] Beat sequence reflects a coherent hook/problem/product/demo/benefit/proof/CTA or equivalent story arc when evidence supports it.
+- [ ] Narration is newly composed and does not simply translate/paraphrase the original transcript line by line.
+- [ ] Narration contains no unsupported product claim, duplicated CTA, repetitive filler, or stray CJK.
+
+### `edit_plan.json`
+- [ ] Every beat has at least one source scene reference.
+- [ ] Every source scene reference resolves to a real source range.
+- [ ] `source_ranges` are deterministic and within source duration.
+- [ ] Reordered/montage beats still preserve source provenance.
+- [ ] Plan is sufficiently explicit for future P3 cut/reorder implementation without re-running Vision.
 
 ## Regression coverage
 - [ ] Second queued P1 Job still auto-advances after first Job failure/success.
-- [ ] Manual Job browsing remains usable.
+- [ ] Manual Job browsing remains usable while another P1 Job processes.
 - [ ] No segmented `/api/tts-retry` narration path reappears.
-- [ ] P2 subtitle-removal behavior unchanged.
+- [ ] P2 subtitle-removal behavior remains unchanged.
+- [ ] Existing P3 BUG-034 voice-fit behavior remains unchanged by task 007.
 
 ## Gates
-Execution PASS for BUG-034 source publication; automated/static WAITING; code review PASS logic/scope (`4912891690`); Owner P1 verification WAITING; Owner P3 listening/runtime WAITING; documentation synchronization PASS after canonical sync; merge BLOCKED.
+Execution PASS for task-007 source publication; automated/static WAITING; code review PASS logic/scope (`4913808619`); Owner semantic runtime/artifact verification NOT STARTED; documentation synchronization PASS after semantic architecture/QA/decision/dynamic-state sync; merge BLOCKED.
