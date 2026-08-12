@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, Menu, net } = require('electron');
 const path = require('path');
 const { PythonBridge } = require('./python-bridge');
 const registerP1VisionIPC = require('./p1-vision-ipc');
+const registerP1StandardVisionIPC = require('./p1-standard-vision-wrapper');
 
 // Prevent Windows cache lock errors (Access is Denied 0x5 / Gpu Cache Creation failed)
 app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
@@ -10,6 +11,7 @@ app.commandLine.appendSwitch('disable-http-cache');
 let mainWindow;
 const pythonBridge = new PythonBridge({ appRoot: path.join(__dirname, '..', '..') });
 registerP1VisionIPC({ ipcMain, net });
+registerP1StandardVisionIPC({ ipcMain, net });
 
 function createWindow() {
   mainWindow = new BrowserWindow({
