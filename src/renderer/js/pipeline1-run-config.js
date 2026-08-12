@@ -34,7 +34,8 @@ function _semanticRemixEnabled() {
 function installSemanticRemixControl() {
   if (document.getElementById('step1-semantic-remix')) return true;
   const startButton = document.getElementById('btn-start-all');
-  if (!startButton?.parentElement) return false;
+  const actionRow = startButton?.parentElement;
+  if (!startButton || !actionRow) return false;
 
   const group = document.createElement('div');
   group.id = 'step1-script-mode-group';
@@ -55,7 +56,8 @@ function installSemanticRemixControl() {
 
   row.append(checkbox, copy);
   group.appendChild(row);
-  startButton.parentElement.parentElement?.insertBefore(group, startButton.parentElement);
+  actionRow.insertAdjacentElement('beforebegin', group);
+  if (!group.isConnected) return false;
 
   checkbox.addEventListener('change', () => {
     localStorage.setItem(SEMANTIC_REMIX_KEY, checkbox.checked ? 'true' : 'false');
@@ -145,6 +147,7 @@ function snapshotPipeline1RunConfig(event) {
     job.p1ArtifactsReady = false;
     job.p1Analysis = null;
     job.p1Artifacts = null;
+    job._p1DurationCheckpoint = null;
     job._aiTriggered = false;
     job._ttsTriggered = false;
     job._ttsRunning = false;
