@@ -11,6 +11,7 @@
 - [x] Narration-quality source commit `00e80aea06d526b34518dd069f9b1c581c80e77c`.
 - [x] Compare `131f35c... -> 00e80aea...` changes exactly one application source file: `src/main/p1-vision-ipc.js`.
 - [x] No P2/P3/STTN/Settings/backend/TTS-engine source changes in the quality correction.
+- [x] PM narration-quality source review PASS `4912002868` for logic/scope.
 
 ## Previously verified runtime/static evidence
 - [x] Owner reported corrective two-Job run successful.
@@ -64,7 +65,7 @@
 - [ ] Quality repair does not rerun Vision.
 - [ ] Final narration has no repeated tail/value block/CTA padding.
 - [ ] Final narration contains no stray CJK characters.
-- [ ] Final narration is coherent natural Vietnamese with consistent subject/product/ingredient naming.
+- [ ] Final narration is coherent natural Vietnamese with consistent subject/product/ingredient naming and no obvious factual contradiction.
 - [ ] CTA/conclusion appears at most once.
 - [ ] If first TTS duration misses 95–100%, measured narration fit remains bounded and final candidate passes both hard range + quality before final re-TTS.
 - [ ] Final successful voice ratio is 95–100% inclusive.
@@ -72,4 +73,4 @@
 - [ ] P1 completes and unlocks P2 only after all gates pass.
 
 ## Gates
-Execution PASS for quality correction; automated/static WAITING on new final head; code review WAITING final PM confirmation; Owner quality retest WAITING; documentation synchronization PASS after publication; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS for quality correction; automated/static WAITING on new final head; code review PASS for logic/scope (`4912002868`); Owner quality retest WAITING; documentation synchronization PASS after publication; merge BLOCKED; Step 3 BLOCKED.
