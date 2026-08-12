@@ -1,87 +1,82 @@
 # QA Checklist
 
 ## Active task
-`PIPELINE1-CONTINUOUS-NARRATION-006`
+`PIPELINE1-CONTINUOUS-NARRATION-006 — BUG-034 P1/P3 Duration Responsibility Redesign`
 
-## BUG-033 review basis
+## Review basis
 - [x] Active branch `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
 - [x] Draft PR #47 targets `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
 - [x] Base SHA `68c750524f9604b7799d97a2b5604d87368f889c`.
-- [x] BUG-033 approved design/spec commit `fb9aed75de3c15a83c8aecec7b8cb0a55e09a198`.
-- [x] Evidence-aware IPC source commit `77f5e2186ddb4660c9ba35de245bc8b86d297f33`.
-- [x] Duration-controller/resume renderer source commit `da3644f3e81ac3a3927d64baca9365745541f4ec`.
-- [x] Compare `fb9aed75... -> da3644f3...` changes exactly `src/main/p1-vision-ipc.js` (+81/-1) and `src/renderer/js/pipelines/pipeline1-ai.js` (+264/-16).
-- [x] PM review `4912637906` PASS for logic/scope only.
-- [x] No P2/P3/STTN/Settings/backend/TTS-engine source changes in BUG-033 source commits.
+- [x] BUG-034 approved spec `c046adca8394652cae94fb47821ac8927cb62f74`.
+- [x] P1 source `97a8e31350b9a0ff40d93207d3de8164b98b458a`.
+- [x] P3 source `55faf3e734120edec93ba22798599eaf16b6be13`.
+- [x] Source compare from spec head changes exactly two files: P1 AI + P3 finalize.
+- [x] PM review `4912891690` PASS logic/scope only.
+- [x] No P2/STTN/backend/TTS-engine/dependency source changes in BUG-034.
 
-## Runtime evidence driving BUG-033
-- [x] 97.57s input uses adaptive 25 keyframes / 4 chunks / 8,8,8,1 frames.
-- [x] Global reasoning produced 601 chars while soft target was 1529–1610.
-- [x] Quality gate accepted the clean short narration.
-- [x] TTS pass 1 measured 35.27s / 97.57s = 36.1%.
-- [x] Measured hard target became 1579–1663 chars.
-- [x] Previous narration-only fit returned 735 chars and was rejected before final TTS.
-- [x] Measured clone rate was close to configured estimate; gross TTS-rate error is not the primary defect.
-- [x] Legacy `/api/ai-rewrite` was verified unsuitable because backend injects no-expansion/SRT-preservation/130%-word constraints.
+## Owner failure evidence
+- [x] 97.57s source / 25 adaptive keyframes / 4 Vision chunks.
+- [x] Global reasoning 38.8s produced quality-clean 613-char narration.
+- [x] Full-text TTS pass 1 measured 35.91s = 36.8%.
+- [x] Prior controller launched a second evidence-fit toward 1582–1666 chars.
+- [x] Second qwen request timed out at 150s and failed the Job.
+- [x] Product diagnosis: hard original-video occupancy is the wrong P1 completion gate.
 
-## BUG-033 source logic review
-- [x] Large duration correction receives the full persisted transcript.
-- [x] Large duration correction receives compact persisted Vision scene/chunk evidence.
-- [x] Evidence-backed fit computes its hard range from actual pass-1 chars/second.
-- [x] Evidence-backed structured output has hard `minLength`/`maxLength` bounds.
-- [x] Post-parse hard length validation remains defense-in-depth.
-- [x] Deterministic CJK/repeated-sentence/near-duplicate/repeated-long-phrase quality validation runs before final TTS.
-- [x] Evidence recomposition allows at most one bounded contract/quality retry; no unbounded LLM loop.
-- [x] Near misses use whole-audio pitch-preserving tempo correction only when target factor is within ±5%, then remeasure.
-- [x] Large miss consumes at most one evidence-backed recomposition and one final full-text TTS.
-- [x] Total full-text TTS syntheses are capped at two.
-- [x] Pass 2 may use only the same bounded ±5% final tempo correction; otherwise fail closed.
-- [x] No P1 segmented `/api/tts-retry` path reintroduced.
-- [x] No legacy `/api/ai-rewrite` used by BUG-033 large correction.
-- [x] Duration checkpoint is stored in Job memory and written as `p1_checkpoint.json` audit evidence.
-- [x] Same-session retry can bypass `runPipeline1MultimodalAnalysis()` only when source fingerprint + reasoning model + prompt signature match.
-- [x] Pass-1 TTS reuse additionally requires matching voice/reference/speed signature and `pass1_reusable=true`.
-- [x] Pass-1 reuse is disabled before final TTS may replace `voice.wav`.
-- [x] Outer P1 error handling no longer overwrites a more specific TTS/duration error stage.
-- [x] Cross-app-restart resume is not claimed without a checkpoint read/rehydration contract.
+## BUG-034 source logic review
+### P1
+- [x] Normal successful P1 path no longer calls evidence-fit for duration occupancy.
+- [x] Normal successful P1 path no longer calls a second TTS solely for occupancy.
+- [x] P1 underlength is non-blocking.
+- [x] P1 duration outside 90–110% logs warning telemetry.
+- [x] P1 blocks only pathological overlength above 150% measured ratio.
+- [x] P1 continuous narration remains one full-text TTS artifact.
+- [x] Same-session late retry can reuse valid analysis/TTS checkpoint.
+- [x] Legacy `DURATION_CONTROL` checkpoint remains compatible while new checkpoint purpose is `TTS_FINALIZE`.
 
-## Previously closed regression coverage to preserve
-- [x] Prior two-Job corrective runtime reported queue failure isolation working.
-- [x] >60s adaptive coverage previously passed on 97.57s input.
-- [x] All Vision chunks previously completed.
-- [x] Continuous full-text TTS architecture previously observed.
-- [x] Prior successful long-run duration reached 94.62s / 97.57s = 97.0% before the separate narration-quality defect.
-- [x] BUG-031 quality gate detects CJK/repeated sentences/repeated long phrases.
+### P3
+- [x] P3 no longer calls `adjustVideoTempo()` for voice matching.
+- [x] P3 probes the actual video used for final mixing.
+- [x] Ratio <0.90 keeps natural P1 voice.
+- [x] Ratio 0.90–1.15 may use pitch-preserving derived voice.
+- [x] Ratio >1.15 blocks automatic stretch.
+- [x] Derived voice is written under sibling `p3/voice.wav`, not over P1 voice.
+- [x] Derived subtitle timing is scaled to measured adjusted duration and written as `p3/tts_timed.srt`.
+- [x] Final burn uses the derived timing when voice was adjusted.
 
-## Exact static checks — BLOCKING ON FINAL DOCS/HEAD
-- [ ] `git rev-parse HEAD` equals the exact final head supplied for retest.
-- [ ] `node --check src/main/p1-vision-ipc.js`.
-- [ ] `node --check src/main/preload.js`.
-- [ ] `node --check src/renderer/js/pipeline1-analysis.js`.
+## Exact static checks — BLOCKING
+- [ ] `git rev-parse HEAD` equals exact final review head.
 - [ ] `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
+- [ ] `node --check src/renderer/js/pipelines/pipeline3-finalize.js`.
+- [ ] Recommended regression syntax: `node --check src/main/p1-vision-ipc.js` and `node --check src/renderer/js/pipeline1-analysis.js`.
 - [ ] `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
-- [ ] GitHub CI/status checks — none configured; absence is not CI PASS.
+- [ ] GitHub CI/status: none configured; absence is not CI PASS.
 
-## Fresh Owner 97.57s runtime — BLOCKING
-- [ ] Run on exact final head with same/equivalent 97.57s input.
-- [ ] Initial global narration remains quality-gated; no repeated tail/CTA, no stray CJK, coherent subject/ingredients.
-- [ ] TTS pass 1 logs exact video/voice duration and ratio.
-- [ ] If pass 1 is a large miss, log states `Large duration miss` and uses transcript + Vision evidence.
-- [ ] Evidence-fit log includes measured hard target and transcript/evidence path, without dumping private raw payloads.
-- [ ] Evidence-fit candidate lies inside the logged hard target before TTS2.
-- [ ] Evidence-fit candidate passes deterministic narration quality before TTS2.
-- [ ] Full-text `/api/tts/generate` occurs no more than twice for the Job.
-- [ ] A near miss uses tempo correction only when the required factor is within ±5% and is re-measured.
-- [ ] Final successful prepared voice ratio is 95–100% inclusive.
-- [ ] P1 completes/unlocks P2 only after the final duration and quality gates pass.
+## Fresh Owner P1 runtime — BLOCKING
+- [ ] Re-run same/equivalent 97.57s video on exact final head.
+- [ ] Vision/global reasoning completes and narration quality gate remains clean.
+- [ ] Exactly one normal full-text TTS request is made.
+- [ ] P1 logs `P1 duration telemetry` with source duration, voice duration and ratio.
+- [ ] For a ~36.8% voice, P1 logs warning but DOES NOT emit `Narration evidence-fit`.
+- [ ] Underlength alone does not fail P1 or block P2 readiness.
+- [ ] P1 artifacts include valid `voice.wav` and `tts_timed.srt`.
+- [ ] A deliberately pathological >150% voice is blocked if a practical fixture is available.
 
-## Late-failure resume runtime — BLOCKING
-- [ ] After pass-1 checkpoint exists, force or observe a late duration-control failure without changing source/model/prompt.
-- [ ] Retry logs `Resume duration-control` and does not rerun ASR/keyframe extraction/Adaptive Vision/global reasoning.
-- [ ] If voice/reference/speed and pass-1 artifact still match, retry logs reuse of pass-1 measured TTS and does not synthesize pass 1 again.
-- [ ] If only voice/reference/speed changes, analysis is reused but pass-1 TTS is regenerated.
-- [ ] A second queued Job still auto-advances if the first Job fails.
-- [ ] Manual Job-detail browsing remains usable during processing.
+## Owner P3 runtime/listening — BLOCKING
+- [ ] Ratio <0.90: voice remains natural; no P3 voice stretch; video duration/playback speed unchanged.
+- [ ] Ratio around 0.90: derived voice path works and remains listenable.
+- [ ] Ratio around 1.00: no unnecessary adjustment.
+- [ ] Ratio around 1.10–1.15: derived voice remains intelligible/natural enough for Owner acceptance.
+- [ ] Ratio >1.15: P3 explicitly refuses automatic stretch; no silent distortion.
+- [ ] When adjusted, P3 creates `p3/voice.wav` and does not alter P1 `voice.wav`.
+- [ ] When adjusted, P3 creates/rescales `p3/tts_timed.srt` and burned subtitle follows adjusted voice.
+- [ ] P3 does not create/use `_tempo.mp4` for voice matching.
+- [ ] Final video uses P2 clean video pacing by default.
+
+## Regression coverage
+- [ ] Second queued P1 Job still auto-advances after first Job failure/success.
+- [ ] Manual Job browsing remains usable.
+- [ ] No segmented `/api/tts-retry` narration path reappears.
+- [ ] P2 subtitle-removal behavior unchanged.
 
 ## Gates
-Execution PASS for BUG-033 source publication; automated/static WAITING; code review PASS logic/scope (`4912637906`); Owner runtime/resume verification WAITING; documentation synchronization PASS after final canonical sync; merge BLOCKED; Step 3 BLOCKED.
+Execution PASS for BUG-034 source publication; automated/static WAITING; code review PASS logic/scope (`4912891690`); Owner P1 verification WAITING; Owner P3 listening/runtime WAITING; documentation synchronization PASS after canonical sync; merge BLOCKED.
