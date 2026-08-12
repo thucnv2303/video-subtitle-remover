@@ -1,40 +1,49 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-CONTINUOUS-NARRATION-006 — P1/P3 Duration Responsibility Redesign`
+`PIPELINE1-SEMANTIC-REMIX-007 — Profiles, Remix Beats and P3 Scene Mapping`
 
 ## Status
-BUG-034 SOURCE PUBLISHED / PM LOGIC-SCOPE REVIEW PASS / STATIC + OWNER RUNTIME WAITING
+IMPLEMENTATION AUTHORIZED / SOURCE NOT YET PUBLISHED
 
 ## Review basis
-- Branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
-- Draft PR: #47.
-- Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
-- Approved spec: `c046adca8394652cae94fb47821ac8927cb62f74`.
-- P1 source: `97a8e31350b9a0ff40d93207d3de8164b98b458a`.
-- P3 source: `55faf3e734120edec93ba22798599eaf16b6be13`.
-- PM review: `4912891690` — PASS logic/scope only.
+- Repository: `thucnv2303/video-subtitle-remover`.
+- Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
+- Starting ref: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
+- Exact spec: `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`.
+- Spec commit: `b0597b40e3a3411280344c94ba961644cb6c5d9a`.
+- ACTIVE pointer commit: `602ce0781eed359a0145f65b0ec10c392407d320`.
 
-## Why BUG-034 exists
-Fresh Owner runtime produced a valid 613-char narration and 35.91s continuous TTS for a 97.57s source, then spent 150s on a second duration-fill reasoning request and failed. This proved that exact original-video occupancy was the wrong P1 completion contract.
+## Why this task exists
+Fresh Owner runtime proves BUG-034 no longer needs to force voice to fill the original timeline, but it exposes a deeper product gap: the current P1 contract can generate a short narration without proving that the short result came from an intentional remix strategy. Owner requires actual remix planning, not transcript translation/summary.
 
-## New behavior
-- P1 quality/artifact validity is blocking; underlength occupancy is not.
-- P1 one-TTS normal path, duration telemetry, warnings outside 90–110%, fail only above 150% overlength.
-- P3 is final duration authority and keeps video pacing unchanged.
-- P3 leaves strongly short voice natural, derives a fitted voice only for 0.90–1.15 ratio, blocks >1.15, and rescales subtitles when it changes voice tempo.
-- P3 derived artifacts are separate from P1 inputs.
+## Required semantic flow
+Original video -> ASR + adaptive Vision -> globally indexed scene inventory -> video profile -> product/subject profile -> customer profile -> remix strategy + recommended target duration -> ordered remix beats -> grounded continuous narration -> edit plan with beat-to-source-scene/time-range mapping -> P1 artifacts/TTS.
 
-## Evidence status
-- Exact source delta from spec head: two files only, P1 AI and P3 finalize.
-- PM direct source review: PASS logic/scope.
-- No GitHub CI statuses configured.
-- Exact-head static checks: WAITING.
-- Owner P1 runtime: WAITING.
-- Owner P3 listening/runtime verification: WAITING.
+## Non-negotiable constraints
+- Full transcript and Vision evidence both remain reasoning inputs.
+- Narration may be newly composed/reordered but factual claims must be grounded.
+- A beat may only reference source scenes that actually exist.
+- Scene indexes must be globally unique across Vision chunks.
+- Artifact version becomes 4 and analysis mode `multimodal-semantic-remix-v4`.
+- BUG-034 duration responsibility remains: no hard P1 minimum occupancy and no second LLM/TTS call solely to fill timeline.
+- P2 is untouched.
+- P3 cut/reorder implementation is NOT part of this task; this task produces the contract it will consume.
 
-## Next action
-Owner tests exact final docs/head. The 97.57s P1 case must complete after first valid TTS and must not emit `Narration evidence-fit`. Then P3 must be verified at short, near-match, modest speed-up/slowdown and over-limit ratios, with no video retiming and no overwrite of P1 artifacts.
+## Allowed source
+- `src/main/p1-vision-ipc.js`
+- `src/renderer/js/pipeline1-analysis.js`
+- `src/renderer/js/pipelines/pipeline1-ai.js` only if semantic target telemetry requires it
+
+## Required implementation evidence
+- exact changed files and commit SHA;
+- `node --check` on every changed JS file;
+- `git diff --check 9981da334ca10fd845c971241d541894d736c13b..HEAD`;
+- no out-of-scope changes;
+- PM review before Owner runtime.
+
+## Owner verification after PM PASS
+Run same/equivalent 97.57s source on exact final HEAD. Inspect `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`. The artifacts must show meaningful video/product/customer profiles, explicit remix target duration, multiple ordered beats, and valid source-scene/time-range mappings. Exact tested `git rev-parse HEAD` is mandatory.
 
 ## Gates
-Execution PASS; automated/static WAITING; code review PASS logic/scope; Owner verification WAITING; documentation synchronization PASS after final sync; merge BLOCKED.
+Execution IN PROGRESS; automated/static WAITING; code review WAITING; Owner runtime NOT STARTED; docs final sync WAITING; merge BLOCKED.
