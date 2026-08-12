@@ -4,36 +4,33 @@
 `PIPELINE1-CONTINUOUS-NARRATION-006 — Voice-Aware Continuous Narration, Bounded Reasoning, and Narration Quality Gate`
 
 ## Status
-BUG-032 SOURCE FIX REVIEW PASS / STATIC + OWNER RETEST WAITING
+BUG-033 DURATION/CONTENT DIAGNOSIS REQUIRED BEFORE FURTHER SOURCE FIX
 
 ## Review basis
 - Active branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
 - Draft PR: #47.
 - Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
-- Owner-failed quality-gate head: `0e327f353b7be15483576233aaed126813542158`.
 - BUG-032 source correction: `a0e6165dfd88561bf3140907b6d578782a2ccebf`.
-- PM BUG-032 review: `4912221026` — PASS logic/scope only.
+- Latest Owner runtime exposes a broader BUG-033 duration/content-generation problem; no further source patch is approved yet.
 
-## Fresh Owner failure
-The 97.57s case produced 575 chars -> TTS 33.98s / 34.8%. Measured fit range was 1568–1651 chars, but qwen fit returned 575 chars and the post-parse validator rejected it before final TTS.
+## Fresh Owner runtime
+97.57s input -> 25 adaptive keyframes / 4 Vision chunks; chunk transcript segment occurrences 17/18/22/2. Global reasoning produced 601 chars against soft target 1529–1610. Quality gate passed. Full-text TTS pass 1 measured 35.27s = 36.1%. Measured target then became 1579–1663 chars, but narration-fit returned 735 chars and failed hard validation before final TTS.
 
-## Root cause and correction
-- Quality cleanup had softened `narrationRepairSchemaForBudget()` to `minLength: 1`.
-- Duration-fit reused that helper, so its structured schema lost the measured hard lower bound.
-- Commit `a0e6165d...` restores conditional semantics: supplied `min_chars` becomes hard schema `minLength`; quality cleanup that supplies only `max_chars` keeps min=1.
-- Existing post-parse hard validation remains.
-- Narrow compare from `13f492d4...` to `a0e6165d...`: one source file, 4 additions / 2 deletions.
-- No P2/P3/STTN/Settings/backend/TTS-engine source changes.
+## Diagnosis verified so far
+- Measured TTS rate is close to the configured clone estimate; gross voice-rate estimation is not the main defect.
+- Current initial lower target is soft, so a severely short narration is permitted into TTS.
+- Initial reasoning has transcript + compact visual evidence.
+- Narration-fit has only the current narration + durations, so it lacks the original evidence needed for a safe 2x–3x grounded expansion.
+- Hard character bounds are validators, not a content-generation solution.
 
-## Evidence status
-- GitHub diff/full-source inspection: PASS.
-- PM source review `4912221026`: PASS logic/scope.
-- Exact final-head Node checks: WAITING.
-- Exact final-head diff check: WAITING.
-- Fresh Owner runtime: WAITING.
+## Evidence still needed
+Quantify transcript chars/words, speech-active duration, longest speech gaps, visual-only spans, and unique visual evidence. Resolve product policy for sparse evidence: whether 95–100% voice occupancy is mandatory, whether Vision-grounded description may fill silent spans, what filler is forbidden, and when small audio tempo correction is acceptable.
+
+## Resume requirement
+Late-stage failures must reuse valid persisted artifacts. A duration-control failure must not rerun ASR, keyframe extraction, Vision chunks, or initial reasoning if their fingerprints/config dependencies are unchanged. Checkpoint/resume acceptance criteria must be part of BUG-033 design.
+
+## Next permitted action
+Evidence/diagnosis only: inspect saved P1 artifacts/runtime data and write an approved evidence-aware duration-controller + checkpoint/resume spec. Do not patch source again until the diagnosis questions are answered.
 
 ## Gates
-Execution PASS; automated/static WAITING; code review PASS for logic/scope; Owner verification WAITING; docs sync PASS after final bug/QA synchronization; merge BLOCKED; Step 3 BLOCKED.
-
-## Next action
-Owner fetches the final docs/head, runs exact static checks and retests the same 97.57s input. Duration-fit must return a candidate inside its logged measured hard range before final TTS, quality gate must pass, final voice must be 95–100%, and P1 must complete.
+Execution NEEDS_MORE_EVIDENCE; automated/static WAITING; code review not release-ready for BUG-033; Owner runtime FAIL for duration behavior; docs sync PASS; merge BLOCKED; Step 3 BLOCKED.
