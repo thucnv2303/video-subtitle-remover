@@ -11,15 +11,6 @@
     lastAudioPath: '',
   };
 
-  function escapeHtml(value) {
-    return String(value ?? '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
-
   function ensureStyle() {
     if (document.querySelector(`link[${STYLE_ATTR}]`)) return;
     const link = document.createElement('link');
@@ -216,7 +207,7 @@
       document.getElementById('voice-render-text')?.focus();
       return;
     }
-    if (!window.api?.generateTTS) {
+    if (!window.api?.post) {
       window.showToast?.('TTS API chưa sẵn sàng.', 'error');
       return;
     }
@@ -235,7 +226,12 @@
     window.addLog?.(`[Voice Render] Bắt đầu OmniVoice (${selectedVoice}, ${text.length} ký tự).`, 'info');
 
     try {
-      const result = await window.api.generateTTS(text, refAudioPath, language, null, outputPath);
+      const result = await window.api.post('/api/tts/generate', {
+        text,
+        ref_audio_path: refAudioPath,
+        language,
+        output_path: outputPath,
+      });
       if (result?.status !== 'ok' || !result.audio_path) {
         throw new Error(result?.error || 'OmniVoice không tạo được file audio.');
       }
