@@ -62,7 +62,7 @@ Required corrected behavior:
 - [x] D-016 does not force Semantic narration to fill original-source duration.
 
 ## Static verification
-Historical application state `59925b05afef7071cdd478209d4c54732b611d78` already passed the required Node syntax checks and `git diff --check` by Owner. GitHub compare from that state to the D-016 correction proves the only application-source delta is `src/main/p1-standard-vision-wrapper.js`; other changes are canonical documentation.
+Historical application state `59925b05afef7071cdd478209d4c54732b611d78` passed the required Node syntax checks and `git diff --check` by Owner. GitHub compare from that state through the D-016 correction proves the only application-source delta is `src/main/p1-standard-vision-wrapper.js`; later changes are canonical documentation.
 
 D-016 delta:
 - [x] Full corrected wrapper re-read from GitHub after publication.
@@ -107,9 +107,9 @@ Run only after Standard PASS.
 
 ## Gates
 - Execution: PASS.
-- Automated/static for application source delta: PASS using prior unchanged-source static evidence + exact corrected-wrapper syntax check.
+- Automated/static for current application source: PASS using prior unchanged-source static evidence + exact corrected-wrapper syntax check.
 - Code review: PASS logic/scope for D-016 source delta.
 - Owner Standard: RETEST WAITING.
 - Owner Semantic: ON HOLD until Standard PASS.
-- Documentation synchronization: WAITING until dynamic docs + PR body are finalized on the exact final head.
+- Documentation synchronization: PASS after canonical D-016/BUG-037 files and PR #48 metadata were aligned; final PR body is updated again after the last docs commit to its exact head.
 - Merge: BLOCKED.
