@@ -250,11 +250,8 @@
       while (end < source.length && /[”"')\]]/.test(source[end])) end += 1;
       if (end < source.length && !/\s/.test(source[end])) continue;
 
-      const whitespaceEnd = (() => {
-        let value = end;
-        while (value < source.length && /\s/.test(source[value])) value += 1;
-        return value;
-      })();
+      let whitespaceEnd = end;
+      while (whitespaceEnd < source.length && /\s/.test(source[whitespaceEnd])) whitespaceEnd += 1;
       const separator = source.slice(end, whitespaceEnd);
       const value = source.slice(cursor, end).replace(/\s+/g, ' ').trim();
       if (value) {
@@ -297,8 +294,6 @@
         current = candidate;
       }
 
-      // Paragraph boundaries may end a chunk only when the paragraph itself
-      // ended with a period. The character target never authorizes a mid-sentence cut.
       if (preserveParagraphs && unit.terminated && unit.paragraphBreakAfter) pushCurrent();
     }
 
@@ -382,7 +377,7 @@
       root.innerHTML = '<div class="vr-empty-mini">Chưa có hàng đợi render.</div>';
       return;
     }
-    root.innerHTML = state.chunks.map((chunk, index) => `<div class="vr-queue-row ${chunk.status}"><span class="vr-queue-dot"></span><div><strong>Chunk ${index + 1}</strong><small>${chunk.text.length.toLocaleString('vi-VN')} ký tự</small></div><span class="vr-queue-state">${({ waiting: 'Chờ xử lý', rendering: 'Đang render…', success: 'Hoàn thành', error: 'Lỗi', stopped: 'Đã dừng' })[chunk.status] || chunk.status}</span></div><span></span>`).join('');
+    root.innerHTML = state.chunks.map((chunk, index) => `<div class="vr-queue-row ${chunk.status}"><span class="vr-queue-dot"></span><div><strong>Chunk ${index + 1}</strong><small>${chunk.text.length.toLocaleString('vi-VN')} ký tự</small></div><span class="vr-queue-state">${({ waiting: 'Chờ xử lý', rendering: 'Đang render…', success: 'Hoàn thành', error: 'Lỗi', stopped: 'Đã dừng' })[chunk.status] || chunk.status}</span></div>`).join('');
     root.querySelector('.rendering')?.scrollIntoView({ block: 'nearest' });
   }
 
