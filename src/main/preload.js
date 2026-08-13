@@ -1,8 +1,4 @@
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const { execFile } = require('child_process');
 
 async function cancelAnyP1Vision(payload) {
   const results = await Promise.allSettled([
@@ -18,67 +14,6 @@ async function cancelAnyP1Vision(payload) {
   const failure = results.find(result => result.status === 'rejected');
   if (failure) throw failure.reason;
   return { ok: true, cancelled: false };
-}
-
-function escapeConcatPath(filePath) {
-  return String(filePath).replace(/\\/g, '/').replace(/'/g, "\\'");
-}
-
-function isOwnedVoiceChunk(inputPath, outputPath) {
-  const input = path.resolve(String(inputPath || ''));
-  const output = path.resolve(String(outputPath || ''));
-  if (path.dirname(input) !== path.dirname(output)) return false;
-  if (!/\.wav$/i.test(output) || !/\.part-\d{3}\.wav$/i.test(input)) return false;
-  const outputStem = path.basename(output, path.extname(output));
-  const inputName = path.basename(input);
-  return inputName.toLowerCase().startsWith(`${outputStem}.part-`.toLowerCase());
-}
-
-function mergeWavFiles(inputPaths, outputPath) {
-  return new Promise((resolve) => {
-    const inputs = Array.isArray(inputPaths) ? inputPaths.filter(Boolean) : [];
-    if (!inputs.length || !outputPath || !/\.wav$/i.test(String(outputPath))) {
-      resolve({ ok: false, error: 'Thiếu danh sách chunk WAV hoặc đường dẫn đầu ra WAV hợp lệ.' });
-      return;
-    }
-    const unsafe = inputs.find((filePath) => !isOwnedVoiceChunk(filePath, outputPath));
-    if (unsafe) {
-      resolve({ ok: false, error: `Chunk không thuộc run Voice Render hiện tại: ${unsafe}` });
-      return;
-    }
-    const missing = inputs.find((filePath) => !fs.existsSync(filePath));
-    if (missing) {
-      resolve({ ok: false, error: `Thiếu chunk WAV: ${missing}` });
-      return;
-    }
-
-    const listPath = path.join(os.tmpdir(), `vsr-voice-merge-${Date.now()}-${Math.random().toString(36).slice(2)}.txt`);
-    const manifest = inputs.map((filePath) => `file '${escapeConcatPath(filePath)}'`).join('\n');
-    try {
-      fs.writeFileSync(listPath, manifest, 'utf8');
-    } catch (error) {
-      resolve({ ok: false, error: error?.message || 'Không tạo được manifest ghép WAV.' });
-      return;
-    }
-
-    execFile('ffmpeg', [
-      '-y', '-hide_banner', '-loglevel', 'error',
-      '-f', 'concat', '-safe', '0', '-i', listPath,
-      '-vn', '-c:a', 'pcm_s16le', outputPath,
-    ], { windowsHide: true }, async (error, stdout, stderr) => {
-      try { fs.unlinkSync(listPath); } catch {}
-      if (error) {
-        resolve({ ok: false, error: (stderr || error.message || 'FFmpeg merge failed').trim() });
-        return;
-      }
-      const cleanupErrors = [];
-      for (const inputPath of inputs) {
-        try { await fs.promises.unlink(inputPath); }
-        catch (cleanupError) { if (cleanupError?.code !== 'ENOENT') cleanupErrors.push(cleanupError?.message || String(cleanupError)); }
-      }
-      resolve({ ok: true, output_path: outputPath, cleanup_warnings: cleanupErrors });
-    });
-  });
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -100,7 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   getSystemInfo: () => ipcRenderer.invoke('app:systemInfo'),
-  mergeWavFiles: (inputPaths, outputPath) => mergeWavFiles(inputPaths, outputPath),
+  mergeWavFiles: (inputPaths, outputPath) => ipcRenderer.invoke('voice-render:mergeWavFiles', inputPaths, outputPath),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   onP1VisionProgress: (callback) => {
