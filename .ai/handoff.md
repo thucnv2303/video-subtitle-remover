@@ -15,13 +15,15 @@ STATIC PASS / OWNER STANDARD THEN SEMANTIC RETEST WAITING
 - Corrective P1 source originally reviewed at `7b217c7b73e98375bcf5ff2bcb24a92c8fa61796`.
 - Voice Render PR #50 merged at `3c7d47ca08c1e7a93365223a184d47e29c2175c0`.
 - Merged-head P1 review basis: `19677fbdbfe6d7910281307b387e15c007ab0282`.
-- Static verification state tested by Owner: `59925b05afef7071cdd478209d4c54732b611d78`.
+- Static verification application state tested by Owner: `59925b05afef7071cdd478209d4c54732b611d78`.
+- Commits after that static-tested state are documentation-only state synchronization.
 
 ## Completed verification
 - Execution: PASS.
 - Merged-head P1 logic/scope code review: PASS.
 - Automated/static verification: PASS. Owner ran the required exact-head Node syntax checks and `git diff --check` on `59925b05...` and reported no errors.
 - GitHub PR #48 is open/Draft and currently reports `mergeable:true`.
+- Documentation synchronization: PASS.
 
 ## Active product behavior
 ### Standard Script — OFF/default
@@ -53,6 +55,6 @@ STATIC PASS / OWNER STANDARD THEN SEMANTIC RETEST WAITING
 - Code review: PASS.
 - Owner Standard: NOT STARTED.
 - Owner Semantic: NOT STARTED after correction.
-- Documentation synchronization: PASS once PR body points to the latest docs head.
+- Documentation synchronization: PASS.
 - P3 semantic cut/reorder: BLOCKED.
 - Merge permission for PR #48: BLOCKED.
