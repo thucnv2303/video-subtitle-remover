@@ -15,42 +15,18 @@ D016_SOURCE_STATIC_REVIEW_PASS_OWNER_STANDARD_RETEST_WAITING
 - Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
 - Prior static-tested application state: `59925b05afef7071cdd478209d4c54732b611d78`.
 - D-016 source correction: `41a4a429bfe7dfe17fbd2113f4019733656359ce`.
-- Owner underfill defect: BUG-037.
+- Regression defect: BUG-037.
 
-## Required Standard behavior
-1. Standard remains default; Semantic Remix remains opt-in.
-2. Standard first pass uses full ASR + adaptive Vision grounded reasoning.
-3. Source duration + selected voice/speed define the existing voice-aware narration budget.
-4. A first draft below the minimum must trigger one evidence-backed AI recompose BEFORE TTS.
-5. Recompose uses full transcript + accumulated Vision evidence + source duration + selected voice/speed-derived rate.
-6. AI may add grounded explanation, visible sequence and transitions when original speech is short.
-7. Filler, repetition and unsupported claims remain forbidden; invalid output fails closed.
-8. Repaired narration must enter the hard budget range before TTS.
-9. TTS remains one continuous full-text synthesis; no repeated post-TTS LLM/TTS duration loop.
-10. Semantic BUG-036 guards remain unchanged and Semantic duration follows its own strategy/beat plan.
+## Corrective contract
+Standard remains default. If its grounded first draft is below the voice-aware minimum, one evidence-backed AI recompose runs before TTS using full transcript, accumulated Vision evidence, source duration and selected voice/speed-derived rate. Repaired narration must enter the hard budget and remain grounded; filler, repetition and unsupported claims fail closed. TTS remains one continuous synthesis with no repeated post-TTS duration loop. Semantic Remix remains opt-in and keeps its own strategy/beat duration rules.
 
-## Verification completed
+## Verification
 - Execution: PASS.
-- GitHub compare proves only `src/main/p1-standard-vision-wrapper.js` changed in application source after the earlier static-tested app state; all other later changes are `.ai/` documentation.
-- Full corrected wrapper re-read from GitHub.
-- Exact corrected wrapper `node --check`: PASS (silent success in PM container).
-- PM logic/scope review for the D-016 one-file source delta: PASS.
+- GitHub compare proves D-016 changes only `src/main/p1-standard-vision-wrapper.js` in application source; later deltas are canonical docs.
+- Full corrected wrapper reviewed from GitHub: PASS logic/scope.
+- Exact corrected wrapper `node --check`: PASS.
 - Unchanged application files retain prior Owner static evidence.
-
-## Owner Standard retest — required next
-- checkout final exact PR head;
-- Semantic Remix OFF/default;
-- log `ScriptMode=standard`;
-- for severe underfill, log `Standard duration guard`;
-- exactly one evidence-backed recompose before TTS;
-- log `Standard duration guard PASS` before TTS;
-- accepted narration inside hard target without filler/repetition/unsupported claims;
-- one continuous TTS;
-- measured voice close to source duration rather than prior ~36.7%;
-- Standard v4 artifacts correct and P1->P2 gate valid.
-
-## Owner Semantic retest
-ON HOLD until Standard PASS. Then explicitly enable Semantic and verify BUG-036 strategy/beat/scene/claim guards and fresh v4 artifacts.
+- Canonical D-016/BUG-037 docs and PR metadata are synchronized; PR body is updated to the final exact head after the final docs commit.
 
 ## Gates
 - Execution: PASS.
@@ -58,6 +34,9 @@ ON HOLD until Standard PASS. Then explicitly enable Semantic and verify BUG-036 
 - Code review: PASS logic/scope.
 - Owner Standard: RETEST WAITING.
 - Owner Semantic: ON HOLD until Standard PASS.
-- Documentation synchronization: WAITING only for final PR body/head alignment.
+- Documentation synchronization: PASS.
 - P3 semantic cut/reorder: BLOCKED.
 - Merge permission: BLOCKED.
+
+## Next verification
+Owner checks out the final exact PR head and reruns Standard with Semantic Remix OFF/default. Expected regression path: `ScriptMode=standard` -> short draft triggers `Standard duration guard` -> one evidence-backed recompose -> `Standard duration guard PASS` -> one full-text TTS. Voice should be close to source duration rather than the prior ~36.7%, while narration remains grounded and natural. Semantic retest waits for Standard PASS.
