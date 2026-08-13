@@ -306,6 +306,29 @@
     chip.textContent = text;
   }
 
+  function resetResultForNewRun() {
+    state.lastAudioPath = '';
+    const audio = document.getElementById('vr-result-audio');
+    if (audio) {
+      try { audio.pause(); } catch {}
+      audio.removeAttribute('src');
+      audio.load();
+    }
+    document.getElementById('vr-output-path').textContent = '—';
+    const badge = document.getElementById('vr-result-badge');
+    badge.className = 'vr-chip working';
+    badge.textContent = 'Đang xử lý';
+    document.getElementById('vr-open-file').disabled = true;
+    document.getElementById('vr-open-folder').disabled = true;
+  }
+
+  function setResultUnavailable(kind, text) {
+    const badge = document.getElementById('vr-result-badge');
+    if (!badge) return;
+    badge.className = `vr-chip ${kind}`;
+    badge.textContent = text;
+  }
+
   function setRendering(rendering) {
     state.rendering = rendering;
     ['vr-text', 'vr-language', 'vr-chunk-size', 'vr-auto-chunk', 'vr-keep-paragraphs', 'vr-project-name'].forEach((id) => document.getElementById(id)?.toggleAttribute('disabled', rendering));
@@ -405,6 +428,7 @@
     state.stopRequested = false;
     state.completedChunkPaths = [];
     state.chunks = chunks.map((chunk) => ({ text: chunk, status: 'waiting', path: '' }));
+    resetResultForNewRun();
     renderQueue();
     setRendering(true);
     setRunStatus('working', 'Đang render');
@@ -416,6 +440,7 @@
           for (let i = index; i < state.chunks.length; i += 1) if (state.chunks[i].status === 'waiting') state.chunks[i].status = 'stopped';
           renderQueue();
           setRunStatus('warn', 'Đã dừng');
+          setResultUnavailable('warn', 'Chưa ghép');
           vrLog('Đã dừng trước khi bắt đầu chunk tiếp theo.', 'warn');
           return;
         }
@@ -439,6 +464,7 @@
 
       if (state.stopRequested) {
         setRunStatus('warn', 'Đã dừng');
+        setResultUnavailable('warn', 'Chưa ghép');
         vrLog('Render đã dừng sau chunk hiện tại; không ghép file cuối.', 'warn');
         return;
       }
@@ -461,6 +487,7 @@
       window.showToast?.('Voice Render đã hoàn tất.', 'success');
     } catch (error) {
       setRunStatus('error', 'Lỗi render');
+      setResultUnavailable('error', 'Không có output');
       vrLog(error?.message || String(error), 'error');
       window.showToast?.(error?.message || 'Voice Render thất bại.', 'error');
     } finally {
