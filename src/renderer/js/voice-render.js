@@ -237,41 +237,99 @@
     list.querySelectorAll('[data-preview-voice]').forEach((button) => button.addEventListener('click', () => previewVoice(button.dataset.previewVoice)));
   }
 
-  function chooseSplitPoint(text, maxChars, preserveParagraphs) {
-    if (text.length <= maxChars) return text.length;
-    const windowText = text.slice(0, maxChars + 1);
-    const candidates = [];
-    if (preserveParagraphs) {
-      const paragraph = Math.max(windowText.lastIndexOf('\n\n'), windowText.lastIndexOf('\r\n\r\n'));
-      if (paragraph >= Math.floor(maxChars * 0.45)) candidates.push(paragraph + 2);
+  function sentenceUnits(text) {
+    const source = String(text || '').trim();
+    if (!source) return [];
+
+    const locale = normalizeLanguage(document.getElementById('vr-language')?.value || 'vi');
+    try {
+      if (typeof Intl?.Segmenter === 'function') {
+        const segmenter = new Intl.Segmenter(locale, { granularity: 'sentence' });
+        const units = [...segmenter.segment(source)]
+          .map((entry) => String(entry.segment || '').trim())
+          .filter(Boolean);
+        if (units.length) return units;
+      }
+    } catch {}
+
+    const fallback = source.match(/[^.!?…]+(?:[.!?…]+[”"')\]]*|$)(?:\s+|$)/g) || [];
+    return fallback.map((unit) => unit.trim()).filter(Boolean);
+  }
+
+  function splitOversizedSentence(sentence, targetChars) {
+    const value = String(sentence || '').trim();
+    if (!value) return [];
+
+    // Normal sentences are allowed to exceed the UI target rather than being
+    // severed. Clause fallback is emergency-only for pathological run-on text.
+    const hardLimit = Math.max(900, Math.floor(targetChars * 2));
+    if (value.length <= hardLimit) return [value];
+
+    const parts = [];
+    let remaining = value;
+    while (remaining.length > hardLimit) {
+      const windowText = remaining.slice(0, hardLimit + 1);
+      const preferredMin = Math.floor(hardLimit * 0.55);
+      let cut = -1;
+
+      const clauseRegex = /[,;:—–][”"')\]]?\s+/g;
+      for (const match of windowText.matchAll(clauseRegex)) {
+        const candidate = match.index + match[0].length;
+        if (candidate >= preferredMin) cut = candidate;
+      }
+
+      if (cut < preferredMin) {
+        const space = windowText.lastIndexOf(' ');
+        if (space >= preferredMin) cut = space + 1;
+      }
+      if (cut < 1) cut = hardLimit;
+
+      const part = remaining.slice(0, cut).trim();
+      if (part) parts.push(part);
+      remaining = remaining.slice(cut).trimStart();
+      if (parts.length > 10000) throw new Error('Một câu tạo quá nhiều đoạn con.');
     }
-    const sentenceRegex = /[.!?…][”"')\]]?\s+/g;
-    let sentenceEnd = -1;
-    for (const match of windowText.matchAll(sentenceRegex)) sentenceEnd = match.index + match[0].length;
-    if (sentenceEnd >= Math.floor(maxChars * 0.45)) candidates.push(sentenceEnd);
-    if (preserveParagraphs) {
-      const newline = windowText.lastIndexOf('\n');
-      if (newline >= Math.floor(maxChars * 0.45)) candidates.push(newline + 1);
-    }
-    const space = windowText.lastIndexOf(' ');
-    if (space >= Math.floor(maxChars * 0.45)) candidates.push(space + 1);
-    return candidates.length ? Math.max(...candidates.filter((value) => value <= maxChars + 1)) : maxChars;
+    if (remaining.trim()) parts.push(remaining.trim());
+    return parts;
   }
 
   function splitLongText(input, maxChars, preserveParagraphs = true) {
-    const text = String(input || '').replace(/\r\n/g, '\n');
-    if (!text.trim()) return [];
+    const text = String(input || '').replace(/\r\n/g, '\n').trim();
+    if (!text) return [];
+
+    const targetChars = Math.max(120, Number(maxChars) || 450);
+    const paragraphs = preserveParagraphs
+      ? text.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean)
+      : [text.replace(/\n+/g, ' ').trim()];
     const chunks = [];
-    let cursor = 0;
-    while (cursor < text.length) {
-      const remaining = text.slice(cursor);
-      const cut = chooseSplitPoint(remaining, maxChars, preserveParagraphs);
-      const raw = remaining.slice(0, cut);
-      if (raw.trim()) chunks.push(raw.trim());
-      cursor += cut;
-      while (cursor < text.length && /[ \t]/.test(text[cursor])) cursor += 1;
-      if (chunks.length > 10000) throw new Error('Văn bản tạo quá nhiều chunk.');
-    }
+
+    const flushParagraph = (paragraph) => {
+      const sentences = sentenceUnits(paragraph);
+      let current = '';
+
+      const pushCurrent = () => {
+        if (!current.trim()) return;
+        chunks.push(current.trim());
+        current = '';
+      };
+
+      for (const sentence of sentences) {
+        const sentenceParts = splitOversizedSentence(sentence, targetChars);
+        for (const part of sentenceParts) {
+          const candidate = current ? `${current} ${part}` : part;
+          if (current && candidate.length > targetChars) {
+            pushCurrent();
+            current = part;
+          } else {
+            current = candidate;
+          }
+        }
+      }
+      pushCurrent();
+    };
+
+    paragraphs.forEach(flushParagraph);
+    if (chunks.length > 10000) throw new Error('Văn bản tạo quá nhiều chunk.');
     return chunks;
   }
 
