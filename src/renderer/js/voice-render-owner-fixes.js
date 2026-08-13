@@ -1,12 +1,21 @@
 (function () {
   'use strict';
 
-  const RATE_PROFILE_KEY = 'voice_render_rate_profiles_v1';
+  const RATE_PROFILE_KEY = 'voice_render_rate_profiles_v2';
   const PREVIEW_TEXT = 'Xin chào, đây là đoạn nghe thử nhanh của giọng đang chọn trong Voice Render.';
   const FALLBACK_WPM = { vi: 220, en: 170, ko: 210 };
   const FALLBACK_CPS = { zh: 4.2, ja: 4.5 };
+  const BUILTIN_PROFILES = {
+    default: { prosody: 'Tự nhiên · Ổn định', speedFactor: 1.00 },
+    'vi-VN-HoaiMyNeural': { prosody: 'Mềm · Bình tĩnh', speedFactor: 0.94 },
+    'vi-VN-NamMinhNeural': { prosody: 'Rõ · Dứt khoát', speedFactor: 1.06 },
+    'en-US-JennyNeural': { prosody: 'Sáng · Nhanh', speedFactor: 1.10 },
+    'en-US-GuyNeural': { prosody: 'Trầm · Chậm', speedFactor: 0.90 },
+  };
+
   let pendingPreviewVoiceId = null;
   let pendingRunSnapshot = null;
+  let pendingCloneProfile = null;
 
   function setStatus(id, text, ok, title) {
     const el = document.getElementById(id);
@@ -25,17 +34,18 @@
     return String(text || '').replace(/\s+/g, '').length;
   }
 
-  function readRateProfiles() {
+  function readSavedVoices() {
     try {
-      const value = JSON.parse(localStorage.getItem(RATE_PROFILE_KEY) || '{}');
-      return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      const voices = JSON.parse(localStorage.getItem('tts_voices') || '[]');
+      return Array.isArray(voices) ? voices : [];
     } catch {
-      return {};
+      return [];
     }
   }
 
-  function profileKey(voiceId, language) {
-    return `${voiceId || 'default'}|${language || 'vi'}`;
+  function writeSavedVoices(voices) {
+    localStorage.setItem('tts_voices', JSON.stringify(voices));
+    window.dispatchEvent(new CustomEvent('tts-voices-updated', { detail: { source: 'voice-profile-fix' } }));
   }
 
   function selectedVoiceId() {
@@ -44,6 +54,34 @@
 
   function selectedLanguage() {
     return document.getElementById('vr-language')?.value || 'vi';
+  }
+
+  function getVoiceProfile(voiceId) {
+    if (BUILTIN_PROFILES[voiceId]) return { ...BUILTIN_PROFILES[voiceId] };
+    if (String(voiceId || '').startsWith('clone:')) {
+      const index = Number(String(voiceId).split(':')[1]);
+      const voice = readSavedVoices()[index];
+      if (voice) {
+        return {
+          prosody: voice.prosody || voice.tone || 'Tự nhiên · Cá nhân',
+          speedFactor: Number.isFinite(Number(voice.speedFactor)) ? Number(voice.speedFactor) : 1,
+        };
+      }
+    }
+    return { prosody: 'Tự nhiên', speedFactor: 1 };
+  }
+
+  function profileKey(voiceId, language) {
+    return `${voiceId || 'default'}|${language || 'vi'}`;
+  }
+
+  function readRateProfiles() {
+    try {
+      const value = JSON.parse(localStorage.getItem(RATE_PROFILE_KEY) || '{}');
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    } catch {
+      return {};
+    }
   }
 
   function recordRateSample(voiceId, language, text, durationSeconds, source) {
@@ -55,7 +93,7 @@
     const profiles = readRateProfiles();
     const key = profileKey(voiceId, language);
     const current = profiles[key] || { words: 0, chars: 0, seconds: 0, samples: 0 };
-    const maxAccumulatedSeconds = 60 * 60;
+    const maxAccumulatedSeconds = 3600;
     let carry = 1;
     if (Number(current.seconds || 0) + seconds > maxAccumulatedSeconds && Number(current.seconds || 0) > 0) {
       carry = Math.max(0.25, (maxAccumulatedSeconds - seconds) / Number(current.seconds));
@@ -70,9 +108,6 @@
       updated_at: new Date().toISOString(),
     };
     localStorage.setItem(RATE_PROFILE_KEY, JSON.stringify(profiles));
-
-    const wpm = words ? Math.round((words / seconds) * 60) : null;
-    console.info(`[Voice Render] learned rate ${voiceId}/${language}: ${wpm ? `${wpm} WPM` : `${(chars / seconds).toFixed(2)} char/s`} from ${source || 'runtime'}`);
     updateAdaptiveEstimate();
   }
 
@@ -86,27 +121,24 @@
       const observedSeconds = Number(profile.seconds);
       const observedWords = Number(profile.words || 0);
       const observedChars = Number(profile.chars || 0);
-      let seconds = 0;
-      let rateLabel = '';
-
       if (observedWords >= 20 && words > 0) {
         const wordsPerSecond = observedWords / observedSeconds;
-        seconds = words / wordsPerSecond;
-        rateLabel = `${Math.round(wordsPerSecond * 60)} WPM`;
-      } else if (observedChars > 0 && chars > 0) {
-        const charsPerSecond = observedChars / observedSeconds;
-        seconds = chars / charsPerSecond;
-        rateLabel = `${charsPerSecond.toFixed(2)} ký tự/s`;
+        return { seconds: words / wordsPerSecond, learned: true, rateLabel: `${Math.round(wordsPerSecond * 60)} WPM đã đo` };
       }
-      if (Number.isFinite(seconds) && seconds > 0) return { seconds, learned: true, rateLabel };
+      if (observedChars > 0 && chars > 0) {
+        const charsPerSecond = observedChars / observedSeconds;
+        return { seconds: chars / charsPerSecond, learned: true, rateLabel: `${charsPerSecond.toFixed(2)} ký tự/s đã đo` };
+      }
     }
 
+    const voiceProfile = getVoiceProfile(voiceId);
+    const speedFactor = Math.max(0.75, Math.min(1.25, Number(voiceProfile.speedFactor) || 1));
     if (language === 'zh' || language === 'ja') {
-      const cps = FALLBACK_CPS[language] || 4.2;
-      return { seconds: chars / cps, learned: false, rateLabel: `${cps} ký tự/s mặc định` };
+      const cps = (FALLBACK_CPS[language] || 4.2) * speedFactor;
+      return { seconds: chars / cps, learned: false, rateLabel: `${cps.toFixed(2)} ký tự/s theo profile ${speedFactor.toFixed(2)}x` };
     }
-    const wpm = FALLBACK_WPM[language] || 200;
-    return { seconds: (words / wpm) * 60, learned: false, rateLabel: `${wpm} WPM mặc định` };
+    const wpm = (FALLBACK_WPM[language] || 200) * speedFactor;
+    return { seconds: (words / wpm) * 60, learned: false, rateLabel: `${Math.round(wpm)} WPM theo profile ${speedFactor.toFixed(2)}x` };
   }
 
   function formatDuration(seconds) {
@@ -123,44 +155,134 @@
     const voiceId = selectedVoiceId();
     const language = selectedLanguage();
     const estimate = estimateSeconds(text, voiceId, language);
+    const voiceProfile = getVoiceProfile(voiceId);
     target.textContent = formatDuration(estimate.seconds);
     const voiceName = document.getElementById('vr-selected-voice-name')?.textContent || voiceId;
-    target.title = estimate.learned
-      ? `Ước tính theo tốc độ đã đo của ${voiceName}: ${estimate.rateLabel}`
-      : `Chưa có dữ liệu tốc độ của ${voiceName}; đang dùng ${estimate.rateLabel}. Nghe thử hoặc render để tự hiệu chỉnh.`;
-    target.dataset.rateSource = estimate.learned ? 'learned' : 'fallback';
+    target.title = `${voiceName} · ${voiceProfile.prosody} · ${voiceProfile.speedFactor.toFixed(2)}x · ${estimate.rateLabel}`;
+    target.dataset.rateSource = estimate.learned ? 'learned' : 'profile';
   }
 
   function calibrateAudioFile(audioPath, voiceId, language, text, source) {
     if (!audioPath) return;
     const audio = new Audio(`file:///${String(audioPath).replace(/\\/g, '/')}`);
     audio.preload = 'metadata';
-    const cleanup = () => {
-      audio.removeEventListener('loadedmetadata', onLoaded);
-      audio.removeEventListener('error', cleanup);
-    };
     const onLoaded = () => {
       if (Number.isFinite(audio.duration) && audio.duration > 0) {
         recordRateSample(voiceId, language, text, audio.duration, source);
       }
-      cleanup();
     };
     audio.addEventListener('loadedmetadata', onLoaded, { once: true });
-    audio.addEventListener('error', cleanup, { once: true });
     audio.load();
   }
 
-  function installTtsCalibration() {
-    if (!window.api?.post || window.api.post.__voiceRenderRateWrapped) return;
+  async function applyProfileTempo(audioPath, voiceId) {
+    const profile = getVoiceProfile(voiceId);
+    const factor = Math.max(0.75, Math.min(1.25, Number(profile.speedFactor) || 1));
+    if (!window.electronAPI?.applyVoiceTempo || Math.abs(factor - 1) < 0.005) return audioPath;
+    const result = await window.electronAPI.applyVoiceTempo(audioPath, factor);
+    if (!result?.ok || !result.output_path) throw new Error(result?.error || 'Không áp được tốc độ voice.');
+    return result.output_path;
+  }
+
+  function decorateVoiceRows() {
+    document.querySelectorAll('[data-voice-row]').forEach((row) => {
+      const id = row.getAttribute('data-voice-row');
+      const copy = row.querySelector('.vr-voice-copy small');
+      if (!copy || !id) return;
+      const profile = getVoiceProfile(id);
+      const base = copy.textContent.split(' · Nhịp ')[0];
+      copy.textContent = `${base} · Nhịp ${profile.prosody} · ${profile.speedFactor.toFixed(2)}x`;
+    });
+  }
+
+  function installCloneProfileControls() {
+    const note = document.getElementById('vr-clone-note');
+    if (!note || document.getElementById('vr-clone-prosody')) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'vr-two-col';
+    wrapper.innerHTML = `
+      <label class="vr-field"><span>Ngữ điệu</span><select id="vr-clone-prosody"><option>Tự nhiên · Ấm</option><option>Tự nhiên · Sáng</option><option>Rõ · Dứt khoát</option><option>Mềm · Bình tĩnh</option><option>Trầm · Chậm rãi</option><option>Nhanh · Năng lượng</option></select></label>
+      <label class="vr-field"><span>Tốc độ riêng <b id="vr-clone-speed-label">1.00x</b></span><input id="vr-clone-speed" type="range" min="0.80" max="1.20" step="0.02" value="1.00"></label>`;
+    note.closest('.vr-field')?.before(wrapper);
+    const slider = document.getElementById('vr-clone-speed');
+    slider?.addEventListener('input', () => {
+      const label = document.getElementById('vr-clone-speed-label');
+      if (label) label.textContent = `${Number(slider.value).toFixed(2)}x`;
+    });
+  }
+
+  function profileIsDuplicate(prosody, speedFactor) {
+    const factor = Number(speedFactor);
+    const builtins = Object.values(BUILTIN_PROFILES);
+    const clones = readSavedVoices().map((voice) => ({ prosody: voice.prosody || voice.tone || '', speedFactor: Number(voice.speedFactor || 1) }));
+    return [...builtins, ...clones].some((profile) => profile.prosody === prosody && Math.abs(Number(profile.speedFactor) - factor) < 0.005);
+  }
+
+  function installSharedVoiceCreationGuard() {
+    document.addEventListener('click', (event) => {
+      const settingsAdd = event.target?.closest?.('#settings-add-voice');
+      if (settingsAdd) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        document.getElementById('nav-voice-render')?.click();
+        setTimeout(() => document.getElementById('vr-open-clone')?.click(), 50);
+        window.showToast?.('Tạo voice mới tại Voice Render để lưu đủ ngữ điệu và tốc độ.', 'info');
+        return;
+      }
+
+      const saveClone = event.target?.closest?.('#vr-save-clone');
+      if (!saveClone) return;
+      const name = document.getElementById('vr-clone-name')?.value.trim() || '';
+      const prosody = document.getElementById('vr-clone-prosody')?.value || 'Tự nhiên · Ấm';
+      const speedFactor = Number(document.getElementById('vr-clone-speed')?.value || 1);
+      const duplicateName = readSavedVoices().some((voice) => String(voice.name || '').trim().toLowerCase() === name.toLowerCase());
+      if (duplicateName || profileIsDuplicate(prosody, speedFactor)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.showToast?.(duplicateName ? 'Tên voice đã tồn tại.' : 'Profile ngữ điệu + tốc độ đã trùng voice khác. Hãy chọn profile riêng.', 'warning');
+        return;
+      }
+      pendingCloneProfile = { name, prosody, speedFactor };
+      setTimeout(() => {
+        if (!pendingCloneProfile) return;
+        const voices = readSavedVoices();
+        const index = voices.findIndex((voice) => String(voice.name || '').trim() === pendingCloneProfile.name);
+        if (index >= 0) {
+          voices[index] = { ...voices[index], prosody: pendingCloneProfile.prosody, tone: pendingCloneProfile.prosody, speedFactor: pendingCloneProfile.speedFactor };
+          writeSavedVoices(voices);
+        }
+        pendingCloneProfile = null;
+        decorateVoiceRows();
+        updateAdaptiveEstimate();
+      }, 0);
+    }, true);
+  }
+
+  function installTtsCalibrationAndTempo() {
+    if (!window.api?.post || window.api.post.__voiceRenderProfileWrapped) return;
     const originalPost = window.api.post.bind(window.api);
     const wrapped = async (endpoint, payload, ...rest) => {
-      const result = await originalPost(endpoint, payload, ...rest);
-      if (endpoint === '/api/tts/generate' && result?.status === 'ok' && result.audio_path && payload?.text === PREVIEW_TEXT && pendingPreviewVoiceId) {
-        calibrateAudioFile(result.audio_path, pendingPreviewVoiceId, payload.language || selectedLanguage(), payload.text, 'preview');
+      let result = await originalPost(endpoint, payload, ...rest);
+      if (endpoint !== '/api/tts/generate' || result?.status !== 'ok' || !result.audio_path) return result;
+
+      let voiceId = null;
+      let source = null;
+      if (payload?.text === PREVIEW_TEXT && pendingPreviewVoiceId) {
+        voiceId = pendingPreviewVoiceId;
+        source = 'preview';
+      } else if (payload?.output_path && pendingRunSnapshot) {
+        voiceId = pendingRunSnapshot.voiceId;
+        source = 'chunk-render';
+      }
+
+      if (voiceId) {
+        const processedPath = await applyProfileTempo(result.audio_path, voiceId);
+        result = { ...result, audio_path: processedPath };
+        if (source === 'preview') calibrateAudioFile(processedPath, voiceId, payload.language || selectedLanguage(), payload.text, source);
       }
       return result;
     };
-    wrapped.__voiceRenderRateWrapped = true;
+    wrapped.__voiceRenderProfileWrapped = true;
     window.api.post = wrapped;
 
     document.addEventListener('click', (event) => {
@@ -176,20 +298,15 @@
         };
       }
 
-      const selectVoice = event.target?.closest?.('[data-select-voice]');
-      if (selectVoice) setTimeout(updateAdaptiveEstimate, 0);
+      if (event.target?.closest?.('[data-select-voice]')) {
+        setTimeout(() => { decorateVoiceRows(); updateAdaptiveEstimate(); }, 0);
+      }
     }, true);
 
     const resultAudio = document.getElementById('vr-result-audio');
     resultAudio?.addEventListener('loadedmetadata', () => {
       if (!pendingRunSnapshot || !Number.isFinite(resultAudio.duration) || resultAudio.duration <= 0) return;
-      recordRateSample(
-        pendingRunSnapshot.voiceId,
-        pendingRunSnapshot.language,
-        pendingRunSnapshot.text,
-        resultAudio.duration,
-        'full-render'
-      );
+      recordRateSample(pendingRunSnapshot.voiceId, pendingRunSnapshot.language, pendingRunSnapshot.text, resultAudio.duration, 'full-render');
       pendingRunSnapshot = null;
     });
 
@@ -198,67 +315,48 @@
       el?.addEventListener('input', () => setTimeout(updateAdaptiveEstimate, 0));
       el?.addEventListener('change', () => setTimeout(updateAdaptiveEstimate, 0));
     });
-    window.addEventListener('tts-voices-updated', () => setTimeout(updateAdaptiveEstimate, 0));
-    setTimeout(updateAdaptiveEstimate, 0);
+    window.addEventListener('tts-voices-updated', () => setTimeout(() => { decorateVoiceRows(); updateAdaptiveEstimate(); }, 0));
+    setTimeout(() => { decorateVoiceRows(); updateAdaptiveEstimate(); }, 0);
   }
 
   async function refreshOwnerStatus() {
     if (!document.getElementById('global-app-status')) return;
-
     let backendOk = false;
     let ttsOk = false;
-
     try {
       await window.api?.health?.();
       backendOk = true;
       setStatus('global-status-backend', 'Sẵn sàng', true);
-    } catch {
-      setStatus('global-status-backend', 'Mất kết nối', false);
-    }
-
+    } catch { setStatus('global-status-backend', 'Mất kết nối', false); }
     try {
       const tts = await window.api?.getTTSStatus?.();
       ttsOk = !!tts?.available;
       setStatus('global-status-tts', ttsOk ? (tts.model_loaded ? 'Đã nạp' : 'Sẵn sàng') : 'Chưa sẵn sàng', ttsOk);
-    } catch {
-      setStatus('global-status-tts', 'Không khả dụng', false);
-    }
-
+    } catch { setStatus('global-status-tts', 'Không khả dụng', false); }
     try {
       const gpu = await window.api?.gpuInfo?.();
       const name = gpu?.gpu_name || gpu?.name || 'Không khả dụng';
       const available = gpu?.gpu_available ?? gpu?.cuda_available;
       const vram = gpu?.vram_total ? ` · ${gpu.vram_total}` : '';
       setStatus('global-status-gpu', `${name}${vram}`, available === true ? true : available === false ? false : undefined, name);
-    } catch {
-      setStatus('global-status-gpu', 'Không khả dụng', undefined);
-    }
-
+    } catch { setStatus('global-status-gpu', 'Không khả dụng', undefined); }
     try {
       const info = await window.electronAPI?.getSystemInfo?.();
       const cpuPct = Number.isFinite(info?.cpu_usage_percent) ? `${Math.round(info.cpu_usage_percent)}%` : '—';
       const cpuTitle = info?.cpu_model ? `${info.cpu_model} · ${info.logical_cores || '—'} luồng` : '';
       setStatus('global-status-cpu', cpuPct, Number.isFinite(info?.cpu_usage_percent) ? true : undefined, cpuTitle);
-
       if (info?.total_memory_bytes) {
         const used = Number(info.used_memory_bytes ?? (info.total_memory_bytes - info.free_memory_bytes));
         const total = Number(info.total_memory_bytes);
-        const ramPct = Number.isFinite(info?.memory_usage_percent)
-          ? `${Math.round(info.memory_usage_percent)}%`
-          : `${Math.round((used / total) * 100)}%`;
+        const ramPct = Number.isFinite(info?.memory_usage_percent) ? `${Math.round(info.memory_usage_percent)}%` : `${Math.round((used / total) * 100)}%`;
         setStatus('global-status-ram', ramPct, true, `${(used / 1073741824).toFixed(1)} / ${(total / 1073741824).toFixed(1)} GB`);
-      } else {
-        setStatus('global-status-ram', 'Không khả dụng', undefined);
-      }
-
-      const version = `VSR ${info?.app_version ? `v${info.app_version}` : ''} · Electron ${info?.electron_version || '—'}`;
-      setStatus('global-status-version', version, true);
+      } else setStatus('global-status-ram', 'Không khả dụng', undefined);
+      setStatus('global-status-version', `VSR ${info?.app_version ? `v${info.app_version}` : ''} · Electron ${info?.electron_version || '—'}`, true);
     } catch (error) {
       setStatus('global-status-cpu', 'Không khả dụng', undefined);
       setStatus('global-status-ram', 'Không khả dụng', undefined);
       console.error('[Voice Render] system-info bridge failed:', error?.message || error);
     }
-
     const overall = document.getElementById('global-status-overall');
     if (overall) {
       overall.textContent = backendOk && ttsOk ? 'Hoạt động tốt' : backendOk ? 'Cần kiểm tra TTS' : 'Backend offline';
@@ -271,10 +369,10 @@
     if (!button || button.dataset.ownerDiagnosticsBound === 'true') return;
     button.dataset.ownerDiagnosticsBound = 'true';
     button.addEventListener('click', () => {
-      const bridgeOk = !!(window.electronAPI?.saveFile && window.electronAPI?.mergeWavFiles);
+      const bridgeOk = !!(window.electronAPI?.saveFile && window.electronAPI?.mergeWavFiles && window.electronAPI?.applyVoiceTempo);
       if (!bridgeOk) {
-        console.error('[Voice Render] render bridge missing: saveFile/mergeWavFiles unavailable');
-        window.showToast?.('Bridge lưu/ghép Voice Render chưa sẵn sàng. Xem log PowerShell.', 'error');
+        console.error('[Voice Render] render bridge missing: saveFile/mergeWavFiles/applyVoiceTempo unavailable');
+        window.showToast?.('Bridge Voice Render chưa sẵn sàng. Xem log PowerShell.', 'error');
       }
     }, true);
   }
@@ -283,9 +381,11 @@
     const timer = setInterval(() => {
       if (!document.getElementById('global-app-status')) return;
       clearInterval(timer);
+      installCloneProfileControls();
+      installSharedVoiceCreationGuard();
       refreshOwnerStatus();
       installRenderDiagnostics();
-      installTtsCalibration();
+      installTtsCalibrationAndTempo();
       document.getElementById('global-status-refresh')?.addEventListener('click', refreshOwnerStatus);
       setInterval(refreshOwnerStatus, 10000);
     }, 100);
