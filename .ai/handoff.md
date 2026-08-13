@@ -4,37 +4,47 @@
 `PIPELINE1-SEMANTIC-REMIX-007 — Optional Semantic Remix with Standard Script Default`
 
 ## Status
-D-016 SOURCE/STATIC REVIEW PASS / OWNER STANDARD RETEST WAITING
+STANDARD QUALITY-RETRY CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING
 
 ## Review basis
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
 - Draft PR: #48.
 - Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
-- Prior static-tested application state: `59925b05afef7071cdd478209d4c54732b611d78`.
-- D-016 Standard duration source: `41a4a429bfe7dfe17fbd2113f4019733656359ce`.
-- Owner regression defect: BUG-037.
+- Failed Owner-tested head: `cf31b4891d141084666c81f9324d622a51f70986`.
+- New source correction: `0fb72b4f421891a20b6574564f90886f6a108356`.
 
-## Corrective behavior
-Standard severe underfill now triggers one evidence-backed AI recompose before TTS using full transcript + accumulated Vision evidence + source duration + selected voice/speed-derived rate. Repaired narration must enter hard budget and remain grounded; filler/repetition/unsupported claims fail closed. TTS remains one continuous synthesis and there is no repeated post-TTS LLM/TTS duration loop. Semantic duration remains tied to its validated strategy/beat plan.
+## Owner runtime evidence
+Standard/default OFF reached the new duration guard correctly: ~97.57s source, 1529-1610 target, initial narration 721 chars. First evidence-fit candidate failed quality and the retry also failed with repeated sentence/long phrase errors. No TTS request occurred.
+
+## Root cause
+The old retry started again from the original short narration even after a parsed expanded candidate had been rejected by deterministic quality checks. The useful near-target candidate was therefore lost.
+
+## Published correction
+The Standard wrapper now performs the bounded pre-TTS recompose itself so candidate state is explicit:
+- first attempt expands the original short narration from full transcript + Vision evidence;
+- a rejected parsed candidate is retained;
+- the one retry edits that rejected candidate instead of restarting from the short draft;
+- retry is instructed to remove repeats/near-duplicates/duplicate CTA while preferring unused grounded evidence;
+- hard target and deterministic quality gates remain strict;
+- TTS remains blocked until PASS;
+- cancellation remains wired through the Standard cancel IPC;
+- Semantic path is unchanged.
 
 ## Verification evidence
-- GitHub compare from `59925b05...` proves only `src/main/p1-standard-vision-wrapper.js` changed in application source for D-016; later changes are canonical documentation.
-- Complete corrected wrapper re-read from GitHub.
-- Exact corrected wrapper passed `node --check` with silent success in PM container.
-- PM code review: PASS logic/scope for the bounded D-016 delta.
-- Unchanged application files retain prior Owner static evidence.
-- D-016/BUG-037 are synchronized across canonical decisions/bugs/architecture/API/task spec/QA/dynamic docs and PR metadata; PR body is updated to the final exact docs head after the last docs commit.
+- Compare `cf31b489... -> 0fb72b4f...`: exactly one source file changed, `src/main/p1-standard-vision-wrapper.js`.
+- PM inspected GitHub full file and commit diff.
+- Exact syntax check is still WAITING because the PM container cannot resolve GitHub raw hosts.
 
 ## Gates
-- Execution: PASS.
-- Automated/static for current application source: PASS.
-- Code review: PASS logic/scope.
-- Owner Standard: RETEST WAITING.
-- Owner Semantic: ON HOLD until Standard PASS.
-- Documentation synchronization: PASS.
+- Execution: PASS for publication.
+- Automated/static: WAITING.
+- Code review: PASS logic/scope, subject to static syntax confirmation.
+- Owner Standard: FAIL on old head; corrected retest WAITING.
+- Owner Semantic: ON HOLD.
+- Documentation synchronization: PASS once PR body is aligned to the final docs head.
 - P3 semantic cut/reorder: BLOCKED.
 - Merge: BLOCKED.
 
 ## Next action
-Owner reruns Standard/default OFF on the final exact PR head and verifies: `Standard duration guard` -> one evidence-backed recompose -> `Standard duration guard PASS` -> one full-text TTS, with voice close to source duration and narration grounded/natural. Semantic retest remains blocked until Standard PASS.
+Align PR metadata to final head. Owner then fetches that exact head, runs `node --check src/main/p1-standard-vision-wrapper.js`, and if silent/PASS reruns Standard/default OFF. If first recompose is rejected, log must show the retry preserving/editing the rejected candidate before a `Standard duration guard PASS` and the single TTS request.
