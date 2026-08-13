@@ -20,26 +20,6 @@ async function cancelAnyP1Vision(payload) {
   return { ok: true, cancelled: false };
 }
 
-function getLocalSystemInfo() {
-  const cpus = os.cpus() || [];
-  const totalMemory = os.totalmem();
-  const freeMemory = os.freemem();
-  let appVersion = '';
-  try {
-    appVersion = require('../../package.json')?.version || '';
-  } catch {}
-  return {
-    platform: os.platform(),
-    release: os.release(),
-    cpu_model: cpus[0]?.model || '',
-    logical_cores: cpus.length,
-    total_memory_bytes: totalMemory,
-    free_memory_bytes: freeMemory,
-    app_version: appVersion,
-    electron_version: process.versions.electron || '',
-  };
-}
-
 function escapeConcatPath(filePath) {
   return String(filePath).replace(/\\/g, '/').replace(/'/g, "\\'");
 }
@@ -119,7 +99,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPathForFile: (file) => webUtils.getPathForFile(file),
   openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
-  getSystemInfo: () => getLocalSystemInfo(),
+  getSystemInfo: () => ipcRenderer.invoke('app:systemInfo'),
   mergeWavFiles: (inputPaths, outputPath) => mergeWavFiles(inputPaths, outputPath),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
