@@ -94,10 +94,6 @@
         language: `${baseLanguage}|vsr-speed=${requestedSpeed.toFixed(2)}`,
       };
 
-      // The older owner-fix wrapper performs FFmpeg atempo by re-reading the
-      // clone's localStorage speed after the request completes. Temporarily
-      // neutralize that one value while the wrapped request is in flight so
-      // native OmniVoice speed is the only speed transform applied.
       const originalSpeed = match.voice?.speedFactor;
       match.voices[match.index] = { ...match.voice, speedFactor: 1 };
       localStorage.setItem('tts_voices', JSON.stringify(match.voices));
@@ -141,6 +137,10 @@
   function install() {
     resetSyntheticLegacySpeeds();
     markNewCloneSpeedsExplicit();
+    window.addEventListener('tts-voices-updated', (event) => {
+      if (event?.detail?.source === 'voice-render-legacy-speed-neutralized') return;
+      setTimeout(resetSyntheticLegacySpeeds, 0);
+    });
 
     let attempts = 0;
     const timer = setInterval(() => {
