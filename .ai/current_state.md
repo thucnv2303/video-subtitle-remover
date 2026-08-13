@@ -9,42 +9,40 @@ PIPELINE1-SEMANTIC-REMIX-007 — STANDARD QUALITY-RETRY CORRECTION PUBLISHED / S
 - Active Draft PR: #48.
 - Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
 - Failed Owner-tested head: `cf31b4891d141084666c81f9324d622a51f70986`.
-- Quality-retry correction source commit: `0fb72b4f421891a20b6574564f90886f6a108356`.
+- Quality-retry source commit: `0fb72b4f421891a20b6574564f90886f6a108356`.
 
 ## Fresh Owner runtime evidence
-Standard/default OFF on `cf31b489...` reached the D-016 duration guard correctly for a ~97.57s source. First narration was 721 chars against a 1529-1610 char budget. Evidence-fit ran before TTS, but the first fit candidate failed quality and the retry also failed with `REPEATED_SENTENCE` and `REPEATED_LONG_PHRASE`. TTS was never reached.
+Standard/default OFF on `cf31b489...` reached D-016 correctly: ~97.57s source, 1529-1610 char budget, 721-char first draft, pre-TTS recompose triggered. Both evidence-fit attempts failed quality; final error was `REPEATED_SENTENCE` + `REPEATED_LONG_PHRASE`. TTS was not reached.
 
 ## Verified root cause
-The previous evidence-fit loop discarded a parsed rejected candidate and rebuilt retry input from the original short narration. That lost useful grounded expansion and encouraged another padded/repetitive rewrite. The deterministic quality gate itself is correct and remains strict.
+The prior evidence-fit retry discarded a parsed rejected expanded candidate and restarted from the original short draft. This lost useful grounded expansion. The deterministic quality gate itself behaved correctly and remains strict.
 
 ## Published correction
-`src/main/p1-standard-vision-wrapper.js` now owns the bounded Standard pre-TTS recompose retry so it can preserve the rejected candidate explicitly.
-
-Required behavior:
-- first attempt expands the short draft using full transcript + Vision evidence;
-- if a parsed candidate fails hard length or narration quality, that rejected candidate becomes the retry input;
-- retry edits the rejected candidate instead of restarting from the original short draft;
-- retry is instructed to remove repeated sentences, repeated long phrases, near-duplicate phrasing and duplicate CTA/conclusion while using unused grounded evidence;
-- hard 95-100% voice-aware character range remains mandatory for this Standard pre-TTS guard;
-- existing CJK/repetition quality checks remain mandatory;
-- TTS remains blocked until narration passes; no post-TTS duration loop is introduced;
-- Semantic mode is unchanged.
+`src/main/p1-standard-vision-wrapper.js` now keeps Standard pre-TTS retry state explicitly:
+- first attempt expands the short draft using full transcript + accumulated Vision evidence;
+- a parsed candidate rejected for hard length or narration quality is retained;
+- the single retry edits that rejected candidate rather than restarting from the original short draft;
+- retry removes repeated sentences/long phrases/near-duplicates/duplicate CTA and prefers unused grounded evidence;
+- hard 95-100% voice-aware character range and deterministic CJK/repetition checks remain mandatory;
+- TTS stays blocked until narration passes;
+- no post-TTS duration loop is added;
+- Semantic/P2/P3/TTS-engine behavior is unchanged.
 
 ## Verification evidence
 - GitHub compare `cf31b489... -> 0fb72b4f...` changes exactly one application file: `src/main/p1-standard-vision-wrapper.js`.
-- PM inspected the published commit diff and full file from GitHub.
-- PM container cannot resolve `raw.githubusercontent.com`, so exact new-head `node --check` is still WAITING and must be run in the Owner checkout before runtime retest.
-- No P2/P3/TTS-engine/dependency change.
+- PM reviewed the published full file/diff from GitHub: logic/scope PASS.
+- PM container cannot resolve GitHub raw hosts, so exact new-head `node --check` could not be executed there.
+- BUG-037 and `qa_checklist.md` are synchronized to the fresh Owner failure and the new correction.
 
 ## Gates
 - Execution: PASS for source publication.
-- Automated/static: WAITING on exact new head.
-- Code review: PASS logic/scope for the one-file correction, subject to static syntax confirmation.
-- Owner Standard runtime: FAIL on `cf31b489...`; RETEST WAITING on new head after static PASS.
+- Automated/static: WAITING on exact final head.
+- Code review: PASS logic/scope, subject to static syntax confirmation.
+- Owner Standard runtime: FAIL on old head; corrected retest WAITING after static PASS.
 - Owner Semantic runtime: ON HOLD until Standard PASS.
-- Documentation synchronization: IN PROGRESS until task_current/handoff/PR body point to final docs head.
+- Documentation synchronization: PASS.
 - P3 semantic cut/reorder: BLOCKED.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Finish canonical/PR synchronization, then Owner fetches the final head and runs `node --check src/main/p1-standard-vision-wrapper.js`. If static PASS, rerun Standard/default OFF. Expected correction evidence: first `Standard duration recompose` candidate may be rejected, then `Standard duration quality retry` must report that it is editing the rejected candidate rather than the original short draft, followed by `Standard duration guard PASS` and one full-text TTS.
+Owner fetches the final PR head, confirms `git rev-parse HEAD`, runs `node --check src/main/p1-standard-vision-wrapper.js` and `git diff --check cf31b4891d141084666c81f9324d622a51f70986..HEAD`. If static PASS, rerun Standard/default OFF. If first recompose is rejected, log must show retry editing the rejected candidate before `Standard duration guard PASS` and the single full-text TTS request.
