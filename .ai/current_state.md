@@ -1,49 +1,52 @@
 # Current State
 
 ## Status
-PIPELINE1-SEMANTIC-REMIX-007 — STANDARD DURATION CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING
+PIPELINE1-SEMANTIC-REMIX-007 — D-016 SOURCE/STATIC REVIEW PASS / OWNER STANDARD RETEST WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Active review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
 - Active Draft PR: #48.
 - Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
-- Prior stable docs/application head before latest correction: `7eaa0d58b82eb93b23a29d79bc784b085f351aea`.
-- Standard duration correction source commit: `41a4a429bfe7dfe17fbd2113f4019733656359ce`.
-- Decision sync commit: `57b0b6819e482d727487fd0d7460043c618b8a4b`.
+- Prior static-tested application state: `59925b05afef7071cdd478209d4c54732b611d78`.
+- D-016 Standard duration source correction: `41a4a429bfe7dfe17fbd2113f4019733656359ce`.
+- BUG-037 records the Owner Standard underfill failure.
 
 ## Owner runtime finding
-On Standard/default mode the app completed successfully but produced only ~35.82s voice for a ~97.57s source (~36.7%) even though the existing Standard narration budget was 1529-1610 chars. First-pass AI narration was only ~612 chars. P1 then accepted that narration and opened P2.
+Standard/default OFF completed technically but accepted ~612 chars and generated ~35.82s voice for ~97.57s source (~36.7%) despite a ~1529–1610 char voice-aware budget.
 
 ## Verified root cause
-The isolated Standard reasoning implementation computed a voice-aware near-source narration budget, but the final draft validator allowed any non-empty narration below the max. Therefore a severely short narration could bypass duration intent and reach TTS.
+Standard reasoning computed the appropriate voice-aware budget but allowed a severely short non-empty draft to pass directly to TTS.
 
-## Owner product decision
-A short source transcript is not a reason for a short Standard narration. P1 has full transcript + Vision evidence + source duration + selected voice/speed characteristics and must use them to compose enough grounded narration before TTS.
+## D-016 corrective behavior
+- Standard first pass remains full ASR + adaptive Vision grounded reasoning.
+- If narration is below the existing minimum voice-aware budget, run one evidence-backed AI recompose BEFORE TTS.
+- Recompose uses full transcript + accumulated Vision evidence + source duration + selected voice/speed-derived rate.
+- Grounded expansion of explanation/sequence/transitions is allowed; filler, repetition and unsupported claims remain forbidden.
+- Repaired narration must enter the hard budget range or fail closed.
+- TTS remains one continuous synthesis after narration acceptance; no repeated post-TTS LLM/TTS duration loop is introduced.
+- Semantic mode remains governed by its own validated strategy/beat duration, not original-source occupancy.
 
-Current required Standard behavior:
-- first pass remains grounded multimodal reasoning;
-- if narration is below the existing 95-100% voice-aware character budget, run one evidence-backed AI recompose before TTS;
-- recompose uses full transcript + accumulated Vision evidence + source duration + selected voice/speed-derived speaking rate;
-- filler/repetition/unsupported claims remain forbidden and fail closed;
-- TTS starts only after the pre-TTS narration duration/quality guard passes;
-- no second TTS pass is introduced by this correction.
+## Verification evidence
+- GitHub compare from prior static-tested app state `59925b05...` through the D-016 source correction proves the only application-source change is `src/main/p1-standard-vision-wrapper.js`; intervening/later changes are canonical documentation.
+- PM re-read the complete corrected wrapper from GitHub.
+- Exact corrected wrapper content passed `node --check` with silent success in the PM container.
+- Logic/scope review of the bounded one-file D-016 source delta: PASS.
+- Unchanged application files retain the earlier Owner static evidence because GitHub compare proves they did not change.
+- GitHub CI/status is not configured; absence of CI is not treated as independent PASS evidence.
 
-## Source publication / review
-- Compare `7eaa0d58... -> 41a4a429...` changes exactly one application file: `src/main/p1-standard-vision-wrapper.js` (+154/-7).
-- PM re-read the full exact-head wrapper after publication.
-- Logic/scope review: PASS for the bounded correction only; not release PASS.
-- PR #48 remains open/Draft. Latest GitHub recomputation currently reports `mergeable:false`; must be rechecked/resolved before any merge.
+## Canonical synchronization
+D-016 is now represented in `decisions.md`, `bugs.md`, `architecture.md`, `api_contracts.md`, the active task spec, `qa_checklist.md`, and the three dynamic state files. PR #48 body must point to the final exact docs head before documentation synchronization is considered complete.
 
 ## Gates
-- Execution: PASS for source publication.
-- Automated/static verification: WAITING on exact corrected application head.
-- Code review: PASS logic/scope for the one-file correction.
-- Owner Standard runtime: WAITING fresh retest.
-- Owner Semantic runtime: ON HOLD until Standard passes.
-- Documentation synchronization: IN PROGRESS until task_current/handoff/PR body match latest docs head.
-- Merge permission: BLOCKED.
+- Execution: PASS.
+- Automated/static for current application source: PASS by prior unchanged-source static evidence plus exact changed-wrapper syntax verification.
+- Code review: PASS logic/scope for D-016 source delta.
+- Owner Standard runtime: RETEST WAITING.
+- Owner Semantic runtime: ON HOLD until Standard PASS.
+- Documentation synchronization: WAITING only for final PR body/head alignment.
 - P3 semantic cut/reorder: BLOCKED.
+- Merge permission: BLOCKED.
 
 ## Next permitted action
-Finish canonical documentation/PR metadata synchronization, then run exact-head static checks including `node --check src/main/p1-standard-vision-wrapper.js` and `git diff --check`. Only after static PASS may Owner rerun Standard/default mode. Expected evidence: a short first draft triggers `Standard duration guard`, one evidence-backed recompose occurs before TTS, narration reaches the hard target range without filler/unsupported claims, and measured voice is close to the source duration.
+After PR metadata is aligned to the final exact head, Owner reruns Standard/default OFF on that head. For the ~97.57s regression case, a short first draft must trigger `Standard duration guard`, one evidence-backed recompose must occur before TTS, `Standard duration guard PASS` must precede the single full-text TTS request, and resulting voice should be close to source duration rather than ~36.7% while remaining grounded/natural.
