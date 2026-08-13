@@ -17,7 +17,7 @@ PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER REAL-APP TEST NOT STARTED / M
 - No Anti/external executor assigned.
 
 ## Product behavior
-- Voice Render is a non-video utility workspace but its voice library is shared with the app’s main TTS selectors.
+- Voice Render is a non-video utility workspace but shares the app’s existing voice library with main TTS selectors.
 - Left sidebar is expanded and contains persistent real App/Backend/TTS/GPU/CPU/RAM status.
 - Voice Render right column contains result, scrollable shared voices with per-row `Nghe thử`, and a dedicated Log card.
 - Clone Voice saves into existing `localStorage.tts_voices`; no private duplicate store.
@@ -32,7 +32,7 @@ Changed application source is exactly:
 - `src/renderer/styles/voice-render.css`.
 
 Review corrections already published:
-1. Removed arbitrary renderer file deletion. Cleanup is now internal to the merge bridge and restricted to matching owned chunk files.
+1. Removed arbitrary renderer file deletion. Cleanup is internal to the merge bridge and restricted to matching owned chunk files.
 2. Clone language metadata is normalized for backend requests.
 3. Long input cannot bypass safe chunking when auto-chunk is disabled.
 4. `Giữ đoạn văn` affects the splitter instead of being decorative.
@@ -42,20 +42,20 @@ No P1/P2/P3/backend-TTS/dependency application source was changed.
 
 ## Verification gap
 - No unresolved PR review threads at latest check.
-- Direct PM verification container cannot resolve GitHub git/raw hosts, therefore exact final-head Node/diff command output is still WAITING rather than inferred PASS.
+- Direct PM verification container cannot resolve GitHub git/raw hosts, therefore exact final-head Node/diff output remains WAITING rather than inferred PASS.
 
 ## Next permitted action
-After documentation/PR metadata finalization, Owner uses the owner-test worktree to fetch the exact final PR #50 HEAD and runs:
+Owner uses the owner-test worktree to fetch the exact final PR #50 HEAD and runs:
 - `node --check src/main/preload.js`
 - `node --check src/renderer/js/voice-render.js`
 - `git diff --check 3164b6f625e06d4d8f4d88009fb9dea5c335198f..HEAD`
 
-If those are clean, Owner may run the app and test global sidebar status, voice preview/selection, shared clone sync, short render, several-thousand-word chunk render, stop behavior, final WAV, Log, and P1/P2/P3 isolation.
+If static checks pass, Owner may run the app and test global sidebar status, voice preview/selection, shared clone sync, short render, several-thousand-word chunk render, stop behavior, final WAV, Log, and P1/P2/P3 isolation.
 
 ## Gates
 - Execution: PASS.
 - Automated/static verification: WAITING.
 - Code review: PASS logic/scope.
 - Owner visual/runtime verification: NOT STARTED.
-- Documentation synchronization: IN PROGRESS until final ACTIVE/architecture/PR body sync.
+- Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
