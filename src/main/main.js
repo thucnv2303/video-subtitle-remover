@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, net } = require('electron');
 const path = require('path');
+const os = require('os');
 const { PythonBridge } = require('./python-bridge');
 const registerP1VisionIPC = require('./p1-vision-ipc');
 const registerP1StandardVisionIPC = require('./p1-standard-vision-wrapper');
@@ -29,6 +30,48 @@ function ensureVoiceRenderBootstrap() {
   `).catch((err) => {
     console.error('[Voice Render] bootstrap failed:', err?.message || err);
   });
+}
+
+function readCpuTotals() {
+  const cpus = os.cpus() || [];
+  return cpus.reduce((acc, cpu) => {
+    const times = cpu?.times || {};
+    const total = Object.values(times).reduce((sum, value) => sum + Number(value || 0), 0);
+    acc.idle += Number(times.idle || 0);
+    acc.total += total;
+    return acc;
+  }, { idle: 0, total: 0 });
+}
+
+async function getSystemInfoSnapshot() {
+  const cpus = os.cpus() || [];
+  const first = readCpuTotals();
+  await new Promise((resolve) => setTimeout(resolve, 160));
+  const second = readCpuTotals();
+  const deltaTotal = second.total - first.total;
+  const deltaIdle = second.idle - first.idle;
+  const cpuUsagePercent = deltaTotal > 0
+    ? Math.max(0, Math.min(100, 100 - (deltaIdle / deltaTotal * 100)))
+    : null;
+
+  const totalMemory = os.totalmem();
+  const freeMemory = os.freemem();
+  const usedMemory = Math.max(0, totalMemory - freeMemory);
+  const memoryUsagePercent = totalMemory > 0 ? (usedMemory / totalMemory) * 100 : null;
+
+  return {
+    platform: os.platform(),
+    release: os.release(),
+    cpu_model: cpus[0]?.model || '',
+    logical_cores: cpus.length,
+    cpu_usage_percent: cpuUsagePercent,
+    total_memory_bytes: totalMemory,
+    free_memory_bytes: freeMemory,
+    used_memory_bytes: usedMemory,
+    memory_usage_percent: memoryUsagePercent,
+    app_version: app.getVersion(),
+    electron_version: process.versions.electron || '',
+  };
 }
 
 function createWindow() {
@@ -151,23 +194,29 @@ ipcMain.handle('dialog:openFile', async (event, customFilters) => {
 });
 
 ipcMain.handle('dialog:openDirectory', async () => {
-  const result = await dialog.showOpenDialog({
+  const options = {
     title: 'Chọn thư mục đầu ra',
     properties: ['openDirectory']
-  });
-  return result;
+  };
+  return mainWindow && !mainWindow.isDestroyed()
+    ? dialog.showOpenDialog(mainWindow, options)
+    : dialog.showOpenDialog(options);
 });
 
 ipcMain.handle('dialog:saveFile', async (event, defaultPath) => {
-  const { canceled, filePath } = await dialog.showSaveDialog({
-    title: 'Lưu file',
-    defaultPath
-  });
-  if (canceled) {
-    return null;
-  } else {
-    return filePath;
-  }
+  const options = {
+    title: 'Lưu file Voice Render',
+    defaultPath,
+    filters: [
+      { name: 'WAV Audio', extensions: ['wav'] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  };
+  const { canceled, filePath } = mainWindow && !mainWindow.isDestroyed()
+    ? await dialog.showSaveDialog(mainWindow, options)
+    : await dialog.showSaveDialog(options);
+  if (canceled || !filePath) return null;
+  return path.extname(filePath) ? filePath : `${filePath}.wav`;
 });
 
 ipcMain.handle('ollama:listModels', async (event, endpoint) => {
@@ -241,3 +290,5 @@ ipcMain.handle('app:openPath', async (e, p) => {
 ipcMain.handle('app:getPath', () => {
   return app.getAppPath();
 });
+
+ipcMain.handle('app:systemInfo', async () => getSystemInfoSnapshot());
