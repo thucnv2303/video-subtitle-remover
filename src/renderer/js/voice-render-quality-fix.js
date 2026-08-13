@@ -4,7 +4,7 @@
   const SPEED_MIN = 0.75;
   const SPEED_MAX = 1.25;
   const CHUNK_OPTIONS = [300, 450, 600];
-  const DEFAULT_CHUNK_SIZE = 450;
+  const DEFAULT_CHUNK_SIZE = 300;
 
   function readSavedVoices() {
     try {
