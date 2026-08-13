@@ -12,6 +12,11 @@
     'en-US-JennyNeural': { prosody: 'Sáng · Nhanh', speedFactor: 1.10 },
     'en-US-GuyNeural': { prosody: 'Trầm · Chậm', speedFactor: 0.90 },
   };
+  const LEGACY_PROSODIES = [
+    'Tự nhiên · Ấm', 'Tự nhiên · Sáng', 'Rõ · Dứt khoát',
+    'Mềm · Bình tĩnh', 'Trầm · Chậm rãi', 'Nhanh · Năng lượng',
+  ];
+  const LEGACY_SPEEDS = [0.88, 0.92, 0.96, 1.02, 1.08, 1.14, 0.84, 1.18];
 
   let pendingPreviewVoiceId = null;
   let pendingRunSnapshot = null;
@@ -46,6 +51,39 @@
   function writeSavedVoices(voices) {
     localStorage.setItem('tts_voices', JSON.stringify(voices));
     window.dispatchEvent(new CustomEvent('tts-voices-updated', { detail: { source: 'voice-profile-fix' } }));
+  }
+
+  function migrateLegacyVoiceProfiles() {
+    const voices = readSavedVoices();
+    if (!voices.length) return;
+    const used = new Set(Object.values(BUILTIN_PROFILES).map((profile) => `${profile.prosody}|${Number(profile.speedFactor).toFixed(2)}`));
+    let changed = false;
+    voices.forEach((voice, index) => {
+      const hasProsody = !!String(voice?.prosody || voice?.tone || '').trim();
+      const hasSpeed = Number.isFinite(Number(voice?.speedFactor));
+      if (hasProsody && hasSpeed) {
+        used.add(`${voice.prosody || voice.tone}|${Number(voice.speedFactor).toFixed(2)}`);
+        return;
+      }
+      let assigned = null;
+      for (let offset = 0; offset < LEGACY_SPEEDS.length * LEGACY_PROSODIES.length; offset += 1) {
+        const prosody = LEGACY_PROSODIES[(index + offset) % LEGACY_PROSODIES.length];
+        const speedFactor = LEGACY_SPEEDS[(index + Math.floor(offset / LEGACY_PROSODIES.length)) % LEGACY_SPEEDS.length];
+        const key = `${prosody}|${speedFactor.toFixed(2)}`;
+        if (!used.has(key)) {
+          assigned = { prosody, speedFactor };
+          used.add(key);
+          break;
+        }
+      }
+      assigned ||= { prosody: `Cá nhân · ${index + 1}`, speedFactor: Math.max(0.80, Math.min(1.20, 0.86 + index * 0.02)) };
+      voice.prosody = assigned.prosody;
+      voice.tone = assigned.prosody;
+      voice.speedFactor = assigned.speedFactor;
+      voice.profileMigrated = true;
+      changed = true;
+    });
+    if (changed) writeSavedVoices(voices);
   }
 
   function selectedVoiceId() {
@@ -381,6 +419,7 @@
     const timer = setInterval(() => {
       if (!document.getElementById('global-app-status')) return;
       clearInterval(timer);
+      migrateLegacyVoiceProfiles();
       installCloneProfileControls();
       installSharedVoiceCreationGuard();
       refreshOwnerStatus();
