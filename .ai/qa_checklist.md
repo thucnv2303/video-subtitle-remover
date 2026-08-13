@@ -7,11 +7,11 @@
 - [x] Branch `review/PIPELINE1-SEMANTIC-REMIX-007`.
 - [x] Draft PR #48.
 - [x] Base `9981da334ca10fd845c971241d541894d736c13b`.
-- [x] BUG-037 records Standard severe-underfill behavior.
-- [x] D-016 records Owner requirement that Standard use full ASR + Vision + source duration + selected voice/speed to build grounded near-timeline narration before TTS.
-- [x] Fresh Owner runtime on `cf31b489...` captured quality-retry failure before TTS.
-- [x] Quality-retry correction source commit: `0fb72b4f421891a20b6574564f90886f6a108356`.
-- [x] No P2/P3/TTS-engine/dependency change in the correction.
+- [x] D-016 requires Standard to use full ASR + Vision + source duration + selected voice/speed to build grounded near-timeline narration before TTS.
+- [x] BUG-037 records the latest underfilled+CJK ordering failure.
+- [x] Prior candidate-retention correction: `0fb72b4f421891a20b6574564f90886f6a108356`.
+- [x] Latest pre-TTS ordering correction: `c8fecb95164c39fe82cddf24711ccfc3386d23c6`.
+- [x] No P2/P3/TTS-engine/dependency change in the latest correction.
 
 ## Mode routing invariants
 - [x] Standard remains default / Semantic Remix OFF.
@@ -20,63 +20,61 @@
 - [x] Standard and Semantic continue to use isolated analysis IPC paths.
 - [x] Semantic BUG-036 validation behavior is unchanged.
 
-## Standard duration guard — verified runtime on failed head
-Owner run on `cf31b489...` proved:
+## Latest Standard failure — verified runtime
+Owner run on the prior PR #48 flow proved:
 - [x] source duration ~97.57s;
-- [x] voice-aware Standard hard budget 1529-1610 chars;
-- [x] first narration 721 chars;
-- [x] `Standard duration guard` triggered before TTS;
-- [x] evidence-backed recompose ran;
-- [x] deterministic quality gate rejected repetition;
-- [x] final failure was `REPEATED_SENTENCE` + `REPEATED_LONG_PHRASE`;
-- [x] TTS did not run after invalid narration.
+- [x] voice-aware Standard budget 1529-1610 chars;
+- [x] Vision + global reasoning completed;
+- [x] draft quality detected `CJK_CHARACTERS`;
+- [x] standalone `Narration quality` repair failed `CJK_CHARACTERS`;
+- [x] grounded Standard pre-TTS recompose was never reached;
+- [x] TTS did not run.
 
-## Quality-retry root cause
-- [x] Previous evidence-fit retry discarded the parsed rejected candidate.
-- [x] Previous retry restarted from the original short narration.
-- [x] Strict quality gate is retained; it is not relaxed to make the retry pass.
+## Verified root cause
+- [x] Under-min draft quality repair ran inside `p1-standard-vision-ipc.js` before analysis returned to the wrapper.
+- [x] That standalone repair did not own the full transcript + Vision grounded recomposition responsibility.
+- [x] Therefore quality failure could terminate Standard before D-016 duration/quality recompose.
+- [x] Global prompt still implied underfill could be addressed later, conflicting with the accepted pre-TTS policy.
 
-## Corrected source contract — `0fb72b4f...`
-- [x] First recompose still uses full transcript + accumulated Vision evidence.
-- [x] Parsed candidate is captured before hard length/quality failure is returned.
-- [x] If a parsed candidate is rejected, that exact candidate becomes retry input.
-- [x] Retry does not restart from the original short draft when a rejected candidate exists.
-- [x] Retry prompt explicitly removes repeated sentences, repeated long phrases, near-duplicate wording and duplicate CTA/conclusion.
-- [x] Retry prefers unused grounded evidence instead of padding/paraphrase loops.
-- [x] Hard Standard narration range remains mandatory.
-- [x] CJK/repetition quality checks remain mandatory.
-- [x] TTS remains blocked until narration passes.
-- [x] No post-TTS duration-repair loop was added.
-- [x] Standard cancellation remains wired through `ollama:p1CancelStandardVision`.
+## Corrected source contract — `c8fecb95...`
+- [x] Under-min Standard drafts do not run the standalone quality-repair request first.
+- [x] Deterministic draft quality is still evaluated and returned.
+- [x] Under-min draft reaches `p1-standard-vision-wrapper.js`.
+- [x] Existing wrapper recompose receives the draft, full transcript and accumulated Vision evidence.
+- [x] Hard Standard narration range remains mandatory before TTS.
+- [x] CJK/repetition quality checks remain mandatory before TTS.
+- [x] Prior retry candidate-retention behavior remains in place.
+- [x] Global prompt now states under-min drafts are recomposed by the Standard pre-TTS guard before TTS.
+- [x] No post-TTS duration-repair loop was introduced.
+- [x] Semantic, P2, P3 and TTS engine are unchanged.
 
 ## Static verification — BLOCKING
-Historical static evidence remains valid only for files unchanged since the previously tested application state.
+Run on the final PR head:
+- [ ] `git rev-parse HEAD` equals the exact PR #48 head.
+- [ ] `node --check src/main/p1-standard-vision-ipc.js`.
+- [ ] `node --check src/main/p1-standard-vision-wrapper.js`.
+- [ ] `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`.
+- [ ] No unexpected application file changed after `c8fecb95...`.
 
-New source delta requires:
-- [ ] checkout exact final PR HEAD;
-- [ ] `node --check src/main/p1-standard-vision-wrapper.js`;
-- [ ] `git diff --check cf31b4891d141084666c81f9324d622a51f70986..HEAD`;
-- [ ] if any additional application source changes occur, rerun syntax checks for every changed application file.
-
-PM attempted exact-head static retrieval, but the PM container cannot resolve GitHub raw hosts. Therefore automated/static is WAITING, not PASS.
+PM container currently cannot resolve GitHub, therefore local exact-head static evidence must come from the Owner worktree. Automated/static remains WAITING until command output is supplied.
 
 ## Owner manual run A — Standard/default OFF
-Run only after static PASS.
+Run only after all static commands PASS.
 - [ ] exact `git rev-parse HEAD` matches PR #48 head;
 - [ ] Semantic Remix OFF/default;
 - [ ] `ScriptMode=standard`;
-- [ ] P1 ASR/Vision/global reasoning completes;
-- [ ] severe underfill triggers `Standard duration guard`;
-- [ ] first `Standard duration recompose` runs before TTS;
-- [ ] if first candidate is rejected, log states retry is editing the rejected candidate rather than restarting from original short draft;
-- [ ] `Standard duration quality retry` passes hard length + quality;
-- [ ] `Standard duration guard PASS` appears before TTS;
-- [ ] accepted narration contains no filler/repetition/unsupported claims;
+- [ ] ASR/Vision/global reasoning completes;
+- [ ] if narration is under-min, log indicates standalone quality repair is deferred to Standard pre-TTS guard;
+- [ ] grounded Standard recompose starts before TTS using full transcript + Vision evidence;
+- [ ] if first recompose candidate is rejected, retry edits the rejected candidate rather than restarting from original short draft;
+- [ ] final narration is within hard voice-aware range;
+- [ ] final narration passes CJK/repetition quality checks;
+- [ ] Standard duration/pre-TTS guard PASS appears before TTS;
 - [ ] exactly one continuous full-text TTS runs;
-- [ ] measured voice is materially close to source duration rather than the prior ~36.7%;
-- [ ] Standard v4 artifact metadata remains correct;
-- [ ] `edit_plan.json` remains non-authoritative with empty plan;
-- [ ] P1->P2 unlock occurs only after valid narration/TTS artifacts.
+- [ ] accepted narration has no filler/repetition/unsupported claims;
+- [ ] measured voice is materially close to source duration;
+- [ ] Standard v4 artifacts remain valid;
+- [ ] P1->P2 unlock only after valid narration/TTS artifacts.
 
 ## Owner manual run B — Semantic ON
 ON HOLD until Standard PASS.
@@ -97,9 +95,9 @@ ON HOLD until Standard PASS.
 
 ## Gates
 - Execution: PASS for source publication.
-- Automated/static: WAITING on exact final head.
-- Code review: PASS logic/scope for the one-file quality-retry correction, subject to static syntax confirmation.
-- Owner Standard: FAIL on `cf31b489...`; corrected retest WAITING.
+- Automated/static: WAITING on final exact-head command output.
+- Code review: WAITING final static confirmation.
+- Owner Standard: FAIL on prior flow; corrected retest WAITING after static PASS.
 - Owner Semantic: ON HOLD until Standard PASS.
-- Documentation synchronization: PASS once PR #48 body is aligned to the final docs head.
+- Documentation synchronization: PASS once dynamic docs/bug ledger/PR body are aligned to the final docs head.
 - Merge: BLOCKED.
