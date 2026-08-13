@@ -7,68 +7,53 @@ VOICE-RENDER-SHARED-LIBRARY-009
 Voice Render Shared Library + Long Text
 
 ## Status
-PM_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_NOT_STARTED
+BOOTSTRAP_CORRECTION_PUBLISHED_STATIC_AND_OWNER_RETEST_WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
-- Draft PR: #50.
-- Base SHA: `3164b6f625e06d4d8f4d88009fb9dea5c335198f`.
+- Single active branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
+- Single active Draft PR: #50.
+- Base: `review/PIPELINE1-SEMANTIC-REMIX-007@0b3ee3a63f06d17334b2c295491c50039326febb`.
+- Superseded PR #49: CLOSED; never use as Owner-test target.
 - Exact spec: `.ai/task_specs/VOICE-RENDER-SHARED-LIBRARY-009.md`.
-- Latest reviewed application-source commit: `066a7cc9b369abf992dd0840c336ad0edb17022a`.
+- Latest application-source commit: `4e7b17a773f7602fa9cfce697cdffcca2b72e7d3`.
 - Execution: Project Manager direct GitHub edits; no Anti/external executor.
 
-## Implemented
-1. App-native Voice Render three-column workspace in current navy/blue design language.
-2. Global sidebar status for Backend/TTS/GPU/CPU/RAM/app version using real APIs/system data or explicit unavailable state.
-3. Scrollable shared voice list with explicit selection and independent preview.
-4. Clone Voice modal saving into existing `localStorage.tts_voices` and refreshing known Settings/Pipeline voice selectors.
-5. Long-text word/character/duration/chunk estimates.
-6. Deterministic paragraph/sentence/whitespace/hard-fallback chunk splitting.
-7. Sequential one-chunk-at-a-time TTS queue using existing `/api/tts/generate`.
-8. Stop-after-current behavior without claiming cancellation of an in-flight synchronous TTS request.
-9. Constrained FFmpeg WAV merge bridge in preload; only matching owned `.part-###.wav` chunks may be merged/cleaned.
-10. New runs clear previous result state before processing.
-11. Dedicated bounded Voice Render Log with filter/copy/clear.
+## Owner runtime finding
+Previous Owner launch showed neither the Voice Render nav item nor the persistent global status card. The previous preload-only dynamic bootstrap therefore failed real-app verification.
 
-## Explicitly unchanged
-- P1 reasoning/artifact source;
-- P2 subtitle-removal/inpaint source;
-- P3 finalize source;
-- shared video Job/status/gates;
-- `api/server.py` and `api/tts_engine.py`;
-- dependencies/package files.
+## Corrective implementation
+1. `src/main/main.js` now invokes an idempotent Voice Render bootstrap after BrowserWindow `did-finish-load`.
+2. The bootstrap injects `js/voice-render.js` from the actual renderer window and logs load/bootstrap failure.
+3. Existing preload injection remains only as fallback.
+4. All previously implemented behavior remains in the same active branch: app-native UI, global sidebar status, shared voice library, independent preview/selection, clone voice sync, sequential long-text chunks, stop-after-current, constrained FFmpeg merge, Log card.
 
-## PM review findings corrected
-- Removed broad arbitrary renderer file deletion.
-- Normalized clone language labels for backend requests.
-- Prevented long text from bypassing chunking when it exceeds the selected safe ceiling.
-- Wired `Giữ đoạn văn` to actual split behavior.
-- Reset prior result at every new run.
+## Active application source scope
+- `src/main/main.js`
+- `src/main/preload.js`
+- `src/renderer/js/voice-render.js`
+- `src/renderer/styles/voice-render.css`
+
+No P1/P2/P3 implementation, shared video Job/gate, backend TTS engine, dependency/package change.
 
 ## Required exact-head static verification
-From Owner-test worktree on final PR #50 HEAD:
+From `E:\Project AI\Video-sub-remove-owner-test-P1` after fetching the final exact PR #50 HEAD:
+- `node --check src/main/main.js`
 - `node --check src/main/preload.js`
 - `node --check src/renderer/js/voice-render.js`
-- `git diff --check 3164b6f625e06d4d8f4d88009fb9dea5c335198f..HEAD`
+- `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
 
-No PASS may be claimed from missing output. ChatGPT verification container cannot currently resolve GitHub git/raw network.
-
-## Owner runtime — after static PASS
-1. Confirm global status card remains visible across Home / Voice Render / Settings or Pipeline navigation.
-2. Confirm layout/color language matches current app.
-3. Scroll voice list; preview at least two voices; selected voice must not change until explicit selection.
-4. Create one clone voice and confirm it appears in shared selectors without restart.
-5. Render short Vietnamese text.
-6. Render several-thousand-word Vietnamese text; verify multiple sequential chunks and one merged WAV.
-7. Press Stop during a multi-chunk run; current request may finish, but no later chunk starts.
-8. Verify Log states and no raw full text dump.
-9. Confirm video Jobs/P1/P2/P3 state remains unchanged.
+## Owner retest order
+1. Fully close every running VSR/Electron instance.
+2. Launch exact PR #50 HEAD.
+3. First verify sidebar contains `Trang chủ`, `Voice Render`, `Cài đặt` and global App/Backend/TTS/GPU/CPU/RAM status is visible.
+4. Switch Home -> Voice Render -> Settings -> Home; global status stays visible and exactly one page is active.
+5. Only after this UI bootstrap gate passes, continue voice preview/selection, clone sync, short render, long-text chunk render, Stop and merged WAV tests.
 
 ## Gates
-- Execution: PASS.
+- Execution: PASS corrective source published.
 - Automated/static verification: WAITING.
-- Code review: PASS logic/scope.
-- Owner visual/runtime verification: NOT STARTED.
+- Code review: WAITING on bootstrap correction exact head.
+- Owner visual/runtime verification: previous head FAIL; corrected-head RETEST WAITING.
 - Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
