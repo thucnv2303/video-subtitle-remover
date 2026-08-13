@@ -1,4 +1,8 @@
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { execFile } = require('child_process');
 
 async function cancelAnyP1Vision(payload) {
   const results = await Promise.allSettled([
@@ -14,6 +18,81 @@ async function cancelAnyP1Vision(payload) {
   const failure = results.find(result => result.status === 'rejected');
   if (failure) throw failure.reason;
   return { ok: true, cancelled: false };
+}
+
+function getLocalSystemInfo() {
+  const cpus = os.cpus() || [];
+  const totalMemory = os.totalmem();
+  const freeMemory = os.freemem();
+  let appVersion = '';
+  try {
+    appVersion = require('../../package.json')?.version || '';
+  } catch {}
+  return {
+    platform: os.platform(),
+    release: os.release(),
+    cpu_model: cpus[0]?.model || '',
+    logical_cores: cpus.length,
+    total_memory_bytes: totalMemory,
+    free_memory_bytes: freeMemory,
+    app_version: appVersion,
+    electron_version: process.versions.electron || '',
+  };
+}
+
+function escapeConcatPath(filePath) {
+  return String(filePath).replace(/\\/g, '/').replace(/'/g, "\\'");
+}
+
+function mergeWavFiles(inputPaths, outputPath) {
+  return new Promise((resolve) => {
+    const inputs = Array.isArray(inputPaths) ? inputPaths.filter(Boolean) : [];
+    if (!inputs.length || !outputPath) {
+      resolve({ ok: false, error: 'Thiếu danh sách chunk WAV hoặc đường dẫn đầu ra.' });
+      return;
+    }
+    const missing = inputs.find((filePath) => !fs.existsSync(filePath));
+    if (missing) {
+      resolve({ ok: false, error: `Thiếu chunk WAV: ${missing}` });
+      return;
+    }
+
+    const listPath = path.join(os.tmpdir(), `vsr-voice-merge-${Date.now()}-${Math.random().toString(36).slice(2)}.txt`);
+    const manifest = inputs.map((filePath) => `file '${escapeConcatPath(filePath)}'`).join('\n');
+    try {
+      fs.writeFileSync(listPath, manifest, 'utf8');
+    } catch (error) {
+      resolve({ ok: false, error: error?.message || 'Không tạo được manifest ghép WAV.' });
+      return;
+    }
+
+    execFile('ffmpeg', [
+      '-y', '-hide_banner', '-loglevel', 'error',
+      '-f', 'concat', '-safe', '0', '-i', listPath,
+      '-vn', '-c:a', 'pcm_s16le', outputPath,
+    ], { windowsHide: true }, (error, stdout, stderr) => {
+      try { fs.unlinkSync(listPath); } catch {}
+      if (error) {
+        resolve({ ok: false, error: (stderr || error.message || 'FFmpeg merge failed').trim() });
+        return;
+      }
+      resolve({ ok: true, output_path: outputPath });
+    });
+  });
+}
+
+async function removeFiles(filePaths) {
+  const removed = [];
+  for (const filePath of Array.isArray(filePaths) ? filePaths : []) {
+    if (!filePath) continue;
+    try {
+      await fs.promises.unlink(filePath);
+      removed.push(filePath);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') return { ok: false, removed, error: error?.message || String(error) };
+    }
+  }
+  return { ok: true, removed };
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -34,6 +113,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPathForFile: (file) => webUtils.getPathForFile(file),
   openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
+  getSystemInfo: () => getLocalSystemInfo(),
+  mergeWavFiles: (inputPaths, outputPath) => mergeWavFiles(inputPaths, outputPath),
+  removeFiles: (filePaths) => removeFiles(filePaths),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   onP1VisionProgress: (callback) => {
