@@ -4,7 +4,7 @@
 VOICE-RENDER-SHARED-LIBRARY-009
 
 ## Status
-SENTENCE_SAFE_CHUNK_CORRECTION_PUBLISHED_OWNER_RETEST_WAITING
+PERIOD_ONLY_CHUNK_BOUNDARY_CORRECTION_PUBLISHED_OWNER_RETEST_WAITING
 
 ## Authority
 - Single active branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -14,15 +14,17 @@ SENTENCE_SAFE_CHUNK_CORRECTION_PUBLISHED_OWNER_RETEST_WAITING
 - PM direct-edit only.
 
 ## Verified defect
-Using the Owner-supplied Vietnamese script with the previous 450-character splitter reproduced 12 chunks, with 11/12 chunk boundaries inside sentences. The old `chooseSplitPoint()` gathered sentence and whitespace candidates then selected the furthest candidate, so a whitespace near the hard limit overrode the earlier sentence ending.
+The previous 450-character splitter cut the Owner-supplied Vietnamese narration inside sentences. Owner clarified the exact rule: a chunk boundary may occur only after sentence-ending period `.`. Character targets must never cut at comma, semicolon, colon, dash or whitespace.
 
 ## Current source state
-Latest application-source correction: `16ed7a2a27aea639332eaba8f0fb921cfe6f7446`.
-- Voice Render chunks sentence units first.
-- 300/450/600 are soft target sizes; complete sentences are packed without cutting normal sentences.
-- `Intl.Segmenter` sentence segmentation is used when available, with punctuation fallback.
-- emergency splitting of a single pathological run-on sentence uses clause punctuation first and whitespace only as the final fallback.
-- previous native OmniVoice speed/headroom correction remains in place.
+Latest application-source correction: `f5a7659a4469cde2d70be10f7a1a8d12f8a4c9b6`.
+- sentence units are recognized from terminating `.` boundaries only;
+- 300/450/600 are soft target sizes for packing complete sentences;
+- a sentence may exceed the target until its terminating period;
+- no clause/whitespace emergency splitter remains;
+- paragraph preservation only closes a chunk after a period-terminated sentence;
+- an unterminated final tail remains intact as the last chunk;
+- previous native OmniVoice speed/headroom correction remains in place;
 - transcript/ref_text conditioning remains removed.
 
 ## Required static verification
@@ -39,7 +41,7 @@ On final PR #50 HEAD:
 1. Launch final exact PR #50 HEAD.
 2. Use Adam and the same supplied Vietnamese script.
 3. Keep chunk target at 450.
-4. Verify audible transitions happen only after complete sentences, not after partial phrases.
+4. Verify every audible outer transition occurs only after `.` and never after a partial phrase.
 5. Confirm content/timbre remain correct and no obvious crackling/clipped syllables return.
 6. Check whether first 3–5 target words are retained.
 7. Confirm final merge/playback remains successful.
