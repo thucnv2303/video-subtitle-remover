@@ -4,7 +4,7 @@
 VOICE-RENDER-SHARED-LIBRARY-009
 
 ## Status
-OWNER_CORE_RUNTIME_PASS_ADAPTIVE_DURATION_ESTIMATOR_RETEST_WAITING
+OWNER_CORE_RUNTIME_PASS_DISTINCT_VOICE_PROFILE_RETEST_WAITING
 
 ## Authority
 - Single active branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -15,26 +15,29 @@ OWNER_CORE_RUNTIME_PASS_ADAPTIVE_DURATION_ESTIMATOR_RETEST_WAITING
 
 ## Verified Owner observations
 PASS:
-- Voice Render tab/page mounts.
-- Voice preview works.
+- Voice Render mounts.
+- voice preview works.
 - `Render toàn bộ` works.
-- 3/3 chunks complete sequentially.
-- final WAV merge succeeds and output plays.
+- 3/3 sequential chunks complete.
+- final WAV merge succeeds and plays.
 
-FAIL / revision required:
-- 1,178-word Adam run estimated `~ 8.1 phút`, actual merged WAV `~ 5:03`.
+Revision requested before merge:
+- each voice must carry explicit prosody/intonation metadata and its own speed profile;
+- switching voice must not leave real output duration effectively identical merely because a global/default speed is reused.
 
-## Root cause
-The base estimator in `voice-render.js` uses a fixed `145 WPM` for every voice. It has no per-voice calibration. The observed Adam run is roughly 233 WPM, so the global 145 WPM assumption is not acceptable for a voice-aware UI.
+## Published correction
+- Built-in Voice Render voices have distinct `prosody + speedFactor` profiles.
+- Legacy clone records without profile data are migrated to distinct profiles.
+- New clone UI requires `Ngữ điệu` and `Tốc độ riêng`.
+- duplicate clone name or duplicate `prosody + speedFactor` profile is rejected.
+- Settings `Thêm giọng clone` is redirected to Voice Render so incomplete clone records are no longer created through a second path.
+- `main.js` owns constrained FFmpeg `atempo` processing.
+- preload exposes only `applyVoiceTempo()` IPC.
+- Voice Render applies selected voice speed to preview/chunk audio before merge.
+- estimator uses measured per-voice rate when available and profile speed fallback otherwise.
 
-## Adaptive estimator correction
-`voice-render-owner-fixes.js` now:
-- persists a rate profile per `voice id + language`;
-- learns from preview WAV metadata;
-- learns more strongly from actual full merged output duration/text;
-- uses learned WPM for whitespace-delimited languages and learned character rate fallback when appropriate;
-- starts with language-specific fallback only when no measured rate exists;
-- updates the visible duration estimate after voice selection, preview calibration, text/language changes, and completed full render.
+## Scope boundary
+This correction stores profile metadata in the shared `tts_voices` record so the main workflow can consume the same library. It does not change P1/P2/P3 processing logic in this task.
 
 ## Required static verification
 On final PR #50 HEAD:
@@ -45,19 +48,18 @@ On final PR #50 HEAD:
 - `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
 
 ## Owner retest
-1. Fully close all VSR/Electron instances.
-2. Launch exact final PR #50 HEAD.
-3. Select Adam.
-4. Observe initial estimate; if no Adam rate profile exists it may show the language fallback.
-5. Click `Nghe thử` for Adam and wait for preview metadata to load; estimate should recalibrate.
-6. Render the same or equivalent long text once; after final WAV metadata loads the Adam profile should update from the full actual output.
-7. With the same text still present, estimate must move materially toward actual duration and no longer use the old fixed 145 WPM assumption.
-8. Switching to another uncalibrated voice may produce a different fallback/learned estimate; profiles must not leak across voices.
+1. Fully close VSR/Electron and launch exact final PR #50 HEAD.
+2. Verify Voice Render list displays a distinct prosody and speed for Adam and at least one other voice.
+3. Render the same short/medium text with two profiles whose speeds are visibly different (for example ~0.90x vs ~1.10x).
+4. Actual audio durations must differ in the expected direction; faster profile must produce shorter output.
+5. Create one clone and confirm the Clone Voice form requires/records `Ngữ điệu` + `Tốc độ riêng` and the new voice appears in the shared library.
+6. In Settings, `Thêm giọng clone` must redirect to Voice Render instead of creating an incomplete voice locally.
+7. Reconfirm final merge/playback and no P1/P2/P3 state mutation.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING.
-- Code review: WAITING on estimator correction exact head.
-- Owner runtime: PARTIAL PASS; estimator RETEST WAITING.
-- Documentation synchronization: PASS.
-- Merge permission: BLOCKED.
+- Code review: WAITING on final exact head.
+- Owner runtime: PARTIAL PASS; profile/duration RETEST WAITING.
+- Documentation synchronization: PASS after dynamic sync.
+- Merge permission: BLOCKED until retest + static + review PASS.
