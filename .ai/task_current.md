@@ -7,15 +7,16 @@ PIPELINE1-SEMANTIC-REMIX-007
 Pipeline 1 Optional Semantic Remix — Standard Script Default + Guarded Scene Remix
 
 ## Status
-RESUMED_AFTER_VOICE_RENDER_MERGE_STATIC_AND_OWNER_TWO_MODE_WAITING
+MERGED_HEAD_CODE_RECHECK_PASS_STATIC_AND_OWNER_TWO_MODE_WAITING
 
 ## Authority
 - Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
 - Draft PR: #48.
 - Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
 - Exact spec: `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`.
-- Corrective source reviewed at `7b217c7b73e98375bcf5ff2bcb24a92c8fa61796`.
-- Voice Render PR #50 merged into this branch at `3c7d47ca08c1e7a93365223a184d47e29c2175c0` and is closed.
+- Corrective P1 source originally reviewed at `7b217c7b73e98375bcf5ff2bcb24a92c8fa61796`.
+- Voice Render PR #50 merged at `3c7d47ca08c1e7a93365223a184d47e29c2175c0`.
+- P1 merged-head recheck basis: `19677fbdbfe6d7910281307b387e15c007ab0282`.
 
 ## User outcome
 Semantic Remix is optional, not a replacement for normal script generation.
@@ -36,8 +37,18 @@ Semantic Remix is optional, not a replacement for normal script generation.
 ## Completed side task
 Voice Render shared-library/long-text work is merged and no longer blocks this P1 task. Accepted clone-safe default is 300 with Owner runtime PASS and static PASS.
 
+## Merged-head review result
+GitHub compare from `7b217c7...` to `19677fb...` shows P1-specific renderer/validator/Standard IPC source did not change after the prior P1 corrective review. The later application changes are the completed Voice Render side task plus docs.
+
+`src/main/main.js` and `src/main/preload.js` were re-read because Voice Render changed them. Verified:
+- semantic and Standard P1 IPC registration is still present;
+- Standard/Semantic cancellation and P1 bridge methods remain present;
+- new additions do not replace task-007 P1 routing.
+
+Merged-head P1 code review: PASS logic/scope. Runtime remains required.
+
 ## Verification required now
-On current final PR #48 HEAD:
+Run on the new current exact PR #48 HEAD after this docs synchronization:
 - `git rev-parse HEAD`;
 - `node --check src/main/main.js`;
 - `node --check src/main/preload.js`;
@@ -65,10 +76,10 @@ Owner runtime B — Semantic ON:
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING on current PR #48 HEAD.
-- Code review: PASS logic/scope for corrective P1 source; merged-head recheck required before release.
+- Automated/static: WAITING.
+- Code review: PASS for merged-head logic/scope.
 - Owner Standard: NOT STARTED.
 - Owner Semantic: NOT STARTED after correction.
-- Documentation synchronization: PASS.
+- Documentation synchronization: IN PROGRESS until handoff/PR metadata match the latest docs head.
 - P3 semantic cut/reorder: BLOCKED.
 - Merge permission: BLOCKED.
