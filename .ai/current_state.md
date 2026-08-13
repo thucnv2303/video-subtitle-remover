@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-VOICE-RENDER-SHARED-LIBRARY-009 — OWNER PARTIAL PASS / PRELOAD BRIDGE ROOT CAUSE FIXED / STATIC + OWNER RETEST WAITING
+VOICE-RENDER-SHARED-LIBRARY-009 — OWNER RUNTIME CORE PASS / DURATION ESTIMATOR CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -14,38 +14,41 @@ VOICE-RENDER-SHARED-LIBRARY-009 — OWNER PARTIAL PASS / PRELOAD BRIDGE ROOT CAU
 ## Latest Owner runtime evidence
 PASS:
 - Voice Render tab/page mounts.
-- Shared voice list is visible.
-- Voice preview works.
+- Shared voice list and voice preview work.
+- `Render toàn bộ` now works end-to-end.
+- Long text was split into 3 sequential chunks.
+- All 3 chunks completed.
+- Final WAV merge completed and output is playable.
+- Log and global status correction are visible in the running app.
 
-FAIL:
-- Previous log/status UX issues required correction.
-- `Render toàn bộ` remained blocked with exact runtime error: `[Voice Render] render bridge missing: saveFile/mergeWavFiles unavailable`.
+Remaining defect observed by Owner:
+- Duration estimate displayed `~ 8.1 phút` for 1,178 words while the actual merged WAV duration was about `5:03`.
 
-## Root cause verified in source
-The privileged WAV merge implementation had been placed inside `preload.js` and required Node modules (`fs`, `path`, `child_process`). The runtime page could mount and HTTP TTS preview could work while the exposed Electron bridge remained incomplete/unavailable. Therefore the renderer correctly reported missing `saveFile/mergeWavFiles` capability.
+## Verified duration-estimator root cause
+`src/renderer/js/voice-render.js` used one fixed heuristic for every voice:
+- `minutes = words / 145`.
 
-## Corrective source
-- `src/main/main.js`
-  - privileged WAV merge now runs in the Electron main process;
-  - constrained IPC handler `voice-render:mergeWavFiles` added;
-  - existing output dialog and system-info IPC remain in main process.
-- `src/main/preload.js`
-  - reduced back to a narrow contextBridge surface;
-  - `saveFile` invokes `dialog:saveFile`;
-  - `mergeWavFiles` invokes `voice-render:mergeWavFiles`;
-  - no direct filesystem/process execution remains in preload.
-- Existing Voice Render UI, shared voice library, clone storage, sequential chunks, Stop semantics, log/status corrections remain on the same branch/PR.
+The completed Adam output gives an observed rate of roughly 233 words/minute for this text/run, so the fixed 145 WPM heuristic materially overestimates this voice. The estimator did not use selected-voice identity, preview duration, or prior real render duration.
 
-## Isolation
-No P1/P2/P3 implementation, shared video Job/gate, backend TTS engine or dependency/package change.
+## Corrective estimator published
+`src/renderer/js/voice-render-owner-fixes.js` now adds per-voice/per-language adaptive rate profiles:
+- profile key uses selected voice id + language;
+- preview WAV metadata can seed/calibrate a voice rate;
+- successful full merged output updates the rate with the actual text + real audio duration;
+- learned profile is persisted locally in `voice_render_rate_profiles_v1`;
+- future estimates use learned WPM/character rate for the exact voice/language instead of the old global 145 WPM assumption;
+- when no learned profile exists, language-specific fallback is explicitly used and marked as fallback in the estimate tooltip;
+- the estimator remains telemetry, not a guarantee.
+
+No TTS generation algorithm, voice audio, chunking, P1/P2/P3 implementation, shared video Job/gate or dependency is changed by this correction.
 
 ## Gates
-- Execution: PASS — bridge correction published.
+- Execution: PASS — adaptive estimator correction published.
 - Automated/static verification: WAITING on final exact HEAD.
-- Code review: WAITING on bridge correction exact head.
-- Owner runtime: PARTIAL — mount/preview PASS; render previous head FAIL; RETEST WAITING.
+- Code review: WAITING on estimator correction exact head.
+- Owner runtime: PARTIAL PASS — core Voice Render/render/merge PASS; duration-estimate retest WAITING.
 - Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Owner fetches the final exact PR #50 HEAD, fully restarts VSR, clicks `Render toàn bộ`, confirms WAV save dialog appears, then confirms the queue populates and chunk 1 begins. If that passes, continue through merged playable WAV. Do not merge.
+Owner fetches the final exact PR #50 HEAD, fully restarts VSR, selects Adam and either previews Adam or performs one render. Then verify that the displayed estimate is recalibrated from actual Adam rate and is materially closer to the real output duration. Do not merge.
