@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, net } = require('electron');
 const path = require('path');
 const os = require('os');
+const fs = require('fs');
+const { execFile } = require('child_process');
 const { PythonBridge } = require('./python-bridge');
 const registerP1VisionIPC = require('./p1-vision-ipc');
 const registerP1StandardVisionIPC = require('./p1-standard-vision-wrapper');
@@ -94,6 +96,75 @@ async function getSystemInfoSnapshot() {
     app_version: app.getVersion(),
     electron_version: process.versions.electron || '',
   };
+}
+
+function escapeConcatPath(filePath) {
+  return String(filePath).replace(/\\/g, '/').replace(/'/g, "\\'");
+}
+
+function isOwnedVoiceChunk(inputPath, outputPath) {
+  const input = path.resolve(String(inputPath || ''));
+  const output = path.resolve(String(outputPath || ''));
+  if (path.dirname(input) !== path.dirname(output)) return false;
+  if (!/\.wav$/i.test(output) || !/\.part-\d{3}\.wav$/i.test(input)) return false;
+  const outputStem = path.basename(output, path.extname(output));
+  const inputName = path.basename(input);
+  return inputName.toLowerCase().startsWith(`${outputStem}.part-`.toLowerCase());
+}
+
+function mergeVoiceRenderWavFiles(inputPaths, outputPath) {
+  return new Promise((resolve) => {
+    const inputs = Array.isArray(inputPaths) ? inputPaths.filter(Boolean) : [];
+    if (!inputs.length || !outputPath || !/\.wav$/i.test(String(outputPath))) {
+      resolve({ ok: false, error: 'Thiếu danh sách chunk WAV hoặc đường dẫn đầu ra WAV hợp lệ.' });
+      return;
+    }
+
+    const unsafe = inputs.find((filePath) => !isOwnedVoiceChunk(filePath, outputPath));
+    if (unsafe) {
+      resolve({ ok: false, error: `Chunk không thuộc run Voice Render hiện tại: ${unsafe}` });
+      return;
+    }
+
+    const missing = inputs.find((filePath) => !fs.existsSync(filePath));
+    if (missing) {
+      resolve({ ok: false, error: `Thiếu chunk WAV: ${missing}` });
+      return;
+    }
+
+    const listPath = path.join(os.tmpdir(), `vsr-voice-merge-${Date.now()}-${Math.random().toString(36).slice(2)}.txt`);
+    const manifest = inputs.map((filePath) => `file '${escapeConcatPath(filePath)}'`).join('\n');
+
+    try {
+      fs.writeFileSync(listPath, manifest, 'utf8');
+    } catch (error) {
+      resolve({ ok: false, error: error?.message || 'Không tạo được manifest ghép WAV.' });
+      return;
+    }
+
+    execFile('ffmpeg', [
+      '-y', '-hide_banner', '-loglevel', 'error',
+      '-f', 'concat', '-safe', '0', '-i', listPath,
+      '-vn', '-c:a', 'pcm_s16le', outputPath,
+    ], { windowsHide: true }, async (error, stdout, stderr) => {
+      try { fs.unlinkSync(listPath); } catch {}
+      if (error) {
+        resolve({ ok: false, error: (stderr || error.message || 'FFmpeg merge failed').trim() });
+        return;
+      }
+
+      const cleanupErrors = [];
+      for (const inputPath of inputs) {
+        try {
+          await fs.promises.unlink(inputPath);
+        } catch (cleanupError) {
+          if (cleanupError?.code !== 'ENOENT') cleanupErrors.push(cleanupError?.message || String(cleanupError));
+        }
+      }
+
+      resolve({ ok: true, output_path: outputPath, cleanup_warnings: cleanupErrors });
+    });
+  });
 }
 
 function createWindow() {
@@ -314,3 +385,4 @@ ipcMain.handle('app:getPath', () => {
 });
 
 ipcMain.handle('app:systemInfo', async () => getSystemInfoSnapshot());
+ipcMain.handle('voice-render:mergeWavFiles', async (event, inputPaths, outputPath) => mergeVoiceRenderWavFiles(inputPaths, outputPath));
