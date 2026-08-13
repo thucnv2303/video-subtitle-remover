@@ -71,12 +71,23 @@
     try { window.renderSavedVoices?.(); } catch {}
   }
 
+  function normalizeLanguage(value) {
+    const raw = String(value || 'vi').trim();
+    const key = raw.toLowerCase();
+    if (['vi', 'vi-vn', 'tiếng việt', 'tieng viet', 'vietnamese'].includes(key)) return 'vi';
+    if (['en', 'en-us', 'en-gb', 'english', 'tiếng anh', 'tieng anh'].includes(key)) return 'en';
+    if (['zh', 'zh-cn', 'chinese', '中文'].includes(key)) return 'zh';
+    if (['ja', 'ja-jp', 'japanese', '日本語'].includes(key)) return 'ja';
+    if (['ko', 'ko-kr', 'korean', '한국어'].includes(key)) return 'ko';
+    return raw;
+  }
+
   function voiceCatalog() {
     const clones = getSavedVoices().map((voice, index) => ({
       id: `clone:${index}`,
       name: voice?.name || `Giọng clone ${index + 1}`,
       type: 'Clone',
-      language: String(voice?.language || 'vi').toLowerCase().startsWith('tiếng') ? 'vi' : String(voice?.language || 'vi'),
+      language: normalizeLanguage(voice?.language),
       tone: voice?.tone || 'Giọng clone dùng chung',
       voiceName: null,
       refAudioPath: voice?.audioPath || null,
@@ -226,31 +237,35 @@
     list.querySelectorAll('[data-preview-voice]').forEach((button) => button.addEventListener('click', () => previewVoice(button.dataset.previewVoice)));
   }
 
-  function chooseSplitPoint(text, maxChars) {
+  function chooseSplitPoint(text, maxChars, preserveParagraphs) {
     if (text.length <= maxChars) return text.length;
     const windowText = text.slice(0, maxChars + 1);
     const candidates = [];
-    const paragraph = Math.max(windowText.lastIndexOf('\n\n'), windowText.lastIndexOf('\r\n\r\n'));
-    if (paragraph >= Math.floor(maxChars * 0.45)) candidates.push(paragraph + 2);
+    if (preserveParagraphs) {
+      const paragraph = Math.max(windowText.lastIndexOf('\n\n'), windowText.lastIndexOf('\r\n\r\n'));
+      if (paragraph >= Math.floor(maxChars * 0.45)) candidates.push(paragraph + 2);
+    }
     const sentenceRegex = /[.!?…][”"')\]]?\s+/g;
     let sentenceEnd = -1;
     for (const match of windowText.matchAll(sentenceRegex)) sentenceEnd = match.index + match[0].length;
     if (sentenceEnd >= Math.floor(maxChars * 0.45)) candidates.push(sentenceEnd);
-    const newline = windowText.lastIndexOf('\n');
-    if (newline >= Math.floor(maxChars * 0.45)) candidates.push(newline + 1);
+    if (preserveParagraphs) {
+      const newline = windowText.lastIndexOf('\n');
+      if (newline >= Math.floor(maxChars * 0.45)) candidates.push(newline + 1);
+    }
     const space = windowText.lastIndexOf(' ');
     if (space >= Math.floor(maxChars * 0.45)) candidates.push(space + 1);
     return candidates.length ? Math.max(...candidates.filter((value) => value <= maxChars + 1)) : maxChars;
   }
 
-  function splitLongText(input, maxChars) {
+  function splitLongText(input, maxChars, preserveParagraphs = true) {
     const text = String(input || '').replace(/\r\n/g, '\n');
     if (!text.trim()) return [];
     const chunks = [];
     let cursor = 0;
     while (cursor < text.length) {
       const remaining = text.slice(cursor);
-      const cut = chooseSplitPoint(remaining, maxChars);
+      const cut = chooseSplitPoint(remaining, maxChars, preserveParagraphs);
       const raw = remaining.slice(0, cut);
       if (raw.trim()) chunks.push(raw.trim());
       cursor += cut;
@@ -265,7 +280,8 @@
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
     const chars = text.length;
     const maxChars = Number(document.getElementById('vr-chunk-size')?.value || 1800);
-    const chunks = document.getElementById('vr-auto-chunk')?.checked === false ? (text.trim() ? [text.trim()] : []) : splitLongText(text, maxChars);
+    const preserveParagraphs = document.getElementById('vr-keep-paragraphs')?.checked !== false;
+    const chunks = document.getElementById('vr-auto-chunk')?.checked === false ? (text.trim() ? [text.trim()] : []) : splitLongText(text, maxChars, preserveParagraphs);
     const minutes = words / 145;
     document.getElementById('vr-word-count').textContent = words.toLocaleString('vi-VN');
     document.getElementById('vr-char-count').textContent = chars.toLocaleString('vi-VN');
@@ -368,7 +384,13 @@
     }
     const maxChars = Number(document.getElementById('vr-chunk-size')?.value || 1800);
     const autoChunk = document.getElementById('vr-auto-chunk')?.checked !== false;
-    const chunks = autoChunk ? splitLongText(text, maxChars) : [text.trim()];
+    const preserveParagraphs = document.getElementById('vr-keep-paragraphs')?.checked !== false;
+    if (!autoChunk && text.trim().length > maxChars) {
+      window.showToast?.(`Văn bản vượt ${maxChars.toLocaleString('vi-VN')} ký tự. Hãy bật Tự chia chunk để render an toàn.`, 'warning');
+      document.getElementById('vr-auto-chunk')?.focus();
+      return;
+    }
+    const chunks = autoChunk ? splitLongText(text, maxChars, preserveParagraphs) : [text.trim()];
     if (!chunks.length) return;
     const outputPath = await window.electronAPI.saveFile(`voice-render-${new Date().toISOString().slice(0, 10)}.wav`);
     if (!outputPath) return;
@@ -435,8 +457,8 @@
       document.getElementById('vr-open-folder').disabled = false;
       setRunStatus('success', 'Hoàn tất');
       vrLog(`Hoàn tất output: ${merged.output_path}`, 'success');
+      if (merged.cleanup_warnings?.length) vrLog(`Đã ghép nhưng cleanup chunk có ${merged.cleanup_warnings.length} cảnh báo.`, 'warn');
       window.showToast?.('Voice Render đã hoàn tất.', 'success');
-      window.electronAPI.removeFiles?.(state.completedChunkPaths).catch(() => {});
     } catch (error) {
       setRunStatus('error', 'Lỗi render');
       vrLog(error?.message || String(error), 'error');
@@ -544,8 +566,9 @@
     } catch { set('global-status-tts', 'Không khả dụng', false); }
     try {
       const gpu = await window.api?.gpuInfo?.();
-      const name = gpu?.gpu_name || gpu?.name || 'Không khả dụng';
-      set('global-status-gpu', name, !!(gpu?.gpu_name || gpu?.name));
+      const gpuName = gpu?.gpu_name || gpu?.name || 'Không khả dụng';
+      const gpuAvailable = gpu?.cuda_available ?? gpu?.gpu_available;
+      set('global-status-gpu', gpuAvailable === false ? `${gpuName} · CPU mode` : gpuName, gpuAvailable === true ? true : undefined);
     } catch { set('global-status-gpu', 'Không khả dụng', undefined); }
     try {
       const info = await window.electronAPI?.getSystemInfo?.();
@@ -593,6 +616,7 @@
     document.getElementById('vr-text')?.addEventListener('input', updateEstimates);
     document.getElementById('vr-chunk-size')?.addEventListener('change', updateEstimates);
     document.getElementById('vr-auto-chunk')?.addEventListener('change', updateEstimates);
+    document.getElementById('vr-keep-paragraphs')?.addEventListener('change', updateEstimates);
     document.getElementById('vr-start')?.addEventListener('click', renderLongText);
     document.getElementById('vr-stop')?.addEventListener('click', requestStop);
     document.getElementById('vr-preview-selected')?.addEventListener('click', () => previewVoice(state.selectedVoiceId));
