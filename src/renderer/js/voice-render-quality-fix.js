@@ -74,6 +74,15 @@
     return { index, voice: voices[index], voices };
   }
 
+  function restoreCloneSpeedSoon(index, originalSpeed) {
+    setTimeout(() => {
+      const latest = readSavedVoices();
+      if (!latest[index]) return;
+      latest[index] = { ...latest[index], speedFactor: originalSpeed };
+      localStorage.setItem('tts_voices', JSON.stringify(latest));
+    }, 0);
+  }
+
   function installNativeCloneSpeedWrapper() {
     if (!window.api?.post) return false;
     if (window.api.post.__voiceRenderNativeSpeedWrapped) return true;
@@ -94,17 +103,19 @@
         language: `${baseLanguage}|vsr-speed=${requestedSpeed.toFixed(2)}`,
       };
 
+      // owner-fixes.js wraps this function later and performs post-WAV atempo
+      // based on localStorage. Keep the clone neutral until that outer wrapper
+      // has completed, then restore the visible profile on the next event turn.
       const originalSpeed = match.voice?.speedFactor;
       match.voices[match.index] = { ...match.voice, speedFactor: 1 };
       localStorage.setItem('tts_voices', JSON.stringify(match.voices));
       try {
-        return await innerPost(endpoint, prepared, ...rest);
-      } finally {
-        const latest = readSavedVoices();
-        if (latest[match.index]) {
-          latest[match.index] = { ...latest[match.index], speedFactor: originalSpeed };
-          localStorage.setItem('tts_voices', JSON.stringify(latest));
-        }
+        const result = await innerPost(endpoint, prepared, ...rest);
+        restoreCloneSpeedSoon(match.index, originalSpeed);
+        return result;
+      } catch (error) {
+        restoreCloneSpeedSoon(match.index, originalSpeed);
+        throw error;
       }
     };
 
