@@ -149,6 +149,18 @@ def generate_speech(text, ref_audio_path=None, output_path=None, language="vi"):
             kwargs = {
                 "text": text,
                 "language": language,
+                # Preserve the generated onset. OmniVoice's default post-process
+                # removes leading/trailing silence and can clip soft speech onset
+                # for some cloned voices. Keep model output intact and retain a
+                # small edge pad/fade instead.
+                "postprocess_output": False,
+                "pad_duration": 0.25,
+                "fade_duration": 0.02,
+                # Keep model-internal long-form chunks short enough that the
+                # renderer's larger text chunks do not become one very long
+                # synthesis request internally.
+                "audio_chunk_duration": 12.0,
+                "audio_chunk_threshold": 18.0,
             }
             if ref_audio_path and os.path.exists(ref_audio_path):
                 kwargs["ref_audio"] = ref_audio_path
@@ -160,7 +172,7 @@ def generate_speech(text, ref_audio_path=None, output_path=None, language="vi"):
             import soundfile as sf
             sf.write(output_path, audios[0], model.sampling_rate)
             
-            print(f"[TTS] Generated: {output_path} ({len(text)} chars)", flush=True)
+            print(f"[TTS] Generated with onset guard: {output_path} ({len(text)} chars)", flush=True)
             return output_path
         except Exception as e:
             print(f"[TTS] Error generating speech: {e}", flush=True)
