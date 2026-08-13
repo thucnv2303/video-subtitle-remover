@@ -2,6 +2,10 @@ const registerStandardVisionIPC = require('./p1-standard-vision-ipc');
 
 const STANDARD_MIN_RATIO = 0.95;
 const STANDARD_TARGET_RATIO = 0.975;
+const CJK_CHAR_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\uf900-\ufaff]/gu;
+const REPEAT_NGRAM_WORDS = 10;
+const SIMILAR_SENTENCE_MIN_WORDS = 8;
+const SIMILAR_SENTENCE_THRESHOLD = 0.88;
 
 function compactNarration(value) {
   return String(value || '').replace(/```(?:json)?/gi, '').replace(/\s+/g, ' ').trim();
@@ -52,41 +56,303 @@ function effectiveCharsPerSecond(budget) {
   return Math.max(1, baseRate * Math.max(0.5, Math.min(2, speed)));
 }
 
-function failedRecompose(result, fitResult, message) {
+function localOllamaUrl(rawEndpoint) {
+  const raw = typeof rawEndpoint === 'string' && rawEndpoint.trim()
+    ? rawEndpoint.trim()
+    : 'http://localhost:11434/api/chat';
+  const url = new URL(raw.includes('://') ? raw : `http://${raw}`);
+  if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Endpoint Ollama phải dùng HTTP hoặc HTTPS.');
+  if (!['localhost', '127.0.0.1', '::1'].includes(url.hostname.toLowerCase())) {
+    throw new Error('Pipeline 1 chỉ cho phép Ollama local.');
+  }
+  url.pathname = '/api/chat';
+  url.search = '';
+  url.hash = '';
+  return url.toString();
+}
+
+function parseJsonContent(value) {
+  const text = String(value || '').trim();
+  if (!text) throw Object.assign(new Error('AI trả về nội dung rỗng.'), { code: 'OLLAMA_JSON_INVALID' });
+  const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const first = cleaned.indexOf('{');
+    const last = cleaned.lastIndexOf('}');
+    if (first >= 0 && last > first) {
+      try { return JSON.parse(cleaned.slice(first, last + 1)); } catch { /* normalized below */ }
+    }
+    throw Object.assign(new Error('AI không trả về JSON hợp lệ.'), { code: 'OLLAMA_JSON_INVALID' });
+  }
+}
+
+function narrationWords(value) {
+  const normalized = compactNarration(value)
+    .toLocaleLowerCase('vi-VN')
+    .normalize('NFC')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+  return normalized ? normalized.split(/\s+/).filter(Boolean) : [];
+}
+
+function narrationSentences(value) {
+  return compactNarration(value)
+    .replace(/([.!?…])\s+/g, '$1\n')
+    .split(/\n+|;+/)
+    .map(sentence => sentence.trim())
+    .filter(Boolean);
+}
+
+function diceSimilarity(leftWords, rightWords) {
+  const left = new Set(leftWords);
+  const right = new Set(rightWords);
+  if (!left.size || !right.size) return 0;
+  let overlap = 0;
+  for (const word of left) if (right.has(word)) overlap += 1;
+  return (2 * overlap) / (left.size + right.size);
+}
+
+function narrationQualityReport(value) {
+  const text = compactNarration(value);
+  const issues = [];
+  const cjkMatches = text.match(CJK_CHAR_RE) || [];
+  if (cjkMatches.length) issues.push('CJK_CHARACTERS');
+
+  const sentenceWords = narrationSentences(text).map(sentence => narrationWords(sentence));
+  let repeatedSentencePairs = 0;
+  const seenExact = new Set();
+  for (const words of sentenceWords) {
+    if (words.length < SIMILAR_SENTENCE_MIN_WORDS) continue;
+    const fingerprint = words.join(' ');
+    if (seenExact.has(fingerprint)) repeatedSentencePairs += 1;
+    else seenExact.add(fingerprint);
+  }
+  if (repeatedSentencePairs) issues.push('REPEATED_SENTENCE');
+
+  let nearDuplicateSentencePairs = 0;
+  for (let i = 0; i < sentenceWords.length; i += 1) {
+    const left = sentenceWords[i];
+    if (left.length < SIMILAR_SENTENCE_MIN_WORDS) continue;
+    for (let j = i + 1; j < sentenceWords.length; j += 1) {
+      const right = sentenceWords[j];
+      if (right.length < SIMILAR_SENTENCE_MIN_WORDS) continue;
+      if (left.join(' ') === right.join(' ')) continue;
+      const lengthRatio = Math.min(left.length, right.length) / Math.max(left.length, right.length);
+      if (lengthRatio < 0.7) continue;
+      if (diceSimilarity(left, right) >= SIMILAR_SENTENCE_THRESHOLD) nearDuplicateSentencePairs += 1;
+    }
+  }
+  if (nearDuplicateSentencePairs) issues.push('NEAR_DUPLICATE_SENTENCE');
+
+  const words = narrationWords(text);
+  const ngramCounts = new Map();
+  let repeatedNgramCount = 0;
+  if (words.length >= REPEAT_NGRAM_WORDS * 2) {
+    for (let i = 0; i <= words.length - REPEAT_NGRAM_WORDS; i += 1) {
+      const gram = words.slice(i, i + REPEAT_NGRAM_WORDS).join(' ');
+      const count = (ngramCounts.get(gram) || 0) + 1;
+      ngramCounts.set(gram, count);
+      if (count === 2) repeatedNgramCount += 1;
+    }
+  }
+  if (repeatedNgramCount) issues.push('REPEATED_LONG_PHRASE');
+
   return {
-    ...result,
-    ok: false,
-    code: fitResult?.code || 'STANDARD_NARRATION_DURATION_RECOMPOSE_FAILED',
-    phase: fitResult?.phase || 'Standard narration duration recompose',
-    model: fitResult?.model || result?.reasoning_model || null,
-    cancelled: Boolean(fitResult?.cancelled),
-    error: fitResult?.error || message,
+    ok: issues.length === 0,
+    issues: [...new Set(issues)],
+    cjk_count: cjkMatches.length,
+    repeated_sentence_pairs: repeatedSentencePairs,
+    near_duplicate_sentence_pairs: nearDuplicateSentencePairs,
+    repeated_10gram_count: repeatedNgramCount,
   };
 }
 
-/**
- * Registers the pre-semantic Pipeline 1 reasoning path under isolated IPC names.
- * Shared audio persistence/fit handlers stay owned by p1-vision-ipc.js.
- *
- * Standard mode keeps the original isolated analysis implementation, but if its
- * first grounded narration is materially shorter than the selected voice/video
- * budget, reuse the same module's evidence-backed narration recompose handler
- * BEFORE TTS. This avoids accepting a 30-40s voice for a ~90s source merely
- * because the original transcript is short, while still forbidding filler and
- * unsupported claims.
- */
+function qualitySummary(report) {
+  return `issues=${(report?.issues || []).join('|') || 'none'}; cjk=${report?.cjk_count || 0}; repeated_sentence=${report?.repeated_sentence_pairs || 0}; near_duplicate=${report?.near_duplicate_sentence_pairs || 0}; repeated_10gram=${report?.repeated_10gram_count || 0}`;
+}
+
+function narrationSchema(minChars, maxChars) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      narration_script: { type: 'string', minLength: minChars, maxLength: maxChars },
+    },
+    required: ['narration_script'],
+  };
+}
+
+async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, candidate, transcript, visualContext, budget, controller, temperature) {
+  const minChars = Math.max(1, Math.floor(Number(budget?.min_chars) || 1));
+  const maxChars = Math.max(minChars, Math.floor(Number(budget?.max_chars) || minChars));
+  const targetChars = Math.max(minChars, Math.min(maxChars, Math.floor(Number(budget?.target_chars) || Math.round((minChars + maxChars) / 2))));
+  const numPredict = Math.max(520, Math.min(2200, Math.ceil(targetChars / 1.6) + 180));
+  const timeoutMs = 150000;
+  const timeout = setTimeout(() => controller.abort({ type: 'timeout', phase }), timeoutMs);
+  emitProgress(event, `${phase}: gửi request tới ${payload.model}; hard_target=${minChars}-${maxChars}; output_limit=${numPredict} token.`, 'info');
+
+  try {
+    const response = await net.fetch(localOllamaUrl(payload.endpoint), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: payload.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: `NARRATION CANDIDATE:\n${candidate}\n\nFULL TRANSCRIPT SRT:\n${transcript}\n\nVISUAL EVIDENCE JSON:\n${JSON.stringify(visualContext)}`,
+          },
+        ],
+        stream: true,
+        format: narrationSchema(minChars, maxChars),
+        think: false,
+        keep_alive: 0,
+        options: { temperature, num_predict: numPredict },
+      }),
+    });
+    if (!response.ok) throw Object.assign(new Error(`${phase}: HTTP ${response.status}`), { code: 'OLLAMA_HTTP_ERROR' });
+    if (!response.body?.getReader) throw Object.assign(new Error(`${phase}: response stream không khả dụng.`), { code: 'OLLAMA_STREAM_UNAVAILABLE' });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let pending = '';
+    let content = '';
+    let finalChunk = null;
+    const consume = (line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      const item = JSON.parse(trimmed);
+      if (item?.error) throw Object.assign(new Error(`${phase}: ${item.error}`), { code: 'OLLAMA_STREAM_ERROR' });
+      if (typeof item?.message?.content === 'string') content += item.message.content;
+      if (item?.done) finalChunk = item;
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      pending += decoder.decode(value, { stream: true });
+      const lines = pending.split(/\r?\n/);
+      pending = lines.pop() || '';
+      for (const line of lines) consume(line);
+    }
+    pending += decoder.decode();
+    if (pending.trim()) consume(pending);
+
+    const evalCount = Number(finalChunk?.eval_count || 0);
+    const doneReason = String(finalChunk?.done_reason || '').toLowerCase();
+    if (doneReason === 'length' || (evalCount >= numPredict && doneReason !== 'stop')) {
+      throw Object.assign(new Error(`${phase}: output chạm giới hạn ${numPredict} token.`), { code: 'OLLAMA_OUTPUT_TRUNCATED' });
+    }
+
+    const parsed = parseJsonContent(content);
+    const narration = compactNarration(parsed?.narration_script);
+    if (narration.length < minChars || narration.length > maxChars) {
+      throw Object.assign(new Error(`${phase}: narration ${narration.length} chars ngoài ${minChars}-${maxChars}.`), {
+        code: 'NARRATION_LENGTH_OUT_OF_BUDGET', candidate: narration,
+      });
+    }
+    const quality = narrationQualityReport(narration);
+    if (!quality.ok) {
+      throw Object.assign(new Error(`${phase}: narration không đạt quality gate: ${quality.issues.join(', ')}.`), {
+        code: 'NARRATION_QUALITY_FAILED', candidate: narration, quality,
+      });
+    }
+    emitProgress(event, `${phase}: PASS; narration=${narration.length} chars; ${qualitySummary(quality)}.`, 'success');
+    return { narration, quality };
+  } catch (error) {
+    if (controller.signal.aborted) {
+      const reason = controller.signal.reason;
+      if (reason && typeof reason === 'object' && reason.type === 'timeout') {
+        throw Object.assign(new Error(`${phase}: quá thời gian ${Math.round(timeoutMs / 1000)} giây.`), { code: 'OLLAMA_PHASE_TIMEOUT' });
+      }
+      throw Object.assign(new Error('Pipeline 1 đã được người dùng dừng.'), { code: 'P1_CANCELLED' });
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function recomposeStandardNarration(net, event, payload, narration, transcript, visualContext, budget, controller) {
+  const minChars = Math.max(1, Math.floor(Number(budget?.min_chars) || 1));
+  const maxChars = Math.max(minChars, Math.floor(Number(budget?.max_chars) || minChars));
+  const targetChars = Math.max(minChars, Math.min(maxChars, Math.floor(Number(budget?.target_chars) || Math.round((minChars + maxChars) / 2))));
+  let candidate = narration;
+  let lastError = null;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const phase = attempt === 0 ? 'Standard duration recompose' : 'Standard duration quality retry';
+    const retryReason = lastError ? `${lastError.code}: ${lastError.message}` : '';
+    const prompt = [
+      'Bạn viết lại MỘT narration tiếng Việt liền mạch cho Pipeline 1 TRƯỚC TTS.',
+      `Hard target ${minChars}-${maxChars} ký tự, ưu tiên khoảng ${targetChars}.`,
+      attempt === 0
+        ? 'Candidate hiện tại là draft ngắn. Hãy mở rộng bằng FULL TRANSCRIPT + VISUAL EVIDENCE, ưu tiên các chi tiết có căn cứ chưa được kể.'
+        : `Candidate hiện tại là CHÍNH bản vừa bị code từ chối (${retryReason}). Hãy GIỮ phần tốt của bản này và chỉ sửa lỗi contract; KHÔNG quay lại draft ngắn ban đầu.`,
+      'Dùng transcript và Vision evidence làm nguồn sự thật duy nhất.',
+      'Có thể mở rộng hành động nhìn thấy, trình tự, vật thể, bối cảnh sản phẩm và câu chuyển ý có căn cứ.',
+      'Ưu tiên evidence mới/chưa dùng thay vì diễn đạt lại ý đã có.',
+      'CẤM lặp nguyên câu, lặp cụm dài, lặp CTA/kết luận/lợi ích dưới cách diễn đạt gần giống.',
+      'CẤM bịa claim, số liệu, nguyên liệu, công dụng hoặc chi tiết không có căn cứ.',
+      'Chỉ tiếng Việt tự nhiên; không CJK lạc ngữ cảnh; không filler chỉ để đủ ký tự.',
+      'Output là một narration liên tục, không SRT, numbering, bullet hoặc scene label.',
+      'Code sẽ kiểm cứng độ dài, CJK, repeated sentence, near-duplicate sentence và repeated 10-word phrase.',
+      'Không giải thích. Chỉ trả JSON đúng schema.',
+    ].join('\n');
+
+    try {
+      return await ollamaNarrationRequest(
+        net, event, payload, phase, prompt, candidate, transcript, visualContext, budget, controller, attempt === 0 ? 0.2 : 0.3
+      );
+    } catch (error) {
+      lastError = error;
+      if (error?.candidate) candidate = compactNarration(error.candidate);
+      const retryable = ['OLLAMA_OUTPUT_TRUNCATED', 'OLLAMA_JSON_INVALID', 'NARRATION_LENGTH_OUT_OF_BUDGET', 'NARRATION_QUALITY_FAILED'].includes(error?.code);
+      if (attempt === 0 && retryable && !controller.signal.aborted) {
+        emitProgress(
+          event,
+          `${phase}: chưa đạt contract (${error.code}); retry sẽ sửa chính candidate bị reject${error?.candidate ? ` (${candidate.length} chars)` : ''}, không quay lại draft ${narration.length} chars.`,
+          'warning'
+        );
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw lastError || new Error('Standard duration recompose thất bại.');
+}
+
+function failedRecompose(result, error, message) {
+  return {
+    ...result,
+    ok: false,
+    code: error?.code || 'STANDARD_NARRATION_DURATION_RECOMPOSE_FAILED',
+    phase: error?.phase || 'Standard narration duration recompose',
+    model: error?.model || result?.reasoning_model || null,
+    cancelled: error?.code === 'P1_CANCELLED',
+    error: error?.message || message,
+  };
+}
+
 module.exports = function registerP1StandardVisionIPC({ ipcMain, net }) {
-  let standardFitHandler = null;
+  const recomposeControllers = new Map();
+  let standardCancelHandler = null;
 
   const scopedIpcMain = {
     handle(channel, handler) {
-      if (channel === 'ollama:p1FitNarration') {
-        standardFitHandler = handler;
-        return undefined;
-      }
+      if (channel === 'ollama:p1FitNarration') return undefined;
 
       if (channel === 'ollama:p1CancelVision') {
-        return ipcMain.handle('ollama:p1CancelStandardVision', handler);
+        standardCancelHandler = handler;
+        return ipcMain.handle('ollama:p1CancelStandardVision', async (event) => {
+          const controller = recomposeControllers.get(event.sender.id);
+          if (controller && !controller.signal.aborted) controller.abort('owner-stop');
+          return standardCancelHandler(event);
+        });
       }
 
       if (channel !== 'ollama:p1AnalyzeVision') return undefined;
@@ -100,10 +366,6 @@ module.exports = function registerP1StandardVisionIPC({ ipcMain, net }) {
         const minChars = Math.max(1, Math.floor(Number(budget?.min_chars) || 1));
         const maxChars = Math.max(minChars, Math.floor(Number(budget?.max_chars) || minChars));
         if (!narration || narration.length >= minChars) return result;
-
-        if (!standardFitHandler) {
-          return failedRecompose(result, null, 'Standard narration ngắn hơn duration budget nhưng evidence-backed recompose handler chưa sẵn sàng.');
-        }
 
         const sourceDurationSec = Number(payload?.video_info?.duration) || 0;
         const transcript = String(payload?.transcript_srt || '').trim();
@@ -120,44 +382,31 @@ module.exports = function registerP1StandardVisionIPC({ ipcMain, net }) {
           'warning'
         );
 
-        const fitResult = await standardFitHandler(event, {
-          endpoint: payload.endpoint,
-          model: payload.model,
-          narration_script: narration,
-          audio_duration_ms: Math.max(1, Math.round(predictedBeforeSec * 1000)),
-          video_duration_ms: Math.max(1, Math.round(sourceDurationSec * 1000)),
-          transcript_srt: transcript,
-          visual_context: visualContext,
-        });
-
-        if (!fitResult?.ok || !fitResult?.narration_script || fitResult?.evidence_backed !== true) {
-          return failedRecompose(result, fitResult, 'Evidence-backed Standard narration recompose không đạt contract.');
+        const controller = new AbortController();
+        recomposeControllers.set(event.sender.id, controller);
+        let recomposed;
+        try {
+          recomposed = await recomposeStandardNarration(net, event, payload, narration, transcript, visualContext, budget, controller);
+        } catch (error) {
+          return failedRecompose(result, error, 'Evidence-backed Standard narration recompose không đạt contract.');
+        } finally {
+          if (recomposeControllers.get(event.sender.id) === controller) recomposeControllers.delete(event.sender.id);
         }
 
-        const repaired = compactNarration(fitResult.narration_script);
-        if (repaired.length < minChars || repaired.length > maxChars) {
-          return failedRecompose(
-            result,
-            fitResult,
-            `Standard narration sau recompose vẫn ngoài hard target ${minChars}-${maxChars} chars.`
-          );
-        }
-
-        result.analysis.narration_script = repaired;
-        result.narration_quality = fitResult.quality || result.narration_quality || null;
+        result.analysis.narration_script = recomposed.narration;
+        result.narration_quality = recomposed.quality || result.narration_quality || null;
         result.narration_budget = {
           ...budget,
-          ...(fitResult.budget || {}),
           target_ratio: STANDARD_TARGET_RATIO,
           min_ratio: STANDARD_MIN_RATIO,
           pre_tts_duration_recomposed: true,
           initial_narration_chars: narration.length,
-          final_narration_chars: repaired.length,
+          final_narration_chars: recomposed.narration.length,
         };
 
         emitProgress(
           event,
-          `Standard duration guard PASS: ${narration.length} -> ${repaired.length} chars; target=${minChars}-${maxChars}. TTS chỉ chạy sau khi narration đủ coverage dự kiến.`,
+          `Standard duration guard PASS: ${narration.length} -> ${recomposed.narration.length} chars; target=${minChars}-${maxChars}. TTS chỉ chạy sau khi narration đủ coverage dự kiến.`,
           'success'
         );
         return result;
