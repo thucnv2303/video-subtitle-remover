@@ -7,7 +7,7 @@ PIPELINE1-SEMANTIC-REMIX-007
 Pipeline 1 Optional Semantic Remix — Standard Script Default + Guarded Scene Remix
 
 ## Status
-MERGED_HEAD_CODE_RECHECK_PASS_STATIC_AND_OWNER_TWO_MODE_WAITING
+STATIC_PASS_OWNER_TWO_MODE_WAITING
 
 ## Authority
 - Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
@@ -16,7 +16,8 @@ MERGED_HEAD_CODE_RECHECK_PASS_STATIC_AND_OWNER_TWO_MODE_WAITING
 - Exact spec: `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`.
 - Corrective P1 source originally reviewed at `7b217c7b73e98375bcf5ff2bcb24a92c8fa61796`.
 - Voice Render PR #50 merged at `3c7d47ca08c1e7a93365223a184d47e29c2175c0`.
-- P1 merged-head recheck basis: `19677fbdbfe6d7910281307b387e15c007ab0282`.
+- Merged-head P1 review basis: `19677fbdbfe6d7910281307b387e15c007ab0282`.
+- Static verification state tested by Owner: `59925b05afef7071cdd478209d4c54732b611d78`.
 
 ## User outcome
 Semantic Remix is optional, not a replacement for normal script generation.
@@ -34,52 +35,35 @@ Semantic Remix is optional, not a replacement for normal script generation.
 8. Guard runs before accepted semantic artifact persistence/TTS.
 9. BUG-034 remains: no hard 95-100% original-source occupancy gate and no extra LLM/TTS pass solely to fill source duration.
 
-## Completed side task
-Voice Render shared-library/long-text work is merged and no longer blocks this P1 task. Accepted clone-safe default is 300 with Owner runtime PASS and static PASS.
+## Verification completed
+- Execution: PASS.
+- Merged-head logic/scope code review: PASS.
+- Automated/static verification: PASS from Owner local run on exact state `59925b05afef7071cdd478209d4c54732b611d78` with no reported errors for the required Node syntax checks and `git diff --check`.
+- PR #48 mergeability currently reports true.
 
-## Merged-head review result
-GitHub compare from `7b217c7...` to `19677fb...` shows P1-specific renderer/validator/Standard IPC source did not change after the prior P1 corrective review. The later application changes are the completed Voice Render side task plus docs.
-
-`src/main/main.js` and `src/main/preload.js` were re-read because Voice Render changed them. Verified:
-- semantic and Standard P1 IPC registration is still present;
-- Standard/Semantic cancellation and P1 bridge methods remain present;
-- new additions do not replace task-007 P1 routing.
-
-Merged-head P1 code review: PASS logic/scope. Runtime remains required.
-
-## Verification required now
-Run on the new current exact PR #48 HEAD after this docs synchronization:
-- `git rev-parse HEAD`;
-- `node --check src/main/main.js`;
-- `node --check src/main/preload.js`;
-- `node --check src/main/p1-standard-vision-ipc.js`;
-- `node --check src/main/p1-standard-vision-wrapper.js`;
-- `node --check src/renderer/js/pipeline1-run-config.js`;
-- `node --check src/renderer/js/pipeline1-analysis.js`;
-- `node --check src/renderer/js/pipeline1-semantic-validator.js`;
-- recommended `node --check src/renderer/js/pipelines/pipeline1-ai.js`;
-- `git diff --check 9981da334ca10fd845c971241d541894d736c13b..HEAD`.
-
-Owner runtime A — Standard/default OFF:
+## Owner runtime A — Standard/default OFF
+Required next:
 - control defaults OFF;
 - log says `ScriptMode=standard`;
 - normal continuous script/TTS completes;
-- Standard v4 artifacts and non-authoritative empty semantic plan;
+- Standard v4 artifacts identify `multimodal-standard-script-v4`, `semantic_remix_enabled:false`;
+- `edit_plan.json` is non-authoritative with empty `plan`;
 - P1->P2 gate remains valid.
 
-Owner runtime B — Semantic ON:
+## Owner runtime B — Semantic ON
+Run only after Standard gate is accepted:
 - explicitly enable before Start;
 - log says `ScriptMode=semantic-remix`;
-- same/equivalent 97.57s source;
+- same/equivalent source;
 - result either passes deterministic guard with coherent scene/timing/claim artifacts or fails closed before accepted semantic artifact/TTS/downstream unlock;
 - if pass, inspect fresh `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING.
+- Automated/static: PASS.
 - Code review: PASS for merged-head logic/scope.
 - Owner Standard: NOT STARTED.
 - Owner Semantic: NOT STARTED after correction.
-- Documentation synchronization: IN PROGRESS until handoff/PR metadata match the latest docs head.
+- Documentation synchronization: IN PROGRESS until handoff/PR metadata match this state.
 - P3 semantic cut/reorder: BLOCKED.
 - Merge permission: BLOCKED.
