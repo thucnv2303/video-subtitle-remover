@@ -1,53 +1,60 @@
 # Current State
 
 ## Status
-VOICE-RENDER-SHARED-LIBRARY-009 — SOURCE PUBLISHED / PM LOGIC-SCOPE REVIEW PASS / EXACT STATIC + OWNER RUNTIME WAITING
+VOICE-RENDER-SHARED-LIBRARY-009 — SINGLE ACTIVE REVIEW PATH / BOOTSTRAP CORRECTION PUBLISHED / EXACT STATIC + OWNER RETEST WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Active review branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
-- Draft PR: #50.
-- Base: `review/VOICE-RENDER-TAB-008-demo@3164b6f625e06d4d8f4d88009fb9dea5c335198f`.
+- Single active Voice Render review branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
+- Single active Voice Render Draft PR: #50.
+- Base: `review/PIPELINE1-SEMANTIC-REMIX-007@0b3ee3a63f06d17334b2c295491c50039326febb`.
+- Superseded PR #49 is CLOSED/OBSOLETE and must not be used for Owner testing.
 - Exact spec: `.ai/task_specs/VOICE-RENDER-SHARED-LIBRARY-009.md`.
-- Latest PM-reviewed application-source commit: `066a7cc9b369abf992dd0840c336ad0edb17022a`.
+- Latest application-source commit after Owner runtime failure: `4e7b17a773f7602fa9cfce697cdffcca2b72e7d3`.
 - Owner-test worktree: `E:\Project AI\Video-sub-remove-owner-test-P1`.
 
-## Published behavior
-- Voice Render uses the current app navy/blue visual language.
-- Global App/Backend/TTS/GPU/CPU/RAM information is mounted in the left sidebar and remains visible across tabs.
-- Voice Render lower-right area is a bounded Log card with filter/copy/clear.
-- Shared voice library is a vertically scrollable list with independent preview and explicit selection.
-- Clone voices save into existing `localStorage.tts_voices` and refresh known Settings/Pipeline selectors.
-- Long text uses deterministic bounded chunks, sequential TTS requests and one final WAV merge.
-- Stop means stop-after-current synchronous TTS request; no false mid-request cancellation claim.
-- A new run clears old result state. Failed/stopped/incomplete runs cannot claim a final merged result.
-- WAV merge is performed by a narrow preload bridge using existing FFmpeg; cleanup is constrained to matching `<final-stem>.part-###.wav` inputs in the final output directory.
+## Owner runtime evidence
+Owner launched the app and observed that Voice Render and the new global status card did not appear. This is a real runtime FAIL for the previous dynamic bootstrap path.
 
-## Isolation
-Application source delta in PR #50 is exactly:
-- `src/main/preload.js`;
-- `src/renderer/js/voice-render.js`;
-- `src/renderer/styles/voice-render.css`.
+## Corrective change
+- `src/main/main.js` now performs a deterministic Voice Render bootstrap after `did-finish-load` using the already-loaded BrowserWindow.
+- The bootstrap is idempotent: if `#nav-voice-render` already exists it does nothing.
+- If prior dynamic script tags exist without mounting, they are removed before adding one fresh `js/voice-render.js` script tag.
+- Load/bootstrap failures are logged to the existing Electron console path.
+- Previous preload bootstrap remains harmless fallback; main-window bootstrap is now the runtime authority for mounting the feature.
 
-No P1/P2/P3 implementation, shared video Job/gate, backend TTS engine, dependency or package source change.
+## Published Voice Render behavior
+- Current app navy/blue visual language.
+- Global App/Backend/TTS/GPU/CPU/RAM information in the left sidebar across tabs.
+- Voice Render lower-right bounded Log card with filter/copy/clear.
+- Scrollable shared voice list with independent preview and explicit selection.
+- Clone voices saved into existing `localStorage.tts_voices` and synchronized with known Settings/Pipeline selectors.
+- Long text deterministic bounded chunks, sequential TTS requests and final WAV merge.
+- Stop means stop-after-current synchronous request.
+- Failed/stopped/incomplete runs cannot claim final merged output.
 
-PR #48 / P1 Semantic Remix remains an independent upstream review and is not satisfied by this task.
+## Isolation / source scope
+Application source in active PR #50 now includes:
+- `src/main/main.js` — deterministic runtime bootstrap only;
+- `src/main/preload.js` — system info + constrained WAV merge + fallback script bootstrap;
+- `src/renderer/js/voice-render.js` — Voice Render UI/state/queue/shared voices;
+- `src/renderer/styles/voice-render.css` — app-native UI styling.
+
+No P1/P2/P3 reasoning/inpaint/finalize implementation, shared video Job/gate, backend TTS engine, dependency or package source change.
 
 ## Verification facts
-- PR #50 is Draft/open on the intended dedicated branch.
-- PM reviewed changed-file scope and source patches; broad renderer file-delete bridge was found during review and removed/replaced by constrained merge-owned cleanup.
-- PM also corrected clone-language normalization, long-text no-chunk guard, actual paragraph-preservation behavior and stale-result carryover.
-- Unresolved PR review threads: none at latest check.
-- Direct verification container cannot resolve GitHub raw/git network, so exact-head `node --check` and `git diff --check` are not claimed PASS.
-- Owner visual/runtime verification: NOT STARTED.
+- PR #50 is Draft/open and now bases directly on the P1 review branch, eliminating the obsolete demo PR as an intermediate base.
+- PR #49 is closed and explicitly marked superseded by PR #50.
+- Previous PM logic/scope review was invalidated for runtime readiness by Owner observation; new `main.js` correction requires exact-head static review/retest.
+- No release PASS is claimed.
 
 ## Gates
-- Execution: PASS.
-- Automated/static verification: WAITING.
-- Code review: PASS logic/scope through application source `066a7cc9b369abf992dd0840c336ad0edb17022a`.
-- Owner visual/runtime verification: NOT STARTED.
-- Documentation synchronization: PASS — current_state/task_current/handoff/ACTIVE/spec/architecture aligned to task 009.
+- Execution: PASS — corrective source published.
+- Automated/static verification: WAITING on new exact HEAD.
+- Code review: WAITING for exact-head correction review/static evidence.
+- Owner visual/runtime verification: FAIL on previous head; RETEST WAITING on corrected head.
+- Documentation synchronization: PASS after this single-path state update.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Owner fetches the exact final PR #50 HEAD into `E:\Project AI\Video-sub-remove-owner-test-P1`, runs the required Node/diff static commands, and only if they pass starts the approved real-app Voice Render test. Do not merge.
+Owner fetches the exact current PR #50 HEAD into `E:\Project AI\Video-sub-remove-owner-test-P1`, verifies static syntax/diff, fully closes any running VSR instance, starts the app, and first verifies that `Voice Render` plus the global sidebar status now mount. Do not test long-text rendering until the tab itself is confirmed visible. Do not merge.
