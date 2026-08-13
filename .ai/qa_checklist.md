@@ -7,94 +7,109 @@
 - [x] Branch `review/PIPELINE1-SEMANTIC-REMIX-007`.
 - [x] Draft PR #48.
 - [x] Base `9981da334ca10fd845c971241d541894d736c13b`.
-- [x] Exact task spec synchronized to optional-mode design.
-- [x] No P2/P3/TTS-engine/dependency change in corrective source.
+- [x] Standard duration defect recorded as BUG-037.
+- [x] Owner duration behavior recorded as D-016.
+- [x] D-016 source correction changes only `src/main/p1-standard-vision-wrapper.js` from prior stable app state.
+- [x] No P2/P3/TTS-engine/dependency change in D-016 correction.
 
-## Mode routing — source review
+## Mode routing
 - [x] Semantic preference key is `p1_semantic_remix_enabled`.
 - [x] Missing preference defaults OFF.
-- [x] Start snapshots `semanticRemixEnabled` into each idle Job.
+- [x] Start snapshots `semanticRemixEnabled` per Job.
 - [x] Runtime log exposes `ScriptMode=standard` or `ScriptMode=semantic-remix`.
-- [x] Standard and Semantic main-process reasoning use separate IPC names.
-- [x] Shared audio handlers are not double-registered by Standard wrapper.
+- [x] Standard and Semantic reasoning use separate IPC names.
+- [x] Shared audio handlers are not double-registered.
 
-## Standard Script — source review
-- [x] Standard reasoning module is exact pre-semantic starting-ref implementation.
-- [x] Standard mode still uses ASR + adaptive Vision + global reasoning.
-- [x] Standard mode produces one continuous narration.
-- [x] Artifacts use `artifact_version:4` / `multimodal-standard-script-v4`.
-- [x] `semantic_remix_enabled:false`.
-- [x] `edit_plan.authoritative:false` and `plan:[]`.
-- [x] Preview SRT remains source-duration compatible.
+## Standard Script — D-016 source review
+- [x] Standard first pass still uses full ASR + adaptive Vision + isolated normal reasoning.
+- [x] Existing voice-aware narration budget remains derived from source duration + selected voice/speed.
+- [x] If first narration is below the minimum budget, wrapper invokes one evidence-backed recompose before TTS.
+- [x] Recompose receives full transcript + accumulated Vision evidence + source duration + selected voice/speed-derived rate.
+- [x] Repaired narration must be inside hard budget before acceptance.
+- [x] Existing quality/evidence failure remains fail-closed.
+- [x] TTS remains one continuous full-text synthesis after narration acceptance.
+- [x] No repeated post-TTS LLM/TTS duration-fit loop was added.
+- [x] Standard artifacts remain `multimodal-standard-script-v4`, `semantic_remix_enabled:false`.
+- [x] `edit_plan.authoritative:false` and `plan:[]` remain required.
 
-## Semantic Remix — source review
-- [x] Only explicit opt-in routes to Semantic reasoning.
+## BUG-037 regression
+Owner prior failure:
+- source ~97.57s;
+- Standard OFF/default;
+- voice-aware budget ~1529–1610 chars;
+- accepted first narration ~612 chars;
+- generated voice ~35.82s / ~36.7%.
+
+Required corrected behavior:
+- [ ] same/equivalent short first draft logs `Standard duration guard`;
+- [ ] evidence-backed recompose happens before TTS;
+- [ ] log shows `Standard duration guard PASS` before TTS;
+- [ ] accepted narration enters the hard character range without filler/repetition/unsupported claims;
+- [ ] exactly one continuous TTS then runs;
+- [ ] measured voice is close to source duration rather than ~36.7%, subject to natural TTS variance.
+
+## Semantic Remix / BUG-036 source review
+- [x] Semantic mode remains explicit opt-in.
 - [x] Canonical global scene inventory remains active.
-- [x] Profiles/strategy/beats/narration remain required by main-process schema.
-- [x] Semantic prompt explicitly rejects translation-only behavior and current BUG-036 failure modes.
-- [x] Existing CJK/repetition quality checks remain upstream.
-- [x] Artifacts use `multimodal-semantic-remix-v4` / `semantic_remix_enabled:true`.
-- [x] Semantic edit plan is marked authoritative only after renderer guards pass.
-
-## BUG-036 deterministic renderer guard
-- [x] Strategy target vs summed beat target tolerance is max(2s,5%).
+- [x] Profiles/strategy/beats/narration remain required.
+- [x] Strategy target vs summed beats tolerance is `max(2s, 5%)`.
 - [x] Missing referenced scenes are rejected.
-- [x] Guarded action terms include mold/shape, steam, bake, wash/peel/soak, mix/syrup, cook/stir and filling.
-- [x] CTA must map to late final-result evidence when available.
-- [x] Selected unsupported health/composition/product claims are rejected.
-- [x] Predicted narration duration must be 70–130% of summed beat duration.
-- [x] Empty normalized evidence tokens are ignored; non-Latin terms cannot accidentally make a rule always PASS.
-- [x] Guard executes before semantic artifact persistence/TTS.
-- [x] Owner Job `kkx59hfu0` 75s strategy vs 50s beat sum would fail the current duration guard.
+- [x] Guarded process/action mappings require supporting scene evidence.
+- [x] CTA uses available late final-result evidence when applicable.
+- [x] Selected unsupported hard claims are rejected.
+- [x] Predicted narration duration must be 70–130% of summed beat target.
+- [x] Guard runs before semantic artifact persistence/TTS.
+- [x] D-016 does not force Semantic narration to fill original-source duration.
 
-## BUG-034 regression invariants
-- [x] No hard 95–100% ORIGINAL-source narration occupancy minimum restored.
-- [x] No second LLM/TTS call added solely to fill source duration.
-- [x] P3 remains final timeline/voice-fit authority.
-- [x] P2 remains subtitle-removal only.
+## Static verification
+Historical application state `59925b05afef7071cdd478209d4c54732b611d78` already passed the required Node syntax checks and `git diff --check` by Owner. GitHub compare from that state to the D-016 correction proves the only application-source delta is `src/main/p1-standard-vision-wrapper.js`; other changes are canonical documentation.
 
-## Exact static checks — BLOCKING
-- [ ] `git rev-parse HEAD` matches exact PR #48 head.
-- [ ] `node --check src/main/main.js`.
-- [ ] `node --check src/main/preload.js`.
-- [ ] `node --check src/main/p1-standard-vision-ipc.js`.
-- [ ] `node --check src/main/p1-standard-vision-wrapper.js`.
-- [ ] `node --check src/renderer/js/pipeline1-run-config.js`.
-- [ ] `node --check src/renderer/js/pipeline1-analysis.js`.
-- [ ] `node --check src/renderer/js/pipeline1-semantic-validator.js`.
-- [ ] Recommended regression: `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
-- [ ] `git diff --check 9981da334ca10fd845c971241d541894d736c13b..HEAD`.
+D-016 delta:
+- [x] Full corrected wrapper re-read from GitHub after publication.
+- [x] `node --check` on exact corrected wrapper content: PASS (silent success in PM container).
+- [x] Logic/scope review of one-file source delta: PASS.
+- [ ] Owner runtime Standard retest on final exact head.
+- [ ] Owner runtime Semantic retest after Standard PASS.
 - [ ] GitHub CI/status: none configured; absence is not PASS.
 
+If any additional application source changes after source commit `41a4a429bfe7dfe17fbd2113f4019733656359ce`, all affected static checks must be rerun.
+
 ## Owner manual run A — Standard/default OFF
-- [ ] Semantic Remix control appears and defaults OFF on clean preference.
-- [ ] Start log says `ScriptMode=standard`.
-- [ ] P1 ASR/Vision/global reasoning completes.
-- [ ] One continuous narration/TTS is produced.
-- [ ] `remix_script.json` says `multimodal-standard-script-v4` and `semantic_remix_enabled:false`.
-- [ ] `edit_plan.json` has `authoritative:false` and empty plan.
-- [ ] P1→P2 unlock works when normal artifacts/TTS are valid.
-- [ ] Toggling UI after Start does not change that running Job mode.
+- [ ] checkout exact final PR head and confirm `git rev-parse HEAD`;
+- [ ] Semantic Remix control OFF/default;
+- [ ] `ScriptMode=standard`;
+- [ ] P1 ASR/Vision/global reasoning completes;
+- [ ] severe underfill triggers D-016 pre-TTS recompose;
+- [ ] narration quality/grounding remains natural and non-repetitive;
+- [ ] one continuous TTS completes;
+- [ ] Standard v4 artifact metadata correct;
+- [ ] `edit_plan.json` non-authoritative with empty plan;
+- [ ] P1->P2 unlock remains valid.
 
 ## Owner manual run B — Semantic ON
-Use same/equivalent ~97.57s source.
-- [ ] Explicitly enable Semantic Remix before Start.
-- [ ] Start log says `ScriptMode=semantic-remix`.
-- [ ] Canonical scene inventory is globally indexed.
-- [ ] Strategy target approximately equals beat target sum.
-- [ ] Predicted narration coverage is within 70–130% of beat plan.
-- [ ] Molding/shape/fill/CTA beats map to semantically correct source scenes.
-- [ ] Final-result scenes are used when script/CTA claims final result.
-- [ ] No unsupported `nướng`, health, purity/safety or composition claims.
-- [ ] If any deterministic guard fails, Job fails before accepted artifact/TTS and downstream must not be unlocked as valid semantic output.
-- [ ] If pass, inspect fresh `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`.
+Run only after Standard PASS.
+- [ ] explicitly enable Semantic Remix before Start;
+- [ ] `ScriptMode=semantic-remix`;
+- [ ] canonical scene inventory globally indexed;
+- [ ] strategy target approximately equals beat target sum;
+- [ ] predicted narration coverage is within 70–130% of beat plan;
+- [ ] action/CTA scene mapping is semantically correct;
+- [ ] no unsupported claims;
+- [ ] invalid semantic result fails before accepted artifact/TTS/downstream unlock;
+- [ ] inspect fresh `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json` on pass.
 
 ## Queue/regression
-- [ ] Failed semantic Job does not stop next queued P1 Job.
-- [ ] Manual Job browsing remains independent of processing Job.
-- [ ] Standard and Semantic Jobs queued together retain their own snapshotted modes.
-- [ ] No segmented `/api/tts-retry` narration regression.
+- [ ] failed Job does not stop next queued P1 Job;
+- [ ] manual Job browsing remains independent of processing Job;
+- [ ] queued Standard/Semantic Jobs retain their own snapshotted modes;
+- [ ] no segmented `/api/tts-retry` narration regression;
 - [ ] P2/P3 behavior unchanged.
 
 ## Gates
-Execution PASS for corrective publication; automated/static WAITING; final corrective code review WAITING; Owner Standard NOT STARTED; Owner Semantic NOT STARTED after correction; documentation synchronization IN PROGRESS until final bug/PR state sync; merge BLOCKED.
+- Execution: PASS.
+- Automated/static for application source delta: PASS using prior unchanged-source static evidence + exact corrected-wrapper syntax check.
+- Code review: PASS logic/scope for D-016 source delta.
+- Owner Standard: RETEST WAITING.
+- Owner Semantic: ON HOLD until Standard PASS.
+- Documentation synchronization: WAITING until dynamic docs + PR body are finalized on the exact final head.
+- Merge: BLOCKED.
