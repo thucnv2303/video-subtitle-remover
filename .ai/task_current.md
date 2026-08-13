@@ -4,7 +4,7 @@
 VOICE-RENDER-SHARED-LIBRARY-009
 
 ## Status
-PERIOD_ONLY_OUTER_CHUNK_IMPROVED_OMNIVOICE_LONG_FORM_DIAGNOSIS
+OWNER_RUNTIME_PASS_CLONE_SAFE_300_STATIC_WAITING
 
 ## Authority
 - Single active branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -15,47 +15,28 @@ PERIOD_ONLY_OUTER_CHUNK_IMPROVED_OMNIVOICE_LONG_FORM_DIAGNOSIS
 - Pinned OmniVoice submodule: `k2-fsa/OmniVoice@468e927ba3716cd8dd86421148dfb3046e9f9d7b`.
 
 ## Verified Owner result
-- period-only outer chunking substantially improved the result;
-- residual spoken stutter still occurs in some sections, so Owner runtime is FAIL;
-- supplied retest WAV: 303.42s, 24 kHz mono PCM16, peak about 0.92;
-- exact PCM repeat scan did not find non-silent copy-pasted duplicate segments at the tested window resolution.
+- Owner tested the same narration with Adam at target 300.
+- Owner reports the result is very good and smooth and explicitly authorizes merge / return to the main processing flow.
+- This closes the residual-stutter runtime defect observed at target 450 for the accepted configuration.
 
-## Current VSR source state
-Latest application-source correction remains `f5a7659a4469cde2d70be10f7a1a8d12f8a4c9b6`.
-- outer chunk boundaries occur only after terminating `.`;
-- 300/450/600 are soft targets and do not cut inside a sentence;
-- each completed renderer chunk is appended once;
-- FFmpeg concat consumes the chunk list once;
-- current evidence does not indicate duplicate outer concat as the stutter source.
+## Final source state
+Latest application-source commit: `9ee2bb08f8efb3a29e478c08dab283d0c5041514`.
+- `src/renderer/js/voice-render-quality-fix.js`: `DEFAULT_CHUNK_SIZE` changed from 450 to 300.
+- options remain 300/450/600.
+- period-only outer splitter remains unchanged.
+- native OmniVoice clone speed, 0.92 headroom, merge logic and transcript/ref_text behavior remain unchanged.
+- GitHub compare confirms the final source correction is exactly one file / one line changed.
 
-## Verified pinned OmniVoice behavior
-At submodule commit `468e927ba3716cd8dd86421148dfb3046e9f9d7b`:
-- default `audio_chunk_threshold` is 30.0 seconds;
-- default `audio_chunk_duration` is 15.0 seconds;
-- requests estimated above threshold route to `_generate_chunked()`;
-- `_generate_chunked()` uses `chunk_text_punctuation()`;
-- the internal punctuation splitter can split at `. , ; : ! ?` and CJK equivalents;
-- internal chunks are recombined with `cross_fade_chunks()`, whose default silence gap is 0.3 seconds.
-
-## Controlled comparison
-Using the exact Owner narration and VSR period-only packing:
-- target 450 -> 13 outer chunks; 12/13 are approximately 33-43 seconds at a 145-wpm comparison estimate;
-- target 300 -> 21 outer chunks; approximately 14-28 seconds at the same comparison estimate;
-- therefore target 300 is expected to reduce the likelihood that OmniVoice activates its own >30s long-form splitter, but Owner runtime is required before any source change.
-
-## Next diagnostic
-Do not change source yet:
-1. Keep the same application source and Adam clone.
-2. Use the exact same narration script.
-3. Render at chunk target 300 instead of 450.
-4. Compare spoken stutter count/severity against the 450 render.
-5. Confirm every VSR outer transition still occurs only after `.`.
-6. Confirm final merge/playback succeeds.
-
-If 300 materially reduces/removes stutter, PM may publish a dedicated minimal correction making 300 the clone-safe default. If stutter remains comparable, inspect OmniVoice generation/internal chunk behavior further before changing VSR merge logic.
+## Acceptance status
+- outer chunk boundaries only after `.`: PASS.
+- long-text render and final WAV merge/playback: PASS from Owner runtime evidence.
+- clone voice quality at accepted default 300: PASS from Owner runtime evidence.
+- residual stutter at accepted default 300: PASS from Owner runtime evidence.
+- final one-line default-value source correction code review: PASS.
+- required static command output on final HEAD: WAITING.
 
 ## Required static verification
-On final PR #50 HEAD after the final source state is selected:
+On final PR #50 HEAD:
 - `node --check src/main/main.js`
 - `node --check src/main/preload.js`
 - `node --check src/renderer/js/voice-render.js`
@@ -65,9 +46,12 @@ On final PR #50 HEAD after the final source state is selected:
 - `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
 
 ## Gates
-- Execution: PASS for current published period-only source.
+- Execution: PASS.
 - Automated/static: WAITING.
-- Code review: WAITING for final source state.
-- Owner runtime: FAIL — residual stutter on 450 result.
-- Documentation synchronization: IN PROGRESS until handoff/PR metadata match this diagnosis.
-- Merge permission: BLOCKED.
+- Code review: PASS.
+- Owner runtime: PASS.
+- Documentation synchronization: IN PROGRESS until handoff/PR metadata match final docs head.
+- Merge permission: BLOCKED pending static PASS.
+
+## Next action
+Run the required static verification on final exact PR HEAD. If all pass, record static PASS, merge PR #50 with exact-head protection, verify the merge on the intended base branch, then switch project control back to the main processing flow.
