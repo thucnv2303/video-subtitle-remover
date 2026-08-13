@@ -4,7 +4,7 @@
 `VOICE-RENDER-SHARED-LIBRARY-009 — Voice Render Shared Library + Long Text`
 
 ## Status
-OWNER CORE RUNTIME PASS / TRANSCRIPT REMEDIATION UI FIX PUBLISHED / STATIC + OWNER RETEST WAITING / MERGE BLOCKED
+OWNER CORE RUNTIME PASS / APP-NATIVE TRANSCRIPT EDITOR PUBLISHED / STATIC + OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Single active Voice Render branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -16,31 +16,33 @@ OWNER CORE RUNTIME PASS / TRANSCRIPT REMEDIATION UI FIX PUBLISHED / STATIC + OWN
 
 ## Verified Owner evidence
 PASS:
-- Voice Render mounts/navigation.
-- core preview/render/long-text queue/final WAV merge work when voice data is valid.
+- Voice Render mount/navigation.
+- core preview/render/long-text queue/final WAV merge work for valid voice data.
 
-Confirmed FAIL:
-- Adam legacy clone lacks exact reference transcript and is correctly blocked.
-- correction initially failed to expose the promised transcript action in Voice Render and Settings.
+Latest Owner UX FAIL:
+- the previous full-width yellow transcript control in Voice Render was poorly placed;
+- the previous Settings transcript injection broke layout;
+- remediation needed a proper app-native editor.
 
-## Published remediation
-Source commit `07e5cd5b68953752817761c479657c13ef76033a` changes `src/renderer/js/voice-render-reference-fix.js`:
-- persistently observes dynamic Voice Render and Settings voice lists;
-- missing clone transcript => Voice Render shows `＋ Bổ sung transcript audio mẫu`;
-- same clone in Settings shows `＋ Transcript`;
-- both write the shared `referenceTranscript/transcript` record in `localStorage.tts_voices`;
-- actions survive/reappear after list rerender;
-- generation remains fail-closed until transcript exists.
+## Published correction
+- transcript editing is centralized in Voice Render;
+- Settings transcript injection removed;
+- missing-transcript clone uses its existing right-side action, changing `Nghe thử` to `Transcript`;
+- `Transcript` opens an app-native modal containing reference-audio playback, exact transcript textarea, Save and Cancel;
+- saving writes shared `referenceTranscript/transcript` fields in `localStorage.tts_voices`;
+- after save the row returns to `Nghe thử`;
+- clone generation remains fail-closed until transcript exists.
 
 Backend reference-text correction remains active: clone requests with transcript pass exact `ref_text` to OmniVoice and restore target text unchanged before generation.
 
 ## Retest sequence
 1. Fetch final exact PR #50 HEAD and fully restart VSR.
-2. Verify Adam shows the remediation button in Voice Render and Settings.
-3. Enter exactly what Adam's reference audio says.
-4. Confirm missing-transcript marker/action disappears after rerender.
-5. Preview/render a short target at least 3 times; every completed WAV must contain all first words.
-6. Reconfirm medium render/merge and slow-vs-fast profile duration behavior.
+2. Confirm Settings has no transcript action beside Adam.
+3. In Voice Render confirm Adam shows `Thiếu transcript mẫu` and right-side `Transcript`.
+4. Open it, play the reference audio, enter exactly what the audio says and save.
+5. Confirm Adam returns to normal `Nghe thử`.
+6. Preview/render a short target at least 3 times; every completed WAV must contain all first words.
+7. Reconfirm normal render/merge and distinct voice speed behavior.
 
 ## Static verification
 - `node --check src/main/main.js`
@@ -52,9 +54,9 @@ Backend reference-text correction remains active: clone requests with transcript
 - `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
 
 ## Gates
-- Execution: PASS — remediation source published.
+- Execution: PASS — UX correction published.
 - Automated/static verification: WAITING.
 - Code review: WAITING on final exact head.
-- Owner runtime: PARTIAL PASS; remediation UI + leading-word retention RETEST WAITING.
-- Documentation synchronization: PASS once PR metadata points to the final exact head.
+- Owner runtime: PARTIAL PASS; transcript-editor UX + leading-word retention RETEST WAITING.
+- Documentation synchronization: PASS after PR metadata is refreshed to final docs head.
 - Merge permission: BLOCKED.
