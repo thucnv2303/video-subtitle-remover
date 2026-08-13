@@ -13,6 +13,24 @@ const pythonBridge = new PythonBridge({ appRoot: path.join(__dirname, '..', '..'
 registerP1VisionIPC({ ipcMain, net });
 registerP1StandardVisionIPC({ ipcMain, net });
 
+function ensureVoiceRenderBootstrap() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.webContents.executeJavaScript(`
+    (() => {
+      if (document.getElementById('nav-voice-render')) return 'already-mounted';
+      document.querySelectorAll('script[data-voice-render]').forEach((node) => node.remove());
+      const script = document.createElement('script');
+      script.src = 'js/voice-render.js';
+      script.dataset.voiceRender = 'main-window-bootstrap';
+      script.addEventListener('error', () => console.error('[Voice Render] failed to load js/voice-render.js'));
+      document.body.appendChild(script);
+      return 'loading';
+    })();
+  `).catch((err) => {
+    console.error('[Voice Render] bootstrap failed:', err?.message || err);
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -47,6 +65,7 @@ function createWindow() {
       mainWindow.show();
       mainWindow.focus();
     }
+    ensureVoiceRenderBootstrap();
     console.log('Page loaded successfully');
   });
 
