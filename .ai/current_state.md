@@ -1,69 +1,53 @@
 # Current State
 
 ## Status
-VOICE-RENDER-TAB-008 — STANDALONE OMNIVOICE DEMO / PM CODE REVIEW PASS / OWNER RUNTIME READY
+VOICE-RENDER-SHARED-LIBRARY-009 — SOURCE PUBLISHED / PM LOGIC-SCOPE REVIEW PASS / EXACT STATIC + OWNER RUNTIME WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Active review branch: `review/VOICE-RENDER-TAB-008-demo`.
-- Draft PR: #49.
-- Starting parent: `review/PIPELINE1-SEMANTIC-REMIX-007@0b3ee3a63f06d17334b2c295491c50039326febb`.
-- Exact task spec: `.ai/task_specs/VOICE-RENDER-TAB-008.md`.
-- Latest application-source commit: `dabac98867fc82c090fc5b3809a083085654b839`.
-
-## Owner request
-Add a new Voice Render tab directly below Home and use the existing OmniVoice stack as a standalone utility. This tool must not participate in the main video-processing workflow. Project Manager now performs implementation directly on GitHub; Anti/external executor is not assigned unless Owner later changes that instruction.
+- Active review branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
+- Draft PR: #50.
+- Base: `review/VOICE-RENDER-TAB-008-demo@3164b6f625e06d4d8f4d88009fb9dea5c335198f`.
+- Exact spec: `.ai/task_specs/VOICE-RENDER-SHARED-LIBRARY-009.md`.
+- Latest PM-reviewed application-source commit: `066a7cc9b369abf992dd0840c336ad0edb17022a`.
+- Owner-test worktree: `E:\Project AI\Video-sub-remove-owner-test-P1`.
 
 ## Published behavior
-- Voice Render is mounted after Home and before Settings.
-- Desktop-first two-column layout separates text/voice controls from render status/audio output.
-- User can choose language, OmniVoice default voice, or a saved clone voice from existing `tts_voices` storage.
-- User chooses a WAV destination through existing Electron save dialog.
-- Renderer calls existing `window.api.post()` -> `POST /api/tts/generate` with `text`, optional `ref_audio_path`, `language`, and `output_path`.
-- `voice_name` is intentionally omitted so backend routes this utility through OmniVoice, not Edge TTS.
-- Engine badge reads actual `/api/tts/status` availability instead of assuming success.
-- Rendering disables inputs/primary action to prevent duplicate submissions.
-- Success shows audio preview and output path and can open the generated file.
-- Navigation explicitly deactivates the dynamically mounted page when Home/Settings is selected, avoiding dual-active page state from legacy static NodeList capture.
+- Voice Render uses the current app navy/blue visual language.
+- Global App/Backend/TTS/GPU/CPU/RAM information is mounted in the left sidebar and is intended to remain visible across tabs.
+- Voice Render lower-right area is a bounded Log card with filter/copy/clear.
+- Shared voice library is a vertically scrollable list with independent preview and explicit selection.
+- Clone voices save into existing `localStorage.tts_voices` and refresh known Settings/Pipeline selectors.
+- Long text uses deterministic bounded chunks, sequential TTS requests and one final WAV merge.
+- Stop means stop-after-current synchronous TTS request; no false mid-request cancellation claim.
+- A new run clears old result state. Failed/stopped/incomplete runs cannot claim a final merged result.
+- WAV merge is performed by a narrow preload bridge using existing FFmpeg; cleanup is constrained to matching `<final-stem>.part-###.wav` inputs in the final output directory.
 
-## Isolation contract
-Application source changed only:
+## Isolation
+Application source delta in PR #50 is exactly:
 - `src/main/preload.js`;
 - `src/renderer/js/voice-render.js`;
 - `src/renderer/styles/voice-render.css`.
 
-No change to:
-- `api/server.py`;
-- `api/tts_engine.py`;
-- P1/P2/P3 implementation;
-- shared Job/state lifecycle;
-- dependencies.
+No P1/P2/P3 implementation, shared video Job/gate, backend TTS engine, dependency or package source change.
 
-The standalone utility never creates a video Job, never changes a pipeline gate and never attaches audio to video automatically.
-
-## Parent P1 state preserved
-PR #48 / `PIPELINE1-SEMANTIC-REMIX-007` remains a separate unfinished upstream review. Its static and Owner Standard/Semantic gates are not satisfied or changed by Voice Render.
+PR #48 / P1 Semantic Remix remains an independent upstream review and is not satisfied by this task.
 
 ## Verification facts
-- Draft PR #49 exists against the intended parent branch.
-- Exact source/full-file and PR patch scope reviewed by Project Manager.
-- Review found one navigation lifecycle defect; it was corrected before final review.
-- Review found misleading static engine-ready presentation; it was corrected to read actual TTS status.
-- `node --check src/main/preload.js`: PASS on exact current source content.
-- `node --check src/renderer/js/voice-render.js`: PASS on exact current source content.
-- Changed application scope contains only the three approved files above.
-- PR review threads: none unresolved at latest verification.
-- GitHub workflow/status runs: none configured; absence is not PASS.
-- Exact repository `git diff --check` could not be executed because the verification container cannot resolve GitHub for a clone. This remains an explicit automated-evidence gap rather than being assumed PASS.
-- Real app visual/runtime evidence is NOT STARTED.
+- PR #50 is Draft/open on the intended dedicated branch.
+- PM reviewed changed-file scope and source patches; broad renderer file-delete bridge was found during review and removed/replaced by constrained merge-owned cleanup.
+- PM also corrected clone-language normalization, long-text no-chunk guard, real paragraph-preservation behavior and stale-result carryover.
+- Unresolved PR review threads: none at latest check.
+- Direct verification container cannot resolve GitHub raw/git network, so exact-head `node --check` and `git diff --check` are not claimed PASS.
+- Owner visual/runtime verification: NOT STARTED.
 
 ## Gates
 - Execution: PASS.
-- Automated/static verification: WAITING/PARTIAL — Node syntax PASS; exact `git diff --check` evidence unavailable.
-- Code review: PASS logic/scope on current application source.
-- Owner visual/runtime verification: NOT STARTED — READY TO TEST.
-- Documentation synchronization: PASS after final dynamic-file sync.
+- Automated/static verification: WAITING.
+- Code review: PASS logic/scope through application source `066a7cc9b369abf992dd0840c336ad0edb17022a`.
+- Owner visual/runtime verification: NOT STARTED — waiting exact static commands, then real-app test.
+- Documentation synchronization: IN PROGRESS until task/handoff/ACTIVE/architecture/PR body are final.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Owner tests PR #49 exact branch in the real app. Verify sidebar/navigation, default OmniVoice render, audio preview/open, optional saved clone render, and that P1/P2/P3 state is unchanged. Report observed PASS/FAIL. Merge is not permitted yet.
+Finish canonical documentation and PR metadata. Then Owner checks out the exact final PR #50 HEAD in the owner-test worktree, runs the required Node/diff static commands, and if they pass starts the approved real-app Voice Render test. Do not merge.
