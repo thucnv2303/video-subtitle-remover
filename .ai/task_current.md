@@ -7,7 +7,7 @@ VOICE-RENDER-SHARED-LIBRARY-009
 Voice Render Shared Library + Long Text
 
 ## Status
-SOURCE_PUBLISHED_PM_CODE_REVIEW_PASS_STATIC_AND_OWNER_WAITING
+PM_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_NOT_STARTED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -22,13 +22,13 @@ SOURCE_PUBLISHED_PM_CODE_REVIEW_PASS_STATIC_AND_OWNER_WAITING
 1. App-native Voice Render three-column workspace in current navy/blue design language.
 2. Global sidebar status for Backend/TTS/GPU/CPU/RAM/app version using real APIs/system data or explicit unavailable state.
 3. Scrollable shared voice list with explicit selection and independent preview.
-4. Clone Voice modal that saves into existing `localStorage.tts_voices` and refreshes known Settings/Pipeline voice selectors.
+4. Clone Voice modal saving into existing `localStorage.tts_voices` and refreshing known Settings/Pipeline voice selectors.
 5. Long-text word/character/duration/chunk estimates.
 6. Deterministic paragraph/sentence/whitespace/hard-fallback chunk splitting.
 7. Sequential one-chunk-at-a-time TTS queue using existing `/api/tts/generate`.
 8. Stop-after-current behavior without claiming cancellation of an in-flight synchronous TTS request.
-9. Constrained FFmpeg WAV merge bridge in preload. Only matching `<final-stem>.part-###.wav` files in the final output directory are accepted/cleaned.
-10. Final output state is cleared at new-run start so stale previous success cannot masquerade as the current result.
+9. Constrained FFmpeg WAV merge bridge in preload; only matching owned `.part-###.wav` chunks may be merged/cleaned.
+10. New runs clear previous result state before processing.
 11. Dedicated bounded Voice Render Log with filter/copy/clear.
 
 ## Explicitly unchanged
@@ -40,8 +40,8 @@ SOURCE_PUBLISHED_PM_CODE_REVIEW_PASS_STATIC_AND_OWNER_WAITING
 - dependencies/package files.
 
 ## PM review findings corrected
-- Removed broad arbitrary renderer file-deletion bridge.
-- Normalized clone language labels back to backend language codes.
+- Removed broad arbitrary renderer file deletion.
+- Normalized clone language labels for backend requests.
 - Prevented long text from bypassing chunking when it exceeds the selected safe ceiling.
 - Wired `Giữ đoạn văn` to actual split behavior.
 - Reset prior result at every new run.
@@ -70,5 +70,5 @@ No PASS may be claimed from missing output. ChatGPT verification container canno
 - Automated/static verification: WAITING.
 - Code review: PASS logic/scope.
 - Owner visual/runtime verification: NOT STARTED.
-- Documentation synchronization: IN PROGRESS.
+- Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
