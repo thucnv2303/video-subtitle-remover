@@ -1,48 +1,45 @@
 # Current State
 
 ## Status
-PIPELINE1-SEMANTIC-REMIX-007 — STANDARD QUALITY-RETRY CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING
+PIPELINE1-SEMANTIC-REMIX-007 — STANDARD PRE-TTS ORDERING FIX PUBLISHED / STATIC + OWNER RETEST WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Active review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
 - Active Draft PR: #48.
 - Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
-- Failed Owner-tested head: `cf31b4891d141084666c81f9324d622a51f70986`.
-- Quality-retry source commit: `0fb72b4f421891a20b6574564f90886f6a108356`.
+- Prior final docs head: `f03ab512b25fb0193b17b3468d5ac865d3c0c2d1`.
+- Latest Standard pre-TTS ordering source correction: `c8fecb95164c39fe82cddf24711ccfc3386d23c6`.
 
-## Fresh Owner runtime evidence
-Standard/default OFF on `cf31b489...` reached D-016 correctly: ~97.57s source, 1529-1610 char budget, 721-char first draft, pre-TTS recompose triggered. Both evidence-fit attempts failed quality; final error was `REPEATED_SENTENCE` + `REPEATED_LONG_PHRASE`. TTS was not reached.
+## Latest Owner runtime evidence
+Standard/default OFF on the prior flow used a ~97.57s source with a 1529-1610 char voice-aware target. Global reasoning completed, then the draft quality gate found `CJK_CHARACTERS` and its standalone one-shot quality repair also failed `CJK_CHARACTERS`. Pipeline 1 failed before `Standard duration guard`/grounded recompose and before TTS.
 
 ## Verified root cause
-The prior evidence-fit retry discarded a parsed rejected expanded candidate and restarted from the original short draft. This lost useful grounded expansion. The deterministic quality gate itself behaved correctly and remains strict.
+`p1-standard-vision-ipc.js` performed standalone narration quality repair before returning the Standard analysis to `p1-standard-vision-wrapper.js`. For an underfilled draft, that repair had no full transcript/Vision recomposition responsibility and could fail before the wrapper's grounded duration guard had any chance to run. The old prompt also still described the narration range as soft and referenced later duration-fit behavior, conflicting with D-016 Standard policy.
 
 ## Published correction
-`src/main/p1-standard-vision-wrapper.js` now keeps Standard pre-TTS retry state explicitly:
-- first attempt expands the short draft using full transcript + accumulated Vision evidence;
-- a parsed candidate rejected for hard length or narration quality is retained;
-- the single retry edits that rejected candidate rather than restarting from the original short draft;
-- retry removes repeated sentences/long phrases/near-duplicates/duplicate CTA and prefers unused grounded evidence;
-- hard 95-100% voice-aware character range and deterministic CJK/repetition checks remain mandatory;
-- TTS stays blocked until narration passes;
-- no post-TTS duration loop is added;
-- Semantic/P2/P3/TTS-engine behavior is unchanged.
+Source commit `c8fecb95164c39fe82cddf24711ccfc3386d23c6` changes only `src/main/p1-standard-vision-ipc.js` from `f03ab512...` (+26/-9):
+- global reasoning prompt now states that an under-min Standard draft will be recomposed by the Standard pre-TTS guard using full transcript + Vision evidence;
+- the obsolete implication that a later TTS duration-fit will solve underfill is removed;
+- when the draft is below `budget.min_chars`, standalone quality repair is deferred instead of being allowed to fail the job first;
+- the raw deterministic draft quality report is returned to the wrapper;
+- non-underfilled behavior remains unchanged;
+- Semantic/P2/P3/TTS engine are unchanged.
 
 ## Verification evidence
-- GitHub compare `cf31b489... -> 0fb72b4f...` changes exactly one application file: `src/main/p1-standard-vision-wrapper.js`.
-- PM reviewed the published full file/diff from GitHub: logic/scope PASS.
-- PM container cannot resolve GitHub raw hosts, so exact new-head `node --check` could not be executed there.
-- BUG-037 and `qa_checklist.md` are synchronized to the fresh Owner failure and the new correction.
+- GitHub compare `f03ab512... -> c8fecb95...`: exactly one application file changed, `src/main/p1-standard-vision-ipc.js`, 35 changed lines.
+- GitHub source inspection confirms the new under-min deferral path and updated prompt are published.
+- Exact-head Node syntax and diff checks have not yet been executed; GitHub CI is not configured.
 
 ## Gates
 - Execution: PASS for source publication.
 - Automated/static: WAITING on exact final head.
-- Code review: PASS logic/scope, subject to static syntax confirmation.
-- Owner Standard runtime: FAIL on old head; corrected retest WAITING after static PASS.
+- Code review: WAITING final exact-head review/static confirmation.
+- Owner Standard runtime: FAIL on prior flow; RETEST WAITING on corrected head after static PASS.
 - Owner Semantic runtime: ON HOLD until Standard PASS.
-- Documentation synchronization: PASS.
+- Documentation synchronization: IN PROGRESS until all dynamic/bug/QA docs and PR body reach the same final head.
 - P3 semantic cut/reorder: BLOCKED.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Owner fetches the final PR head, confirms `git rev-parse HEAD`, runs `node --check src/main/p1-standard-vision-wrapper.js` and `git diff --check cf31b4891d141084666c81f9324d622a51f70986..HEAD`. If static PASS, rerun Standard/default OFF. If first recompose is rejected, log must show retry editing the rejected candidate before `Standard duration guard PASS` and the single full-text TTS request.
+Finish canonical synchronization and exact-head review. Then Owner checks out the final PR head, runs `node --check src/main/p1-standard-vision-ipc.js`, `node --check src/main/p1-standard-vision-wrapper.js`, and `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`. If static PASS, rerun Standard/default OFF. The underfilled+CJK case must now reach the grounded Standard pre-TTS recompose path rather than fail in standalone `Narration quality` before the wrapper.
