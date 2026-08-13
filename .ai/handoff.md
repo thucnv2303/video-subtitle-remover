@@ -4,7 +4,7 @@
 `VOICE-RENDER-SHARED-LIBRARY-009 — Voice Render Shared Library + Long Text`
 
 ## Status
-OWNER CORE RUNTIME PASS / DISTINCT VOICE PROFILE CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING / MERGE BLOCKED
+OWNER CORE RUNTIME PASS / LEADING-WORD TTS CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Single active Voice Render branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -22,39 +22,51 @@ Owner verified:
 - 3 sequential long-text chunks complete.
 - final WAV merge succeeds and the result plays.
 
-Latest product correction requested before merge:
-- every voice must carry explicit prosody/intonation + speed profile;
-- changing voice/profile must affect real output duration, not only the estimate;
-- voice creation must use one shared complete schema before returning to the main pipeline task.
+Latest runtime defect:
+- generated audio can intermittently omit approximately the first 2–5 supplied words.
 
-## Published correction
-- Built-in voices have distinct `prosody + speedFactor` profiles.
-- Legacy clone records missing profile data are migrated to distinct profile pairs.
-- Clone Voice adds `Ngữ điệu` and `Tốc độ riêng` controls.
-- duplicate clone name or duplicate `prosody + speedFactor` pair is rejected.
-- Settings `Thêm giọng clone` redirects to Voice Render so new clone records are complete and stored once in `localStorage.tts_voices`.
-- `main.js` owns constrained FFmpeg `atempo` audio processing through `voice-render:applyTempo`.
-- preload exposes the narrow `applyVoiceTempo()` IPC method.
-- Voice Render applies the selected voice speed to preview/chunk audio before merge, so real output duration changes with speed profile.
-- duration estimation remains per voice/language and learns from actual preview/final audio duration.
+## Investigation and correction
+Renderer text splitting begins at character 0; no intentional prefix removal is present there. The exact internal OmniVoice stage causing the loss is not proven yet.
+
+Owner authorized one small correction before closing this task. `api/tts_engine.py` now uses an onset-preservation configuration:
+- `postprocess_output=False`;
+- `pad_duration=0.25`;
+- `fade_duration=0.02`;
+- `audio_chunk_duration=12.0`;
+- `audio_chunk_threshold=18.0`.
+
+The intent is to preserve the beginning of generated speech and use shorter internal long-form spans without rewriting or deleting input text.
+
+## Distinct voice profile behavior retained
+- every built-in/shared clone voice carries prosody + speed profile data;
+- selected speed changes real audio before merge;
+- clone creation is centralized in Voice Render;
+- legacy clones are migrated to complete profiles;
+- per-voice duration calibration remains isolated by voice/language.
 
 ## Boundary
-The shared voice record now carries the metadata the main workflow will need. This task does not yet modify P1/P2/P3 TTS execution to consume `speedFactor`; that belongs to the next main-flow integration step after task 009 is verified/closed.
-
-Acoustic uniqueness cannot be guaranteed mathematically if two clones use the same/similar source speaker. The app enforces distinct voice names/profile metadata and distinct selected speed behavior; timbre identity remains produced by the underlying TTS model/reference audio.
+This small correction touches the shared OmniVoice wrapper, so both Voice Render and later main-flow OmniVoice generation inherit the onset guard. No P1 reasoning, P2 inpaint or P3 composition logic is changed here.
 
 ## Retest sequence
 1. Fetch exact final PR #50 HEAD and fully restart app.
-2. Verify Adam and another voice display different prosody/speed profiles.
-3. Render the same short/medium text using one slower and one faster profile; real audio durations must differ in the expected direction.
-4. Create one clone and confirm prosody + speed are required/stored/displayed in the shared library.
-5. In Settings, `Thêm giọng clone` must route to Voice Render instead of creating an incomplete clone locally.
+2. Render a short sentence with unmistakable first 5–8 words at least 3 times using OmniVoice/default.
+3. Repeat at least 2 times using one clone voice.
+4. Every generated output must preserve the full beginning.
+5. Recheck a slower and faster voice profile still produce real duration differences in the expected direction.
 6. Reconfirm merge/playback and no P1/P2/P3 state mutation.
 
+## Static verification
+- `node --check src/main/main.js`
+- `node --check src/main/preload.js`
+- `node --check src/renderer/js/voice-render.js`
+- `node --check src/renderer/js/voice-render-owner-fixes.js`
+- `python -m py_compile api/tts_engine.py`
+- `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
+
 ## Gates
-- Execution: PASS.
+- Execution: PASS — onset guard published.
 - Automated/static verification: WAITING.
 - Code review: WAITING on final exact head.
-- Owner runtime: PARTIAL PASS; distinct profile/duration RETEST WAITING.
+- Owner runtime: PARTIAL PASS; onset retention/profile behavior RETEST WAITING.
 - Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
