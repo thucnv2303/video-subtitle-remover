@@ -4,7 +4,7 @@
 `PIPELINE1-SEMANTIC-REMIX-007 — Optional Semantic Remix with Standard Script Default`
 
 ## Status
-MERGED-HEAD CODE RECHECK PASS / STATIC + OWNER TWO-MODE RETEST WAITING
+STATIC PASS / OWNER STANDARD THEN SEMANTIC RETEST WAITING
 
 ## Review basis
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -13,51 +13,46 @@ MERGED-HEAD CODE RECHECK PASS / STATIC + OWNER TWO-MODE RETEST WAITING
 - Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
 - Exact spec: `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`.
 - Corrective P1 source originally reviewed at `7b217c7b73e98375bcf5ff2bcb24a92c8fa61796`.
-- Voice Render PR #50 merged into this branch at `3c7d47ca08c1e7a93365223a184d47e29c2175c0`.
-- P1 merged-head recheck basis before docs-only sync: `19677fbdbfe6d7910281307b387e15c007ab0282`.
+- Voice Render PR #50 merged at `3c7d47ca08c1e7a93365223a184d47e29c2175c0`.
+- Merged-head P1 review basis: `19677fbdbfe6d7910281307b387e15c007ab0282`.
+- Static verification state tested by Owner: `59925b05afef7071cdd478209d4c54732b611d78`.
 
-## Completed Voice Render side task
-- Owner runtime PASS at clone-safe target/default 300.
-- Required static command set PASS with no reported errors.
-- Period-only outer chunking, native clone speed, 0.92 headroom and final WAV merge behavior are retained.
-- Voice Render no longer blocks the main P1 flow.
+## Completed verification
+- Execution: PASS.
+- Merged-head P1 logic/scope code review: PASS.
+- Automated/static verification: PASS. Owner ran the required exact-head Node syntax checks and `git diff --check` on `59925b05...` and reported no errors.
+- GitHub PR #48 is open/Draft and currently reports `mergeable:true`.
 
-## Active P1 behavior
+## Active product behavior
 ### Standard Script — OFF/default
-- Semantic Remix preference defaults false and is snapshotted at Start.
-- Uses isolated pre-semantic multimodal reasoning under distinct IPC handlers.
-- Outputs Standard v4 artifacts with non-authoritative empty semantic edit plan.
+- Semantic Remix defaults OFF and is snapshotted at Start.
+- Uses isolated pre-semantic multimodal reasoning.
+- Outputs Standard v4 artifacts and a non-authoritative empty semantic edit plan.
 
 ### Semantic Remix — explicit ON
 - Uses semantic scene/profile/strategy/beat flow.
-- BUG-036 deterministic guard runs before accepted artifact persistence/TTS and rejects known timing, scene-grounding, CTA and unsupported-claim failure classes.
+- BUG-036 deterministic guard runs before accepted artifact persistence/TTS and fails closed on known timing, grounding, CTA and unsupported-claim failures.
 
-## Merged-head source recheck
-GitHub compare from `7b217c7...` to `19677fb...` shows the P1-specific task-007 source files did not change after the prior corrective review. Later source changes belong to the completed Voice Render side task.
-
-Because Voice Render changed shared `src/main/main.js` and `src/main/preload.js`, both were re-read on the merged head. P1 semantic/Standard IPC registration, bridge methods and dual-mode cancellation remain intact. Result: merged-head P1 logic/scope code review PASS.
-
-GitHub PR #48 recomputation reports `mergeable:true`; the prior false result is stale. GitHub has no CI/status checks for this head. Supervisor container cannot resolve github.com, so required Node/diff commands cannot be run from ChatGPT's local execution environment.
-
-## Scope / architecture
-- BUG-034 remains: no forced 95-100% original-source narration occupancy and no extra LLM/TTS pass solely to fill duration.
-- P2 remains subtitle-removal only.
-- P3 semantic cut/reorder remains out of scope and blocked until Semantic Remix Owner PASS.
-
-## Required evidence next
-1. Exact current PR #48 HEAD after docs synchronization.
-2. Node syntax checks for main/preload/Standard IPC modules/run-config/analysis/semantic validator; recommended pipeline1-ai syntax regression.
-3. `git diff --check 9981da334ca10fd845c971241d541894d736c13b..HEAD`.
-4. Owner Standard run with Semantic Remix OFF/default.
-5. Owner Semantic run with Semantic Remix ON using same/equivalent source.
-6. If Semantic passes, inspect fresh `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`; if it fails, capture exact guard message and verify downstream is not unlocked as valid semantic output.
+## Owner verification sequence
+1. Standard/default OFF first:
+   - control is OFF/default;
+   - log says `ScriptMode=standard`;
+   - normal continuous script/TTS completes;
+   - artifacts show `multimodal-standard-script-v4` and `semantic_remix_enabled:false`;
+   - `edit_plan.json` is non-authoritative with `plan:[]`;
+   - P1->P2 gate remains valid.
+2. Only after Standard passes, run Semantic ON:
+   - explicitly enable before Start;
+   - log says `ScriptMode=semantic-remix`;
+   - result passes with coherent v4 artifacts or fails closed before valid downstream unlock;
+   - if pass, inspect fresh `scenes.json`, `multimodal_timeline.json`, `remix_script.json`, `edit_plan.json`.
 
 ## Gates
 - Execution: PASS.
-- Automated/static verification: WAITING.
-- Code review: PASS for merged-head logic/scope.
+- Automated/static verification: PASS.
+- Code review: PASS.
 - Owner Standard: NOT STARTED.
 - Owner Semantic: NOT STARTED after correction.
-- Documentation synchronization: PASS once PR body points to latest docs head.
+- Documentation synchronization: PASS once PR body points to the latest docs head.
 - P3 semantic cut/reorder: BLOCKED.
 - Merge permission for PR #48: BLOCKED.
