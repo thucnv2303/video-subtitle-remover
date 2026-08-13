@@ -4,35 +4,37 @@
 PIPELINE1-SEMANTIC-REMIX-007
 
 ## Status
-STANDARD_QUALITY_RETRY_CORRECTION_PUBLISHED_STATIC_OWNER_RETEST_WAITING
+STANDARD_PRE_TTS_ORDERING_FIX_PUBLISHED_STATIC_OWNER_RETEST_WAITING
 
 ## Authority
 - Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`
 - Draft PR: #48
 - Base: `9981da334ca10fd845c971241d541894d736c13b`
-- Failed Owner-tested head: `cf31b4891d141084666c81f9324d622a51f70986`
-- Quality-retry source commit: `0fb72b4f421891a20b6574564f90886f6a108356`
+- Prior docs head: `f03ab512b25fb0193b17b3468d5ac865d3c0c2d1`
+- Latest source correction: `c8fecb95164c39fe82cddf24711ccfc3386d23c6`
 
-## Runtime evidence
-Owner Standard run reached the duration guard before TTS. Source was about 97.57s, first narration 721 chars, target 1529-1610 chars. Both recompose attempts failed quality. Final issues were `REPEATED_SENTENCE` and `REPEATED_LONG_PHRASE`. TTS did not run.
+## Latest Owner failure
+For the ~97.57s Standard regression case, global reasoning completed but draft quality found `CJK_CHARACTERS`. Standalone `Narration quality` repair failed the same gate, so P1 stopped before the grounded Standard duration/pre-TTS recompose and before TTS.
+
+## Root cause
+The Standard IPC quality repair ran too early. An underfilled draft could be rejected before the wrapper received the analysis, despite D-016 requiring grounded recomposition from full transcript + Vision evidence before TTS.
 
 ## Corrected behavior
-- Keep the first grounded recompose based on full transcript and Vision evidence.
-- If a parsed candidate fails hard length or quality, preserve that candidate.
-- The single retry edits the rejected candidate instead of restarting from the original short draft.
-- Hard length and deterministic quality gates remain required.
-- TTS remains blocked until narration passes.
-- Semantic, P2, P3 and TTS engine are unchanged.
+- Under-min Standard drafts no longer run the standalone quality repair first.
+- The draft plus deterministic quality report is returned to the wrapper.
+- The wrapper's evidence-backed pre-TTS recompose remains responsible for bringing the underfilled narration into hard range and passing CJK/repetition quality gates.
+- Prompt wording no longer claims a later TTS duration-fit will solve underfill.
+- Non-underfilled Standard behavior, Semantic, P2, P3 and TTS engine are unchanged.
 
 ## Verification
 - Source publication: PASS.
-- GitHub compare from the failed head to the source correction changes only `src/main/p1-standard-vision-wrapper.js`.
-- PM source review: PASS logic/scope.
-- Exact-head syntax: WAITING.
-- Owner corrected runtime: WAITING after static PASS.
+- Compare `f03ab512... -> c8fecb95...`: one app file, `src/main/p1-standard-vision-ipc.js`, +26/-9.
+- Exact-head syntax/diff: WAITING.
+- Code review final confirmation: WAITING.
+- Owner Standard corrected runtime: WAITING after static PASS.
 - Owner Semantic: ON HOLD.
-- Documentation synchronization: PASS.
+- Documentation synchronization: IN PROGRESS until all canonical docs/PR metadata are aligned.
 - Merge: BLOCKED.
 
 ## Next verification
-Fetch the final PR head. Run `node --check src/main/p1-standard-vision-wrapper.js` and `git diff --check cf31b4891d141084666c81f9324d622a51f70986..HEAD`. If both pass, rerun Standard/default OFF and verify that a rejected first candidate is retained for the one quality retry before TTS.
+Finish docs sync, then run exact-head `node --check` for Standard IPC + wrapper and `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`. If clean, Owner reruns Standard/default OFF. Expected: underfilled+CJK draft is deferred to grounded pre-TTS recompose, then hard duration + quality PASS occurs before one TTS request.
