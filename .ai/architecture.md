@@ -8,14 +8,14 @@ Relevant P1 modules:
 src/main/
 ├── main.js
 ├── preload.js
-├── p1-vision-ipc.js                 # Semantic Remix reasoning
-├── p1-standard-vision-ipc.js        # exact pre-semantic Standard reasoning snapshot
-└── p1-standard-vision-wrapper.js    # isolated Standard IPC names
+├── p1-vision-ipc.js
+├── p1-standard-vision-ipc.js
+└── p1-standard-vision-wrapper.js
 
 src/renderer/js/
-├── pipeline1-run-config.js           # mode UI/persistence/job snapshot
-├── pipeline1-analysis.js             # mode router + artifacts
-├── pipeline1-semantic-validator.js   # BUG-036 fail-closed guard
+├── pipeline1-run-config.js
+├── pipeline1-analysis.js
+├── pipeline1-semantic-validator.js
 ├── pipeline1-artifact-gate.js
 └── pipelines/pipeline1-ai.js
 ```
@@ -30,18 +30,13 @@ p3Status: locked | ready
 A new upload belongs to P1. P2/P3 remain locked until upstream artifact gates pass.
 
 ## 2. PIPELINE 1 — TWO SCRIPT MODES
-
 User chooses before Start:
 ```text
 Kịch bản bình thường        [DEFAULT / Semantic Remix OFF]
 Semantic Remix theo cảnh    [OPT-IN]
 ```
 
-Preference key:
-```text
-p1_semantic_remix_enabled
-```
-Default false. Start snapshots mode into `job.p1Config.semanticRemixEnabled`; running Jobs do not read live UI state.
+Preference key `p1_semantic_remix_enabled` defaults false. Start snapshots mode into `job.p1Config.semanticRemixEnabled`; running Jobs do not read live UI state.
 
 ### 2.1 Standard Script — default
 ```text
@@ -62,15 +57,12 @@ ONE full-text TTS
 P2 may become READY
 ```
 
-Standard reasoning is deliberately isolated from the Semantic implementation using the exact starting-ref pre-semantic `p1-vision-ipc.js` blob registered under separate IPC names.
-
 Standard invariants:
-- normal script generation remains available without enabling Semantic Remix;
-- it still analyzes original-video transcript + Vision evidence;
-- it does not issue authoritative scene reorder instructions to P3;
+- normal script generation remains available without Semantic Remix;
+- original transcript + Vision evidence remain inputs;
+- no authoritative scene reorder instructions to P3;
 - artifacts use `multimodal-standard-script-v4` / `semantic_remix_enabled:false`;
 - `edit_plan.json` is `authoritative:false` with `plan:[]`;
-- source-duration preview compatibility is retained;
 - narration remains one continuous TTS input.
 
 ### 2.2 Semantic Remix — explicit opt-in
@@ -81,18 +73,11 @@ ORIGINAL VIDEO
           ↓
 canonical global scene inventory
           ↓
-video_profile
-product_profile
-customer_profile
+video/product/customer profiles
           ↓
 remix_strategy
           ↓
 ordered remix_beats
-  ├─ role/message
-  ├─ source_scene_indexes[]
-  ├─ edit action
-  ├─ target_duration_sec
-  └─ reason
           ↓
 ONE continuous narration_script
           ↓
@@ -103,26 +88,15 @@ Semantic v4 artifacts
 ONE full-text TTS
 ```
 
-Canonical Semantic scenes contain globally unique index, chunk index, evidence time and deterministic midpoint start/end source windows. These are MVP evidence ranges, not CV-detected exact shot boundaries.
-
 Semantic invariants:
-- not a translation-only/transcript-summary feature;
-- profiles/strategy must remain grounded in source transcript + Vision evidence;
-- every beat references existing canonical source scenes;
-- strategy target must reconcile with summed beat targets within `max(2s,5%)`;
-- guarded process/action terms must be supported by referenced scene evidence;
-- CTA must use final-result evidence when available in late scenes;
-- selected health/composition/product claims without source evidence are rejected;
-- predicted narration duration must be 70–130% of summed beat target duration;
+- profiles/strategy remain grounded in source evidence;
+- beats reference canonical source scenes;
+- strategy/beat durations must reconcile;
+- guarded claims/process mappings must be supported;
 - invalid semantic output fails before accepted artifact persistence/TTS.
 
-This renderer guard is in addition to existing main-process structural/schema/language/repetition checks. It does not add another LLM pass solely for duration.
-
 ## 3. P1 ARTIFACT CONTRACT — VERSION 4
-Artifact root:
-```text
-jobs/<job_id>/p1/
-```
+Artifact root: `jobs/<job_id>/p1/`.
 
 Shared files:
 - `scenes.json`
@@ -133,40 +107,32 @@ Shared files:
 - `voice.wav` when TTS enabled
 - `tts_timed.srt` when TTS enabled
 
-Mode authority is explicit inside artifacts.
-
-Standard:
+Standard authority:
 ```text
 analysis_mode: multimodal-standard-script-v4
 semantic_remix_enabled: false
 edit_plan.authoritative: false
 ```
 
-Semantic:
+Semantic authority:
 ```text
 analysis_mode: multimodal-semantic-remix-v4
 semantic_remix_enabled: true
 edit_plan.authoritative: true
 ```
 
-Only validated Semantic artifacts may later become P3 scene-selection/reorder authority. Standard artifacts never implicitly request semantic editing.
+Only validated Semantic artifacts may later become P3 scene-selection/reorder authority.
 
 ## 4. DURATION RESPONSIBILITY — BUG-034 PRESERVED
-P1 does not require narration voice to fill 95–100% of the ORIGINAL source video.
-
+- P1 does not require narration voice to fill 95–100% of original source duration.
 - Original-source underlength alone is warning/telemetry, not failure.
 - P1 does not run another LLM/TTS pass solely to fill original duration.
-- Pathological P1 overlength protection remains inherited.
-- Semantic mode separately verifies narration coverage against its OWN beat plan. This is plan-coherence validation, not source-occupancy enforcement.
 - P3 owns final edited timeline and final voice/video alignment.
 
 ## 5. PIPELINE 2 — SUBTITLE REMOVAL ONLY
 P2 receives ORIGINAL source video and only removes burned-in subtitles.
 
-Output:
-```text
-clean_video.mp4
-```
+Output: `clean_video.mp4`.
 
 No script generation, semantic planning, final mixing, scene reorder or voice-driven video retiming belongs to P2.
 
@@ -179,57 +145,116 @@ Current responsibilities:
 - bounded derived voice fit from BUG-034;
 - never overwrite immutable P1 artifacts.
 
-Current inherited voice-fit policy:
-```text
-voice/video < 0.90     keep natural P1 voice
-~1.00                  use P1 voice
-0.90–1.15 mismatch     may create derived pitch-preserving P3 voice
->1.15                  refuse automatic extreme stretch
-```
-
-Semantic scene cut/reorder execution is NOT implemented by task 007. It remains blocked until Owner verifies corrected Semantic artifacts.
+Semantic scene cut/reorder execution remains blocked until the independent task-007 Owner verification passes.
 
 ## 7. SOURCE IDENTITY
-Every artifact remains traceable to the same Job/source fingerprint. P3 must not mutate P1/P2 source artifacts. Standard-vs-Semantic mode must remain explicit; P3 must never infer Semantic authority from file presence alone.
+Every pipeline artifact remains traceable to the same Job/source fingerprint. P3 must not mutate P1/P2 source artifacts. Standard-vs-Semantic mode remains explicit.
 
-## 8. STANDALONE UTILITIES — OUTSIDE THE THREE PIPELINES
-Standalone app utilities may reuse shared engines only when they remain outside the video Job lifecycle and do not mutate pipeline artifacts or gates.
+## 8. SHARED VOICE LIBRARY
+The app has one common clone-voice store:
+```text
+localStorage.tts_voices
+```
 
-### Voice Render — VOICE-RENDER-TAB-008
+Existing Settings/Pipeline selectors and Voice Render consume the same store. Voice Render must not create a private clone library.
+
+Compatible clone record:
+```text
+name
+language
+audioPath
+optional audioFile / samplePath / note / date
+```
+
+Voice Render saving a clone refreshes known selectors such as `tts-voice`, `job-tts-voice`, and `step1-tts-voice`. The generated standalone audio itself does not become a pipeline artifact automatically; the reusable voice definition/reference becomes shared.
+
+## 9. VOICE RENDER — SHARED UTILITY OUTSIDE VIDEO JOBS
+Task: `VOICE-RENDER-SHARED-LIBRARY-009` / Draft PR #50.
+
+Voice Render is an app utility, not Pipeline 1:
 ```text
 USER TEXT
   + language
-  + optional saved clone reference
-  + chosen WAV output path
+  + selected shared/default/clone voice
           ↓
-existing POST /api/tts/generate
+deterministic bounded chunks
           ↓
-existing OmniVoice TTS engine
+SEQUENTIAL existing POST /api/tts/generate
           ↓
-standalone WAV file
+<final-stem>.part-001.wav
+<final-stem>.part-002.wav
+...
+          ↓
+constrained preload FFmpeg merge
+          ↓
+standalone final WAV
 ```
 
-Voice Render source:
+### 9.1 Source boundary
 ```text
-src/main/preload.js                    # loads isolated renderer utility
-src/renderer/js/voice-render.js        # standalone UI/state/render orchestration
-src/renderer/styles/voice-render.css   # isolated utility styling
+src/main/preload.js
+  - read-only local CPU/RAM/app info
+  - constrained mergeWavFiles bridge
+
+src/renderer/js/voice-render.js
+  - page/sidebar mount
+  - shared voice list + preview + clone save
+  - long-text split/queue/stop/result/log state
+
+src/renderer/styles/voice-render.css
+  - current-app navy/blue visual system
+  - persistent sidebar status
+  - Voice Render layout/queue/voice/log/modal styling
 ```
 
-Voice Render invariants:
-- sidebar destination is below Home and before Settings;
-- uses OmniVoice default or saved clone references from existing `tts_voices` settings storage;
-- does not create a P1/P2/P3 Job;
-- does not read/write pipeline status or downstream gates;
-- does not attach generated audio to video automatically;
-- does not create or mutate P1/P2/P3 artifacts;
-- does not require a new backend or TTS-engine contract for the demo;
-- backend `voice_name` is omitted so the utility stays on the existing OmniVoice route;
-- output is a user-selected standalone WAV file.
+No task-009 source change belongs to P1/P2/P3 implementation, shared video Job lifecycle, `api/server.py`, `api/tts_engine.py`, or dependencies.
 
-This utility can share the OmniVoice engine implementation with Pipeline 1 without becoming part of Pipeline 1.
+### 9.2 Long-text invariants
+- multi-thousand-word input is split before TTS;
+- split favors paragraph/sentence/whitespace boundaries according to UI setting;
+- only one TTS chunk runs at a time;
+- voice/language selection is frozen for one run;
+- Stop is stop-after-current request; no false mid-request cancellation claim;
+- one failed/missing chunk blocks final merge success;
+- a new run clears stale prior result state.
 
-## 9. CURRENT VERIFICATION STATUS
-- Parent corrective opt-in/BUG-036 source remains on Draft PR #48 with its own static and Owner two-mode verification still required.
-- Standalone Voice Render demo is published on Draft PR #49. Node syntax for its changed JavaScript has been checked by Project Manager; final exact-head docs/source review and Owner real-app visual/runtime verification remain required.
-- Merge remains blocked until the relevant task gates pass.
+### 9.3 Merge boundary
+`electronAPI.mergeWavFiles(inputs, output)` is intentionally narrow:
+- final output must be `.wav`;
+- inputs must exist;
+- inputs must be in the final output directory;
+- inputs must match `<final-stem>.part-###.wav`;
+- FFmpeg merges in supplied order to PCM WAV;
+- only validated owned chunks are cleaned after successful merge.
+
+There is no generic renderer file-delete bridge.
+
+### 9.4 Global app status
+Voice Render installs the current shared UI shell status card in the left sidebar. It reads:
+- backend health;
+- TTS status;
+- GPU information from existing backend API;
+- CPU model/core count and RAM values from read-only preload system information;
+- app/Electron version.
+
+Unknown/unavailable values are shown explicitly; no fake success percentage is permitted.
+
+### 9.5 Voice preview/selection
+Shared voice list is vertically scrollable. Every row has independent preview and explicit selection. Preview generation must not mutate selected voice.
+
+### 9.6 Isolation from pipelines
+Voice Render:
+- never creates a video Job;
+- never changes `p1Status`, `p2Status`, `p3Status`;
+- never unlocks a pipeline gate;
+- never creates/mutates P1/P2/P3 artifacts;
+- never automatically attaches its rendered WAV to a video.
+
+The shared element is the voice library/engine, not the video-processing lifecycle.
+
+## 10. CURRENT VERIFICATION STATUS
+- PR #48 / P1 Semantic Remix remains independently unverified for its own static + Owner gates.
+- PR #50 / Voice Render task 009 has source published and PM logic/scope review PASS through application source `066a7cc9b369abf992dd0840c336ad0edb17022a`.
+- Exact-head Node syntax and `git diff --check` remain WAITING because the PM verification container cannot resolve GitHub git/raw hosts.
+- Owner real-app Voice Render verification is NOT STARTED.
+- Merge remains BLOCKED.
