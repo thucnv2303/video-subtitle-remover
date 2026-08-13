@@ -124,7 +124,7 @@
     return true;
   }
 
-  function decorateLegacyRows() {
+  function decorateVoiceRenderRows() {
     document.querySelectorAll('[data-voice-row^="clone:"]').forEach((row) => {
       const id = row.getAttribute('data-voice-row') || '';
       const index = Number(id.split(':')[1]);
@@ -132,14 +132,14 @@
       const voice = readVoices()[index];
       if (!voice) return;
 
-      const copy = row.querySelector('.vr-voice-copy small');
       const missing = !transcriptOf(voice);
+      const copy = row.querySelector('.vr-voice-copy small');
       if (copy) {
+        const clean = copy.textContent.replace(/\s*·\s*Thiếu transcript mẫu/g, '').trim();
+        copy.textContent = missing ? `${clean} · Thiếu transcript mẫu` : clean;
         copy.classList.toggle('vr-ref-transcript-missing', missing);
-        if (missing && !copy.textContent.includes('Thiếu transcript mẫu')) {
-          copy.textContent += ' · Thiếu transcript mẫu';
-        }
       }
+      row.classList.toggle('vr-ref-transcript-row-missing', missing);
 
       let button = row.querySelector('[data-add-ref-transcript]');
       if (!missing) {
@@ -150,12 +150,74 @@
 
       button = document.createElement('button');
       button.type = 'button';
-      button.className = 'vr-preview-btn';
+      button.className = 'vr-preview-btn vr-transcript-action';
       button.dataset.addRefTranscript = String(index);
-      button.textContent = '+ Transcript';
+      button.textContent = '＋ Bổ sung transcript audio mẫu';
       button.title = 'Bổ sung transcript chính xác của audio mẫu clone';
+      button.style.gridColumn = '1 / -1';
+      button.style.height = '28px';
+      button.style.borderColor = 'rgba(245, 158, 11, .42)';
+      button.style.background = 'rgba(245, 158, 11, .09)';
+      button.style.color = '#fbbf24';
+      button.style.fontWeight = '700';
       row.appendChild(button);
     });
+  }
+
+  function decorateSettingsRows() {
+    const list = document.getElementById('saved-voices-list');
+    if (!list) return;
+    const voices = readVoices();
+    list.querySelectorAll('.approved-voice-row').forEach((row, fallbackIndex) => {
+      const deleteButton = row.querySelector('[data-delete-voice]');
+      const index = Number(deleteButton?.dataset.deleteVoice ?? fallbackIndex);
+      if (!Number.isInteger(index) || index < 0) return;
+      const voice = voices[index];
+      if (!voice) return;
+
+      const missing = !transcriptOf(voice);
+      let button = row.querySelector('[data-add-ref-transcript]');
+      if (!missing) {
+        button?.remove();
+        return;
+      }
+      if (button) return;
+
+      button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'approved-secondary-btn compact';
+      button.dataset.addRefTranscript = String(index);
+      button.textContent = '＋ Transcript';
+      button.title = 'Bổ sung transcript chính xác của audio mẫu clone';
+      button.style.marginLeft = 'auto';
+      if (deleteButton) row.insertBefore(button, deleteButton);
+      else row.appendChild(button);
+    });
+  }
+
+  function decorateTranscriptUi() {
+    decorateVoiceRenderRows();
+    decorateSettingsRows();
+  }
+
+  function installListObservers() {
+    const bindObserver = (element, key) => {
+      if (!element || element.dataset[key] === 'true') return;
+      element.dataset[key] = 'true';
+      const observer = new MutationObserver(() => decorateTranscriptUi());
+      observer.observe(element, { childList: true, subtree: true });
+    };
+
+    const discover = () => {
+      bindObserver(document.getElementById('vr-voice-list'), 'refTranscriptObserved');
+      bindObserver(document.getElementById('saved-voices-list'), 'refTranscriptObserved');
+      decorateTranscriptUi();
+    };
+
+    discover();
+    const discoveryObserver = new MutationObserver(discover);
+    discoveryObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
+    setTimeout(() => discoveryObserver.disconnect(), 15000);
   }
 
   function saveLegacyTranscript(index) {
@@ -183,7 +245,7 @@
     voices[index] = voice;
     writeVoices(voices, 'voice-reference-transcript-update');
     window.showToast?.(`Đã lưu transcript mẫu cho ${voice.name || `voice ${index + 1}`}.`, 'success');
-    setTimeout(decorateLegacyRows, 0);
+    setTimeout(decorateTranscriptUi, 0);
   }
 
   function installUiGuards() {
@@ -231,20 +293,23 @@
       }
     }, true);
 
-    window.addEventListener('tts-voices-updated', () => setTimeout(decorateLegacyRows, 0));
+    window.addEventListener('tts-voices-updated', () => setTimeout(decorateTranscriptUi, 0));
   }
 
   function init() {
     migrateExplicitTranscriptFields();
     installUiGuards();
+    installListObservers();
 
     let attempts = 0;
     const timer = setInterval(() => {
       attempts += 1;
       const postReady = installPostWrapper();
       const formReady = updateCloneFormContract();
-      if (document.getElementById('vr-voice-list')) decorateLegacyRows();
-      if ((postReady && formReady) || attempts >= INSTALL_RETRY_LIMIT) clearInterval(timer);
+      decorateTranscriptUi();
+      if ((postReady && formReady && document.getElementById('vr-voice-list')) || attempts >= INSTALL_RETRY_LIMIT) {
+        clearInterval(timer);
+      }
     }, INSTALL_RETRY_MS);
   }
 
