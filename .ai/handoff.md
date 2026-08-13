@@ -4,7 +4,7 @@
 `VOICE-RENDER-SHARED-LIBRARY-009 — Voice Render Shared Library + Long Text`
 
 ## Status
-AUDIO QUALITY CORRECTION PUBLISHED / OWNER RETEST WAITING / MERGE BLOCKED
+SENTENCE-SAFE CHUNK CORRECTION PUBLISHED / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Single active Voice Render branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -16,27 +16,34 @@ AUDIO QUALITY CORRECTION PUBLISHED / OWNER RETEST WAITING / MERGE BLOCKED
 ## Verified evidence
 Previously working: Voice Render mount/navigation, shared voice list, preview, sequential long-text render, final WAV merge/playback, status/log UI.
 
-Current quality incident:
-- Owner supplied a generated clone WAV containing locally distorted/incorrect-sounding sections.
-- waveform inspection found repeated near-full-scale/clipping clusters inside rendered speech.
-- issue is not explained by final concat alone.
+Latest Owner result:
+- supplied render WAV is 303.92s, 24 kHz mono, peak about 0.92; the prior clipping/headroom defect is not the dominant current issue.
+- supplied exact Vietnamese narration script reproduces a chunk-boundary defect in the old splitter: at 450 chars it produced 12 chunks and 11/12 boundaries were inside sentences.
+- root cause in `chooseSplitPoint()`: sentence and whitespace candidates were combined and the furthest candidate was selected, allowing whitespace near the target limit to override a valid earlier sentence end.
 
 ## Published correction
-Latest application-source correction: `422595386ae26e081bc1eb0a8068c261491a2ce5`.
-- OmniVoice clone speed is applied natively inside `model.generate(speed=...)`.
-- clone WAVs are not post-time-stretched by FFmpeg; Edge built-in tempo behavior remains separate.
-- OmniVoice output is scaled to 0.92 peak before PCM16 write.
-- synthetic legacy clone speed migration is neutralized to 1.00x unless speed was explicitly selected by the user.
-- outer Voice Render chunk choices are 300/450/600 chars, default 450; sentence/paragraph-aware splitting remains in place.
-- transcript/ref_text conditioning remains removed.
+Application source commit: `16ed7a2a27aea639332eaba8f0fb921cfe6f7446`.
+- sentence segmentation occurs before chunk packing;
+- 300/450/600 are soft target sizes;
+- complete normal sentences are never cut solely to hit a target size;
+- `Intl.Segmenter` is preferred, punctuation fallback retained;
+- only pathological run-on sentences beyond a large hard limit can fall back to clause punctuation, then whitespace;
+- paragraph preservation remains available.
+
+Prior audio-quality correction remains:
+- OmniVoice clone native speed;
+- no post-WAV time-stretch for clone output;
+- 0.92 peak headroom;
+- legacy synthetic speed neutralized;
+- transcript/ref_text removed.
 
 ## Retest sequence
 1. Fetch final exact PR #50 HEAD and fully restart VSR.
-2. Confirm Adam does not require transcript.
-3. Confirm chunk options 300/450/600, default 450.
-4. Render known medium text using Adam and listen through the full result.
-5. Verify correct content/timbre and absence of obvious distorted/crackling syllables.
-6. Verify whether the earlier first-3–5-word omission still reproduces.
+2. Select Adam, no transcript requirement.
+3. Use the same Owner-supplied Vietnamese script and 450-char target.
+4. Verify every outer chunk transition is heard only after a complete sentence.
+5. Verify content/timbre and absence of obvious crackling/clipped syllables.
+6. Check whether the earlier first-3–5-word omission still reproduces.
 7. Reconfirm final merge/playback.
 
 ## Static verification
