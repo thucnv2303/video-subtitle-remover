@@ -4,7 +4,7 @@
 VOICE-RENDER-SHARED-LIBRARY-009
 
 ## Status
-OWNER_CORE_RUNTIME_PASS_TRANSCRIPT_REMEDIATION_RETEST_WAITING
+OWNER_CORE_RUNTIME_PASS_TRANSCRIPT_EDITOR_RETEST_WAITING
 
 ## Authority
 - Single active branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -16,20 +16,21 @@ OWNER_CORE_RUNTIME_PASS_TRANSCRIPT_REMEDIATION_RETEST_WAITING
 ## Verified Owner observations
 PASS:
 - Voice Render mounts/navigation.
-- preview/render core works for valid voice data.
-- `Render toàn bộ` + sequential chunks + final WAV merge work.
+- preview/render core and long-text merge work for valid voice data.
 
-Confirmed runtime FAIL:
-- Adam is correctly blocked because exact reference transcript is missing.
-- promised transcript remediation action was not visible in Voice Render or Settings.
+Latest UX FAIL:
+- previous transcript controls were poorly placed in both Voice Render and Settings;
+- previous remediation was not usable enough for runtime testing.
 
-## Published UI correction
-Source commit `07e5cd5b68953752817761c479657c13ef76033a` updates `src/renderer/js/voice-render-reference-fix.js` so:
-- Voice Render dynamically observes voice rows and always adds `＋ Bổ sung transcript audio mẫu` for clones missing transcript;
-- Settings saved-voice rows also receive `＋ Transcript`;
-- both actions update the shared `localStorage.tts_voices` record;
-- list rerenders recreate the actions;
-- clone preview/render remains fail-closed until transcript exists.
+## Published correction
+- transcript editing is centralized in Voice Render only;
+- clone rows missing transcript replace their normal `Nghe thử` action with `Transcript`;
+- no extra full-width yellow row is added;
+- Settings receives no transcript button;
+- `Transcript` opens an app-native modal with reference-audio playback, exact transcript textarea, Save and Cancel;
+- saved transcript updates shared `localStorage.tts_voices` fields `referenceTranscript/transcript`;
+- after save the row returns to normal preview behavior;
+- clone generation remains fail-closed until exact transcript exists.
 
 Reference-transcript conditioning in `api/tts_engine.py` remains active and sends exact `ref_text` to OmniVoice while preserving target text.
 
@@ -45,16 +46,16 @@ On final PR #50 HEAD:
 
 ## Owner retest
 1. Launch final exact PR #50 HEAD.
-2. Verify Adam shows `＋ Bổ sung transcript audio mẫu` in Voice Render.
-3. Verify Settings shows `＋ Transcript` for Adam.
-4. Enter the exact words spoken in Adam's reference audio once; the missing-transcript marker/action must disappear after refresh/rerender.
-5. Preview/render a short target at least 3 times and verify the finished audio contains all first words.
-6. Reconfirm a normal medium render/merge and speed-profile behavior.
+2. Settings must no longer show a transcript button beside Adam.
+3. Voice Render must show `Thiếu transcript mẫu`; the right-side action for Adam must read `Transcript`.
+4. Click it; modal must open and play Adam reference audio.
+5. Enter exact spoken reference transcript and save; row must return to `Nghe thử`.
+6. Preview/render a short target at least 3 times and verify every finished audio contains all first words.
 
 ## Gates
-- Execution: PASS — UI remediation source published.
+- Execution: PASS — UX correction published.
 - Automated/static: WAITING.
 - Code review: WAITING on final exact head.
-- Owner runtime: PARTIAL PASS; remediation UI + leading-word retention RETEST WAITING.
-- Documentation synchronization: IN PROGRESS until handoff and PR metadata match final head.
+- Owner runtime: PARTIAL PASS; transcript-editor UX + leading-word retention RETEST WAITING.
+- Documentation synchronization: IN PROGRESS until handoff/PR metadata match final docs head.
 - Merge permission: BLOCKED.
