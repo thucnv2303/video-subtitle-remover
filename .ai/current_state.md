@@ -14,7 +14,7 @@ VOICE-RENDER-SHARED-LIBRARY-009 — SOURCE PUBLISHED / PM LOGIC-SCOPE REVIEW PAS
 
 ## Published behavior
 - Voice Render uses the current app navy/blue visual language.
-- Global App/Backend/TTS/GPU/CPU/RAM information is mounted in the left sidebar and is intended to remain visible across tabs.
+- Global App/Backend/TTS/GPU/CPU/RAM information is mounted in the left sidebar and remains visible across tabs.
 - Voice Render lower-right area is a bounded Log card with filter/copy/clear.
 - Shared voice library is a vertically scrollable list with independent preview and explicit selection.
 - Clone voices save into existing `localStorage.tts_voices` and refresh known Settings/Pipeline selectors.
@@ -36,7 +36,7 @@ PR #48 / P1 Semantic Remix remains an independent upstream review and is not sat
 ## Verification facts
 - PR #50 is Draft/open on the intended dedicated branch.
 - PM reviewed changed-file scope and source patches; broad renderer file-delete bridge was found during review and removed/replaced by constrained merge-owned cleanup.
-- PM also corrected clone-language normalization, long-text no-chunk guard, real paragraph-preservation behavior and stale-result carryover.
+- PM also corrected clone-language normalization, long-text no-chunk guard, actual paragraph-preservation behavior and stale-result carryover.
 - Unresolved PR review threads: none at latest check.
 - Direct verification container cannot resolve GitHub raw/git network, so exact-head `node --check` and `git diff --check` are not claimed PASS.
 - Owner visual/runtime verification: NOT STARTED.
@@ -45,9 +45,9 @@ PR #48 / P1 Semantic Remix remains an independent upstream review and is not sat
 - Execution: PASS.
 - Automated/static verification: WAITING.
 - Code review: PASS logic/scope through application source `066a7cc9b369abf992dd0840c336ad0edb17022a`.
-- Owner visual/runtime verification: NOT STARTED — waiting exact static commands, then real-app test.
-- Documentation synchronization: IN PROGRESS until task/handoff/ACTIVE/architecture/PR body are final.
+- Owner visual/runtime verification: NOT STARTED.
+- Documentation synchronization: PASS — current_state/task_current/handoff/ACTIVE/spec/architecture aligned to task 009.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Finish canonical documentation and PR metadata. Then Owner checks out the exact final PR #50 HEAD in the owner-test worktree, runs the required Node/diff static commands, and if they pass starts the approved real-app Voice Render test. Do not merge.
+Owner fetches the exact final PR #50 HEAD into `E:\Project AI\Video-sub-remove-owner-test-P1`, runs the required Node/diff static commands, and only if they pass starts the approved real-app Voice Render test. Do not merge.
