@@ -65,5 +65,5 @@ On final PR #50 HEAD:
 - Automated/static: WAITING.
 - Code review: WAITING on final exact head.
 - Owner runtime: PARTIAL PASS; clone leading-word retention RETEST WAITING.
-- Documentation synchronization: IN PROGRESS until handoff/PR metadata match.
+- Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
