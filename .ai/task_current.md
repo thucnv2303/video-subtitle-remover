@@ -7,7 +7,7 @@ PIPELINE1-SEMANTIC-REMIX-007
 Pipeline 1 Optional Semantic Remix — Standard Script Default + Guarded Scene Remix
 
 ## Status
-STATIC_PASS_OWNER_TWO_MODE_WAITING
+STATIC_PASS_OWNER_STANDARD_THEN_SEMANTIC_WAITING
 
 ## Authority
 - Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
@@ -17,7 +17,8 @@ STATIC_PASS_OWNER_TWO_MODE_WAITING
 - Corrective P1 source originally reviewed at `7b217c7b73e98375bcf5ff2bcb24a92c8fa61796`.
 - Voice Render PR #50 merged at `3c7d47ca08c1e7a93365223a184d47e29c2175c0`.
 - Merged-head P1 review basis: `19677fbdbfe6d7910281307b387e15c007ab0282`.
-- Static verification state tested by Owner: `59925b05afef7071cdd478209d4c54732b611d78`.
+- Static verification application state tested by Owner: `59925b05afef7071cdd478209d4c54732b611d78`.
+- Commits after that static-tested state are documentation-only state synchronization.
 
 ## User outcome
 Semantic Remix is optional, not a replacement for normal script generation.
@@ -38,8 +39,9 @@ Semantic Remix is optional, not a replacement for normal script generation.
 ## Verification completed
 - Execution: PASS.
 - Merged-head logic/scope code review: PASS.
-- Automated/static verification: PASS from Owner local run on exact state `59925b05afef7071cdd478209d4c54732b611d78` with no reported errors for the required Node syntax checks and `git diff --check`.
+- Automated/static verification: PASS from Owner local run on exact application state `59925b05afef7071cdd478209d4c54732b611d78` with no reported errors for the required Node syntax checks and `git diff --check`.
 - PR #48 mergeability currently reports true.
+- Documentation synchronization: PASS.
 
 ## Owner runtime A — Standard/default OFF
 Required next:
@@ -64,6 +66,6 @@ Run only after Standard gate is accepted:
 - Code review: PASS for merged-head logic/scope.
 - Owner Standard: NOT STARTED.
 - Owner Semantic: NOT STARTED after correction.
-- Documentation synchronization: IN PROGRESS until handoff/PR metadata match this state.
+- Documentation synchronization: PASS.
 - P3 semantic cut/reorder: BLOCKED.
 - Merge permission: BLOCKED.
