@@ -436,7 +436,7 @@ function visionTokenBudget(frameCount) {
 function outputContractPrompt(userPrompt, videoInfo, frameMeta, budget) {
   const duration = Number(videoInfo?.duration || 0).toFixed(2);
   const frameCount = Array.isArray(frameMeta) ? frameMeta.length : 0;
-  return `Bạn là bộ reasoning cuối của Pipeline 1. Output protocol hệ thống có ưu tiên cao hơn format trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH:\n---\n${userPrompt}\n---\n\nDỮ LIỆU THỜI LƯỢNG/VOICE:\n- Video nguồn: ${duration}s.\n- Voice đã chọn: ${budget.voice}.\n- Tốc độ đọc đã chọn: ${budget.speed.toFixed(2)}x.\n- Target mềm lời thoại: ${budget.min_chars}-${budget.max_chars} ký tự, ưu tiên khoảng ${budget.target_chars} ký tự.\n- Visual sampling: ${frameCount} keyframe đã được Vision rút gọn thành evidence theo chunk.\n\nYÊU CẦU BẮT BUỘC:\n- Dùng transcript toàn video và visual evidence theo timeline.\n- Vision chunks đã tạo scene evidence; KHÔNG tạo lại danh sách scenes trong output cuối.\n- narration_script là MỘT lời thoại tiếng Việt LIỀN MẠCH đọc từ đầu đến cuối; không SRT, không numbering, không bullet, không nhãn Scene, không chia mini-script theo cảnh.\n- Ưu tiên narration_script gần ${budget.target_chars} ký tự và KHÔNG vượt ${budget.max_chars}; ${budget.min_chars} chỉ là target mềm trước khi đo TTS, không được nhồi chữ để chạm min.\n- Chất lượng ưu tiên hơn số ký tự: không lặp câu, không lặp CTA/kết luận, không kéo dài bằng filler; nếu nội dung tự nhiên ngắn hơn target mềm thì kết thúc tự nhiên để duration-fit xử lý sau TTS.\n- Chỉ dùng tiếng Việt tự nhiên; không chèn ký tự CJK/Hán/Nhật/Hàn lạc ngữ cảnh.\n- Giữ nhất quán tên chủ thể, sản phẩm, nguyên liệu và đối tượng xuyên suốt narration; nếu evidence mâu thuẫn, dùng cách diễn đạt trung tính thay vì tự bịa chi tiết.\n- Không bịa claim hoặc chi tiết không có căn cứ từ transcript/visual evidence.\n- CTA/kết luận chỉ xuất hiện một lần ở cuối nếu phù hợp nội dung.\n- Metadata phụ phải cực ngắn: summary súc tích, insights chỉ giữ điểm quan trọng nhất, edit_plan/edit_notes không kể lại transcript/evidence.\n- Ưu tiên hoàn tất narration_script + JSON đúng schema trước mọi metadata phụ.\n- RESPONSE chỉ là JSON đúng schema hệ thống, không giải thích ngoài JSON.`;
+  return `Bạn là bộ reasoning cuối của Pipeline 1. Output protocol hệ thống có ưu tiên cao hơn format trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH:\n---\n${userPrompt}\n---\n\nDỮ LIỆU THỜI LƯỢNG/VOICE:\n- Video nguồn: ${duration}s.\n- Voice đã chọn: ${budget.voice}.\n- Tốc độ đọc đã chọn: ${budget.speed.toFixed(2)}x.\n- Target dự thảo lời thoại: ${budget.min_chars}-${budget.max_chars} ký tự, ưu tiên khoảng ${budget.target_chars} ký tự.\n- Visual sampling: ${frameCount} keyframe đã được Vision rút gọn thành evidence theo chunk.\n\nYÊU CẦU BẮT BUỘC:\n- Dùng transcript toàn video và visual evidence theo timeline.\n- Vision chunks đã tạo scene evidence; KHÔNG tạo lại danh sách scenes trong output cuối.\n- narration_script là MỘT lời thoại tiếng Việt LIỀN MẠCH đọc từ đầu đến cuối; không SRT, không numbering, không bullet, không nhãn Scene, không chia mini-script theo cảnh.\n- Ưu tiên narration_script gần ${budget.target_chars} ký tự và KHÔNG vượt ${budget.max_chars}; không được nhồi chữ để chạm min.\n- Chất lượng ưu tiên hơn số ký tự: không lặp câu, không lặp CTA/kết luận, không kéo dài bằng filler; nếu draft tự nhiên ngắn hơn ${budget.min_chars}, Standard pre-TTS guard sẽ recompose bằng full transcript + Vision evidence trước TTS.\n- Chỉ dùng tiếng Việt tự nhiên; không chèn ký tự CJK/Hán/Nhật/Hàn lạc ngữ cảnh.\n- Giữ nhất quán tên chủ thể, sản phẩm, nguyên liệu và đối tượng xuyên suốt narration; nếu evidence mâu thuẫn, dùng cách diễn đạt trung tính thay vì tự bịa chi tiết.\n- Không bịa claim hoặc chi tiết không có căn cứ từ transcript/visual evidence.\n- CTA/kết luận chỉ xuất hiện một lần ở cuối nếu phù hợp nội dung.\n- Metadata phụ phải cực ngắn: summary súc tích, insights chỉ giữ điểm quan trọng nhất, edit_plan/edit_notes không kể lại transcript/evidence.\n- Ưu tiên hoàn tất narration_script + JSON đúng schema trước mọi metadata phụ.\n- RESPONSE chỉ là JSON đúng schema hệ thống, không giải thích ngoài JSON.`;
 }
 
 function compactReasoningContext(chunkAnalyses) {
@@ -735,7 +735,7 @@ async function runReasoningWithOneRepair(net, endpoint, model, systemPrompt, tra
   } catch (err) {
     if (!['OLLAMA_OUTPUT_TRUNCATED', 'OLLAMA_JSON_INVALID', 'NARRATION_LENGTH_OUT_OF_BUDGET'].includes(err?.code) || runController.signal.aborted) throw err;
     emitProgress(event, `Global reasoning/remix: output chưa đạt contract (${err.code}); thử lại đúng 1 lần với JSON tối giản.`, 'warning');
-    const repairPrompt = `${systemPrompt}\n\nLẦN THỬ LẠI BẮT BUỘC:\n- Chỉ trả JSON hợp lệ đúng schema.\n- narration_script ưu tiên gần ${budget.target_chars} ký tự nhưng không được vượt ${budget.max_chars}.\n- ${budget.min_chars} là target mềm trước TTS: không lặp câu, CTA, kết luận hoặc filler chỉ để chạm min.\n- Chỉ tiếng Việt tự nhiên; không CJK lạc ngữ cảnh; giữ nhất quán tên chủ thể/nguyên liệu.\n- Ưu tiên narration_script; mọi metadata còn lại phải ngắn nhất có thể.\n- Không lặp transcript hoặc visual evidence.`;
+    const repairPrompt = `${systemPrompt}\n\nLẦN THỬ LẠI BẮT BUỘC:\n- Chỉ trả JSON hợp lệ đúng schema.\n- narration_script ưu tiên gần ${budget.target_chars} ký tự nhưng không được vượt ${budget.max_chars}.\n- Nếu draft chưa đạt ${budget.min_chars}, Standard pre-TTS guard sẽ recompose bằng full transcript + Vision evidence trước TTS; không lặp câu, CTA, kết luận hoặc filler để chạm min.\n- Chỉ tiếng Việt tự nhiên; không CJK lạc ngữ cảnh; giữ nhất quán tên chủ thể/nguyên liệu.\n- Ưu tiên narration_script; mọi metadata còn lại phải ngắn nhất có thể.\n- Không lặp transcript hoặc visual evidence.`;
     const repaired = await chatStream(net, endpoint, model, [
       { role: 'system', content: repairPrompt },
       { role: 'user', content: `TRANSCRIPT SRT TOÀN VIDEO:\n${transcript}\n\nVISUAL EVIDENCE JSON ĐÃ RÚT GỌN:\n${JSON.stringify(visualContext)}` },
@@ -1125,11 +1125,28 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       if (runController.signal.aborted) throw cancelledError();
 
       finalAnalysis.narration_script = assertNarrationWithinDraftBudget(finalAnalysis.narration_script, budget, 'Global reasoning/remix', model);
-      const quality = await repairNarrationQuality(net, payload.endpoint, model, finalAnalysis.narration_script, budget, event, runController, {
-        phase: 'Narration quality',
-        requireFullBudget: false,
-      });
-      finalAnalysis.narration_script = quality.narration;
+      const draftQuality = narrationQualityReport(finalAnalysis.narration_script);
+      const underMin = finalAnalysis.narration_script.length < budget.min_chars;
+      let quality;
+      if (underMin) {
+        quality = {
+          narration: finalAnalysis.narration_script,
+          report: draftQuality,
+          repaired: false,
+          deferred_to_standard_pre_tts_guard: true,
+        };
+        emitProgress(
+          event,
+          `Narration draft: ${finalAnalysis.narration_script.length} ký tự dưới target ${budget.min_chars}-${budget.max_chars}; quality=${qualitySummary(draftQuality)}. Hoãn quality repair riêng để Standard pre-TTS guard recompose một lần bằng full transcript + Vision evidence.`,
+          draftQuality.ok ? 'info' : 'warning'
+        );
+      } else {
+        quality = await repairNarrationQuality(net, payload.endpoint, model, finalAnalysis.narration_script, budget, event, runController, {
+          phase: 'Narration quality',
+          requireFullBudget: false,
+        });
+        finalAnalysis.narration_script = quality.narration;
+      }
       const visualScenes = chunkAnalyses.flatMap((chunk, chunkIndex) => {
         const scenes = Array.isArray(chunk?.analysis?.scenes) ? chunk.analysis.scenes : [];
         return scenes.map((scene, sceneIndex) => ({
@@ -1139,7 +1156,7 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
         }));
       });
       finalAnalysis.scenes = visualScenes;
-      emitProgress(event, `Narration draft: ${finalAnalysis.narration_script.length} ký tự; soft_target=${budget.min_chars}-${budget.max_chars}; quality_repaired=${quality.repaired ? 'yes' : 'no'}.`, 'success');
+      emitProgress(event, `Narration draft: ${finalAnalysis.narration_script.length} ký tự; soft_target=${budget.min_chars}-${budget.max_chars}; quality_repaired=${quality.repaired ? 'yes' : 'no'}; pre_tts_deferred=${quality.deferred_to_standard_pre_tts_guard ? 'yes' : 'no'}.`, 'success');
 
       const fingerprint = await sha256File(videoPath);
       return {
