@@ -23,12 +23,14 @@ Source commit `c8fecb95164c39fe82cddf24711ccfc3386d23c6` changes only `src/main/
 - the obsolete implication that a later TTS duration-fit will solve underfill is removed;
 - when the draft is below `budget.min_chars`, standalone quality repair is deferred instead of being allowed to fail the job first;
 - the raw deterministic draft quality report is returned to the wrapper;
+- prior rejected-candidate retention in the wrapper remains in force;
 - non-underfilled behavior remains unchanged;
 - Semantic/P2/P3/TTS engine are unchanged.
 
 ## Verification evidence
 - GitHub compare `f03ab512... -> c8fecb95...`: exactly one application file changed, `src/main/p1-standard-vision-ipc.js`, 35 changed lines.
 - GitHub source inspection confirms the new under-min deferral path and updated prompt are published.
+- Canonical `current_state.md`, `task_current.md`, `handoff.md`, `bugs.md`, `qa_checklist.md` and PR #48 description are synchronized to this correction.
 - Exact-head Node syntax and diff checks have not yet been executed; GitHub CI is not configured.
 
 ## Gates
@@ -37,9 +39,9 @@ Source commit `c8fecb95164c39fe82cddf24711ccfc3386d23c6` changes only `src/main/
 - Code review: WAITING final exact-head review/static confirmation.
 - Owner Standard runtime: FAIL on prior flow; RETEST WAITING on corrected head after static PASS.
 - Owner Semantic runtime: ON HOLD until Standard PASS.
-- Documentation synchronization: IN PROGRESS until all dynamic/bug/QA docs and PR body reach the same final head.
+- Documentation synchronization: PASS.
 - P3 semantic cut/reorder: BLOCKED.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Finish canonical synchronization and exact-head review. Then Owner checks out the final PR head, runs `node --check src/main/p1-standard-vision-ipc.js`, `node --check src/main/p1-standard-vision-wrapper.js`, and `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`. If static PASS, rerun Standard/default OFF. The underfilled+CJK case must now reach the grounded Standard pre-TTS recompose path rather than fail in standalone `Narration quality` before the wrapper.
+Owner checks out the final PR head and runs `node --check src/main/p1-standard-vision-ipc.js`, `node --check src/main/p1-standard-vision-wrapper.js`, and `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`. If static PASS, rerun Standard/default OFF. The underfilled+CJK case must now reach the grounded Standard pre-TTS recompose path rather than fail in standalone `Narration quality` before the wrapper.
