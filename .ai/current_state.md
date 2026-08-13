@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-VOICE-RENDER-SHARED-LIBRARY-009 — OWNER CORE RUNTIME PASS / DISTINCT VOICE PROFILE CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING
+VOICE-RENDER-SHARED-LIBRARY-009 — OWNER CORE RUNTIME PASS / LEADING-WORD TTS CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -11,7 +11,7 @@ VOICE-RENDER-SHARED-LIBRARY-009 — OWNER CORE RUNTIME PASS / DISTINCT VOICE PRO
 - PR #49: CLOSED/OBSOLETE; never use for Owner testing.
 - Owner-test worktree: `E:\Project AI\Video-sub-remove-owner-test-P1`.
 
-## Latest Owner runtime evidence
+## Verified Owner runtime evidence
 PASS:
 - Voice Render tab/page mounts.
 - Shared voice list and voice preview work.
@@ -20,39 +20,55 @@ PASS:
 - Final WAV merge completed and output is playable.
 - Log/global status corrections are visible.
 
-Remaining Owner defect before this correction:
-- changing voice did not produce a meaningful duration difference because the old estimator used a shared rate and Voice Render did not enforce a persistent per-voice speed profile on generated audio.
+Latest Owner runtime defect:
+- some rendered speech intermittently loses roughly the first 2–5 words of the supplied text.
 
-## Distinct voice-profile correction
-Every Voice Render voice now has a profile containing at least:
+## Leading-word investigation
+The Voice Render renderer splitter itself starts at source character 0 and does not intentionally discard the first words. The remaining risk is inside generated-audio onset/post-processing rather than the renderer text queue.
+
+The installed OmniVoice generation contract supports:
+- `postprocess_output` (default true; removes long silences),
+- `pad_duration`,
+- `fade_duration`,
+- internal long-form `audio_chunk_duration` / `audio_chunk_threshold`.
+
+There is not yet Owner evidence proving exactly which OmniVoice stage caused the missing words, so this is treated as a targeted corrective hypothesis, not a confirmed root-cause claim.
+
+## Published onset guard
+Owner explicitly requested this small correction before closing task 009. Scope therefore expands narrowly to `api/tts_engine.py`.
+
+`generate_speech()` now:
+- preserves generated onset with `postprocess_output=False`;
+- retains 250 ms edge padding;
+- uses a short 20 ms fade rather than aggressive edge removal;
+- lowers OmniVoice internal long-form chunk target/threshold to 12s/18s so large renderer chunks are synthesized as smaller internal spans.
+
+No input text words are prepended, removed, duplicated or rewritten by this guard.
+
+## Distinct voice-profile correction retained
+Every Voice Render voice has at least:
 - `prosody` / intonation label;
 - `speedFactor`.
 
 Built-in profiles are distinct. Existing legacy clone voices missing profile fields are migrated to distinct profile combinations. New clone creation requires a non-duplicate name and non-duplicate `prosody + speedFactor` profile.
 
-`src/main/main.js` now provides constrained `voice-render:applyTempo` processing using FFmpeg `atempo` in the main process. `src/main/preload.js` exposes only the narrow `applyVoiceTempo()` IPC bridge. Voice Render applies the selected voice `speedFactor` to preview/chunk audio before final merge, so profile speed changes real output duration rather than only the displayed estimate.
-
-The duration estimator uses per-voice/per-language measured output when available and profile-based fallback before calibration. Full successful output remains the strongest local rate sample.
+Voice Render applies selected profile speed to generated preview/chunk audio before final merge, so profile speed changes real output duration, not only displayed estimate.
 
 ## Shared-library rule
 - `localStorage.tts_voices` remains the single clone-voice store.
 - Settings/Pipeline selectors continue reading that store.
-- Creating a new clone from Settings is redirected to Voice Render so every newly created clone receives the complete profile contract.
-- Voice profile metadata is stored with the shared clone record for later main-flow consumption.
+- New clone creation from Settings routes to Voice Render so records contain complete profile metadata.
 
 ## Important limitation
-The app can enforce unique profile metadata and selected speed behavior. It cannot mathematically guarantee two independently cloned voices are acoustically unique if the same/similar source voice is supplied; acoustic identity remains determined by the underlying voice model/reference audio.
-
-## Isolation
-No P1 semantic reasoning, P2 inpaint, P3 composition, shared video Job/gate, TTS model implementation or dependency/package change is included in this correction.
+The app can enforce distinct profile metadata and speed behavior. It cannot mathematically guarantee acoustic uniqueness when the same/similar source speaker is supplied.
 
 ## Gates
-- Execution: PASS — profile correction published.
-- Automated/static verification: WAITING on final exact HEAD.
-- Code review: WAITING on final exact HEAD.
-- Owner runtime: PARTIAL PASS — core render/merge PASS; distinct profile/duration behavior RETEST WAITING.
-- Documentation synchronization: PASS after dynamic state sync.
+- Execution: PASS — onset guard source published.
+- Automated/static verification: WAITING on final exact HEAD, including Python compile for `api/tts_engine.py`.
+- Code review: WAITING on onset-guard exact HEAD.
+- Owner runtime: PARTIAL PASS — core render/merge PASS; leading-word retention + distinct profile behavior RETEST WAITING.
+- Documentation synchronization: IN PROGRESS until task_current/handoff/PR metadata match this exact correction.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Owner fetches exact final PR #50 HEAD, restarts VSR, verifies different voices show different prosody/speed profiles and render the same short text with two profiles having clearly different speed factors. Their real output durations must differ in the expected direction. Also create/inspect one clone and verify prosody + speed are stored/displayed. If PASS and static checks PASS, PM may close task 009 and return to the main pipeline task. Do not merge before that evidence.
+Owner tests the final exact PR #50 HEAD with a short sentence whose first 5–8 words are easy to recognize, then repeats several renders with OmniVoice/default and at least one clone. The beginning of every output must preserve the supplied first words. Also recheck two distinct speed profiles still produce real duration differences. If those pass and static checks pass, task 009 may be closed and control returns to the main pipeline work. Do not merge before that evidence.
