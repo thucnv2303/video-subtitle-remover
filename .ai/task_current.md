@@ -4,7 +4,7 @@
 VOICE-RENDER-SHARED-LIBRARY-009
 
 ## Status
-OWNER_PARTIAL_PASS_PRELOAD_BRIDGE_FIX_PUBLISHED_RETEST_WAITING
+OWNER_CORE_RUNTIME_PASS_ADAPTIVE_DURATION_ESTIMATOR_RETEST_WAITING
 
 ## Authority
 - Single active branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -16,25 +16,25 @@ OWNER_PARTIAL_PASS_PRELOAD_BRIDGE_FIX_PUBLISHED_RETEST_WAITING
 ## Verified Owner observations
 PASS:
 - Voice Render tab/page mounts.
-- Voice list is visible.
 - Voice preview works.
+- `Render toàn bộ` works.
+- 3/3 chunks complete sequentially.
+- final WAV merge succeeds and output plays.
 
-FAIL:
-- Previous log/status UX required correction.
-- `Render toàn bộ` reports: `render bridge missing: saveFile/mergeWavFiles unavailable`.
+FAIL / revision required:
+- 1,178-word Adam run estimated `~ 8.1 phút`, actual merged WAV `~ 5:03`.
 
-## Root cause and correction
-Privileged merge logic must not depend on preload-local `fs/path/child_process` availability. The correction moves WAV merge into Electron main process and exposes only narrow IPC methods through preload:
-- `saveFile()` -> `dialog:saveFile`;
-- `mergeWavFiles(inputs, output)` -> `voice-render:mergeWavFiles`.
+## Root cause
+The base estimator in `voice-render.js` uses a fixed `145 WPM` for every voice. It has no per-voice calibration. The observed Adam run is roughly 233 WPM, so the global 145 WPM assumption is not acceptable for a voice-aware UI.
 
-Merge constraints remain:
-- final output `.wav`;
-- every chunk exists;
-- chunk in same output directory;
-- name matches `<final-stem>.part-###.wav`;
-- merge in supplied order;
-- only validated owned chunks cleaned after success.
+## Adaptive estimator correction
+`voice-render-owner-fixes.js` now:
+- persists a rate profile per `voice id + language`;
+- learns from preview WAV metadata;
+- learns more strongly from actual full merged output duration/text;
+- uses learned WPM for whitespace-delimited languages and learned character rate fallback when appropriate;
+- starts with language-specific fallback only when no measured rate exists;
+- updates the visible duration estimate after voice selection, preview calibration, text/language changes, and completed full render.
 
 ## Required static verification
 On final PR #50 HEAD:
@@ -47,17 +47,17 @@ On final PR #50 HEAD:
 ## Owner retest
 1. Fully close all VSR/Electron instances.
 2. Launch exact final PR #50 HEAD.
-3. Click `Render toàn bộ`.
-4. WAV save dialog must appear.
-5. Choose path; queue must populate and chunk 1 enter rendering.
-6. If successful, continue until one merged playable WAV exists.
-7. Reconfirm log readability and App status.
-8. Confirm P1/P2/P3 state unchanged.
+3. Select Adam.
+4. Observe initial estimate; if no Adam rate profile exists it may show the language fallback.
+5. Click `Nghe thử` for Adam and wait for preview metadata to load; estimate should recalibrate.
+6. Render the same or equivalent long text once; after final WAV metadata loads the Adam profile should update from the full actual output.
+7. With the same text still present, estimate must move materially toward actual duration and no longer use the old fixed 145 WPM assumption.
+8. Switching to another uncalibrated voice may produce a different fallback/learned estimate; profiles must not leak across voices.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING.
-- Code review: WAITING on bridge correction exact head.
-- Owner runtime: PARTIAL; RETEST WAITING.
+- Code review: WAITING on estimator correction exact head.
+- Owner runtime: PARTIAL PASS; estimator RETEST WAITING.
 - Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
