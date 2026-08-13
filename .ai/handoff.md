@@ -4,7 +4,7 @@
 `VOICE-RENDER-SHARED-LIBRARY-009 — Voice Render Shared Library + Long Text`
 
 ## Status
-OWNER CORE RUNTIME PASS / CLONE REFERENCE-TRANSCRIPT CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING / MERGE BLOCKED
+OWNER CORE RUNTIME PASS / TRANSCRIPT REMEDIATION UI FIX PUBLISHED / STATIC + OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Single active Voice Render branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -14,35 +14,33 @@ OWNER CORE RUNTIME PASS / CLONE REFERENCE-TRANSCRIPT CORRECTION PUBLISHED / STAT
 - Owner-test worktree: `E:\Project AI\Video-sub-remove-owner-test-P1`.
 - No Anti/external executor.
 
-## Verified real-app evidence
-Owner verified Voice Render mount/navigation, voice preview, sequential long-text rendering, 3/3 chunks, final WAV merge/playback and global status/log UI.
+## Verified Owner evidence
+PASS:
+- Voice Render mounts/navigation.
+- core preview/render/long-text queue/final WAV merge work when voice data is valid.
 
-Latest runtime FAIL:
-- completed rendered speech can omit roughly the first 3–5 target words from the actual spoken WAV content.
+Confirmed FAIL:
+- Adam legacy clone lacks exact reference transcript and is correctly blocked.
+- correction initially failed to expose the promised transcript action in Voice Render and Settings.
 
-## Corrected investigation
-- renderer splitting begins at source character 0;
-- prior padding/silence hypothesis was rejected after Owner clarified the words are absent from the rendered speech itself;
-- clone requests previously supplied reference audio without exact reference transcript;
-- OmniVoice auto-transcribes reference audio when `ref_text` is absent and conditions target generation with reference text + target text;
-- upstream OmniVoice issue #246 independently reports worse clone/pronunciation behavior without reference transcript.
+## Published remediation
+Source commit `07e5cd5b68953752817761c479657c13ef76033a` changes `src/renderer/js/voice-render-reference-fix.js`:
+- persistently observes dynamic Voice Render and Settings voice lists;
+- missing clone transcript => Voice Render shows `＋ Bổ sung transcript audio mẫu`;
+- same clone in Settings shows `＋ Transcript`;
+- both write the shared `referenceTranscript/transcript` record in `localStorage.tts_voices`;
+- actions survive/reappear after list rerender;
+- generation remains fail-closed until transcript exists.
 
-## Published correction
-- `api/tts_engine.py` restores normal OmniVoice generation defaults and decodes a bounded internal reference-transcript envelope for clone requests;
-- decoded reference transcript is passed as OmniVoice `ref_text`; target text is restored exactly before generation;
-- `voice-render-reference-fix.js` injects exact reference transcript into clone preview/render calls;
-- clone form now requires exact audio-sample transcript;
-- old clones missing an explicit transcript show `Thiếu transcript mẫu` + `+ Transcript` and fail closed until corrected;
-- legacy generic `note` is not silently trusted as exact transcript;
-- preload loads the transcript request guard before the existing Voice Render/profile wrappers.
+Backend reference-text correction remains active: clone requests with transcript pass exact `ref_text` to OmniVoice and restore target text unchanged before generation.
 
 ## Retest sequence
-1. Fetch exact final PR #50 HEAD and fully restart VSR.
-2. For Adam/selected clone, if `Thiếu transcript mẫu` appears, click `+ Transcript` and enter exactly what the reference audio says.
-3. Render a short Vietnamese sentence with unmistakable first 5–8 words at least 3 times with that clone.
-4. Every completed WAV must contain the complete beginning.
-5. Reconfirm one medium render/merge and distinct slow/fast profile duration behavior.
-6. Confirm P1/P2/P3 state remains unchanged.
+1. Fetch final exact PR #50 HEAD and fully restart VSR.
+2. Verify Adam shows the remediation button in Voice Render and Settings.
+3. Enter exactly what Adam's reference audio says.
+4. Confirm missing-transcript marker/action disappears after rerender.
+5. Preview/render a short target at least 3 times; every completed WAV must contain all first words.
+6. Reconfirm medium render/merge and slow-vs-fast profile duration behavior.
 
 ## Static verification
 - `node --check src/main/main.js`
@@ -54,9 +52,9 @@ Latest runtime FAIL:
 - `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
 
 ## Gates
-- Execution: PASS — correction source published.
+- Execution: PASS — remediation source published.
 - Automated/static verification: WAITING.
 - Code review: WAITING on final exact head.
-- Owner runtime: PARTIAL PASS; clone leading-word retention RETEST WAITING.
-- Documentation synchronization: PASS once PR metadata points to final exact head.
+- Owner runtime: PARTIAL PASS; remediation UI + leading-word retention RETEST WAITING.
+- Documentation synchronization: PASS once PR metadata points to the final exact head.
 - Merge permission: BLOCKED.
