@@ -5,6 +5,7 @@ Supports zero-shot voice cloning with reference audio
 import os
 import sys
 import json
+import base64
 import tempfile
 import traceback
 import re
@@ -24,6 +25,8 @@ _model_lock = threading.RLock()
 _release_timer = None
 _active_generations = 0
 _IDLE_RELEASE_SECONDS = 6.0
+_VSR_REF_TEXT_PREFIX = '[[VSR_REF_TEXT_B64:'
+_VSR_REF_TEXT_MAX_CHARS = 4000
 
 
 def _check_omnivoice():
@@ -85,6 +88,48 @@ def _schedule_idle_release(delay_seconds=_IDLE_RELEASE_SECONDS):
         timer.start()
 
 
+def _decode_vsr_reference_text(text):
+    """Decode the renderer's backwards-compatible clone transcript envelope.
+
+    The current FastAPI TTS request predates reference-text support. Voice Render
+    therefore carries clone reference text inside a bounded internal control
+    header at the beginning of the text field. This function strips that header
+    before synthesis, so control data can never be spoken by OmniVoice.
+
+    Returns: (target_text, ref_text_or_none)
+    """
+    value = str(text or '')
+    if not value.startswith(_VSR_REF_TEXT_PREFIX):
+        return value, None
+
+    end = value.find(']]')
+    if end < 0:
+        raise ValueError('Voice Render reference-text envelope is malformed.')
+
+    encoded = value[len(_VSR_REF_TEXT_PREFIX):end].strip()
+    if not encoded:
+        raise ValueError('Voice clone reference transcript is empty.')
+
+    try:
+        decoded = base64.b64decode(encoded, validate=True).decode('utf-8').strip()
+    except Exception as exc:
+        raise ValueError('Voice clone reference transcript cannot be decoded.') from exc
+
+    if not decoded:
+        raise ValueError('Voice clone reference transcript is empty.')
+    if len(decoded) > _VSR_REF_TEXT_MAX_CHARS:
+        raise ValueError('Voice clone reference transcript is too long.')
+
+    target = value[end + 2:]
+    if target.startswith('\r\n'):
+        target = target[2:]
+    elif target.startswith('\n'):
+        target = target[1:]
+    if not target.strip():
+        raise ValueError('Target TTS text is empty after reference metadata.')
+    return target, decoded
+
+
 def load_model(device="cuda", dtype="float16"):
     """Load OmniVoice model (lazy initialization)"""
     global _model
@@ -124,7 +169,9 @@ def generate_speech(text, ref_audio_path=None, output_path=None, language="vi"):
     Generate speech from text using OmniVoice.
     
     Args:
-        text: Text to synthesize
+        text: Text to synthesize. Voice Render may prefix a bounded internal
+              reference-transcript envelope for clone generation; it is stripped
+              before synthesis.
         ref_audio_path: Optional path to reference audio for voice cloning
         output_path: Where to save the output WAV file
         language: Language code (default: 'vi' for Vietnamese)
@@ -146,24 +193,18 @@ def generate_speech(text, ref_audio_path=None, output_path=None, language="vi"):
             output_path = tempfile.mktemp(suffix='.wav')
         
         try:
+            target_text, ref_text = _decode_vsr_reference_text(text)
             kwargs = {
-                "text": text,
+                "text": target_text,
                 "language": language,
-                # Preserve the generated onset. OmniVoice's default post-process
-                # removes leading/trailing silence and can clip soft speech onset
-                # for some cloned voices. Keep model output intact and retain a
-                # small edge pad/fade instead.
-                "postprocess_output": False,
-                "pad_duration": 0.25,
-                "fade_duration": 0.02,
-                # Keep model-internal long-form chunks short enough that the
-                # renderer's larger text chunks do not become one very long
-                # synthesis request internally.
-                "audio_chunk_duration": 12.0,
-                "audio_chunk_threshold": 18.0,
             }
             if ref_audio_path and os.path.exists(ref_audio_path):
                 kwargs["ref_audio"] = ref_audio_path
+                if ref_text:
+                    # Exact reference transcript keeps OmniVoice's reference
+                    # audio/text alignment deterministic instead of forcing a
+                    # fresh ASR guess at the target-text boundary.
+                    kwargs["ref_text"] = ref_text
             
             # model.generate() returns a list of numpy arrays
             audios = model.generate(**kwargs)
@@ -172,7 +213,8 @@ def generate_speech(text, ref_audio_path=None, output_path=None, language="vi"):
             import soundfile as sf
             sf.write(output_path, audios[0], model.sampling_rate)
             
-            print(f"[TTS] Generated with onset guard: {output_path} ({len(text)} chars)", flush=True)
+            ref_mode = 'exact-ref-text' if ref_text and ref_audio_path else 'auto/default'
+            print(f"[TTS] Generated: {output_path} ({len(target_text)} chars, {ref_mode})", flush=True)
             return output_path
         except Exception as e:
             print(f"[TTS] Error generating speech: {e}", flush=True)
@@ -230,7 +272,7 @@ def generate_from_srt(srt_path, ref_audio_path=None, output_dir=None, language="
     
     Args:
         srt_path: Path to SRT file
-        ref_audio_path: Optional reference audio for voice cloning
+        ref_audio_path: Optional path to reference audio for voice cloning
         output_dir: Directory to save audio segments
         language: Language code
     
