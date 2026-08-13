@@ -58,8 +58,8 @@ No P1 reasoning, P2 subtitle removal, P3 composition, video Job/gate or package/
 - Automated/static verification: WAITING on final exact HEAD (`node --check` + `python -m py_compile` + `git diff --check`).
 - Code review: WAITING on final exact HEAD.
 - Owner runtime: PARTIAL PASS — core Voice Render/render/merge PASS; clone leading-word retention RETEST WAITING.
-- Documentation synchronization: IN PROGRESS until task_current/handoff/PR metadata are updated to the same exact head.
+- Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-After documentation sync, Owner fetches the final exact PR #50 HEAD. For an existing clone such as Adam, if the UI shows `Thiếu transcript mẫu`, use `+ Transcript` and enter the exact words spoken in its reference audio. Then render a short unmistakable sentence repeatedly and verify the completed WAV contains every first word. Also recheck the distinct speed profile behavior. Do not merge until runtime + static + review gates pass.
+Owner fetches the final exact PR #50 HEAD. For an existing clone such as Adam, if the UI shows `Thiếu transcript mẫu`, use `+ Transcript` and enter the exact words spoken in its reference audio. Then render a short unmistakable sentence repeatedly and verify the completed WAV contains every first word. Also recheck the distinct speed profile behavior. Do not merge until runtime + static + review gates pass.
