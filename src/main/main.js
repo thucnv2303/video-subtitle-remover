@@ -167,6 +167,57 @@ function mergeVoiceRenderWavFiles(inputPaths, outputPath) {
   });
 }
 
+function applyVoiceRenderTempo(inputPath, speedFactor) {
+  return new Promise((resolve) => {
+    const source = path.resolve(String(inputPath || ''));
+    const factor = Number(speedFactor);
+    if (!source || !fs.existsSync(source)) {
+      resolve({ ok: false, error: 'Không tìm thấy audio để áp tốc độ voice.' });
+      return;
+    }
+    if (!Number.isFinite(factor) || factor < 0.75 || factor > 1.25) {
+      resolve({ ok: false, error: 'Tốc độ voice phải nằm trong khoảng 0.75x–1.25x.' });
+      return;
+    }
+    if (Math.abs(factor - 1) < 0.005) {
+      resolve({ ok: true, output_path: source, speed_factor: 1 });
+      return;
+    }
+
+    const ext = path.extname(source).toLowerCase();
+    const sameFileWav = ext === '.wav';
+    const tempoPath = sameFileWav
+      ? `${source}.tempo-${Date.now()}.wav`
+      : path.join(path.dirname(source), `${path.basename(source, ext)}.tempo-${Date.now()}.wav`);
+
+    execFile('ffmpeg', [
+      '-y', '-hide_banner', '-loglevel', 'error',
+      '-i', source,
+      '-vn', '-filter:a', `atempo=${factor.toFixed(4)}`,
+      '-c:a', 'pcm_s16le', tempoPath,
+    ], { windowsHide: true }, async (error, stdout, stderr) => {
+      if (error) {
+        try { await fs.promises.unlink(tempoPath); } catch {}
+        resolve({ ok: false, error: (stderr || error.message || 'FFmpeg tempo failed').trim() });
+        return;
+      }
+
+      if (!sameFileWav) {
+        resolve({ ok: true, output_path: tempoPath, speed_factor: factor });
+        return;
+      }
+
+      try {
+        await fs.promises.unlink(source);
+        await fs.promises.rename(tempoPath, source);
+        resolve({ ok: true, output_path: source, speed_factor: factor });
+      } catch (replaceError) {
+        resolve({ ok: false, error: replaceError?.message || 'Không thay được WAV sau khi áp tốc độ voice.' });
+      }
+    });
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -386,3 +437,4 @@ ipcMain.handle('app:getPath', () => {
 
 ipcMain.handle('app:systemInfo', async () => getSystemInfoSnapshot());
 ipcMain.handle('voice-render:mergeWavFiles', async (event, inputPaths, outputPath) => mergeVoiceRenderWavFiles(inputPaths, outputPath));
+ipcMain.handle('voice-render:applyTempo', async (event, inputPath, speedFactor) => applyVoiceRenderTempo(inputPath, speedFactor));
