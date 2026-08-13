@@ -4,42 +4,48 @@
 `PIPELINE1-SEMANTIC-REMIX-007 — Optional Semantic Remix with Standard Script Default`
 
 ## Status
-STANDARD DURATION CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING
+D-016 SOURCE/STATIC REVIEW PASS / OWNER STANDARD RETEST WAITING
 
 ## Review basis
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
 - Draft PR: #48.
 - Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
-- Prior stable head before latest correction: `7eaa0d58b82eb93b23a29d79bc784b085f351aea`.
-- Standard duration correction source: `41a4a429bfe7dfe17fbd2113f4019733656359ce`.
-- Owner product decision: D-016.
+- Prior static-tested application state: `59925b05afef7071cdd478209d4c54732b611d78`.
+- D-016 Standard duration correction source: `41a4a429bfe7dfe17fbd2113f4019733656359ce`.
+- Owner regression defect: BUG-037.
 
 ## Owner runtime evidence
-Standard/default OFF completed but produced ~35.82s voice for ~97.57s source (~36.7%). Existing Standard budget was 1529-1610 chars, while the accepted first narration was ~612 chars.
+Standard/default OFF completed but accepted ~612 chars and produced ~35.82s voice for ~97.57s source (~36.7%) despite a ~1529–1610 char voice-aware budget.
 
-## Root cause
-Standard reasoning computed a voice-aware near-source character budget but only enforced non-empty/max-length acceptance. A severely short grounded draft therefore reached TTS even though source duration, selected voice/speed, transcript and Vision evidence were already available.
+## Corrective behavior
+- keep Standard full-ASR + Vision first pass;
+- if narration is below the existing voice-aware minimum, run one evidence-backed AI recompose before TTS;
+- recompose receives full transcript + accumulated Vision evidence + source duration + selected voice/speed-derived rate;
+- grounded expansion is allowed, but filler/repetition/unsupported claims fail closed;
+- repaired narration must enter hard target range before TTS;
+- TTS remains one continuous full-text synthesis; no repeated post-TTS LLM/TTS duration loop;
+- Semantic duration remains tied to its validated strategy/beat plan rather than original-source occupancy.
 
-## Published correction
-Only `src/main/p1-standard-vision-wrapper.js` changed from `7eaa0d58...` to `41a4a429...`.
+## Verification evidence
+- GitHub compare from `59925b05...` through the correction shows only `src/main/p1-standard-vision-wrapper.js` changed in application source; later deltas are canonical `.ai/` files.
+- PM re-read the complete corrected wrapper from GitHub.
+- Exact corrected wrapper passed `node --check` with silent success in PM container.
+- PM code review: PASS logic/scope for the bounded D-016 source delta.
+- Unchanged application files retain prior Owner static evidence because GitHub proves no source change in them.
 
-Behavior:
-- keep isolated Standard multimodal first pass;
-- if narration is below the existing 95-100% voice-aware budget, run one evidence-backed recompose before TTS;
-- recompose receives full transcript + accumulated Vision evidence + source duration + selected voice/speed-derived speaking rate;
-- repaired text must enter hard target range and existing quality/evidence guards must pass;
-- filler/repetition/unsupported claims fail closed;
-- TTS remains one continuous synthesis after narration acceptance; no extra TTS pass added.
+## Canonical synchronization
+D-016/BUG-037 are represented in decisions, bug ledger, architecture, API contracts, active task spec, QA checklist, current state, current task and this handoff. Documentation synchronization becomes PASS when PR #48 body is updated to the final exact head and that state is re-fetched.
 
-## Verification state
+## Gates
 - Execution: PASS.
-- PM code review: PASS logic/scope for the bounded one-file correction.
-- Automated/static: WAITING on final exact docs/head.
-- Owner Standard: WAITING fresh retest.
+- Automated/static for current application source: PASS.
+- Code review: PASS logic/scope.
+- Owner Standard: RETEST WAITING.
 - Owner Semantic: ON HOLD until Standard PASS.
-- Documentation synchronization: PASS once PR body points to the final docs head and exact head is reverified.
+- Documentation synchronization: WAITING only for final PR body/head alignment.
+- P3 semantic cut/reorder: BLOCKED.
 - Merge: BLOCKED.
 
 ## Next action
-Finalize PR metadata to the latest docs head, re-fetch exact HEAD, then run static checks. After static PASS, Owner reruns Standard/default mode and verifies the pre-TTS duration guard/recompose and resulting voice duration. Do not run Semantic retest before Standard PASS.
+Align PR #48 metadata to the final exact head, then Owner reruns Standard/default OFF. Expected regression evidence: `Standard duration guard` -> one evidence-backed recompose -> `Standard duration guard PASS` -> one full-text TTS, with resulting voice close to source duration and narration remaining grounded/natural. Do not run Semantic until Standard PASS.
