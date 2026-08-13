@@ -24,6 +24,10 @@ _model_lock = threading.RLock()
 _release_timer = None
 _active_generations = 0
 _IDLE_RELEASE_SECONDS = 6.0
+_VSR_SPEED_SUFFIX_RE = re.compile(r'^(?P<language>[^|]+)\|vsr-speed=(?P<speed>\d+(?:\.\d+)?)$')
+_VSR_SPEED_MIN = 0.75
+_VSR_SPEED_MAX = 1.25
+_OUTPUT_PEAK_TARGET = 0.92
 
 
 def _check_omnivoice():
@@ -85,6 +89,39 @@ def _schedule_idle_release(delay_seconds=_IDLE_RELEASE_SECONDS):
         timer.start()
 
 
+def _parse_vsr_language_speed(language):
+    """Decode Voice Render native-speed transport while preserving legacy callers.
+
+    The existing FastAPI request contract has no speed field. Voice Render therefore
+    carries only its bounded numeric speed beside the language value. The control
+    data is stripped here before OmniVoice sees the language code. Other callers
+    continue to pass ordinary language values unchanged.
+    """
+    raw = str(language or 'vi').strip()
+    match = _VSR_SPEED_SUFFIX_RE.match(raw)
+    if not match:
+        return raw or 'vi', None
+    speed = float(match.group('speed'))
+    if not (_VSR_SPEED_MIN <= speed <= _VSR_SPEED_MAX):
+        raise ValueError(f'Voice Render speed must be {_VSR_SPEED_MIN:.2f}x-{_VSR_SPEED_MAX:.2f}x.')
+    return match.group('language').strip() or 'vi', speed
+
+
+def _apply_safe_output_headroom(audio):
+    """Keep generated float audio below PCM full scale without changing timing."""
+    import numpy as np
+
+    value = np.asarray(audio, dtype=np.float32)
+    if value.size == 0:
+        return value
+    peak = float(np.max(np.abs(value)))
+    if not np.isfinite(peak):
+        raise ValueError('OmniVoice produced non-finite audio samples.')
+    if peak > _OUTPUT_PEAK_TARGET and peak > 1e-8:
+        value = value * (_OUTPUT_PEAK_TARGET / peak)
+    return value
+
+
 def load_model(device="cuda", dtype="float16"):
     """Load OmniVoice model (lazy initialization)"""
     global _model
@@ -127,7 +164,8 @@ def generate_speech(text, ref_audio_path=None, output_path=None, language="vi"):
         text: Text to synthesize
         ref_audio_path: Optional path to reference audio for voice cloning
         output_path: Where to save the output WAV file
-        language: Language code (default: 'vi' for Vietnamese)
+        language: Language code. Voice Render may append a bounded internal
+                  ``|vsr-speed=<factor>`` suffix; it is stripped before inference.
     
     Returns:
         Path to generated audio file, or None on failure
@@ -146,21 +184,27 @@ def generate_speech(text, ref_audio_path=None, output_path=None, language="vi"):
             output_path = tempfile.mktemp(suffix='.wav')
         
         try:
+            model_language, native_speed = _parse_vsr_language_speed(language)
             kwargs = {
                 "text": text,
-                "language": language,
+                "language": model_language,
             }
+            if native_speed is not None:
+                kwargs["speed"] = native_speed
             if ref_audio_path and os.path.exists(ref_audio_path):
                 kwargs["ref_audio"] = ref_audio_path
             
             # model.generate() returns a list of numpy arrays
             audios = model.generate(**kwargs)
+            audio = _apply_safe_output_headroom(audios[0])
             
-            # Save first audio to file using model's sampling rate
+            # Save with headroom so the PCM file cannot hit full-scale simply
+            # because the cloned reference has a high RMS/peak level.
             import soundfile as sf
-            sf.write(output_path, audios[0], model.sampling_rate)
+            sf.write(output_path, audio, model.sampling_rate, subtype='PCM_16')
             
-            print(f"[TTS] Generated: {output_path} ({len(text)} chars)", flush=True)
+            speed_label = f", native-speed={native_speed:.2f}x" if native_speed is not None else ""
+            print(f"[TTS] Generated: {output_path} ({len(text)} chars{speed_label})", flush=True)
             return output_path
         except Exception as e:
             print(f"[TTS] Error generating speech: {e}", flush=True)
