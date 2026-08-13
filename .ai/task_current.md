@@ -13,21 +13,14 @@ AUDIO_QUALITY_CORRECTION_PUBLISHED_OWNER_RETEST_WAITING
 - PR #49: CLOSED/OBSOLETE.
 - PM direct-edit only.
 
-## Verified Owner observations
-Previously PASS:
-- Voice Render UI/navigation, shared voice list, preview/render, long-text queue, final WAV merge/playback, status/log UI.
-
-Current FAIL evidence:
-- completed clone audio contains some locally distorted/incorrect-sounding sections.
-- supplied WAV analysis showed high peak/clipping clusters within audio sections, not only at final merge boundaries.
-
-## Published correction
-- OmniVoice speed is applied during model generation instead of FFmpeg `atempo` after generation.
-- OmniVoice output gets 0.92 peak headroom before PCM16 write.
-- legacy synthetic migration speeds are reset to neutral 1.00x; newly created clone speed is marked user-explicit.
-- Voice Render outer chunks are restricted to 300/450/600 chars, default 450.
-- old renderer tempo bridge is a no-op compatibility shim; completed WAV chunks are not time-stretched.
-- transcript/ref_text experiment remains removed.
+## Current source state
+Latest application-source correction: `422595386ae26e081bc1eb0a8068c261491a2ce5`.
+- OmniVoice clone speed is native model speed, not post-WAV time-stretch.
+- generated OmniVoice PCM receives 0.92 peak headroom.
+- legacy synthetic clone speed is neutralized to 1.00x unless explicitly user-created.
+- Voice Render outer chunk options are 300/450/600 chars, default 450.
+- Edge built-in voice tempo behavior is preserved separately.
+- transcript/ref_text conditioning remains removed.
 
 ## Required static verification
 On final PR #50 HEAD:
@@ -41,17 +34,17 @@ On final PR #50 HEAD:
 
 ## Owner retest
 1. Launch final exact PR #50 HEAD.
-2. Confirm Adam no longer requires transcript.
-3. Verify chunk-size options are 300 / 450 / 600 and default 450.
-4. Render a known medium text with Adam and listen through the sections that previously sounded distorted.
-5. Confirm requested content/timbre are normal and no obvious crackling/clipped syllables occur.
-6. Recheck whether the first 3–5 target words are still omitted.
-7. Verify final WAV merge/playback still completes.
+2. Adam must not require transcript.
+3. Verify chunk sizes 300/450/600, default 450.
+4. Render known medium text with Adam and listen across the full file.
+5. Confirm correct text/timbre and no obvious crackling/clipped syllables.
+6. Check whether the first 3–5 target words still disappear.
+7. Confirm final merge/playback remains successful.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING.
 - Code review: WAITING.
 - Owner runtime: RETEST WAITING.
-- Documentation synchronization: IN PROGRESS until handoff/PR metadata match final head.
+- Documentation synchronization: IN PROGRESS until handoff/PR metadata match final docs head.
 - Merge permission: BLOCKED.
