@@ -190,11 +190,20 @@ function installP2RuntimeScript() {
   document.head.appendChild(script);
 }
 
+function installVoiceRenderReferenceFixScript() {
+  if (document.querySelector('script[data-voice-render-reference-fix]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/voice-render-reference-fix.js';
+  script.async = false;
+  script.dataset.voiceRenderReferenceFix = 'true';
+  document.head.appendChild(script);
+}
+
 function installVoiceRenderScript() {
   if (document.querySelector('script[data-voice-render]')) return;
   const script = document.createElement('script');
   script.src = 'js/voice-render.js';
-  script.defer = true;
+  script.async = false;
   script.dataset.voiceRender = 'true';
   document.head.appendChild(script);
 }
@@ -204,6 +213,10 @@ window.addEventListener('DOMContentLoaded', () => {
   installP1SpinnerPhaseScript();
   installP1RunUxScript();
   installP2RuntimeScript();
+  // Install the clone reference-transcript request guard before Voice Render
+  // and its owner-fix wrapper so preview/render retain their normal profile
+  // handling while the backend receives exact clone reference text.
+  installVoiceRenderReferenceFixScript();
   installVoiceRenderScript();
   let attempts = 0;
   const timer = setInterval(() => {
