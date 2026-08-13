@@ -18,11 +18,33 @@ function ensureVoiceRenderBootstrap() {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   mainWindow.webContents.executeJavaScript(`
     (() => {
-      if (document.getElementById('nav-voice-render')) return 'already-mounted';
+      if (!document.querySelector('link[data-voice-render-owner-fixes]')) {
+        const style = document.createElement('link');
+        style.rel = 'stylesheet';
+        style.href = 'styles/voice-render-owner-fixes.css';
+        style.dataset.voiceRenderOwnerFixes = 'true';
+        document.head.appendChild(style);
+      }
+
+      const loadOwnerFixes = () => {
+        if (document.querySelector('script[data-voice-render-owner-fixes]')) return;
+        const fixes = document.createElement('script');
+        fixes.src = 'js/voice-render-owner-fixes.js';
+        fixes.dataset.voiceRenderOwnerFixes = 'true';
+        fixes.addEventListener('error', () => console.error('[Voice Render] failed to load owner runtime fixes'));
+        document.body.appendChild(fixes);
+      };
+
+      if (document.getElementById('nav-voice-render')) {
+        loadOwnerFixes();
+        return 'already-mounted';
+      }
+
       document.querySelectorAll('script[data-voice-render]').forEach((node) => node.remove());
       const script = document.createElement('script');
       script.src = 'js/voice-render.js';
       script.dataset.voiceRender = 'main-window-bootstrap';
+      script.addEventListener('load', loadOwnerFixes);
       script.addEventListener('error', () => console.error('[Voice Render] failed to load js/voice-render.js'));
       document.body.appendChild(script);
       return 'loading';
