@@ -1,74 +1,74 @@
 # Current Task
 
 ## Task ID
-VOICE-RENDER-TAB-008
+VOICE-RENDER-SHARED-LIBRARY-009
 
 ## Name
-Standalone OmniVoice Voice Render Tab Demo
+Voice Render Shared Library + Long Text
 
 ## Status
-PM_CODE_REVIEW_PASS_OWNER_RUNTIME_READY
+SOURCE_PUBLISHED_PM_CODE_REVIEW_PASS_STATIC_AND_OWNER_WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Branch: `review/VOICE-RENDER-TAB-008-demo`.
-- Draft PR: #49.
-- Starting parent: `review/PIPELINE1-SEMANTIC-REMIX-007@0b3ee3a63f06d17334b2c295491c50039326febb`.
-- Exact spec: `.ai/task_specs/VOICE-RENDER-TAB-008.md`.
-- Latest application-source commit: `dabac98867fc82c090fc5b3809a083085654b839`.
-
-## User outcome
-Provide an independent Voice Render workspace directly below Home. User can type text, choose language, use OmniVoice default or an existing clone voice, choose a WAV output path, render, preview and open the file without entering any video-processing pipeline.
+- Branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
+- Draft PR: #50.
+- Base SHA: `3164b6f625e06d4d8f4d88009fb9dea5c335198f`.
+- Exact spec: `.ai/task_specs/VOICE-RENDER-SHARED-LIBRARY-009.md`.
+- Latest reviewed application-source commit: `066a7cc9b369abf992dd0840c336ad0edb17022a`.
+- Execution: Project Manager direct GitHub edits; no Anti/external executor.
 
 ## Implemented
-1. Added isolated renderer module `src/renderer/js/voice-render.js`.
-2. Added isolated stylesheet `src/renderer/styles/voice-render.css`.
-3. `src/main/preload.js` loads the tool without modifying legacy `index.html`/`app.js` routing source.
-4. Sidebar item is inserted after Home and before Settings.
-5. Page owns local render state only.
-6. Saved clone voices reuse existing `localStorage.tts_voices`; clone management remains in Settings.
-7. Render uses existing `window.api.post('/api/tts/generate', ...)` with explicit `output_path` and optional clone `ref_audio_path`.
-8. `voice_name` is intentionally omitted so this standalone utility remains OmniVoice-only.
-9. Existing Electron `saveFile` and `openPath` bridges are reused.
-10. Idle/rendering/success/error states and duplicate-submit protection are implemented.
-11. Navigation lifecycle correction ensures returning to Home/Settings removes the dynamic Voice Render page from active state.
-12. Engine badge now reads real TTS availability via existing `getTTSStatus()`.
+1. App-native Voice Render three-column workspace in current navy/blue design language.
+2. Global sidebar status for Backend/TTS/GPU/CPU/RAM/app version using real APIs/system data or explicit unavailable state.
+3. Scrollable shared voice list with explicit selection and independent preview.
+4. Clone Voice modal that saves into existing `localStorage.tts_voices` and refreshes known Settings/Pipeline voice selectors.
+5. Long-text word/character/duration/chunk estimates.
+6. Deterministic paragraph/sentence/whitespace/hard-fallback chunk splitting.
+7. Sequential one-chunk-at-a-time TTS queue using existing `/api/tts/generate`.
+8. Stop-after-current behavior without claiming cancellation of an in-flight synchronous TTS request.
+9. Constrained FFmpeg WAV merge bridge in preload. Only matching `<final-stem>.part-###.wav` files in the final output directory are accepted/cleaned.
+10. Final output state is cleared at new-run start so stale previous success cannot masquerade as the current result.
+11. Dedicated bounded Voice Render Log with filter/copy/clear.
 
 ## Explicitly unchanged
-- no `api/server.py` change;
-- no `api/tts_engine.py` change;
-- no P1 source change;
-- no P2 source change;
-- no P3 source change;
-- no shared Job/state change;
-- no dependency change.
+- P1 reasoning/artifact source;
+- P2 subtitle-removal/inpaint source;
+- P3 finalize source;
+- shared video Job/status/gates;
+- `api/server.py` and `api/tts_engine.py`;
+- dependencies/package files.
 
-## Review evidence
-- PR #49 exact source/full files and source patches reviewed.
-- Changed application scope matches exactly the three allowed files.
-- `node --check src/main/preload.js`: PASS.
-- `node --check src/renderer/js/voice-render.js`: PASS.
-- No unresolved PR review threads.
-- No GitHub workflow runs/status checks are configured.
-- Exact `git diff --check` remains WAITING because the verification container cannot resolve GitHub for a repository clone. Do not reinterpret this missing evidence as PASS.
+## PM review findings corrected
+- Removed broad arbitrary renderer file-deletion bridge.
+- Normalized clone language labels back to backend language codes.
+- Prevented long text from bypassing chunking when it exceeds the selected safe ceiling.
+- Wired `Giữ đoạn văn` to actual split behavior.
+- Reset prior result at every new run.
 
-## Owner runtime scenario — READY
-1. Confirm sidebar order Home → Voice Render → Settings.
-2. Open Voice Render, then Home/Settings; exactly one page must remain active.
-3. Confirm engine badge reflects OmniVoice/backend state rather than permanent green.
-4. Render short Vietnamese text with OmniVoice default to a chosen WAV location.
-5. Confirm result audio plays and Open file works.
-6. If a saved clone exists, render same text with it and confirm expected clone voice.
-7. Confirm P1/P2/P3 job/status state is unchanged before and after standalone render.
-8. Trigger/recover from a controlled error if convenient; pipeline state must remain unchanged.
+## Required exact-head static verification
+From Owner-test worktree on final PR #50 HEAD:
+- `node --check src/main/preload.js`
+- `node --check src/renderer/js/voice-render.js`
+- `git diff --check 3164b6f625e06d4d8f4d88009fb9dea5c335198f..HEAD`
 
-## Parent task relationship
-`PIPELINE1-SEMANTIC-REMIX-007` / PR #48 remains separate upstream work. This demo does not satisfy or change its static, Owner Standard, Owner Semantic, P3, or merge gates.
+No PASS may be claimed from missing output. ChatGPT verification container cannot currently resolve GitHub git/raw network.
+
+## Owner runtime — after static PASS
+1. Confirm global status card remains visible across Home / Voice Render / Settings or Pipeline navigation.
+2. Confirm layout/color language matches current app.
+3. Scroll voice list; preview at least two voices; selected voice must not change until explicit selection.
+4. Create one clone voice and confirm it appears in shared selectors without restart.
+5. Render short Vietnamese text.
+6. Render several-thousand-word Vietnamese text; verify multiple sequential chunks and one merged WAV.
+7. Press Stop during a multi-chunk run; current request may finish, but no later chunk starts.
+8. Verify Log states and no raw full text dump.
+9. Confirm video Jobs/P1/P2/P3 state remains unchanged.
 
 ## Gates
 - Execution: PASS.
-- Automated/static verification: WAITING/PARTIAL — Node syntax PASS, exact diff-check evidence missing.
+- Automated/static verification: WAITING.
 - Code review: PASS logic/scope.
-- Owner visual/runtime verification: NOT STARTED — READY.
-- Documentation synchronization: PASS after final handoff/ACTIVE sync.
+- Owner visual/runtime verification: NOT STARTED.
+- Documentation synchronization: IN PROGRESS.
 - Merge permission: BLOCKED.
