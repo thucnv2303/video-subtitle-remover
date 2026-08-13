@@ -36,6 +36,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   getSystemInfo: () => ipcRenderer.invoke('app:systemInfo'),
   mergeWavFiles: (inputPaths, outputPath) => ipcRenderer.invoke('voice-render:mergeWavFiles', inputPaths, outputPath),
+  // Compatibility shim for the older renderer owner-fix. Voice speed is now
+  // applied natively inside OmniVoice before WAV generation; never time-stretch
+  // a completed WAV in the renderer path.
+  applyVoiceTempo: async (inputPath) => ({ ok: true, output_path: inputPath, speed_factor: 1, bypassed: true }),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   onP1VisionProgress: (callback) => {
