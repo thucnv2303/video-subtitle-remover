@@ -34,6 +34,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPathForFile: (file) => webUtils.getPathForFile(file),
   openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
+  getSystemInfo: () => ipcRenderer.invoke('app:systemInfo'),
+  mergeWavFiles: (inputPaths, outputPath) => ipcRenderer.invoke('voice-render:mergeWavFiles', inputPaths, outputPath),
+  applyVoiceTempo: (inputPath, speedFactor) => ipcRenderer.invoke('voice-render:applyTempo', inputPath, speedFactor),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   onP1VisionProgress: (callback) => {
@@ -187,11 +190,31 @@ function installP2RuntimeScript() {
   document.head.appendChild(script);
 }
 
+function installVoiceRenderScript() {
+  if (document.querySelector('script[data-voice-render]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/voice-render.js';
+  script.defer = true;
+  script.dataset.voiceRender = 'true';
+  document.head.appendChild(script);
+}
+
+function installVoiceRenderQualityFixScript() {
+  if (document.querySelector('script[data-voice-render-quality-fix]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/voice-render-quality-fix.js';
+  script.defer = true;
+  script.dataset.voiceRenderQualityFix = 'true';
+  document.head.appendChild(script);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   installFilePathCompatScript();
   installP1SpinnerPhaseScript();
   installP1RunUxScript();
   installP2RuntimeScript();
+  installVoiceRenderScript();
+  installVoiceRenderQualityFixScript();
   let attempts = 0;
   const timer = setInterval(() => {
     attempts += 1;

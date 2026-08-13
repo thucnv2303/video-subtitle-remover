@@ -1,69 +1,52 @@
 # Current State
 
 ## Status
-PIPELINE1-SEMANTIC-REMIX-007 — OPTIONAL MODE CORRECTION PUBLISHED / PM LOGIC-SCOPE REVIEW PASS / STATIC + OWNER TWO-MODE RETEST WAITING
+VOICE-RENDER-SHARED-LIBRARY-009 — ALL RELEASE GATES PASS / MERGE AUTHORIZED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Active review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
-- Draft PR: #48.
-- Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
-- Exact task spec: `.ai/task_specs/PIPELINE1-SEMANTIC-REMIX-007.md`.
-- Latest corrective source reviewed at `7b217c7b73e98375bcf5ff2bcb24a92c8fa61796`.
-- PM corrective review: `4915748131` — PASS logic/scope only, not release PASS.
+- Single active Voice Render branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
+- Single active Voice Render Draft PR: #50.
+- Base: `review/PIPELINE1-SEMANTIC-REMIX-007@0b3ee3a63f06d17334b2c295491c50039326febb`.
+- PR #49: CLOSED/OBSOLETE.
+- Owner-test worktree: `E:\Project AI\Video-sub-remove-owner-test-P1`.
+- Pinned OmniVoice submodule: `k2-fsa/OmniVoice@468e927ba3716cd8dd86421148dfb3046e9f9d7b`.
 
-## Owner product decision
-Semantic Remix is optional and defaults OFF.
+## Verified Owner runtime result
+- Owner rerendered the same narration with Adam at target 300 and reports the result is very good, smooth, and ready to merge.
+- This satisfies the controlled A/B runtime requirement: 300 materially improves the residual-stutter condition observed at 450.
+- Period-only VSR outer chunking remains the accepted boundary rule.
+- Final merge/playback path had already been confirmed working in the same Voice Render flow.
 
-Two P1 modes now exist:
-- Standard Script: normal multimodal script generation; no authoritative semantic cut/reorder plan.
-- Semantic Remix: explicit opt-in; video/product/customer profiling + remix strategy/beats + P3 candidate scene mapping.
+## Final application-source correction
+Latest source commit: `9ee2bb08f8efb3a29e478c08dab283d0c5041514`.
+- `src/renderer/js/voice-render-quality-fix.js` changes only `DEFAULT_CHUNK_SIZE` from 450 to 300.
+- available options remain 300/450/600.
+- no splitter, OmniVoice engine, merge, speed, headroom, or unrelated behavior changed in this final correction.
+- GitHub compare `fe0384c..9ee2bb0` confirms exactly one file changed with one line added and one line removed.
 
-The selected mode is persisted in `p1_semantic_remix_enabled` and snapshotted into each idle Job as `job.p1Config.semanticRemixEnabled` at Start. Fresh Start clears any duration checkpoint so a Job cannot accidentally resume analysis from the other mode. UI changes after Start do not mutate a running Job.
+## Accepted rationale
+At pinned OmniVoice `468e927...`, requests estimated above 30 seconds enter internal long-form splitting, whose punctuation splitter may use `. , ; : ! ?`. The Owner's 300-target test materially improves smoothness and is more likely to keep VSR outer requests below that internal threshold. Therefore 300 is now the clone-safe default while 450/600 remain optional user choices.
 
-## Published source behavior
-### Standard Script
-- Uses an isolated exact copy of the known pre-semantic P1 reasoning implementation; `src/main/p1-standard-vision-ipc.js` has blob SHA `230b1f156b9861f8daf4bbcdcac099b555030ce9`, identical to the starting-ref P1 reasoning blob.
-- Distinct IPC names prevent handler collision with Semantic Remix.
-- Existing Stop bridge cancels both Standard and Semantic inference so current callers do not need mode-specific stop logic.
-- Artifacts use `artifact_version: 4`, `analysis_mode: multimodal-standard-script-v4`, `semantic_remix_enabled: false`.
-- `edit_plan.json` is non-authoritative and has an empty plan.
-- Preview narration timing remains source-duration compatible.
+## Static verification evidence
+Owner ran the required static command set on exact PR state `608180d9f83732d61ffdac9e113bf9642d3ab61c` and reports no command produced an error. These commands are silent on success:
+- `node --check src/main/main.js`
+- `node --check src/main/preload.js`
+- `node --check src/renderer/js/voice-render.js`
+- `node --check src/renderer/js/voice-render-owner-fixes.js`
+- `node --check src/renderer/js/voice-render-quality-fix.js`
+- `python -m py_compile api/tts_engine.py`
+- `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
 
-### Semantic Remix
-- Uses current semantic reasoning path and canonical globally indexed scenes.
-- Prompt is strengthened against the exact BUG-036 failures seen in Owner Job `kkx59hfu0`.
-- Renderer deterministic guard rejects before artifact persistence/TTS when:
-  - strategy target and summed beat durations disagree beyond `max(2s,5%)`;
-  - beat process/action terms are unsupported by referenced scene evidence;
-  - CTA ignores available late final-result evidence;
-  - selected high-risk unsupported product/health/composition claims appear;
-  - predicted narration duration is outside 70–130% of the summed beat target.
-- The prior 75s strategy / 50s beat plan / ~30s narration Owner artifact would fail closed rather than publish an edit plan.
-
-## Preserved architecture
-- BUG-034 remains: P1 does not force narration to occupy 95–100% of original source duration and does not run another LLM/TTS pass solely to fill source duration.
-- P2 remains subtitle-removal only.
-- P3 semantic cut/reorder is not implemented in task 007 and remains blocked until Semantic Remix Owner PASS.
-
-## Verification facts
-- GitHub compare shows task branch is 41 commits ahead of exact base and not behind it; corrective diff contains no P2/P3/dependency source file changes.
-- Standard reasoning file blob identity has been verified against starting ref.
-- PR review threads: none unresolved at final corrective review time.
-- GitHub status checks: none configured; absence is not PASS.
-- Exact-head Node syntax and `git diff --check` output are still WAITING.
-- New Standard/Semantic UI and runtime routing have not yet been Owner-observed.
-- GitHub currently reports PR `mergeable:false`; this remains an independent merge blocker pending later recheck/resolution.
+The commits after `608180d...` are documentation-only release-state synchronization; application source remains unchanged from `9ee2bb0...`.
 
 ## Gates
-- Execution: PASS for corrective source publication.
-- Automated/static verification: WAITING.
-- Code review: PASS logic/scope (`4915748131`), not release PASS.
-- Owner Standard mode verification: NOT STARTED.
-- Owner Semantic mode verification: NOT STARTED after correction.
+- Execution: PASS.
+- Automated/static verification: PASS — Owner reports the exact required command set completed without errors on the final application state.
+- Code review: PASS — final correction is a one-line default-value change only; no unrelated diff.
+- Owner runtime: PASS — Owner explicitly reports target 300 is very good/smooth and authorizes merge.
 - Documentation synchronization: PASS.
-- Merge permission: BLOCKED.
-- P3 semantic cut/reorder progression: BLOCKED.
+- Merge permission: ALLOWED — Owner explicitly authorized merge after runtime PASS and static PASS has now been recorded.
 
 ## Next permitted action
-Owner first provides exact-head static checks, then tests two runs on that same exact head: Standard with Semantic Remix OFF/default, then Semantic Remix explicitly ON using the same/equivalent 97.57s source. If Semantic passes, inspect the four fresh v4 JSON artifacts again. If a guard rejects it, capture the exact error and confirm downstream was not unlocked as a valid semantic result. Do not merge.
+Merge PR #50 into `review/PIPELINE1-SEMANTIC-REMIX-007` using exact-head protection, verify the merge on the intended base branch, then resume the main processing-flow task from the merged branch state.

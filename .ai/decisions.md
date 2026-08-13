@@ -56,3 +56,16 @@ Decision:
 - this decision does not change P2 or authorize P3 semantic editing.
 
 This preserves the working normal-script product path while making advanced semantic remix an explicit capability with stricter validation.
+
+## D-015 — Project Manager direct GitHub implementation is the default executor mode
+On 2026-08-12 the Owner instructed Project Control to stop assigning implementation work to Anti and to perform repository changes directly through GitHub review branches.
+
+Decision:
+- Project Manager may directly implement bounded source and knowledge changes on dedicated review branches;
+- no direct push to canonical/main/dev is permitted;
+- every direct source change still requires exact starting SHA, focused scope, GitHub diff/full-file review, appropriate verification, canonical `.ai/` synchronization and Owner runtime verification when applicable;
+- a successful GitHub write is not equivalent to Code Review PASS;
+- merge remains BLOCKED until normal project gates pass and the Owner explicitly requests/approves merge;
+- Anti/external executor must not be dispatched unless the Owner later changes this instruction.
+
+This changes execution ownership only; it does not relax evidence, QA, architecture or merge gates.
