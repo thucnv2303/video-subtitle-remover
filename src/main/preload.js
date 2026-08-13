@@ -44,11 +44,26 @@ function escapeConcatPath(filePath) {
   return String(filePath).replace(/\\/g, '/').replace(/'/g, "\\'");
 }
 
+function isOwnedVoiceChunk(inputPath, outputPath) {
+  const input = path.resolve(String(inputPath || ''));
+  const output = path.resolve(String(outputPath || ''));
+  if (path.dirname(input) !== path.dirname(output)) return false;
+  if (!/\.wav$/i.test(output) || !/\.part-\d{3}\.wav$/i.test(input)) return false;
+  const outputStem = path.basename(output, path.extname(output));
+  const inputName = path.basename(input);
+  return inputName.toLowerCase().startsWith(`${outputStem}.part-`.toLowerCase());
+}
+
 function mergeWavFiles(inputPaths, outputPath) {
   return new Promise((resolve) => {
     const inputs = Array.isArray(inputPaths) ? inputPaths.filter(Boolean) : [];
-    if (!inputs.length || !outputPath) {
-      resolve({ ok: false, error: 'Thiếu danh sách chunk WAV hoặc đường dẫn đầu ra.' });
+    if (!inputs.length || !outputPath || !/\.wav$/i.test(String(outputPath))) {
+      resolve({ ok: false, error: 'Thiếu danh sách chunk WAV hoặc đường dẫn đầu ra WAV hợp lệ.' });
+      return;
+    }
+    const unsafe = inputs.find((filePath) => !isOwnedVoiceChunk(filePath, outputPath));
+    if (unsafe) {
+      resolve({ ok: false, error: `Chunk không thuộc run Voice Render hiện tại: ${unsafe}` });
       return;
     }
     const missing = inputs.find((filePath) => !fs.existsSync(filePath));
@@ -70,29 +85,20 @@ function mergeWavFiles(inputPaths, outputPath) {
       '-y', '-hide_banner', '-loglevel', 'error',
       '-f', 'concat', '-safe', '0', '-i', listPath,
       '-vn', '-c:a', 'pcm_s16le', outputPath,
-    ], { windowsHide: true }, (error, stdout, stderr) => {
+    ], { windowsHide: true }, async (error, stdout, stderr) => {
       try { fs.unlinkSync(listPath); } catch {}
       if (error) {
         resolve({ ok: false, error: (stderr || error.message || 'FFmpeg merge failed').trim() });
         return;
       }
-      resolve({ ok: true, output_path: outputPath });
+      const cleanupErrors = [];
+      for (const inputPath of inputs) {
+        try { await fs.promises.unlink(inputPath); }
+        catch (cleanupError) { if (cleanupError?.code !== 'ENOENT') cleanupErrors.push(cleanupError?.message || String(cleanupError)); }
+      }
+      resolve({ ok: true, output_path: outputPath, cleanup_warnings: cleanupErrors });
     });
   });
-}
-
-async function removeFiles(filePaths) {
-  const removed = [];
-  for (const filePath of Array.isArray(filePaths) ? filePaths : []) {
-    if (!filePath) continue;
-    try {
-      await fs.promises.unlink(filePath);
-      removed.push(filePath);
-    } catch (error) {
-      if (error?.code !== 'ENOENT') return { ok: false, removed, error: error?.message || String(error) };
-    }
-  }
-  return { ok: true, removed };
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -115,7 +121,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   getSystemInfo: () => getLocalSystemInfo(),
   mergeWavFiles: (inputPaths, outputPath) => mergeWavFiles(inputPaths, outputPath),
-  removeFiles: (filePaths) => removeFiles(filePaths),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   onP1VisionProgress: (callback) => {
