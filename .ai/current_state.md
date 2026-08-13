@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-VOICE-RENDER-SHARED-LIBRARY-009 — OWNER RUNTIME PASS AT CLONE-SAFE 300 / STATIC VERIFICATION WAITING
+VOICE-RENDER-SHARED-LIBRARY-009 — ALL RELEASE GATES PASS / MERGE AUTHORIZED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -28,13 +28,25 @@ Latest source commit: `9ee2bb08f8efb3a29e478c08dab283d0c5041514`.
 ## Accepted rationale
 At pinned OmniVoice `468e927...`, requests estimated above 30 seconds enter internal long-form splitting, whose punctuation splitter may use `. , ; : ! ?`. The Owner's 300-target test materially improves smoothness and is more likely to keep VSR outer requests below that internal threshold. Therefore 300 is now the clone-safe default while 450/600 remain optional user choices.
 
+## Static verification evidence
+Owner ran the required static command set on exact PR state `608180d9f83732d61ffdac9e113bf9642d3ab61c` and reports no command produced an error. These commands are silent on success:
+- `node --check src/main/main.js`
+- `node --check src/main/preload.js`
+- `node --check src/renderer/js/voice-render.js`
+- `node --check src/renderer/js/voice-render-owner-fixes.js`
+- `node --check src/renderer/js/voice-render-quality-fix.js`
+- `python -m py_compile api/tts_engine.py`
+- `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
+
+The commits after `608180d...` are documentation-only release-state synchronization; application source remains unchanged from `9ee2bb0...`.
+
 ## Gates
 - Execution: PASS.
-- Automated/static verification: WAITING — no CI/status checks exist for final source commit and required local static command output has not yet been supplied.
+- Automated/static verification: PASS — Owner reports the exact required command set completed without errors on the final application state.
 - Code review: PASS — final correction is a one-line default-value change only; no unrelated diff.
 - Owner runtime: PASS — Owner explicitly reports target 300 is very good/smooth and authorizes merge.
-- Documentation synchronization: IN PROGRESS until task/handoff/PR metadata match final docs head.
-- Merge permission: BLOCKED pending required automated/static verification PASS.
+- Documentation synchronization: PASS.
+- Merge permission: ALLOWED — Owner explicitly authorized merge after runtime PASS and static PASS has now been recorded.
 
 ## Next permitted action
-Run the required static command set on final PR HEAD. If all commands pass, update canonical docs to static PASS, merge PR #50 with exact-head protection, verify the base branch contains the merge, then move project control back to the main processing flow.
+Merge PR #50 into `review/PIPELINE1-SEMANTIC-REMIX-007` using exact-head protection, verify the merge on the intended base branch, then resume the main processing-flow task from the merged branch state.
