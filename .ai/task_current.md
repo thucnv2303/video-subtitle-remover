@@ -4,7 +4,7 @@
 VOICE-RENDER-SHARED-LIBRARY-009
 
 ## Status
-PERIOD_ONLY_CHUNK_BOUNDARY_CORRECTION_PUBLISHED_OWNER_RETEST_WAITING
+PERIOD_ONLY_CHUNK_IMPROVED_RESIDUAL_STUTTER_DIAGNOSIS
 
 ## Authority
 - Single active branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -13,22 +13,34 @@ PERIOD_ONLY_CHUNK_BOUNDARY_CORRECTION_PUBLISHED_OWNER_RETEST_WAITING
 - PR #49: CLOSED/OBSOLETE.
 - PM direct-edit only.
 
-## Verified defect
-The previous 450-character splitter cut the Owner-supplied Vietnamese narration inside sentences. Owner clarified the exact rule: a chunk boundary may occur only after sentence-ending period `.`. Character targets must never cut at comma, semicolon, colon, dash or whitespace.
+## Verified Owner result
+- Owner tested exact HEAD `5241007de1f541132784d6a81c093858e3f138b6`.
+- period-only chunk behavior produced a substantially improved / generally stable render.
+- residual spoken stutter still occurs in some sections; Owner verification is FAIL, not PASS.
+- supplied retest WAV: 303.42s, 24 kHz mono PCM16, peak about 0.92.
+- exact PCM repeat scan did not find non-silent duplicated audio segments at the tested repeat-window resolution.
 
 ## Current source state
-Latest application-source correction: `f5a7659a4469cde2d70be10f7a1a8d12f8a4c9b6`.
-- sentence units are recognized from terminating `.` boundaries only;
-- 300/450/600 are soft target sizes for packing complete sentences;
-- a sentence may exceed the target until its terminating period;
-- no clause/whitespace emergency splitter remains;
-- paragraph preservation only closes a chunk after a period-terminated sentence;
-- an unterminated final tail remains intact as the last chunk;
-- previous native OmniVoice speed/headroom correction remains in place;
+Latest application-source correction remains `f5a7659a4469cde2d70be10f7a1a8d12f8a4c9b6`.
+- outer chunk boundaries occur only after terminating `.`.
+- 300/450/600 are soft targets and do not cut inside a sentence.
+- each completed renderer chunk is appended once.
+- FFmpeg concat consumes the chunk list once; current evidence does not indicate duplicate concat as the source of stutter.
+- prior native OmniVoice speed/headroom correction remains in place.
 - transcript/ref_text conditioning remains removed.
 
+## Next diagnostic
+Controlled A/B comparison only; do not change source yet:
+1. Keep the same exact application source and same Adam clone.
+2. Use the exact same narration script.
+3. Render at chunk target 300 instead of 450.
+4. Compare the number/severity of spoken stutters against the 450 render.
+5. Confirm period-only boundaries remain correct and final merge/playback still succeeds.
+
+If 300 materially reduces/removes stutter, PM may publish a dedicated minimal correction making 300 the clone-safe default. If stutter remains comparable, investigate OmniVoice generation parameters/internal long-form behavior before changing outer merge logic.
+
 ## Required static verification
-On final PR #50 HEAD:
+On final PR #50 HEAD after the task's final source state is selected:
 - `node --check src/main/main.js`
 - `node --check src/main/preload.js`
 - `node --check src/renderer/js/voice-render.js`
@@ -37,19 +49,10 @@ On final PR #50 HEAD:
 - `python -m py_compile api/tts_engine.py`
 - `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
 
-## Owner retest
-1. Launch final exact PR #50 HEAD.
-2. Use Adam and the same supplied Vietnamese script.
-3. Keep chunk target at 450.
-4. Verify every audible outer transition occurs only after `.` and never after a partial phrase.
-5. Confirm content/timbre remain correct and no obvious crackling/clipped syllables return.
-6. Check whether first 3–5 target words are retained.
-7. Confirm final merge/playback remains successful.
-
 ## Gates
-- Execution: PASS.
+- Execution: PASS for current published period-only source.
 - Automated/static: WAITING.
-- Code review: WAITING.
-- Owner runtime: RETEST WAITING.
-- Documentation synchronization: IN PROGRESS until handoff/PR metadata match final docs head.
+- Code review: WAITING for final source state.
+- Owner runtime: FAIL — residual stutter.
+- Documentation synchronization: IN PROGRESS until handoff/PR match final docs head.
 - Merge permission: BLOCKED.
