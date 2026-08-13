@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-VOICE-RENDER-SHARED-LIBRARY-009 — OWNER RUNTIME CORE PASS / DURATION ESTIMATOR CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING
+VOICE-RENDER-SHARED-LIBRARY-009 — OWNER CORE RUNTIME PASS / DISTINCT VOICE PROFILE CORRECTION PUBLISHED / STATIC + OWNER RETEST WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -15,40 +15,44 @@ VOICE-RENDER-SHARED-LIBRARY-009 — OWNER RUNTIME CORE PASS / DURATION ESTIMATOR
 PASS:
 - Voice Render tab/page mounts.
 - Shared voice list and voice preview work.
-- `Render toàn bộ` now works end-to-end.
-- Long text was split into 3 sequential chunks.
-- All 3 chunks completed.
+- `Render toàn bộ` works end-to-end.
+- Long text split into 3 sequential chunks; all completed.
 - Final WAV merge completed and output is playable.
-- Log and global status correction are visible in the running app.
+- Log/global status corrections are visible.
 
-Remaining defect observed by Owner:
-- Duration estimate displayed `~ 8.1 phút` for 1,178 words while the actual merged WAV duration was about `5:03`.
+Remaining Owner defect before this correction:
+- changing voice did not produce a meaningful duration difference because the old estimator used a shared rate and Voice Render did not enforce a persistent per-voice speed profile on generated audio.
 
-## Verified duration-estimator root cause
-`src/renderer/js/voice-render.js` used one fixed heuristic for every voice:
-- `minutes = words / 145`.
+## Distinct voice-profile correction
+Every Voice Render voice now has a profile containing at least:
+- `prosody` / intonation label;
+- `speedFactor`.
 
-The completed Adam output gives an observed rate of roughly 233 words/minute for this text/run, so the fixed 145 WPM heuristic materially overestimates this voice. The estimator did not use selected-voice identity, preview duration, or prior real render duration.
+Built-in profiles are distinct. Existing legacy clone voices missing profile fields are migrated to distinct profile combinations. New clone creation requires a non-duplicate name and non-duplicate `prosody + speedFactor` profile.
 
-## Corrective estimator published
-`src/renderer/js/voice-render-owner-fixes.js` now adds per-voice/per-language adaptive rate profiles:
-- profile key uses selected voice id + language;
-- preview WAV metadata can seed/calibrate a voice rate;
-- successful full merged output updates the rate with the actual text + real audio duration;
-- learned profile is persisted locally in `voice_render_rate_profiles_v1`;
-- future estimates use learned WPM/character rate for the exact voice/language instead of the old global 145 WPM assumption;
-- when no learned profile exists, language-specific fallback is explicitly used and marked as fallback in the estimate tooltip;
-- the estimator remains telemetry, not a guarantee.
+`src/main/main.js` now provides constrained `voice-render:applyTempo` processing using FFmpeg `atempo` in the main process. `src/main/preload.js` exposes only the narrow `applyVoiceTempo()` IPC bridge. Voice Render applies the selected voice `speedFactor` to preview/chunk audio before final merge, so profile speed changes real output duration rather than only the displayed estimate.
 
-No TTS generation algorithm, voice audio, chunking, P1/P2/P3 implementation, shared video Job/gate or dependency is changed by this correction.
+The duration estimator uses per-voice/per-language measured output when available and profile-based fallback before calibration. Full successful output remains the strongest local rate sample.
+
+## Shared-library rule
+- `localStorage.tts_voices` remains the single clone-voice store.
+- Settings/Pipeline selectors continue reading that store.
+- Creating a new clone from Settings is redirected to Voice Render so every newly created clone receives the complete profile contract.
+- Voice profile metadata is stored with the shared clone record for later main-flow consumption.
+
+## Important limitation
+The app can enforce unique profile metadata and selected speed behavior. It cannot mathematically guarantee two independently cloned voices are acoustically unique if the same/similar source voice is supplied; acoustic identity remains determined by the underlying voice model/reference audio.
+
+## Isolation
+No P1 semantic reasoning, P2 inpaint, P3 composition, shared video Job/gate, TTS model implementation or dependency/package change is included in this correction.
 
 ## Gates
-- Execution: PASS — adaptive estimator correction published.
+- Execution: PASS — profile correction published.
 - Automated/static verification: WAITING on final exact HEAD.
-- Code review: WAITING on estimator correction exact head.
-- Owner runtime: PARTIAL PASS — core Voice Render/render/merge PASS; duration-estimate retest WAITING.
-- Documentation synchronization: PASS.
+- Code review: WAITING on final exact HEAD.
+- Owner runtime: PARTIAL PASS — core render/merge PASS; distinct profile/duration behavior RETEST WAITING.
+- Documentation synchronization: PASS after dynamic state sync.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Owner fetches the final exact PR #50 HEAD, fully restarts VSR, selects Adam and either previews Adam or performs one render. Then verify that the displayed estimate is recalibrated from actual Adam rate and is materially closer to the real output duration. Do not merge.
+Owner fetches exact final PR #50 HEAD, restarts VSR, verifies different voices show different prosody/speed profiles and render the same short text with two profiles having clearly different speed factors. Their real output durations must differ in the expected direction. Also create/inspect one clone and verify prosody + speed are stored/displayed. If PASS and static checks PASS, PM may close task 009 and return to the main pipeline task. Do not merge before that evidence.
