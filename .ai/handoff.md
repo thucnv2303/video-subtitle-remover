@@ -22,12 +22,13 @@ Current quality incident:
 - issue is not explained by final concat alone.
 
 ## Published correction
+Latest application-source correction: `422595386ae26e081bc1eb0a8068c261491a2ce5`.
 - OmniVoice clone speed is applied natively inside `model.generate(speed=...)`.
-- no renderer-path FFmpeg time-stretch is applied to completed WAV chunks; preload keeps a no-op compatibility function only.
-- OmniVoice WAV output is scaled to 0.92 peak before PCM16 write.
-- synthetic legacy clone speed migration is neutralized to 1.00x unless a speed is explicitly user-created.
-- outer Voice Render chunk choices are 300/450/600 chars, default 450; existing sentence/paragraph-aware splitter remains authoritative.
-- transcript/ref_text conditioning stays removed.
+- clone WAVs are not post-time-stretched by FFmpeg; Edge built-in tempo behavior remains separate.
+- OmniVoice output is scaled to 0.92 peak before PCM16 write.
+- synthetic legacy clone speed migration is neutralized to 1.00x unless speed was explicitly selected by the user.
+- outer Voice Render chunk choices are 300/450/600 chars, default 450; sentence/paragraph-aware splitting remains in place.
+- transcript/ref_text conditioning remains removed.
 
 ## Retest sequence
 1. Fetch final exact PR #50 HEAD and fully restart VSR.
