@@ -69,3 +69,17 @@ Decision:
 - Anti/external executor must not be dispatched unless the Owner later changes this instruction.
 
 This changes execution ownership only; it does not relax evidence, QA, architecture or merge gates.
+
+## D-016 — Standard Script must compose to the selected voice/video duration before TTS
+On 2026-08-13 the Owner clarified that a short source transcript must not force a short Standard narration. Pipeline 1 already has full transcript, adaptive Vision evidence, source duration and selected voice/speed characteristics, so Standard reasoning must use those inputs to compose a grounded narration whose predicted speaking duration matches the source-video duration closely enough before TTS.
+
+Decision:
+- Standard mode targets the existing voice-aware 95–100% source-duration narration budget before TTS;
+- if the first grounded narration is below that range, P1 performs one evidence-backed AI recompose using full transcript + Vision evidence + source duration + selected voice/speed-derived rate;
+- the recompose may add grounded explanation, sequencing and transitions from analyzed evidence even when source speech is short;
+- filler, repetition and unsupported claims remain forbidden and fail closed through existing quality/evidence checks;
+- TTS starts only after the Standard narration passes the pre-TTS duration/quality guard;
+- this correction does not add a second TTS pass;
+- P3 remains final render/timeline authority, but D-012 no longer permits Standard P1 to knowingly accept severe underfill such as ~36.7% source occupancy.
+
+Source correction published on PR #48 at `41a4a429bfe7dfe17fbd2113f4019733656359ce`; static and Owner retest are required before acceptance.
