@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
   getSystemInfo: () => ipcRenderer.invoke('app:systemInfo'),
   mergeWavFiles: (inputPaths, outputPath) => ipcRenderer.invoke('voice-render:mergeWavFiles', inputPaths, outputPath),
+  applyVoiceTempo: (inputPath, speedFactor) => ipcRenderer.invoke('voice-render:applyTempo', inputPath, speedFactor),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   onP1VisionProgress: (callback) => {
