@@ -3,57 +3,64 @@
 ## Task ID
 VOICE-RENDER-SHARED-LIBRARY-009
 
-## Name
-Voice Render Shared Library + Long Text
-
 ## Status
-BOOTSTRAP_CORRECTION_PUBLISHED_STATIC_AND_OWNER_RETEST_WAITING
+OWNER_PARTIAL_PASS_RUNTIME_FIXES_PUBLISHED_RETEST_WAITING
 
 ## Authority
-- Repository: `thucnv2303/video-subtitle-remover`.
 - Single active branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
 - Single active Draft PR: #50.
 - Base: `review/PIPELINE1-SEMANTIC-REMIX-007@0b3ee3a63f06d17334b2c295491c50039326febb`.
-- Superseded PR #49: CLOSED; never use as Owner-test target.
-- Exact spec: `.ai/task_specs/VOICE-RENDER-SHARED-LIBRARY-009.md`.
-- Latest application-source commit: `4e7b17a773f7602fa9cfce697cdffcca2b72e7d3`.
-- Execution: Project Manager direct GitHub edits; no Anti/external executor.
+- PR #49: CLOSED/OBSOLETE.
+- Execution: Project Manager direct GitHub edits only.
 
-## Owner runtime finding
-Previous Owner launch showed neither the Voice Render nav item nor the persistent global status card. The previous preload-only dynamic bootstrap therefore failed real-app verification.
+## Verified Owner observations
+PASS:
+- Voice Render tab/page mounts.
+- Voice list is visible.
+- Voice preview works.
 
-## Corrective implementation
-1. `src/main/main.js` now invokes an idempotent Voice Render bootstrap after BrowserWindow `did-finish-load`.
-2. The bootstrap injects `js/voice-render.js` from the actual renderer window and logs load/bootstrap failure.
-3. Existing preload injection remains only as fallback.
-4. All previously implemented behavior remains in the same active branch: app-native UI, global sidebar status, shared voice library, independent preview/selection, clone voice sync, sequential long-text chunks, stop-after-current, constrained FFmpeg merge, Log card.
+FAIL:
+- Log font too small.
+- Global App status layout/data not yet acceptable; CPU/RAM unavailable on observed head.
+- `Render toàn bộ` does not start; queue stays empty.
 
-## Active application source scope
+## Corrective implementation now published
+- Main-process WAV save dialog is modal to the app window and adds WAV filter/default extension.
+- Main-process `app:systemInfo` provides CPU usage, RAM usage, app/Electron version.
+- Preload system-info bridge uses IPC.
+- Owner-fix stylesheet increases log readability and makes App status a metric-card layout.
+- Owner-fix renderer refreshes Backend/TTS/GPU/CPU/RAM and adds missing-render-bridge diagnostics.
+
+## Active source
 - `src/main/main.js`
 - `src/main/preload.js`
 - `src/renderer/js/voice-render.js`
 - `src/renderer/styles/voice-render.css`
+- `src/renderer/js/voice-render-owner-fixes.js`
+- `src/renderer/styles/voice-render-owner-fixes.css`
 
-No P1/P2/P3 implementation, shared video Job/gate, backend TTS engine, dependency/package change.
-
-## Required exact-head static verification
-From `E:\Project AI\Video-sub-remove-owner-test-P1` after fetching the final exact PR #50 HEAD:
+## Required static verification
+On final PR #50 HEAD in `E:\Project AI\Video-sub-remove-owner-test-P1`:
 - `node --check src/main/main.js`
 - `node --check src/main/preload.js`
 - `node --check src/renderer/js/voice-render.js`
+- `node --check src/renderer/js/voice-render-owner-fixes.js`
 - `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
 
-## Owner retest order
-1. Fully close every running VSR/Electron instance.
-2. Launch exact PR #50 HEAD.
-3. First verify sidebar contains `Trang chủ`, `Voice Render`, `Cài đặt` and global App/Backend/TTS/GPU/CPU/RAM status is visible.
-4. Switch Home -> Voice Render -> Settings -> Home; global status stays visible and exactly one page is active.
-5. Only after this UI bootstrap gate passes, continue voice preview/selection, clone sync, short render, long-text chunk render, Stop and merged WAV tests.
+## Owner retest
+1. Fully close all VSR/Electron instances.
+2. Launch exact final PR #50 HEAD.
+3. Confirm Log is readable without zooming.
+4. Confirm global App status shows Backend/TTS/GPU plus real CPU/RAM values and remains visible across tabs.
+5. Click `Render toàn bộ`; a WAV save dialog must appear.
+6. Choose output path; queue must populate and chunk 1 must enter rendering state.
+7. If successful, continue until merged WAV is produced and playable.
+8. Confirm P1/P2/P3 state is unchanged.
 
 ## Gates
-- Execution: PASS corrective source published.
-- Automated/static verification: WAITING.
-- Code review: WAITING on bootstrap correction exact head.
-- Owner visual/runtime verification: previous head FAIL; corrected-head RETEST WAITING.
+- Execution: PASS.
+- Automated/static: WAITING.
+- Code review: WAITING on corrected exact head.
+- Owner runtime: PARTIAL; RETEST WAITING.
 - Documentation synchronization: PASS.
 - Merge permission: BLOCKED.
