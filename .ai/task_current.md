@@ -4,7 +4,7 @@
 VOICE-RENDER-SHARED-LIBRARY-009
 
 ## Status
-OWNER_CORE_RUNTIME_PASS_LEADING_WORD_RETEST_WAITING
+OWNER_CORE_RUNTIME_PASS_CLONE_REFERENCE_TRANSCRIPT_RETEST_WAITING
 
 ## Authority
 - Single active branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`.
@@ -15,39 +15,31 @@ OWNER_CORE_RUNTIME_PASS_LEADING_WORD_RETEST_WAITING
 
 ## Verified Owner observations
 PASS:
-- Voice Render mounts.
+- Voice Render mounts/navigation.
 - voice preview works.
 - `Render toàn bộ` works.
 - 3/3 sequential chunks complete.
 - final WAV merge succeeds and plays.
 
-Latest runtime FAIL:
-- some generated audio intermittently loses roughly the first 2–5 supplied words.
+Runtime FAIL to close before task completion:
+- completed clone/rendered speech can omit roughly the first 3–5 supplied words from the spoken WAV content.
 
-## Investigation
-Renderer `splitLongText()` starts from source character 0, so no intentional prefix removal exists in the Voice Render queue.
+## Verified implementation facts
+- `splitLongText()` starts from source character 0; renderer has no intentional prefix removal.
+- clone requests previously supplied reference audio without exact reference transcript.
+- OmniVoice auto-transcribes the reference audio when `ref_text` is absent and conditions generation using reference text + target text.
+- upstream OmniVoice issue #246 reports poorer clone/pronunciation behavior when reference audio is used without reference transcript.
 
-OmniVoice generation supports `postprocess_output`, `pad_duration`, `fade_duration`, `audio_chunk_duration` and `audio_chunk_threshold`. The precise stage causing the observed missing words is not yet proven by Owner evidence, therefore the correction is an onset-preservation guard rather than a claimed proven root cause.
-
-## Published onset guard
-Narrow Owner-authorized scope expansion: `api/tts_engine.py`.
-
-`generate_speech()` now:
-- `postprocess_output=False`;
-- `pad_duration=0.25`;
-- `fade_duration=0.02`;
-- `audio_chunk_duration=12.0`;
-- `audio_chunk_threshold=18.0`.
-
-Goal: retain the generated beginning and reduce very long model-internal synthesis spans without modifying the supplied text.
-
-## Distinct voice-profile correction retained
-- built-in voices have distinct `prosody + speedFactor` profiles;
-- legacy clones are migrated to complete profiles;
-- clone UI requires `Ngữ điệu` + `Tốc độ riêng`;
-- duplicate name/profile is rejected;
-- selected speed changes real generated audio before merge;
-- Settings routes clone creation to Voice Render.
+## Published correction
+- previous unverified padding/postprocess workaround removed.
+- `api/tts_engine.py` decodes a bounded internal reference-transcript envelope and supplies the decoded value as OmniVoice `ref_text` for clone generation.
+- target text is restored exactly before `model.generate()`; envelope metadata is never spoken.
+- new `src/renderer/js/voice-render-reference-fix.js` injects exact clone transcript into `/api/tts/generate` requests.
+- new clone preview/save requires `Transcript chính xác của audio mẫu`.
+- existing clone with no explicit transcript is marked `Thiếu transcript mẫu` and receives `+ Transcript`.
+- generic old `note` is not automatically trusted as transcript.
+- clone generation fails closed when exact transcript is unavailable.
+- preload loads this guard before the normal Voice Render/profile wrappers.
 
 ## Required static verification
 On final PR #50 HEAD:
@@ -55,21 +47,23 @@ On final PR #50 HEAD:
 - `node --check src/main/preload.js`
 - `node --check src/renderer/js/voice-render.js`
 - `node --check src/renderer/js/voice-render-owner-fixes.js`
+- `node --check src/renderer/js/voice-render-reference-fix.js`
 - `python -m py_compile api/tts_engine.py`
 - `git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD`
 
 ## Owner retest
 1. Fully close VSR/Electron and launch exact final PR #50 HEAD.
-2. Use a short Vietnamese sentence whose first 5–8 words are unmistakable.
-3. Render it at least 3 times using OmniVoice/default; every output must contain the complete beginning.
-4. Repeat at least 2 times using one clone voice; every output must contain the complete beginning.
-5. Render one medium text with a slow profile and one faster profile; real duration must still differ in the expected direction.
-6. Reconfirm final merge/playback and no P1/P2/P3 state mutation.
+2. For Adam/selected clone, if `Thiếu transcript mẫu` appears, click `+ Transcript` and enter exactly what is spoken in the reference audio.
+3. Use a short Vietnamese target whose first 5–8 words are unmistakable.
+4. Preview/render the clone at least 3 times; every completed audio must contain the exact beginning.
+5. Render a medium target once and confirm merge/playback remains correct.
+6. Recheck a slow and faster voice profile still produce different real durations in the expected direction.
+7. Confirm no P1/P2/P3 state mutation.
 
 ## Gates
-- Execution: PASS — onset guard published.
+- Execution: PASS — source correction published.
 - Automated/static: WAITING.
 - Code review: WAITING on final exact head.
-- Owner runtime: PARTIAL PASS; onset retention/profile behavior RETEST WAITING.
+- Owner runtime: PARTIAL PASS; clone leading-word retention RETEST WAITING.
 - Documentation synchronization: IN PROGRESS until handoff/PR metadata match.
-- Merge permission: BLOCKED until retest + static + review PASS.
+- Merge permission: BLOCKED.
