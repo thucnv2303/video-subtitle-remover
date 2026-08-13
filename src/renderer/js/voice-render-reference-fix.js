@@ -31,7 +31,6 @@
       voice?.referenceTranscript ||
       voice?.transcript ||
       voice?.referenceText ||
-      voice?.note ||
       ''
     ).trim();
   }
@@ -101,12 +100,12 @@
     return true;
   }
 
-  function migrateTranscriptField() {
+  function migrateExplicitTranscriptFields() {
     const voices = readVoices();
     let changed = false;
     voices.forEach((voice) => {
       if (voice?.referenceTranscript) return;
-      const legacy = String(voice?.transcript || voice?.referenceText || voice?.note || '').trim();
+      const legacy = String(voice?.transcript || voice?.referenceText || '').trim();
       if (!legacy) return;
       voice.referenceTranscript = legacy;
       voice.transcript = legacy;
@@ -236,7 +235,7 @@
   }
 
   function init() {
-    migrateTranscriptField();
+    migrateExplicitTranscriptFields();
     installUiGuards();
 
     let attempts = 0;
