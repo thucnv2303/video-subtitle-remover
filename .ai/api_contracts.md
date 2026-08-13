@@ -1,207 +1,83 @@
 # API and Artifact Contracts
 
 ## Scope
-Canonical cross-pipeline contract for the current Pipeline 1 optional-script modes plus inherited Pipeline 2 / Pipeline 3 responsibilities. Source remains implementation truth.
+Canonical cross-pipeline contract for Pipeline 1 optional script modes plus inherited Pipeline 2 / Pipeline 3 responsibilities. Source remains implementation truth.
 
 ## Pipeline 1 mode snapshot
-Per-run Job config field:
+Per-run Job config:
 ```json
-{
-  "semanticRemixEnabled": false
-}
+{"semanticRemixEnabled": false}
 ```
-
-UI preference:
-```text
-p1_semantic_remix_enabled
-```
-
-Default: `false`.
-
-The Job snapshot at Start is authoritative. Later UI changes must not alter an already-running Job.
+Preference key: `p1_semantic_remix_enabled`. Default: `false`. The Start snapshot is authoritative for the running Job.
 
 ## Standard Script contract — DEFAULT
-Reasoning uses original-video ASR + adaptive Vision + compact global reasoning and produces one normal continuous Vietnamese narration.
+Inputs:
+- full timestamped ASR transcript;
+- adaptive Vision evidence from the original video;
+- source duration;
+- selected voice and speed telemetry;
+- user prompt/config.
 
-Artifacts:
+Outputs:
 ```text
 artifact_version: 4
 analysis_mode: multimodal-standard-script-v4
 semantic_remix_enabled: false
 ```
 
-`scenes.json`
-- audit evidence only; not authoritative P3 scene-reorder input.
+`remix_script.json` contains the authoritative continuous Standard narration. `edit_plan.json` must remain non-authoritative with `plan: []`; Standard mode cannot command P3 scene reorder.
 
-`multimodal_timeline.json`
-- source transcript;
-- sampling/chunk/keyframe provenance;
-- standard compact insights;
-- scene evidence for audit.
+### D-016 Standard narration duration contract
+The selected voice/speed and source duration define a voice-aware character budget. For Standard mode, this is a writing-quality target before TTS, not a post-render video-retiming instruction.
 
-`remix_script.json`
-- authoritative normal continuous `narration_script`;
-- narration budget/provenance;
-- source-compatible preview segment/SRT data.
+Required behavior:
+1. Run the normal grounded multimodal first pass.
+2. If the first narration is below the existing minimum budget, run one evidence-backed AI recompose BEFORE TTS.
+3. Recompose receives the full transcript, accumulated Vision evidence, source duration and selected voice/speed-derived speaking rate.
+4. The AI may expand grounded explanation, sequencing and transitions supported by analyzed source evidence even when the original transcript is short.
+5. Filler, repetition, unsupported product/process/health claims and invented facts remain forbidden.
+6. Repaired narration must enter the configured hard character range before TTS; otherwise Standard fails closed.
+7. TTS remains one continuous full-text synthesis after narration acceptance. This correction does not add a second TTS pass or a repeated post-TTS LLM/TTS duration loop.
 
-`edit_plan.json`
-```json
-{
-  "semantic_remix_enabled": false,
-  "authoritative": false,
-  "plan": []
-}
-```
-
-Standard mode therefore cannot accidentally command P3 to cut/reorder source scenes.
+For the Owner regression case (~97.57s source, clone-speed budget ~1529–1610 chars), a ~612-char first draft must not proceed directly to TTS.
 
 ## Semantic Remix contract — OPT-IN
-Semantic reasoning uses:
-- full timestamped ASR transcript;
-- adaptive Vision evidence;
-- canonical source scenes;
-- source duration/FPS/frame metadata;
-- user prompt;
-- selected TTS voice/speed as guidance/telemetry.
+Semantic reasoning uses full ASR + Vision evidence + canonical global scenes and produces:
+- video/product/customer profiles;
+- remix strategy;
+- ordered grounded remix beats;
+- one continuous narration;
+- candidate scene edit plan.
 
-Required semantic output:
-- `summary`;
-- `video_profile`;
-- `product_profile`;
-- `customer_profile`;
-- `remix_strategy`;
-- ordered `remix_beats`;
-- one continuous `narration_script`;
-- `edit_notes`.
-
-Semantic artifacts:
+Artifacts:
 ```text
 artifact_version: 4
 analysis_mode: multimodal-semantic-remix-v4
 semantic_remix_enabled: true
 ```
 
-### Canonical scene
-```json
-{
-  "index": 20,
-  "chunk_index": 2,
-  "time_sec": 81.267,
-  "start_sec": 79.233,
-  "end_sec": 83.3,
-  "visual": "grounded visual description",
-  "speech_context": "related source speech",
-  "purpose": "semantic purpose"
-}
-```
-
-Semantic rules:
-- indexes globally unique inside one Job;
-- `0 <= start_sec < end_sec <= source_duration`;
-- midpoint ranges are deterministic MVP evidence windows, not CV-accurate scene boundaries.
-
-### Remix strategy
-Required fields include objective, angle, hook, story arc, CTA, `target_duration_sec`, rationale.
-
-`target_duration_sec` is a deliberate intended remix timeline, not an accidental narration length and not automatically equal to original source duration.
-
-### Remix beat
-```json
-{
-  "beat_index": 3,
-  "role": "demo",
-  "message": "semantic message",
-  "source_scene_indexes": [20, 21],
-  "edit_action": "montage",
-  "target_duration_sec": 8,
-  "reason": "why the source evidence supports this beat"
-}
-```
-
-Allowed roles: hook, problem, product, demo, benefit, proof, transition, cta, custom.
-Allowed actions: keep, trim, reorder, montage.
+Only validated Semantic output may set `edit_plan.authoritative:true`.
 
 ### Semantic fail-closed guard
-Before accepted artifact persistence/TTS, current candidate must satisfy both main-process structural checks and renderer deterministic checks:
-- referenced scenes exist;
-- strategy target and sum of beat targets differ by no more than `max(2s, 5%)`;
-- guarded process/action words in beat content are supported by referenced scene evidence;
-- CTA maps to late final-result evidence when such evidence exists;
-- selected unsupported health/composition/product claims are rejected;
-- predicted narration duration using configured character-rate telemetry remains within 70–130% of summed beat target duration;
-- narration passes existing deterministic language/repetition quality checks.
+Before accepted artifact persistence/TTS:
+- referenced scenes must exist;
+- strategy target and summed beat targets differ by no more than `max(2s, 5%)`;
+- guarded process/action terms must be supported by referenced scene evidence;
+- CTA must map to available late final-result evidence when applicable;
+- selected unsupported hard claims are rejected;
+- predicted narration duration must remain within 70–130% of the summed beat target;
+- narration must pass existing deterministic language/repetition quality checks.
 
-A semantic result that fails these checks must not publish an authoritative edit plan or unlock downstream as a valid semantic result.
-
-### Semantic artifacts
-`scenes.json`
-- canonical global scenes + source windows.
-
-`multimodal_timeline.json`
-- transcript/provenance;
-- canonical scenes;
-- video/product/customer profiles;
-- semantic validation/coverage telemetry.
-
-`remix_script.json`
-- strategy;
-- ordered beats;
-- continuous narration;
-- source duration;
-- semantic target duration;
-- predicted narration duration telemetry;
-- preview segment/SRT data.
-
-`edit_plan.json`
-```json
-{
-  "semantic_remix_enabled": true,
-  "authoritative": true,
-  "target_duration_sec": 50,
-  "plan": [
-    {
-      "beat_index": 3,
-      "role": "demo",
-      "message": "semantic message",
-      "edit_action": "montage",
-      "source_scene_indexes": [20, 21],
-      "source_ranges": [
-        {"scene_index":20,"start_sec":79.233,"end_sec":83.3,"time_sec":81.267}
-      ],
-      "target_duration_sec": 8,
-      "reason": "mapping rationale"
-    }
-  ]
-}
-```
-
-P3 must not consume this authority until task-007 Owner Semantic verification passes and a later P3 implementation explicitly supports it.
+D-016 does not force Semantic mode to fill the original source duration. Semantic duration authority remains its validated strategy/beat timeline.
 
 ## Duration responsibility
-Inherited from BUG-034 / D-012:
-- P1 does not require narration to occupy 95–100% of original source duration;
-- source underlength alone is not a P1 failure;
-- P1 does not run another LLM/TTS pass solely to fill original duration;
-- P3 owns final edited timeline and final voice/video alignment.
-
-Semantic mode adds an internal coherence check between its own beat plan and predicted narration, without restoring the old source-occupancy gate.
+- Standard P1 must not knowingly accept severe narration underfill when full transcript/Vision evidence and voice-aware duration telemetry can support a grounded rewrite; D-016 enforces one pre-TTS evidence-backed recompose when needed.
+- P1 still does not perform final video retiming/rendering.
+- There is no repeated post-TTS LLM/TTS loop solely to chase exact source occupancy.
+- P3 remains final edited-timeline and final voice/video alignment authority.
 
 ## Pipeline 2
-P2 receives the ORIGINAL video and only removes burned-in subtitles.
-
-Required output:
-```text
-clean_video.mp4
-```
-
-P2 does not generate scripts, perform semantic editing or final rendering.
+P2 receives the ORIGINAL video and only removes burned-in subtitles. Required output: `clean_video.mp4`.
 
 ## Pipeline 3
-P3 receives approved P1 artifacts plus P2 clean video.
-
-Current responsibilities remain:
-- final composition/mix/subtitles/render;
-- final duration/voice alignment;
-- no overwrite of immutable P1 artifacts.
-
-Semantic cut/reorder consumption is still blocked/not implemented in task 007.
+P3 consumes approved P1 artifacts plus P2 clean video for final cut/mix/subtitle/render. P3 must not overwrite immutable P1 artifacts. Semantic cut/reorder consumption remains blocked until task-007 Owner Semantic verification passes and a later P3 task explicitly implements it.
