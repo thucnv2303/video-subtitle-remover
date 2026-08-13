@@ -237,60 +237,40 @@
     list.querySelectorAll('[data-preview-voice]').forEach((button) => button.addEventListener('click', () => previewVoice(button.dataset.previewVoice)));
   }
 
-  function sentenceUnits(text) {
-    const source = String(text || '').trim();
+  function periodSentenceUnits(text) {
+    const source = String(text || '').replace(/\r\n/g, '\n').trim();
     if (!source) return [];
 
-    const locale = normalizeLanguage(document.getElementById('vr-language')?.value || 'vi');
-    try {
-      if (typeof Intl?.Segmenter === 'function') {
-        const segmenter = new Intl.Segmenter(locale, { granularity: 'sentence' });
-        const units = [...segmenter.segment(source)]
-          .map((entry) => String(entry.segment || '').trim())
-          .filter(Boolean);
-        if (units.length) return units;
+    const units = [];
+    let cursor = 0;
+    for (let index = 0; index < source.length; index += 1) {
+      if (source[index] !== '.') continue;
+
+      let end = index + 1;
+      while (end < source.length && /[”"')\]]/.test(source[end])) end += 1;
+      if (end < source.length && !/\s/.test(source[end])) continue;
+
+      const whitespaceEnd = (() => {
+        let value = end;
+        while (value < source.length && /\s/.test(source[value])) value += 1;
+        return value;
+      })();
+      const separator = source.slice(end, whitespaceEnd);
+      const value = source.slice(cursor, end).replace(/\s+/g, ' ').trim();
+      if (value) {
+        units.push({
+          text: value,
+          terminated: true,
+          paragraphBreakAfter: /\n\s*\n/.test(separator),
+        });
       }
-    } catch {}
-
-    const fallback = source.match(/[^.!?…]+(?:[.!?…]+[”"')\]]*|$)(?:\s+|$)/g) || [];
-    return fallback.map((unit) => unit.trim()).filter(Boolean);
-  }
-
-  function splitOversizedSentence(sentence, targetChars) {
-    const value = String(sentence || '').trim();
-    if (!value) return [];
-
-    // Normal sentences are allowed to exceed the UI target rather than being
-    // severed. Clause fallback is emergency-only for pathological run-on text.
-    const hardLimit = Math.max(900, Math.floor(targetChars * 2));
-    if (value.length <= hardLimit) return [value];
-
-    const parts = [];
-    let remaining = value;
-    while (remaining.length > hardLimit) {
-      const windowText = remaining.slice(0, hardLimit + 1);
-      const preferredMin = Math.floor(hardLimit * 0.55);
-      let cut = -1;
-
-      const clauseRegex = /[,;:—–][”"')\]]?\s+/g;
-      for (const match of windowText.matchAll(clauseRegex)) {
-        const candidate = match.index + match[0].length;
-        if (candidate >= preferredMin) cut = candidate;
-      }
-
-      if (cut < preferredMin) {
-        const space = windowText.lastIndexOf(' ');
-        if (space >= preferredMin) cut = space + 1;
-      }
-      if (cut < 1) cut = hardLimit;
-
-      const part = remaining.slice(0, cut).trim();
-      if (part) parts.push(part);
-      remaining = remaining.slice(cut).trimStart();
-      if (parts.length > 10000) throw new Error('Một câu tạo quá nhiều đoạn con.');
+      cursor = whitespaceEnd;
+      index = whitespaceEnd - 1;
     }
-    if (remaining.trim()) parts.push(remaining.trim());
-    return parts;
+
+    const tail = source.slice(cursor).replace(/\s+/g, ' ').trim();
+    if (tail) units.push({ text: tail, terminated: false, paragraphBreakAfter: false });
+    return units;
   }
 
   function splitLongText(input, maxChars, preserveParagraphs = true) {
@@ -298,37 +278,31 @@
     if (!text) return [];
 
     const targetChars = Math.max(120, Number(maxChars) || 450);
-    const paragraphs = preserveParagraphs
-      ? text.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean)
-      : [text.replace(/\n+/g, ' ').trim()];
+    const units = periodSentenceUnits(text);
     const chunks = [];
+    let current = '';
 
-    const flushParagraph = (paragraph) => {
-      const sentences = sentenceUnits(paragraph);
-      let current = '';
-
-      const pushCurrent = () => {
-        if (!current.trim()) return;
-        chunks.push(current.trim());
-        current = '';
-      };
-
-      for (const sentence of sentences) {
-        const sentenceParts = splitOversizedSentence(sentence, targetChars);
-        for (const part of sentenceParts) {
-          const candidate = current ? `${current} ${part}` : part;
-          if (current && candidate.length > targetChars) {
-            pushCurrent();
-            current = part;
-          } else {
-            current = candidate;
-          }
-        }
-      }
-      pushCurrent();
+    const pushCurrent = () => {
+      if (!current.trim()) return;
+      chunks.push(current.trim());
+      current = '';
     };
 
-    paragraphs.forEach(flushParagraph);
+    for (const unit of units) {
+      const candidate = current ? `${current} ${unit.text}` : unit.text;
+      if (current && candidate.length > targetChars) {
+        pushCurrent();
+        current = unit.text;
+      } else {
+        current = candidate;
+      }
+
+      // Paragraph boundaries may end a chunk only when the paragraph itself
+      // ended with a period. The character target never authorizes a mid-sentence cut.
+      if (preserveParagraphs && unit.terminated && unit.paragraphBreakAfter) pushCurrent();
+    }
+
+    pushCurrent();
     if (chunks.length > 10000) throw new Error('Văn bản tạo quá nhiều chunk.');
     return chunks;
   }
@@ -408,7 +382,7 @@
       root.innerHTML = '<div class="vr-empty-mini">Chưa có hàng đợi render.</div>';
       return;
     }
-    root.innerHTML = state.chunks.map((chunk, index) => `<div class="vr-queue-row ${chunk.status}"><span class="vr-queue-dot"></span><div><strong>Chunk ${index + 1}</strong><small>${chunk.text.length.toLocaleString('vi-VN')} ký tự</small></div><span class="vr-queue-state">${({ waiting: 'Chờ xử lý', rendering: 'Đang render…', success: 'Hoàn thành', error: 'Lỗi', stopped: 'Đã dừng' })[chunk.status] || chunk.status}</span></div>`).join('');
+    root.innerHTML = state.chunks.map((chunk, index) => `<div class="vr-queue-row ${chunk.status}"><span class="vr-queue-dot"></span><div><strong>Chunk ${index + 1}</strong><small>${chunk.text.length.toLocaleString('vi-VN')} ký tự</small></div><span class="vr-queue-state">${({ waiting: 'Chờ xử lý', rendering: 'Đang render…', success: 'Hoàn thành', error: 'Lỗi', stopped: 'Đã dừng' })[chunk.status] || chunk.status}</span></div><span></span>`).join('');
     root.querySelector('.rendering')?.scrollIntoView({ block: 'nearest' });
   }
 
