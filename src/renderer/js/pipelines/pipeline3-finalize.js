@@ -1,29 +1,9 @@
+import { planP3Fit } from '../pipeline3/fit-planner.js';
+
 /**
- * Pipeline 3 — Finalize Video
- *
- * Nhận vào job đã có:
- *   job.outputPath      — video đã xóa hardsub (từ Pipeline 2)
- *   job.ttsAudioPath    — audio TTS gốc từ Pipeline 1
- *   job.ttsTimedSrt     — SRT timing theo voice Pipeline 1
- *   job.karaokeAss      — ASS karaoke content (nếu có)
- *   job.voiceSub        — boolean: có burn subtitle không
- *
- * Luồng xử lý:
- *   Bước 1: Giữ nguyên tốc độ video; fit voice có giới hạn nếu mismatch vừa phải
- *   Bước 2: Tách vocal gốc → lấy nhạc nền (nếu bật tts-remove-vocal)
- *   Bước 3: Ghép audio TTS/P3-derived voice vào clean video
- *   Bước 4: Burn subtitle theo timing của voice thực tế
- *
- * Output: job.finalOutputPath — đường dẫn video hoàn chỉnh
+ * Pipeline 3 — focused final composition.
+ * P1 artifacts and P2 clean video stay immutable; P3 creates derived media only.
  */
-
-const P3_VOICE_FIT_MIN_RATIO = 0.90;
-const P3_VOICE_FIT_MAX_RATIO = 1.15;
-const P3_VOICE_NOOP_DELTA = 0.005;
-
-function _durationPct(value) {
-  return `${(Number(value || 0) * 100).toFixed(1)}%`;
-}
 
 function _durationSec(valueMs) {
   return `${(Number(valueMs || 0) / 1000).toFixed(2)}s`;
@@ -40,12 +20,7 @@ function _p3ArtifactDir(job) {
 function _srtTimeToMs(value) {
   const match = String(value || '').match(/^(\d{2}):(\d{2}):(\d{2})[,.](\d{3})$/);
   if (!match) return null;
-  return (
-    Number(match[1]) * 3600000
-    + Number(match[2]) * 60000
-    + Number(match[3]) * 1000
-    + Number(match[4])
-  );
+  return Number(match[1]) * 3600000 + Number(match[2]) * 60000 + Number(match[3]) * 1000 + Number(match[4]);
 }
 
 function _msToSrtTime(ms) {
@@ -71,308 +46,216 @@ function _scaleTimedSrt(srtText, scale) {
   );
 }
 
-async function _prepareP3Voice(job, baseVideo, p1Audio) {
+async function _prepareP3Voice(job, p1Audio, sourceTimedSrt, plan) {
   const originalVoiceMs = Number(job?.ttsAudioDurMs) || 0;
-  if (!(originalVoiceMs > 0)) {
-    _addLog('[Finalize] ℹ️ Không có duration TTS P1 — giữ nguyên voice, không auto-fit.', 'info');
-    return { ok: true, audioPath: p1Audio, timedSrt: job.ttsTimedSrt, durationMs: 0, tempo: 1 };
-  }
-
-  const info = await window.api.videoInfo(baseVideo);
-  const videoDurationMs = (Number(info?.duration) || 0) * 1000;
-  if (!(videoDurationMs > 0)) {
-    return { ok: false, error: 'Không đọc được duration clean video để fit voice ở Pipeline 3.' };
-  }
-
-  const ratio = originalVoiceMs / videoDurationMs;
-  _addLog(`[Finalize] ⏱ Voice-fit telemetry: video=${_durationSec(videoDurationMs)}, P1 voice=${_durationSec(originalVoiceMs)}, ratio=${_durationPct(ratio)}.`, 'info');
-
-  if (ratio < P3_VOICE_FIT_MIN_RATIO) {
-    _addLog(`[Finalize] ℹ️ Voice ngắn (${_durationPct(ratio)} < ${_durationPct(P3_VOICE_FIT_MIN_RATIO)}): giữ tốc độ tự nhiên; phần timeline còn lại dùng hình/nhạc/nền.`, 'info');
-    return { ok: true, audioPath: p1Audio, timedSrt: job.ttsTimedSrt, durationMs: originalVoiceMs, tempo: 1 };
-  }
-
-  if (ratio > P3_VOICE_FIT_MAX_RATIO) {
-    return {
-      ok: false,
-      error: `Voice dài ${_durationPct(ratio)} so với final video; vượt giới hạn auto-fit ${_durationPct(P3_VOICE_FIT_MAX_RATIO)}. Cần sửa narration/edit plan thay vì ép tốc độ giọng.`,
-    };
-  }
-
-  if (Math.abs(ratio - 1) <= P3_VOICE_NOOP_DELTA) {
-    _addLog('[Finalize] ✅ Voice gần khớp final video; không cần retime.', 'success');
-    return { ok: true, audioPath: p1Audio, timedSrt: job.ttsTimedSrt, durationMs: originalVoiceMs, tempo: 1 };
+  const requestedSpeed = Number(plan?.voiceSpeed) || 1;
+  if (!(originalVoiceMs > 0) || Math.abs(requestedSpeed - 1) < 0.001) {
+    return { ok: true, audioPath: p1Audio, timedSrt: sourceTimedSrt, durationMs: originalVoiceMs, tempo: 1 };
   }
 
   const artifactDir = _p3ArtifactDir(job);
-  if (!artifactDir) {
-    return { ok: false, error: 'Không xác định được thư mục artifact P3 để tạo derived voice mà không ghi đè P1.' };
-  }
-  if (!window.electronAPI?.prepareP1NarrationAudio) {
-    return { ok: false, error: 'Bridge pitch-preserving audio tempo chưa sẵn sàng cho Pipeline 3.' };
-  }
+  if (!artifactDir) return { ok: false, error: 'Không xác định được thư mục artifact P3 để tạo derived voice.' };
+  if (!window.electronAPI?.prepareP1NarrationAudio) return { ok: false, error: 'Bridge pitch-preserving voice tempo chưa sẵn sàng.' };
 
   const prepared = await window.electronAPI.prepareP1NarrationAudio({
     source_path: p1Audio,
     artifact_dir: artifactDir,
-    speed: ratio,
+    speed: requestedSpeed,
   });
   if (!prepared?.ok || !prepared?.audio_path || !(Number(prepared.duration_ms) > 0)) {
-    return { ok: false, error: prepared?.error || 'Không tạo được derived voice Pipeline 3.' };
+    return { ok: false, error: prepared?.error || 'Không tạo được derived voice P3.' };
   }
 
   const adjustedDurationMs = Number(prepared.duration_ms);
   const timingScale = adjustedDurationMs / originalVoiceMs;
-  let timedSrt = job.ttsTimedSrt;
+  let timedSrt = sourceTimedSrt;
   if (timedSrt) {
     timedSrt = _scaleTimedSrt(timedSrt, timingScale);
     const sep = artifactDir.includes('\\') ? '\\' : '/';
     const srtPath = `${artifactDir}${sep}tts_timed.srt`;
     const save = await window.api.writeFile(srtPath, timedSrt);
-    if (save?.status === 'error') {
-      return { ok: false, error: save.error || 'Không lưu được subtitle timing của derived voice P3.' };
-    }
+    if (save?.status === 'error') return { ok: false, error: save.error || 'Không lưu được P3 timed SRT.' };
     job.p3TimedSrt = timedSrt;
     job.p3TimedSrtPath = srtPath;
   }
 
   job.p3VoiceAudioPath = prepared.audio_path;
   job.p3VoiceDurMs = adjustedDurationMs;
-  job.p3VoiceTempo = ratio;
-
-  _addLog(
-    `[Finalize] ✅ Derived voice P3: tempo=${ratio.toFixed(4)}x, ${_durationSec(originalVoiceMs)} → ${_durationSec(adjustedDurationMs)}; P1 voice.wav không bị ghi đè.`,
-    'success'
-  );
-  return {
-    ok: true,
-    audioPath: prepared.audio_path,
-    timedSrt,
-    durationMs: adjustedDurationMs,
-    tempo: ratio,
-  };
+  job.p3VoiceTempo = requestedSpeed;
+  _addLog(`[Finalize] ✅ Voice tempo ${requestedSpeed.toFixed(4)}x: ${_durationSec(originalVoiceMs)} → ${_durationSec(adjustedDurationMs)}.`, 'success');
+  return { ok: true, audioPath: prepared.audio_path, timedSrt, durationMs: adjustedDurationMs, tempo: requestedSpeed };
 }
 
-// ─── Main entry point ────────────────────────────────────────────────────────
+async function _prepareP3Video(job, baseVideo, videoInfo, plan, bgVolume) {
+  const requestedSpeed = Number(plan?.videoSpeed) || 1;
+  if (Math.abs(requestedSpeed - 1) < 0.02) {
+    return { ok: true, videoPath: baseVideo, durationMs: Number(videoInfo?.duration || 0) * 1000, tempo: 1, adjusted: false };
+  }
 
-/**
- * Finalize video: ghép TTS audio + burn subtitle lên video đã xóa sub.
- * @param {object} job
- */
+  // Current backend tempo endpoint removes source audio. Until the narrow backend
+  // amendment is landed, do not silently destroy a requested background/original mix.
+  if (Number(bgVolume) > 0) {
+    return {
+      ok: false,
+      error: 'Video retime hiện chưa thể giữ audio nền đồng bộ khi âm lượng nền > 0. Hãy đặt nền = 0 hoặc dùng Fit Voice/Natural cho build này.',
+    };
+  }
+
+  const sourceDurationMs = Number(videoInfo?.duration || 0) * 1000;
+  if (!(sourceDurationMs > 0)) return { ok: false, error: 'Không đọc được duration clean video.' };
+  const outputPath = String(baseVideo).replace(/\.[^.]+$/, '') + '_p3_tempo.mp4';
+  const targetDurationMs = sourceDurationMs / requestedSpeed;
+  const res = await window.api.adjustVideoTempo(baseVideo, outputPath, targetDurationMs, requestedSpeed, requestedSpeed);
+  if (!res || res.status !== 'ok' || !res.output_path) return { ok: false, error: res?.error || 'Không retime được video P3.' };
+  job.p3VideoTempoPath = res.output_path;
+  job.p3VideoTempo = Number(res.speed_ratio) || requestedSpeed;
+  const durationMs = sourceDurationMs / job.p3VideoTempo;
+  _addLog(`[Finalize] ✅ Video tempo ${job.p3VideoTempo.toFixed(4)}x: ${_durationSec(sourceDurationMs)} → ~${_durationSec(durationMs)}.`, 'success');
+  return { ok: true, videoPath: res.output_path, durationMs, tempo: job.p3VideoTempo, adjusted: Boolean(res.adjusted) };
+}
+
 export async function finalizeVideo(job) {
-  const baseVideo = job.outputPath; // video đã xóa hardsub từ Pipeline 2
+  const baseVideo = job.p3CleanVideoPath || job.outputPath;
   let ttsAudio = job.ttsAudioPath;
-  let timedSrt = job.ttsTimedSrt;
-
+  let timedSrt = job.p3TimedSrt || job.ttsTimedSrt;
   if (!baseVideo) {
-    _addLog('[Finalize] ❌ Chưa có video đã xóa sub — hãy chạy Pipeline 2 trước.', 'error');
+    _addLog('[Finalize] ❌ Chưa có clean video từ Pipeline 2.', 'error');
     return false;
   }
 
   if (!ttsAudio) {
-    _addLog('[Finalize] ⚠️ Chưa có audio TTS — chỉ burn subtitle (nếu bật).', 'warning');
-    if (job.voiceSub && job.ttsTimedSrt) {
-      return await _burnSubOnly(job, baseVideo);
-    }
-    _addLog('[Finalize] ℹ️ Không có gì để finalize.', 'info');
+    _addLog('[Finalize] ⚠️ Không có TTS; chỉ burn subtitle nếu được bật.', 'warning');
+    if (job.voiceSub && timedSrt) return _burnSubOnly(job, baseVideo, timedSrt);
     return false;
   }
 
-  const removeVocal = localStorage.getItem('tts_remove_vocal') === 'true';
-  const videoForMix = baseVideo;
+  const config = job.p3Config || {};
+  const bgVol = Math.max(0, Math.min(100, Number(config.bgVolume ?? localStorage.getItem('tts_bg_volume') ?? 10)));
+  const removeVocal = Boolean(config.removeVocal ?? (localStorage.getItem('tts_remove_vocal') === 'true'));
+  const info = await window.api.videoInfo(baseVideo);
+  const videoDurationMs = Number(info?.duration || 0) * 1000;
+  const voiceDurationMs = Number(job.ttsAudioDurMs) || 0;
+  const plan = planP3Fit(videoDurationMs, voiceDurationMs, config.fitMode || 'auto');
+  job.p3FitPlan = plan;
+  if (!plan.ok) {
+    _addLog('[Finalize] ❌ Fit bị chặn: ' + plan.reason, 'error');
+    return false;
+  }
 
-  _addLog('[Finalize] 🚀 Bắt đầu hoàn thiện video...', 'info');
+  _addLog(`[Finalize] 🚀 P3 final: strategy=${plan.selectedStrategy || plan.mode}; voice=${plan.voiceSpeed.toFixed(3)}x; video=${plan.videoSpeed.toFixed(3)}x.`, 'info');
 
-  // ── Bước 1: Giữ video, fit derived voice có giới hạn ──────────────────────
-  _addLog('[Finalize] ⏱ Bước 1/4 — Kiểm tra duration voice trên final timeline...', 'info');
+  let videoFit;
   try {
-    const voiceFit = await _prepareP3Voice(job, baseVideo, ttsAudio);
-    if (!voiceFit.ok) {
-      _addLog('[Finalize] ❌ Voice-fit bị chặn: ' + voiceFit.error, 'error');
-      return false;
-    }
+    videoFit = await _prepareP3Video(job, baseVideo, info, plan, bgVol);
+    if (!videoFit.ok) throw new Error(videoFit.error);
+  } catch (e) {
+    _addLog('[Finalize] ❌ Video-fit: ' + e.message, 'error');
+    return false;
+  }
+  const videoForMix = videoFit.videoPath;
+
+  try {
+    const voiceFit = await _prepareP3Voice(job, ttsAudio, timedSrt, plan);
+    if (!voiceFit.ok) throw new Error(voiceFit.error);
     ttsAudio = voiceFit.audioPath;
     timedSrt = voiceFit.timedSrt || timedSrt;
   } catch (e) {
-    _addLog('[Finalize] ❌ Lỗi voice-fit: ' + e.message, 'error');
+    _addLog('[Finalize] ❌ Voice-fit: ' + e.message, 'error');
     return false;
   }
 
-  // ── Bước 2: Tách vocal gốc → lấy nhạc nền (optional) ─────────────────────
   let bgAudioPath = null;
-  if (removeVocal) {
-    _addLog('[Finalize] 🎵 Bước 2/4 — Đang tách vocal gốc, giữ nhạc nền...', 'info');
+  if (removeVocal && bgVol > 0) {
+    _addLog('[Finalize] 🎵 Tách giọng gốc để giữ nền...', 'info');
     try {
-      const vocalRes = await window.api.removeVocal(job.filePath);
-      if (vocalRes.status === 'ok' || vocalRes.status === 'warning') {
-        bgAudioPath = vocalRes.audio_path;
-        _addLog(`[Finalize] ✅ Tách vocal xong (${vocalRes.method_used})${vocalRes.message ? ': ' + vocalRes.message : ''}.`, 'success');
-      } else {
-        _addLog('[Finalize] ⚠️ Tách vocal thất bại: ' + vocalRes.error + ' — dùng audio gốc.', 'warning');
-      }
+      const vocalRes = await window.api.removeVocal(videoForMix);
+      if (vocalRes.status === 'ok' || vocalRes.status === 'warning') bgAudioPath = vocalRes.audio_path;
+      else _addLog('[Finalize] ⚠️ Tách vocal thất bại; dùng audio gốc nếu có.', 'warning');
     } catch (e) {
-      _addLog('[Finalize] ⚠️ Lỗi tách vocal: ' + e.message + ' — dùng audio gốc.', 'warning');
+      _addLog('[Finalize] ⚠️ Tách vocal lỗi; dùng audio gốc nếu có: ' + e.message, 'warning');
     }
-  } else {
-    _addLog('[Finalize] ℹ️ Bước 2/4 — Bỏ qua tách vocal.', 'info');
   }
 
-  // ── Bước 3: Ghép audio TTS vào video ──────────────────────────────────────
-  _addLog('[Finalize] 🔊 Bước 3/4 — Đang ghép âm thanh vào video...', 'info');
-
   const videoWithVoice = job.filePath.replace(/\.[^.]+$/, '') + '_with_voice.mp4';
-  const bgVol = parseInt(localStorage.getItem('tts_bg_volume') || '10');
-
   let mergeRes;
   try {
     if (bgAudioPath) {
       mergeRes = await fetch(`${window.api.base}/api/mix-audio-tracks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          video_path: videoForMix,
-          tts_path: ttsAudio,
-          bg_audio_path: bgAudioPath,
-          output_path: videoWithVoice,
-          bg_volume: bgVol,
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ video_path: videoForMix, tts_path: ttsAudio, bg_audio_path: bgAudioPath, output_path: videoWithVoice, bg_volume: bgVol }),
       }).then(r => r.json());
     } else {
       mergeRes = await window.api.replaceAudio(videoForMix, ttsAudio, videoWithVoice, bgVol);
     }
   } catch (e) {
-    _addLog('[Finalize] ❌ Lỗi ghép audio: ' + e.message, 'error');
+    _addLog('[Finalize] ❌ Ghép audio lỗi: ' + e.message, 'error');
     return false;
   }
-
   if (!mergeRes || mergeRes.status !== 'ok') {
     _addLog('[Finalize] ❌ Ghép audio thất bại: ' + (mergeRes?.error || 'Unknown'), 'error');
     return false;
   }
-  _addLog('[Finalize] ✅ Ghép audio thành công!', 'success');
 
-  // ── Bước 4: Burn subtitle lên video (nếu bật) ──────────────────────────────
   if (job.voiceSub && timedSrt) {
     const finalOutput = _getFinalOutputPath(job);
     const success = await _burnSubtitle(job, videoWithVoice, finalOutput, timedSrt);
-    if (success) {
-      job.finalOutputPath = finalOutput;
-    } else {
-      job.finalOutputPath = videoWithVoice;
-      _addLog('[Finalize] ⚠️ Dùng video có voice nhưng không có subtitle.', 'warning');
-    }
+    job.finalOutputPath = success ? finalOutput : videoWithVoice;
+    if (!success) _addLog('[Finalize] ⚠️ Dùng video có voice nhưng subtitle burn thất bại.', 'warning');
   } else {
-    _addLog('[Finalize] ℹ️ Bước 4/4 — Bỏ qua burn subtitle.', 'info');
     job.finalOutputPath = videoWithVoice;
   }
 
   job.outputPath = job.finalOutputPath;
-
   _addLog('[Finalize] 🎉 Hoàn tất! Video: ' + job.finalOutputPath, 'success');
   _showFinalOutputButton(job.finalOutputPath);
-
-  if (typeof window.renderJobList === 'function') window.renderJobList();
-  if (typeof window.updateStartButton === 'function') window.updateStartButton();
-
+  window.renderJobList?.();
+  window.updateStartButton?.();
   return true;
 }
 
-// ─── Burn Subtitle Only (không có TTS) ──────────────────────────────────────
-
-async function _burnSubOnly(job, videoPath) {
-  _addLog('[Finalize] 📝 Burn subtitle lên video (không có TTS)...', 'info');
+async function _burnSubOnly(job, videoPath, timedSrt) {
   const finalOutput = _getFinalOutputPath(job);
-  const success = await _burnSubtitle(job, videoPath, finalOutput, job.ttsTimedSrt);
-  if (success) {
-    job.finalOutputPath = finalOutput;
-    job.outputPath = finalOutput;
-    _showFinalOutputButton(finalOutput);
-    if (typeof window.renderJobList === 'function') window.renderJobList();
-    return true;
-  }
-  return false;
+  const success = await _burnSubtitle(job, videoPath, finalOutput, timedSrt);
+  if (!success) return false;
+  job.finalOutputPath = finalOutput;
+  job.outputPath = finalOutput;
+  _showFinalOutputButton(finalOutput);
+  window.renderJobList?.();
+  return true;
 }
 
-// ─── Burn Subtitle Helper ────────────────────────────────────────────────────
-
-async function _burnSubtitle(job, videoPath, outputPath, srtContent = job.ttsTimedSrt) {
-  _addLog('[Finalize] 📝 Bước 4/4 — Đang burn subtitle...', 'info');
-
-  const cssColor = document.getElementById('step3-color')?.value
-                 || document.getElementById('sub-color')?.value
-                 || '#ffffff';
-  const rc = cssColor.slice(1, 3);
-  const gc = cssColor.slice(3, 5);
-  const bc = cssColor.slice(5, 7);
-  const styleArgs = {
-    font_name: document.getElementById('step3-font')?.value
-                || document.getElementById('sub-font')?.value
-                || 'Arial',
-    font_size: parseInt(document.getElementById('step3-size')?.value
-                || document.getElementById('sub-size')?.value
-                || '24'),
-    primary_color: `&H00${bc}${gc}${rc}`.toUpperCase(),
-  };
-
-  let subPositions = [];
-  let videoMeta = {};
-  try {
-    if (job.regions?.length > 0 && window._appState?.videoInfo) {
-      const info = window._appState.videoInfo;
-      videoMeta = { video_height: info.height, video_width: info.width };
-      subPositions = job.regions.map(r => {
-        const yCenter = (r.ymin + r.ymax) / 2 / info.height;
-        let alignment = 2, margin_v = 15;
-        if (yCenter < 0.4) { alignment = 8; margin_v = Math.round(r.ymin * 0.8); }
-        else if (yCenter < 0.65) { alignment = 5; margin_v = 0; }
-        else { alignment = 2; margin_v = Math.round((info.height - r.ymax) * 0.8); }
-        return {
-          start_ms: r.startFrame / (info.fps || 25) * 1000,
-          end_ms: r.endFrame / (info.fps || 25) * 1000,
-          position: alignment === 8 ? 'top' : alignment === 5 ? 'middle' : 'bottom',
-          alignment,
-          margin_v: Math.max(5, margin_v),
-        };
-      });
-      _addLog(`[Finalize] 📍 Lấy vị trí từ ${job.regions.length} vùng đã vẽ.`, 'success');
-    } else {
-      const posRes = await window.api.detectSubPositions(job.filePath, 60);
-      if (posRes.status === 'ok' && posRes.positions?.length > 0) {
-        subPositions = posRes.positions;
-        videoMeta = { video_height: posRes.video_height, video_width: posRes.video_width };
-        _addLog(`[Finalize] 📍 Phát hiện ${subPositions.length} vùng subtitle.`, 'success');
-      } else {
-        _addLog('[Finalize] ⚠️ Không phát hiện vùng → dùng vị trí mặc định (dưới).', 'warning');
-      }
-    }
-  } catch (e) {
-    _addLog('[Finalize] ⚠️ Bỏ qua detect vị trí: ' + e.message, 'warning');
-  }
-
+async function _burnSubtitle(job, videoPath, outputPath, srtContent) {
+  _addLog('[Finalize] 📝 Burn subtitle final...', 'info');
+  const config = job.p3Config || {};
+  const cssColor = config.textColor || '#ffffff';
+  const rc=cssColor.slice(1,3),gc=cssColor.slice(3,5),bc=cssColor.slice(5,7);
+  const info = job.p3VideoInfo || await window.api.videoInfo(videoPath).catch(() => ({}));
   try {
     const subRes = await window.api.burnSubtitlePositioned(
       videoPath,
       srtContent,
       outputPath,
-      subPositions,
-      { ...styleArgs, ...videoMeta },
+      [],
+      {
+        font_name: config.fontFamily || 'Arial',
+        font_size: Math.round(Number(config.fontSize) || 46),
+        primary_color: `&H00${bc}${gc}${rc}`.toUpperCase(),
+        video_height: Number(info?.height) || 0,
+        video_width: Number(info?.width) || 0,
+      },
       job.karaokeAss || null
     );
-
-    if (subRes.status === 'ok') {
-      const extra = subRes.styles_used > 1 ? ` (${subRes.styles_used} vị trí)` : '';
-      _addLog(`[Finalize] ✅ Burn subtitle thành công${extra}!`, 'success');
+    if (subRes?.status === 'ok') {
+      _addLog('[Finalize] ✅ Burn subtitle thành công.', 'success');
       return true;
     }
-    _addLog('[Finalize] ❌ Burn subtitle thất bại: ' + (subRes.error || 'Unknown'), 'error');
+    _addLog('[Finalize] ❌ Burn subtitle thất bại: ' + (subRes?.error || 'Unknown'), 'error');
     return false;
   } catch (e) {
-    _addLog('[Finalize] ❌ Lỗi burn subtitle: ' + e.message, 'error');
+    _addLog('[Finalize] ❌ Burn subtitle lỗi: ' + e.message, 'error');
     return false;
   }
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function _getFinalOutputPath(job) {
   return job.filePath.replace(/\.[^.]+$/, '') + '_final.mp4';
@@ -380,24 +263,12 @@ function _getFinalOutputPath(job) {
 
 function _showFinalOutputButton(filePath) {
   if (!window.electronAPI?.openPath) return;
-  const existing = document.getElementById('btn-open-final-output');
-  if (existing) existing.remove();
-  const btn = document.createElement('button');
-  btn.id = 'btn-open-final-output';
-  btn.className = 'btn btn-accent btn-block';
-  btn.style.marginTop = '8px';
-  btn.innerHTML = '📂 Mở video hoàn chỉnh (_final.mp4)';
-  btn.onclick = () => window.electronAPI.openPath(filePath);
-  const progressSection = document.getElementById('progress-section');
-  if (progressSection) progressSection.appendChild(btn);
+  document.getElementById('btn-open-final-output')?.remove();
+  const btn=document.createElement('button');
+  btn.id='btn-open-final-output';btn.className='btn btn-accent btn-block';btn.style.marginTop='8px';btn.textContent='📂 Mở video hoàn chỉnh (_final.mp4)';btn.onclick=()=>window.electronAPI.openPath(filePath);
+  document.getElementById('progress-section')?.appendChild(btn);
 }
 
-function _addLog(msg, type) {
-  if (typeof window.addLog === 'function') window.addLog(msg, type);
-  else console.log(`[${type}] ${msg}`);
-}
+function _addLog(msg,type){if(typeof window.addLog==='function')window.addLog(msg,type);else console.log(`[${type}] ${msg}`);}
 
-export {
-  _scaleTimedSrt,
-  _prepareP3Voice,
-};
+export { _scaleTimedSrt, _prepareP3Voice, _prepareP3Video };
