@@ -1,63 +1,57 @@
 # Active PM Execution Spec
 
-Status: PIPELINE1_INTEGRATION_013_SOURCE_PUBLISHED_OWNER_VERIFY_WAITING
+Status: PIPELINE3_EDITOR_REBUILD_016_SOURCE_PUBLISHED_REVIEW_IN_PROGRESS
 
-Task: `PIPELINE1-INTEGRATION-013`
+Task: `PIPELINE3-EDITOR-REBUILD-016`
 Repository: `thucnv2303/video-subtitle-remover`
-Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56
-Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`
-Integration spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`
-Long-video Revision-3 application source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`
-Integration renderer source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`
+Branch: `review/PIPELINE3-EDITOR-REBUILD-016`
+Exact starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1`
+Main spec: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016.md`
+Bootstrap amendment: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016-BOOTSTRAP-AMENDMENT.md`
+Application-source head before docs: `936ddb32ceed3fda2839fc6a000e593a37f4a75d`
 
 ## Purpose
-Provide one Owner-testable Pipeline 1 build containing both:
-1. long-video Standard chunked narration; and
-2. per-Job Semantic Remix.
+Implement the Owner-approved Pipeline 3 final assembly editor with a visible Job Manager, aspect-correct logical preview, assembly timeline, per-Job subtitle/audio/export settings, smooth subtitle drag, and collapsible fold/accordion groups for related settings.
 
-This replaces the prior incorrect product-test sequence where Owner was asked to run isolated PR #55 and therefore still saw the old global Remix UI.
+## Source scope
+- `src/renderer/js/pipeline3/editor.js`
+- `src/renderer/js/pipeline3/editor-store.js`
+- `src/renderer/js/pipeline3/preview-geometry.js`
+- `src/renderer/js/pipeline3/subtitle-ass.js`
+- `src/renderer/js/pipeline3/render-controller.js`
+- `src/renderer/styles/pipeline3-editor.css`
+- `src/renderer/js/pipeline1-run-config.js`: exactly one import-only P3 bootstrap addition.
 
-## Source invariants
-- `src/main/p1-standard-vision-wrapper.js` remains inherited from Revision 3 and is not modified by integration.
-- `pipeline1-run-config.js` preserves `import './pipeline1-log-router.js';`.
-- global Semantic Remix localStorage/Action-area control is removed.
-- each Job snapshots its own `semanticRemixEnabled`.
-- per-Job switch defaults OFF and locks during queued/processing.
-- long Standard sections join into one narration and pass global gates before TTS.
-- TTS receives one continuous narration, not one audio render per AI section.
+## Invariants
+- no P1/P2/backend/dependency behavior change;
+- existing P3 finalizer stays unchanged;
+- P3 consumes P1 artifacts + P2 clean video only;
+- settings are per Job;
+- legacy hidden Step-3 DOM remains for compatibility;
+- real source width/height controls logical canvas geometry;
+- derived ASS uses exact logical position and does not overwrite P1/P2 artifacts;
+- original karaoke ASS is preserved;
+- re-render always restores preserved P2 clean input;
+- no new local clone/worktree/test directory.
 
-## Owner local safety
-No new clone/worktree/test folders. Reuse only:
-`E:\Project AI\Video-sub-remove-owner-test-LONG012`
-
-Before changing ref, `git status --short` must be empty. Dirty state => STOP; do not reset/restore/clean.
-
-## Required verification on exact final integration HEAD
+## Required verification
 ```text
-git rev-parse HEAD
-node --check src/main/p1-standard-vision-wrapper.js
+node --check src/renderer/js/pipeline3/editor.js
+node --check src/renderer/js/pipeline3/editor-store.js
+node --check src/renderer/js/pipeline3/preview-geometry.js
+node --check src/renderer/js/pipeline3/subtitle-ass.js
+node --check src/renderer/js/pipeline3/render-controller.js
 node --check src/renderer/js/pipeline1-run-config.js
-node --check src/renderer/js/pipeline1-semantic-remix-per-job.js
-git diff --check 4ff0712a909f12929373e6f457aa96329e9c3610..HEAD
+git diff --check abfe33510523b800654dcf3b1b56f25f4ccd43d1..HEAD
 ```
-
-## Runtime acceptance
-1. No global Semantic Remix block remains in Action area.
-2. Add 2+ Jobs: each card independently shows Remix OFF/Standard.
-3. Enable only Job A; Job B stays Standard.
-4. During queued/processing, each relevant switch locks and run config respects the Job-specific mode.
-5. ~497s Standard Job logs chunked long-narration section plan rather than one ~8k generation request.
-6. Sections join to one narration, global hard-length/CJK/repetition gate passes, then exactly one TTS flow begins.
-7. Listening check: transitions coherent; no repeated opening/CTA/filler/CJK.
-8. P1/Ollama logs remain isolated from P2 console.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending exact final-head/static/runtime/QA closeout.
+- Code review: WAITING final PR/full-file review.
+- Owner runtime: NOT STARTED.
+- Documentation synchronization: PASS pre-runtime.
 - Merge: BLOCKED.
 
 ## Next permitted action
-PM reverifies PR #56 exact final head/files/checks/comments. If consistent, Owner updates the existing LONG012 directory to that exact head and runs the required checks/runtime. Do not merge.
+Open Draft PR, complete GitHub code review, then Owner may reuse the existing clean local test directory for verification only after review PASS.
