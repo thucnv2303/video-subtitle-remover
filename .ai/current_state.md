@@ -1,53 +1,49 @@
 # Current State
 
 ## Status
-PIPELINE1-LOG-OBSERVABILITY-009 — RUNTIME REVISION 2 SOURCE PUBLISHED / PM REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
+PIPELINE1-LOG-OBSERVABILITY-009 — RUNTIME REVISION 3 SOURCE PUBLISHED / PM REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Parent: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
 - Active branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52.
-- Runtime-revision starting HEAD: `3ab395128d841626d689182853beea8c10c58aa1`.
-- Runtime-revision spec commit: `19a5b4ca530a7567a5bd64b90ddb0228fd9399dd`.
-- Runtime-revision source commit: `c4d9911c8cb6cf99fdbeb3ca9cf561d2269d14c7`.
+- Revision-3 starting HEAD: `a7e05b1cd2fe2a4d78b74d7b7b3b59a7c9f08ba7`.
+- Revision-3 spec commit: `a0c7d6b0de721ea11fa25aa0ae3c1618c3f939f0`.
+- Revision-3 source commit: `de1a5e2cb25c46dffed383eb66cf54ca711af566`.
 - Active bug: `BUG-039`.
 
 ## Owner runtime evidence
-Owner observed that successful `/api/health`, `/api/tts/status`, `/api/gpu-info` access logs still appeared repeatedly in the visible log after the first correction. Owner also requires frame-processing progress to use one updating line rather than append many frame lines.
+Owner reports that Pipeline 1 log information appears in the Pipeline 2 log panel even though P2 has not run. Direct source review confirmed `app.js::addLog()` writes every log to `#log-output` (Step 2) and then clones it into `#step1-log-output` (Step 1).
 
-This invalidated the prior runtime-closeout assumption and authorized revision 2.
+A separate Owner finding confirms Prompt Manager deletion persistence is defective. That remains `BUG-040` and is not part of PR #52.
 
-## Source state
-Application changes for BUG-039 are now limited to renderer UX files:
-- `src/renderer/js/pipeline1-run-ux.js`: P1 heartbeat cleanup + retention 2000.
-- `src/renderer/js/pipeline2-runtime.js`: runtime revision 2, source commit changes only this file (+7/-4).
-- `src/renderer/js/app.js`: no net final change.
-
-Revision 2 changes only presentation:
-- routine successful access logs are inspected/removed even while no P2 job is active;
-- `/api/tts/status` is included in routine-success suppression;
-- P2 existing single live progress row remains authoritative;
-- additional clear `processing/xử lý ... frame N/TOTAL` forms update that row and raw progress rows are removed;
-- non-200, warnings, errors and unrelated logs remain durable;
-- polling frequency/backend processing is unchanged.
+## Revision-3 source state
+- `src/renderer/js/pipeline1-run-ux.js` now installs a narrow observer on `#log-output`.
+- Entries explicitly marked `[P1]`, `[ASR]`, `[AI]`, `[TTS]`, `[Voice]`, or `[VoiceSub]` are removed from the Step 2/global log after normal logger execution, while their synchronous Step 1 clone remains.
+- Existing P1 retention 2000 and heartbeat cleanup remain unchanged.
+- Existing P2 routine-access cleanup and one-line frame coalescing remain unchanged.
+- `src/renderer/js/app.js` remains net-unchanged.
+- No backend, timer, polling, Prompt Manager, Settings, AI/TTS processing, or P3 changes.
 
 ## Verification
-- GitHub revision source isolation: PASS — `c4d9911c...` changes only `pipeline2-runtime.js`, +7/-4.
-- GitHub patch review: PASS — no timer/polling/backend/manual-region changes.
+- Revision-3 source isolation: PASS — exactly `pipeline1-run-ux.js`, +33/-0.
+- Exact GitHub commit diff review: PASS — narrow marker matcher + observer only.
 - PM logic/scope review: PASS.
 - Exact `node --check` / `git diff --check`: WAITING executable checkout.
-- Owner runtime revision-2 retest: WAITING.
+- Owner runtime revision-3 retest: WAITING.
 
-## Inherited Standard state
-Task 008 Standard functional runtime remains PASS for the corrected configured prompt. `BUG-040` stale product-default prompt remains a separate follow-up.
+## Inherited state
+- Revision 2 P2 access-noise/frame coalescing remains present.
+- Task 008 Standard functional runtime remains PASS for the corrected configured prompt.
+- `BUG-040` Prompt Manager/default-prompt persistence remains separate.
 
 ## Gates
-- Execution: PASS — revision-2 source published.
+- Execution: PASS — revision-3 source published.
 - Automated/static: PARTIAL.
-- Code review: PASS for exact revision patch.
-- Owner manual app verification: WAITING on new HEAD.
-- Documentation synchronization: PARTIAL until bug ledger/QA closeout are updated.
+- Code review: PASS for revision-3 exact source diff.
+- Owner manual app verification: WAITING on latest HEAD.
+- Documentation synchronization: PARTIAL until bug ledger/QA closeout are updated after runtime result.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Owner/test checkout must move to current PR #52 HEAD, restart the app, verify idle log cleanliness and one-line P2 frame progress, while confirming status polling and warning/error visibility remain intact. Do not merge.
+Run exact static checks on latest PR #52 HEAD, then Owner retests P1/P2 log isolation and existing revision-2 behavior. Do not merge.
