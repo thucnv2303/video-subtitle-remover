@@ -90,13 +90,6 @@ function narrationQualityError(phase, model, report) {
   return err;
 }
 
-function semanticRemixError(message, details = {}) {
-  const err = new Error(message);
-  err.code = 'SEMANTIC_REMIX_INVALID';
-  Object.assign(err, details);
-  return err;
-}
-
 function cancelledError() {
   const err = new Error('Pipeline 1 đã được người dùng dừng.');
   err.code = 'P1_CANCELLED';
@@ -344,123 +337,58 @@ function narrationBudget(videoDurationSec, voice, speed) {
 }
 
 function finalSchemaForBudget(budget, videoDurationSec) {
-  const duration = Math.max(1, Number(videoDurationSec) || 1);
+  const duration = Math.max(0, Number(videoDurationSec) || 0);
   const short = duration <= 60;
   const medium = duration <= 180;
-  const listMax = short ? 4 : medium ? 6 : 8;
-  const beatMax = short ? 8 : medium ? 16 : 24;
-  const noteMax = short ? 3 : medium ? 5 : 8;
-  const textMax = short ? 140 : medium ? 190 : 240;
-  const summaryMax = short ? 220 : medium ? 320 : 420;
-  const fieldMax = short ? 120 : medium ? 170 : 220;
-  const storyMax = short ? 180 : medium ? 260 : 340;
-  const maxTargetDuration = Number((duration * 1.15).toFixed(3));
-  const stringArray = (maxItems = listMax) => ({
-    type: 'array',
-    maxItems,
-    items: { type: 'string', maxLength: textMax },
-  });
+  const listMax = short ? 2 : medium ? 4 : 6;
+  const editMax = short ? 3 : medium ? 6 : 10;
+  const noteMax = short ? 2 : medium ? 4 : 6;
+  const textMax = short ? 80 : medium ? 110 : 140;
+  const summaryMax = short ? 140 : medium ? 220 : 300;
+  const shortFieldMax = short ? 70 : medium ? 100 : 120;
+  const emphasisMax = short ? 100 : medium ? 140 : 180;
   return {
     type: 'object',
     additionalProperties: false,
     properties: {
       summary: { type: 'string', maxLength: summaryMax },
-      video_profile: {
+      insights: {
         type: 'object',
         additionalProperties: false,
         properties: {
-          content_type: { type: 'string', maxLength: fieldMax },
-          primary_goal: { type: 'string', maxLength: fieldMax },
-          story_structure: { type: 'string', maxLength: storyMax },
-          visual_style: { type: 'string', maxLength: fieldMax },
-          pacing: { type: 'string', maxLength: fieldMax },
-          strengths: stringArray(),
-          weaknesses: stringArray(),
+          topic: { type: 'string', maxLength: shortFieldMax },
+          product_or_subject: { type: 'string', maxLength: shortFieldMax },
+          audience: { type: 'string', maxLength: shortFieldMax },
+          hook: { type: 'string', maxLength: emphasisMax },
+          benefits: { type: 'array', maxItems: listMax, items: { type: 'string', maxLength: textMax } },
+          evidence: { type: 'array', maxItems: listMax, items: { type: 'string', maxLength: textMax } },
+          cta: { type: 'string', maxLength: emphasisMax },
+          conflicts: { type: 'array', maxItems: listMax, items: { type: 'string', maxLength: textMax } },
         },
-        required: ['content_type', 'primary_goal', 'story_structure', 'visual_style', 'pacing', 'strengths', 'weaknesses'],
-      },
-      product_profile: {
-        type: 'object',
-        additionalProperties: false,
-        properties: {
-          product_or_subject: { type: 'string', maxLength: fieldMax },
-          category: { type: 'string', maxLength: fieldMax },
-          value_proposition: { type: 'string', maxLength: storyMax },
-          features: stringArray(),
-          benefits: stringArray(),
-          proof_points: stringArray(),
-          unknowns: stringArray(),
-        },
-        required: ['product_or_subject', 'category', 'value_proposition', 'features', 'benefits', 'proof_points', 'unknowns'],
-      },
-      customer_profile: {
-        type: 'object',
-        additionalProperties: false,
-        properties: {
-          target_audience: { type: 'string', maxLength: storyMax },
-          pains: stringArray(),
-          desires: stringArray(),
-          objections: stringArray(),
-          awareness_level: { type: 'string', maxLength: fieldMax },
-          buying_motivation: { type: 'string', maxLength: storyMax },
-        },
-        required: ['target_audience', 'pains', 'desires', 'objections', 'awareness_level', 'buying_motivation'],
-      },
-      remix_strategy: {
-        type: 'object',
-        additionalProperties: false,
-        properties: {
-          objective: { type: 'string', maxLength: storyMax },
-          angle: { type: 'string', maxLength: storyMax },
-          hook: { type: 'string', maxLength: storyMax },
-          story_arc: { type: 'string', maxLength: summaryMax },
-          cta: { type: 'string', maxLength: storyMax },
-          target_duration_sec: { type: 'number', exclusiveMinimum: 0, maximum: maxTargetDuration },
-          rationale: { type: 'string', maxLength: summaryMax },
-        },
-        required: ['objective', 'angle', 'hook', 'story_arc', 'cta', 'target_duration_sec', 'rationale'],
-      },
-      remix_beats: {
-        type: 'array',
-        minItems: 1,
-        maxItems: beatMax,
-        items: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            beat_index: { type: 'integer', minimum: 0 },
-            role: { type: 'string', enum: ['hook', 'problem', 'product', 'demo', 'benefit', 'proof', 'transition', 'cta', 'custom'] },
-            message: { type: 'string', maxLength: storyMax },
-            source_scene_indexes: {
-              type: 'array',
-              minItems: 1,
-              maxItems: 6,
-              items: { type: 'integer', minimum: 0 },
-            },
-            edit_action: { type: 'string', enum: ['keep', 'trim', 'reorder', 'montage'] },
-            target_duration_sec: { type: 'number', exclusiveMinimum: 0, maximum: maxTargetDuration },
-            reason: { type: 'string', maxLength: storyMax },
-          },
-          required: ['beat_index', 'role', 'message', 'source_scene_indexes', 'edit_action', 'target_duration_sec', 'reason'],
-        },
+        required: ['topic', 'product_or_subject', 'audience', 'hook', 'benefits', 'evidence', 'cta', 'conflicts'],
       },
       narration_script: {
         type: 'string',
         minLength: 1,
         maxLength: Math.max(1, Math.floor(Number(budget?.max_chars) || 1)),
       },
+      edit_plan: {
+        type: 'array',
+        maxItems: editMax,
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            scene_index: { type: 'integer' },
+            action: { type: 'string', enum: ['keep', 'trim', 'reorder'] },
+            reason: { type: 'string', maxLength: textMax },
+          },
+          required: ['scene_index', 'action', 'reason'],
+        },
+      },
       edit_notes: { type: 'array', maxItems: noteMax, items: { type: 'string', maxLength: textMax } },
     },
-    required: [
-      'summary',
-      'video_profile',
-      'product_profile',
-      'customer_profile',
-      'remix_strategy',
-      'remix_beats',
-      'narration_script',
-      'edit_notes',
-    ],
+    required: ['summary', 'insights', 'narration_script', 'edit_plan', 'edit_notes'],
   };
 }
 
@@ -484,8 +412,8 @@ function narrationRepairSchemaForBudget(budget) {
 function reasoningTokenBudget(targetChars, videoDurationSec) {
   const narrationTokens = Math.ceil(Math.max(1, Number(targetChars) || 1) / 1.6);
   const duration = Math.max(0, Number(videoDurationSec) || 0);
-  const metadataAllowance = duration <= 60 ? 900 : duration <= 180 ? 1500 : 2200;
-  return Math.max(1100, Math.min(5200, narrationTokens + metadataAllowance));
+  const metadataAllowance = duration <= 60 ? 320 : duration <= 180 ? 520 : 800;
+  return Math.max(520, Math.min(4200, narrationTokens + metadataAllowance));
 }
 
 function narrationOnlyTokenBudget(targetChars) {
@@ -508,80 +436,27 @@ function visionTokenBudget(frameCount) {
 function outputContractPrompt(userPrompt, videoInfo, frameMeta, budget) {
   const duration = Number(videoInfo?.duration || 0).toFixed(2);
   const frameCount = Array.isArray(frameMeta) ? frameMeta.length : 0;
-  return `Bạn là bộ SEMANTIC REMIX REASONING cuối của Pipeline 1. Output protocol hệ thống có ưu tiên cao hơn format trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH:\n---\n${userPrompt}\n---\n\nDỮ LIỆU NGUỒN/VOICE:\n- Video nguồn: ${duration}s.\n- Voice đã chọn: ${budget.voice}.\n- Tốc độ đọc đã chọn: ${budget.speed.toFixed(2)}x.\n- Nếu giữ gần toàn timeline nguồn thì tham chiếu voice khoảng ${budget.min_chars}-${budget.max_chars} ký tự; đây chỉ là THAM CHIẾU/CEILING, KHÔNG phải mục tiêu bắt buộc.\n- Visual sampling: ${frameCount} keyframe đã được Vision rút gọn thành scene evidence theo timeline.\n\nMỤC TIÊU SẢN PHẨM BẮT BUỘC:\n- Đây KHÔNG phải tác vụ dịch transcript hoặc tóm tắt lời thoại cho có nghĩa.\n- Phải kết hợp FULL TRANSCRIPT có timestamp + scene evidence trực quan để hiểu video trước, sau đó mới viết kịch bản mới.\n- Thứ tự suy luận bắt buộc: video_profile -> product_profile -> customer_profile -> remix_strategy -> remix_beats -> narration_script.\n- video_profile phải cho biết video hiện tại đang kể gì, mục tiêu gì, cấu trúc/pacing/style và điểm mạnh/yếu.\n- product_profile phải tách rõ sản phẩm/chủ thể, value proposition, feature/benefit/proof và điều CHƯA biết; không được biến điều chưa biết thành fact.\n- customer_profile phải suy luận khách hàng mục tiêu từ evidence, gồm pain/desire/objection/awareness/motivation; nếu evidence yếu phải diễn đạt thận trọng.\n- remix_strategy phải là một chiến lược mới có angle/hook/story arc/CTA và target_duration_sec CỐ Ý. Target có thể ngắn hơn video nguồn nếu bỏ đoạn lặp/rườm rà. Không được chọn target chỉ vì narration tình cờ ngắn.\n- remix_beats là timeline nội dung mới. Mỗi beat phải tham chiếu ÍT NHẤT một source_scene_indexes có thật trong VISUAL EVIDENCE JSON; tuyệt đối không bịa scene id. Được reorder/montage các cảnh nguồn nếu phục vụ strategy.\n- Mỗi beat phải nói rõ message, role, edit_action, target_duration_sec và reason để Pipeline 3 có thể cắt/reorder sau này.\n- narration_script là MỘT lời thoại tiếng Việt LIỀN MẠCH đọc từ đầu đến cuối; không SRT, không numbering, không bullet, không nhãn Scene, không chia mini-script theo cảnh.\n- Narration phải được VIẾT MỚI theo remix strategy; không được chỉ dịch hoặc paraphrase tuần tự transcript nguồn.\n- Có thể thay đổi thứ tự nhấn mạnh và mô tả hành động/sản phẩm nhìn thấy rõ trong Vision evidence.\n- Mọi claim sản phẩm, số liệu, nguyên liệu, lợi ích, testimonial phải có căn cứ từ transcript hoặc Vision evidence; không bịa chi tiết.\n- Chất lượng ưu tiên hơn số ký tự: không lặp câu, không lặp CTA/kết luận, không filler. Không cần chạm ${budget.min_chars}; tuyệt đối không vượt ${budget.max_chars} ký tự.\n- Chỉ dùng tiếng Việt tự nhiên; không chèn ký tự CJK/Hán/Nhật/Hàn lạc ngữ cảnh.\n- CTA/kết luận chỉ xuất hiện một lần ở cuối nếu phù hợp strategy.\n- Nếu evidence mâu thuẫn, ghi nhận trong profile/unknowns hoặc diễn đạt trung tính thay vì tự quyết định một fact.\n- RESPONSE chỉ là JSON đúng schema hệ thống, không giải thích ngoài JSON.`;
+  return `Bạn là bộ reasoning cuối của Pipeline 1. Output protocol hệ thống có ưu tiên cao hơn format trong prompt người dùng.\n\nMỤC TIÊU/PHONG CÁCH DO NGƯỜI DÙNG CẤU HÌNH:\n---\n${userPrompt}\n---\n\nDỮ LIỆU THỜI LƯỢNG/VOICE:\n- Video nguồn: ${duration}s.\n- Voice đã chọn: ${budget.voice}.\n- Tốc độ đọc đã chọn: ${budget.speed.toFixed(2)}x.\n- Target dự thảo lời thoại: ${budget.min_chars}-${budget.max_chars} ký tự, ưu tiên khoảng ${budget.target_chars} ký tự.\n- Visual sampling: ${frameCount} keyframe đã được Vision rút gọn thành evidence theo chunk.\n\nYÊU CẦU BẮT BUỘC:\n- Dùng transcript toàn video và visual evidence theo timeline.\n- Vision chunks đã tạo scene evidence; KHÔNG tạo lại danh sách scenes trong output cuối.\n- narration_script là MỘT lời thoại tiếng Việt LIỀN MẠCH đọc từ đầu đến cuối; không SRT, không numbering, không bullet, không nhãn Scene, không chia mini-script theo cảnh.\n- Ưu tiên narration_script gần ${budget.target_chars} ký tự và KHÔNG vượt ${budget.max_chars}; không được nhồi chữ để chạm min.\n- Chất lượng ưu tiên hơn số ký tự: không lặp câu, không lặp CTA/kết luận, không kéo dài bằng filler; nếu draft tự nhiên ngắn hơn ${budget.min_chars}, Standard pre-TTS guard sẽ recompose bằng full transcript + Vision evidence trước TTS.\n- Chỉ dùng tiếng Việt tự nhiên; không chèn ký tự CJK/Hán/Nhật/Hàn lạc ngữ cảnh.\n- Giữ nhất quán tên chủ thể, sản phẩm, nguyên liệu và đối tượng xuyên suốt narration; nếu evidence mâu thuẫn, dùng cách diễn đạt trung tính thay vì tự bịa chi tiết.\n- Không bịa claim hoặc chi tiết không có căn cứ từ transcript/visual evidence.\n- CTA/kết luận chỉ xuất hiện một lần ở cuối nếu phù hợp nội dung.\n- Metadata phụ phải cực ngắn: summary súc tích, insights chỉ giữ điểm quan trọng nhất, edit_plan/edit_notes không kể lại transcript/evidence.\n- Ưu tiên hoàn tất narration_script + JSON đúng schema trước mọi metadata phụ.\n- RESPONSE chỉ là JSON đúng schema hệ thống, không giải thích ngoài JSON.`;
 }
 
-function canonicalizeSceneInventory(chunkAnalyses, videoDurationSec) {
-  const duration = Math.max(0.001, Number(videoDurationSec) || 0.001);
-  const raw = [];
-  (Array.isArray(chunkAnalyses) ? chunkAnalyses : []).forEach((chunk, chunkIndex) => {
+function compactReasoningContext(chunkAnalyses) {
+  return (Array.isArray(chunkAnalyses) ? chunkAnalyses : []).map(chunk => {
     const analysis = chunk?.analysis || {};
-    const scenes = Array.isArray(analysis.scenes) ? analysis.scenes : [];
-    scenes.forEach((scene, sceneIndex) => {
-      const rawTime = Number(scene?.time_sec);
-      const fallbackStart = Number(chunk?.start_sec) || 0;
-      const fallbackEnd = Math.max(fallbackStart, Number(chunk?.end_sec) || fallbackStart);
-      const fallbackRatio = scenes.length <= 1 ? 0.5 : sceneIndex / Math.max(1, scenes.length - 1);
-      const fallbackTime = fallbackStart + (fallbackEnd - fallbackStart) * fallbackRatio;
-      const timeSec = Math.max(0, Math.min(duration, Number.isFinite(rawTime) ? rawTime : fallbackTime));
-      raw.push({
-        chunk_index: Number.isFinite(Number(chunk?.index)) ? Number(chunk.index) : chunkIndex,
-        time_sec: Number(timeSec.toFixed(3)),
-        visual: compactField(scene?.visual, 240),
-        speech_context: compactField(scene?.speech_context, 220),
-        purpose: compactField(scene?.purpose, 180),
-      });
-    });
-  });
-
-  raw.sort((left, right) => left.time_sec - right.time_sec || left.chunk_index - right.chunk_index);
-  return raw.map((scene, index) => {
-    const previous = raw[index - 1];
-    const next = raw[index + 1];
-    const start = index === 0
-      ? 0
-      : Math.max(0, Math.min(scene.time_sec, (previous.time_sec + scene.time_sec) / 2));
-    const estimatedEnd = index === raw.length - 1
-      ? duration
-      : Math.min(duration, Math.max(scene.time_sec, (scene.time_sec + next.time_sec) / 2));
-    const end = Math.min(duration, Math.max(start + 0.05, estimatedEnd));
-    return {
-      index,
-      ...scene,
-      start_sec: Number(start.toFixed(3)),
-      end_sec: Number(end.toFixed(3)),
-    };
-  });
-}
-
-function compactReasoningContext(chunkAnalyses, sceneInventory = []) {
-  const chunks = (Array.isArray(chunkAnalyses) ? chunkAnalyses : []).map(chunk => {
-    const analysis = chunk?.analysis || {};
+    const scenes = (Array.isArray(analysis.scenes) ? analysis.scenes : []).slice(0, MAX_FRAMES_PER_CHUNK).map(scene => ({
+      time_sec: Number(scene?.time_sec) || 0,
+      visual: compactField(scene?.visual, 120),
+      purpose: compactField(scene?.purpose, 90),
+    }));
     return {
       index: Number(chunk?.index) || 0,
       start_sec: Number(chunk?.start_sec) || 0,
       end_sec: Number(chunk?.end_sec) || 0,
-      summary: compactField(analysis.summary, 220),
-      visual_evidence: (Array.isArray(analysis.visual_evidence) ? analysis.visual_evidence : []).slice(0, 6).map(item => compactField(item, 180)),
-      conflicts: (Array.isArray(analysis.conflicts) ? analysis.conflicts : []).slice(0, 4).map(item => compactField(item, 180)),
+      summary: compactField(analysis.summary, 160),
+      scenes,
+      visual_evidence: (Array.isArray(analysis.visual_evidence) ? analysis.visual_evidence : []).slice(0, 4).map(item => compactField(item, 120)),
+      conflicts: (Array.isArray(analysis.conflicts) ? analysis.conflicts : []).slice(0, 2).map(item => compactField(item, 120)),
     };
   });
-  const scenes = (Array.isArray(sceneInventory) ? sceneInventory : []).slice(0, 80).map(scene => ({
-    index: Number(scene?.index) || 0,
-    chunk_index: Number(scene?.chunk_index) || 0,
-    start_sec: Number(scene?.start_sec) || 0,
-    end_sec: Number(scene?.end_sec) || 0,
-    time_sec: Number(scene?.time_sec) || 0,
-    visual: compactField(scene?.visual, 220),
-    speech_context: compactField(scene?.speech_context, 180),
-    purpose: compactField(scene?.purpose, 150),
-  }));
-  return {
-    chunks,
-    scenes,
-    visual_evidence: chunks.flatMap(chunk => chunk.visual_evidence).slice(0, 24),
-    conflicts: chunks.flatMap(chunk => chunk.conflicts).slice(0, 12),
-  };
 }
 
 function assertNarrationWithinBudget(value, budget, phase, model) {
@@ -607,84 +482,6 @@ function assertNarrationQuality(value, phase, model) {
   const report = narrationQualityReport(narration);
   if (!report.ok) throw narrationQualityError(phase, model, report);
   return { narration, report };
-}
-
-function assertSemanticRemixPlan(value, scenes, videoDurationSec, phase, model) {
-  const fail = (message, details = {}) => {
-    throw semanticRemixError(`${phase} / ${model}: ${message}`, { phase, model, ...details });
-  };
-  if (!value || typeof value !== 'object') fail('semantic remix output rỗng hoặc sai kiểu.');
-
-  const requiredObjects = ['video_profile', 'product_profile', 'customer_profile', 'remix_strategy'];
-  for (const field of requiredObjects) {
-    if (!value[field] || typeof value[field] !== 'object' || Array.isArray(value[field])) {
-      fail(`thiếu ${field}.`, { field });
-    }
-  }
-
-  const sourceDuration = Math.max(0.001, Number(videoDurationSec) || 0.001);
-  const targetDuration = Number(value.remix_strategy?.target_duration_sec);
-  if (!(targetDuration > 0)) fail('remix_strategy.target_duration_sec phải > 0.', { field: 'remix_strategy.target_duration_sec' });
-  if (targetDuration > sourceDuration * 1.15) {
-    fail(`target remix ${targetDuration.toFixed(2)}s vượt quá giới hạn an toàn 115% source ${sourceDuration.toFixed(2)}s.`, {
-      targetDuration,
-      sourceDuration,
-    });
-  }
-
-  const sceneIds = new Set((Array.isArray(scenes) ? scenes : []).map(scene => Number(scene?.index)).filter(Number.isInteger));
-  if (!sceneIds.size) fail('không có canonical source scene để map remix beats.');
-
-  const beats = Array.isArray(value.remix_beats) ? value.remix_beats : [];
-  if (!beats.length) fail('remix_beats rỗng.');
-  const validRoles = new Set(['hook', 'problem', 'product', 'demo', 'benefit', 'proof', 'transition', 'cta', 'custom']);
-  const validActions = new Set(['keep', 'trim', 'reorder', 'montage']);
-  const seenBeatIndexes = new Set();
-  const referencedSceneIds = new Set();
-  let summedBeatDuration = 0;
-
-  const normalizedBeats = beats.map((beat, arrayIndex) => {
-    const beatIndex = Number(beat?.beat_index);
-    if (!Number.isInteger(beatIndex) || beatIndex < 0) fail(`beat ${arrayIndex} có beat_index không hợp lệ.`, { beatIndex });
-    if (seenBeatIndexes.has(beatIndex)) fail(`beat_index ${beatIndex} bị trùng.`, { beatIndex });
-    seenBeatIndexes.add(beatIndex);
-
-    const role = String(beat?.role || '').trim();
-    if (!validRoles.has(role)) fail(`beat ${beatIndex} có role không hợp lệ: ${role || '(empty)'}.`, { beatIndex, role });
-    const action = String(beat?.edit_action || '').trim();
-    if (!validActions.has(action)) fail(`beat ${beatIndex} có edit_action không hợp lệ: ${action || '(empty)'}.`, { beatIndex, action });
-
-    const sourceSceneIndexes = [...new Set((Array.isArray(beat?.source_scene_indexes) ? beat.source_scene_indexes : [])
-      .map(Number)
-      .filter(Number.isInteger))];
-    if (!sourceSceneIndexes.length) fail(`beat ${beatIndex} không tham chiếu source scene.`, { beatIndex });
-    for (const sceneIndex of sourceSceneIndexes) {
-      if (!sceneIds.has(sceneIndex)) fail(`beat ${beatIndex} tham chiếu scene ${sceneIndex} không tồn tại.`, { beatIndex, sceneIndex });
-      referencedSceneIds.add(sceneIndex);
-    }
-
-    const beatDuration = Number(beat?.target_duration_sec);
-    if (!(beatDuration > 0)) fail(`beat ${beatIndex} có target_duration_sec không hợp lệ.`, { beatIndex, beatDuration });
-    summedBeatDuration += beatDuration;
-    return {
-      ...beat,
-      beat_index: beatIndex,
-      role,
-      edit_action: action,
-      source_scene_indexes: sourceSceneIndexes,
-      target_duration_sec: Number(beatDuration.toFixed(3)),
-    };
-  }).sort((left, right) => left.beat_index - right.beat_index);
-
-  value.remix_strategy.target_duration_sec = Number(targetDuration.toFixed(3));
-  value.remix_beats = normalizedBeats;
-  value.semantic_coverage = {
-    source_scene_count: sceneIds.size,
-    referenced_scene_count: referencedSceneIds.size,
-    beat_count: normalizedBeats.length,
-    summed_beat_duration_sec: Number(summedBeatDuration.toFixed(3)),
-  };
-  return value;
 }
 
 function bytesToGiB(value) {
@@ -864,10 +661,10 @@ function parseStructuredResult(result, phase, model, limit) {
   }
 }
 
-function parseFinalReasoningResult(result, phase, model, limit, budget, sceneInventory, videoDurationSec) {
+function parseFinalReasoningResult(result, phase, model, limit, budget) {
   const parsed = parseStructuredResult(result, phase, model, limit);
   parsed.narration_script = assertNarrationWithinDraftBudget(parsed?.narration_script, budget, phase, model);
-  return assertSemanticRemixPlan(parsed, sceneInventory, videoDurationSec, phase, model);
+  return parsed;
 }
 
 async function repairNarrationQuality(net, endpoint, model, narration, budget, event, runController, options = {}) {
@@ -921,7 +718,6 @@ async function runReasoningWithOneRepair(net, endpoint, model, systemPrompt, tra
   const primaryLimit = reasoningTokenBudget(budget.target_chars, videoDurationSec);
   const timeoutMs = reasoningTimeoutMs(videoDurationSec);
   const format = finalSchemaForBudget(budget, videoDurationSec);
-  const sceneInventory = Array.isArray(visualContext?.scenes) ? visualContext.scenes : [];
   const messages = [
     { role: 'system', content: systemPrompt },
     { role: 'user', content: `TRANSCRIPT SRT TOÀN VIDEO:\n${transcript}\n\nVISUAL EVIDENCE JSON ĐÃ RÚT GỌN:\n${JSON.stringify(visualContext)}` },
@@ -935,11 +731,11 @@ async function runReasoningWithOneRepair(net, endpoint, model, systemPrompt, tra
       numPredict: primaryLimit,
       runController,
     });
-    return parseFinalReasoningResult(result, 'Global reasoning/remix', model, primaryLimit, budget, sceneInventory, videoDurationSec);
+    return parseFinalReasoningResult(result, 'Global reasoning/remix', model, primaryLimit, budget);
   } catch (err) {
-    if (!['OLLAMA_OUTPUT_TRUNCATED', 'OLLAMA_JSON_INVALID', 'NARRATION_LENGTH_OUT_OF_BUDGET', 'SEMANTIC_REMIX_INVALID'].includes(err?.code) || runController.signal.aborted) throw err;
-    emitProgress(event, `Global reasoning/remix: output chưa đạt semantic contract (${err.code}); thử lại đúng 1 lần.`, 'warning');
-    const repairPrompt = `${systemPrompt}\n\nLẦN THỬ LẠI BẮT BUỘC:\n- Chỉ trả JSON hợp lệ đúng schema semantic-remix.\n- Phải có đủ video_profile, product_profile, customer_profile, remix_strategy, remix_beats, narration_script.\n- Mỗi remix beat phải tham chiếu source_scene_indexes có thật trong VISUAL EVIDENCE JSON; không bịa scene id.\n- target_duration_sec phải là quyết định remix có rationale, không phải lấy độ dài narration hiện tại làm lý do.\n- narration_script phải là kịch bản mới theo strategy, không dịch/paraphrase tuần tự transcript.\n- Không lặp câu/CTA/filler; không CJK lạc ngữ cảnh; không bịa fact.\n- Narration không được vượt ${budget.max_chars} ký tự; không bắt buộc chạm ${budget.min_chars}.`;
+    if (!['OLLAMA_OUTPUT_TRUNCATED', 'OLLAMA_JSON_INVALID', 'NARRATION_LENGTH_OUT_OF_BUDGET'].includes(err?.code) || runController.signal.aborted) throw err;
+    emitProgress(event, `Global reasoning/remix: output chưa đạt contract (${err.code}); thử lại đúng 1 lần với JSON tối giản.`, 'warning');
+    const repairPrompt = `${systemPrompt}\n\nLẦN THỬ LẠI BẮT BUỘC:\n- Chỉ trả JSON hợp lệ đúng schema.\n- narration_script ưu tiên gần ${budget.target_chars} ký tự nhưng không được vượt ${budget.max_chars}.\n- Nếu draft chưa đạt ${budget.min_chars}, Standard pre-TTS guard sẽ recompose bằng full transcript + Vision evidence trước TTS; không lặp câu, CTA, kết luận hoặc filler để chạm min.\n- Chỉ tiếng Việt tự nhiên; không CJK lạc ngữ cảnh; giữ nhất quán tên chủ thể/nguyên liệu.\n- Ưu tiên narration_script; mọi metadata còn lại phải ngắn nhất có thể.\n- Không lặp transcript hoặc visual evidence.`;
     const repaired = await chatStream(net, endpoint, model, [
       { role: 'system', content: repairPrompt },
       { role: 'user', content: `TRANSCRIPT SRT TOÀN VIDEO:\n${transcript}\n\nVISUAL EVIDENCE JSON ĐÃ RÚT GỌN:\n${JSON.stringify(visualContext)}` },
@@ -951,7 +747,7 @@ async function runReasoningWithOneRepair(net, endpoint, model, systemPrompt, tra
       numPredict: primaryLimit,
       runController,
     });
-    return parseFinalReasoningResult(repaired, 'Global reasoning/remix retry', model, primaryLimit, budget, sceneInventory, videoDurationSec);
+    return parseFinalReasoningResult(repaired, 'Global reasoning/remix retry', model, primaryLimit, budget);
   }
 }
 
@@ -1303,10 +1099,6 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       const chunkAnalyses = await analyzeVisionChunks(net, payload.endpoint, vision.model, chunks, event, runController);
       if (runController.signal.aborted) throw cancelledError();
 
-      const visualScenes = canonicalizeSceneInventory(chunkAnalyses, videoDurationSec);
-      if (!visualScenes.length) throw semanticRemixError('Vision không tạo được canonical scene inventory.', { phase: 'Semantic scene inventory', model: vision.model });
-      emitProgress(event, `Semantic scene inventory: ${visualScenes.length} scene có global index + source window.`, 'success');
-
       if (vision.model !== model) {
         await unloadModel(net, payload.endpoint, vision.model, event);
         if (runController.signal.aborted) throw cancelledError();
@@ -1314,9 +1106,9 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
 
       const timeoutMs = reasoningTimeoutMs(videoDurationSec);
       const outputLimit = reasoningTokenBudget(budget.target_chars, videoDurationSec);
-      const reasoningContext = compactReasoningContext(chunkAnalyses, visualScenes);
-      emitProgress(event, `Semantic remix budget: source=${videoDurationSec.toFixed(2)}s; voice=${budget.voice}; speed=${budget.speed.toFixed(2)}x; source_reference_chars=${budget.min_chars}-${budget.max_chars}; reasoning_timeout=${Math.round(timeoutMs / 1000)}s; output_limit=${outputLimit} token.`, 'info');
-      emitProgress(event, `Đã hoàn tất ${chunkAnalyses.length} Vision chunk. Chuyển sang semantic remix reasoning model ${model}.`, 'success');
+      const reasoningContext = compactReasoningContext(chunkAnalyses);
+      emitProgress(event, `Voice-aware narration budget: video=${videoDurationSec.toFixed(2)}s; voice=${budget.voice}; speed=${budget.speed.toFixed(2)}x; soft_target=${budget.min_chars}-${budget.max_chars} chars; reasoning_timeout=${Math.round(timeoutMs / 1000)}s; output_limit=${outputLimit} token.`, 'info');
+      emitProgress(event, `Đã hoàn tất ${chunkAnalyses.length} Vision chunk. Chuyển sang compact global reasoning model ${model}.`, 'success');
       const systemPrompt = outputContractPrompt(prompt, payload.video_info, allFrameMeta, budget);
       const finalAnalysis = await runReasoningWithOneRepair(
         net,
@@ -1333,32 +1125,38 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
       if (runController.signal.aborted) throw cancelledError();
 
       finalAnalysis.narration_script = assertNarrationWithinDraftBudget(finalAnalysis.narration_script, budget, 'Global reasoning/remix', model);
-      const quality = await repairNarrationQuality(net, payload.endpoint, model, finalAnalysis.narration_script, budget, event, runController, {
-        phase: 'Narration quality',
-        requireFullBudget: false,
+      const draftQuality = narrationQualityReport(finalAnalysis.narration_script);
+      const underMin = finalAnalysis.narration_script.length < budget.min_chars;
+      let quality;
+      if (underMin) {
+        quality = {
+          narration: finalAnalysis.narration_script,
+          report: draftQuality,
+          repaired: false,
+          deferred_to_standard_pre_tts_guard: true,
+        };
+        emitProgress(
+          event,
+          `Narration draft: ${finalAnalysis.narration_script.length} ký tự dưới target ${budget.min_chars}-${budget.max_chars}; quality=${qualitySummary(draftQuality)}. Hoãn quality repair riêng để Standard pre-TTS guard recompose một lần bằng full transcript + Vision evidence.`,
+          draftQuality.ok ? 'info' : 'warning'
+        );
+      } else {
+        quality = await repairNarrationQuality(net, payload.endpoint, model, finalAnalysis.narration_script, budget, event, runController, {
+          phase: 'Narration quality',
+          requireFullBudget: false,
+        });
+        finalAnalysis.narration_script = quality.narration;
+      }
+      const visualScenes = chunkAnalyses.flatMap((chunk, chunkIndex) => {
+        const scenes = Array.isArray(chunk?.analysis?.scenes) ? chunk.analysis.scenes : [];
+        return scenes.map((scene, sceneIndex) => ({
+          ...scene,
+          index: Number.isFinite(Number(scene?.index)) ? Number(scene.index) : sceneIndex,
+          chunk_index: chunkIndex,
+        }));
       });
-      finalAnalysis.narration_script = quality.narration;
       finalAnalysis.scenes = visualScenes;
-      finalAnalysis.insights = {
-        topic: finalAnalysis.video_profile?.content_type || finalAnalysis.summary || '',
-        product_or_subject: finalAnalysis.product_profile?.product_or_subject || '',
-        audience: finalAnalysis.customer_profile?.target_audience || '',
-        hook: finalAnalysis.remix_strategy?.hook || '',
-        benefits: Array.isArray(finalAnalysis.product_profile?.benefits) ? finalAnalysis.product_profile.benefits : [],
-        evidence: Array.isArray(finalAnalysis.product_profile?.proof_points) ? finalAnalysis.product_profile.proof_points : [],
-        cta: finalAnalysis.remix_strategy?.cta || '',
-        conflicts: Array.isArray(reasoningContext.conflicts) ? reasoningContext.conflicts : [],
-      };
-      finalAnalysis.edit_plan = finalAnalysis.remix_beats.map(beat => ({
-        scene_index: beat.source_scene_indexes[0],
-        action: beat.edit_action === 'montage' ? 'reorder' : beat.edit_action,
-        reason: beat.reason,
-      }));
-      emitProgress(
-        event,
-        `Semantic remix PASS: target=${Number(finalAnalysis.remix_strategy.target_duration_sec).toFixed(1)}s; beats=${finalAnalysis.remix_beats.length}; scenes_used=${finalAnalysis.semantic_coverage?.referenced_scene_count || 0}/${visualScenes.length}; narration=${finalAnalysis.narration_script.length} chars; quality_repaired=${quality.repaired ? 'yes' : 'no'}.`,
-        'success'
-      );
+      emitProgress(event, `Narration draft: ${finalAnalysis.narration_script.length} ký tự; soft_target=${budget.min_chars}-${budget.max_chars}; quality_repaired=${quality.repaired ? 'yes' : 'no'}; pre_tts_deferred=${quality.deferred_to_standard_pre_tts_guard ? 'yes' : 'no'}.`, 'success');
 
       const fingerprint = await sha256File(videoPath);
       return {
@@ -1367,7 +1165,6 @@ module.exports = function registerP1VisionIPC({ ipcMain, net }) {
         visual_chunks: chunkAnalyses,
         narration_budget: budget,
         narration_quality: quality.report,
-        semantic_target_duration_sec: Number(finalAnalysis.remix_strategy.target_duration_sec) || 0,
         source_fingerprint: fingerprint,
         vision_model: vision.model,
         reasoning_model: model,
@@ -1408,7 +1205,5 @@ module.exports.__test = {
   assertNarrationWithinDraftBudget,
   narrationQualityReport,
   assertNarrationQuality,
-  canonicalizeSceneInventory,
   compactReasoningContext,
-  assertSemanticRemixPlan,
 };

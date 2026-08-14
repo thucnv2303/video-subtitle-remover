@@ -1,82 +1,103 @@
 # QA Checklist
 
 ## Active task
-`PIPELINE1-CONTINUOUS-NARRATION-006 — BUG-034 P1/P3 Duration Responsibility Redesign`
+`PIPELINE1-SEMANTIC-REMIX-007 — Optional Semantic Remix with Standard Script Default`
 
 ## Review basis
-- [x] Active branch `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
-- [x] Draft PR #47 targets `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005`.
-- [x] Base SHA `68c750524f9604b7799d97a2b5604d87368f889c`.
-- [x] BUG-034 approved spec `c046adca8394652cae94fb47821ac8927cb62f74`.
-- [x] P1 source `97a8e31350b9a0ff40d93207d3de8164b98b458a`.
-- [x] P3 source `55faf3e734120edec93ba22798599eaf16b6be13`.
-- [x] Source compare from spec head changes exactly two files: P1 AI + P3 finalize.
-- [x] PM review `4912891690` PASS logic/scope only.
-- [x] No P2/STTN/backend/TTS-engine/dependency source changes in BUG-034.
+- [x] Branch `review/PIPELINE1-SEMANTIC-REMIX-007`.
+- [x] Draft PR #48.
+- [x] Base `9981da334ca10fd845c971241d541894d736c13b`.
+- [x] D-016 requires Standard to use full ASR + Vision + source duration + selected voice/speed to build grounded near-timeline narration before TTS.
+- [x] BUG-037 records the latest underfilled+CJK ordering failure.
+- [x] Prior candidate-retention correction: `0fb72b4f421891a20b6574564f90886f6a108356`.
+- [x] Latest pre-TTS ordering correction: `c8fecb95164c39fe82cddf24711ccfc3386d23c6`.
+- [x] No P2/P3/TTS-engine/dependency change in the latest correction.
 
-## Owner failure evidence
-- [x] 97.57s source / 25 adaptive keyframes / 4 Vision chunks.
-- [x] Global reasoning 38.8s produced quality-clean 613-char narration.
-- [x] Full-text TTS pass 1 measured 35.91s = 36.8%.
-- [x] Prior controller launched a second evidence-fit toward 1582–1666 chars.
-- [x] Second qwen request timed out at 150s and failed the Job.
-- [x] Product diagnosis: hard original-video occupancy is the wrong P1 completion gate.
+## Mode routing invariants
+- [x] Standard remains default / Semantic Remix OFF.
+- [x] Semantic remains explicit opt-in.
+- [x] Per-Job mode snapshot remains unchanged.
+- [x] Standard and Semantic continue to use isolated analysis IPC paths.
+- [x] Semantic BUG-036 validation behavior is unchanged.
 
-## BUG-034 source logic review
-### P1
-- [x] Normal successful P1 path no longer calls evidence-fit for duration occupancy.
-- [x] Normal successful P1 path no longer calls a second TTS solely for occupancy.
-- [x] P1 underlength is non-blocking.
-- [x] P1 duration outside 90–110% logs warning telemetry.
-- [x] P1 blocks only pathological overlength above 150% measured ratio.
-- [x] P1 continuous narration remains one full-text TTS artifact.
-- [x] Same-session late retry can reuse valid analysis/TTS checkpoint.
-- [x] Legacy `DURATION_CONTROL` checkpoint remains compatible while new checkpoint purpose is `TTS_FINALIZE`.
+## Latest Standard failure — verified runtime
+Owner run on the prior PR #48 flow proved:
+- [x] source duration ~97.57s;
+- [x] voice-aware Standard budget 1529-1610 chars;
+- [x] Vision + global reasoning completed;
+- [x] draft quality detected `CJK_CHARACTERS`;
+- [x] standalone `Narration quality` repair failed `CJK_CHARACTERS`;
+- [x] grounded Standard pre-TTS recompose was never reached;
+- [x] TTS did not run.
 
-### P3
-- [x] P3 no longer calls `adjustVideoTempo()` for voice matching.
-- [x] P3 probes the actual video used for final mixing.
-- [x] Ratio <0.90 keeps natural P1 voice.
-- [x] Ratio 0.90–1.15 may use pitch-preserving derived voice.
-- [x] Ratio >1.15 blocks automatic stretch.
-- [x] Derived voice is written under sibling `p3/voice.wav`, not over P1 voice.
-- [x] Derived subtitle timing is scaled to measured adjusted duration and written as `p3/tts_timed.srt`.
-- [x] Final burn uses the derived timing when voice was adjusted.
+## Verified root cause
+- [x] Under-min draft quality repair ran inside `p1-standard-vision-ipc.js` before analysis returned to the wrapper.
+- [x] That standalone repair did not own the full transcript + Vision grounded recomposition responsibility.
+- [x] Therefore quality failure could terminate Standard before D-016 duration/quality recompose.
+- [x] Global prompt still implied underfill could be addressed later, conflicting with the accepted pre-TTS policy.
 
-## Exact static checks — BLOCKING
-- [ ] `git rev-parse HEAD` equals exact final review head.
-- [ ] `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
-- [ ] `node --check src/renderer/js/pipelines/pipeline3-finalize.js`.
-- [ ] Recommended regression syntax: `node --check src/main/p1-vision-ipc.js` and `node --check src/renderer/js/pipeline1-analysis.js`.
-- [ ] `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
-- [ ] GitHub CI/status: none configured; absence is not CI PASS.
+## Corrected source contract — `c8fecb95...`
+- [x] Under-min Standard drafts do not run the standalone quality-repair request first.
+- [x] Deterministic draft quality is still evaluated and returned.
+- [x] Under-min draft reaches `p1-standard-vision-wrapper.js`.
+- [x] Existing wrapper recompose receives the draft, full transcript and accumulated Vision evidence.
+- [x] Hard Standard narration range remains mandatory before TTS.
+- [x] CJK/repetition quality checks remain mandatory before TTS.
+- [x] Prior retry candidate-retention behavior remains in place.
+- [x] Global prompt now states under-min drafts are recomposed by the Standard pre-TTS guard before TTS.
+- [x] No post-TTS duration-repair loop was introduced.
+- [x] Semantic, P2, P3 and TTS engine are unchanged.
 
-## Fresh Owner P1 runtime — BLOCKING
-- [ ] Re-run same/equivalent 97.57s video on exact final head.
-- [ ] Vision/global reasoning completes and narration quality gate remains clean.
-- [ ] Exactly one normal full-text TTS request is made.
-- [ ] P1 logs `P1 duration telemetry` with source duration, voice duration and ratio.
-- [ ] For a ~36.8% voice, P1 logs warning but DOES NOT emit `Narration evidence-fit`.
-- [ ] Underlength alone does not fail P1 or block P2 readiness.
-- [ ] P1 artifacts include valid `voice.wav` and `tts_timed.srt`.
-- [ ] A deliberately pathological >150% voice is blocked if a practical fixture is available.
+## Static verification — BLOCKING
+Run on the final PR head:
+- [ ] `git rev-parse HEAD` equals the exact PR #48 head.
+- [ ] `node --check src/main/p1-standard-vision-ipc.js`.
+- [ ] `node --check src/main/p1-standard-vision-wrapper.js`.
+- [ ] `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`.
+- [ ] No unexpected application file changed after `c8fecb95...`.
 
-## Owner P3 runtime/listening — BLOCKING
-- [ ] Ratio <0.90: voice remains natural; no P3 voice stretch; video duration/playback speed unchanged.
-- [ ] Ratio around 0.90: derived voice path works and remains listenable.
-- [ ] Ratio around 1.00: no unnecessary adjustment.
-- [ ] Ratio around 1.10–1.15: derived voice remains intelligible/natural enough for Owner acceptance.
-- [ ] Ratio >1.15: P3 explicitly refuses automatic stretch; no silent distortion.
-- [ ] When adjusted, P3 creates `p3/voice.wav` and does not alter P1 `voice.wav`.
-- [ ] When adjusted, P3 creates/rescales `p3/tts_timed.srt` and burned subtitle follows adjusted voice.
-- [ ] P3 does not create/use `_tempo.mp4` for voice matching.
-- [ ] Final video uses P2 clean video pacing by default.
+PM container currently cannot resolve GitHub, therefore local exact-head static evidence must come from the Owner worktree. Automated/static remains WAITING until command output is supplied.
 
-## Regression coverage
-- [ ] Second queued P1 Job still auto-advances after first Job failure/success.
-- [ ] Manual Job browsing remains usable.
-- [ ] No segmented `/api/tts-retry` narration path reappears.
-- [ ] P2 subtitle-removal behavior unchanged.
+## Owner manual run A — Standard/default OFF
+Run only after all static commands PASS.
+- [ ] exact `git rev-parse HEAD` matches PR #48 head;
+- [ ] Semantic Remix OFF/default;
+- [ ] `ScriptMode=standard`;
+- [ ] ASR/Vision/global reasoning completes;
+- [ ] if narration is under-min, log indicates standalone quality repair is deferred to Standard pre-TTS guard;
+- [ ] grounded Standard recompose starts before TTS using full transcript + Vision evidence;
+- [ ] if first recompose candidate is rejected, retry edits the rejected candidate rather than restarting from original short draft;
+- [ ] final narration is within hard voice-aware range;
+- [ ] final narration passes CJK/repetition quality checks;
+- [ ] Standard duration/pre-TTS guard PASS appears before TTS;
+- [ ] exactly one continuous full-text TTS runs;
+- [ ] accepted narration has no filler/repetition/unsupported claims;
+- [ ] measured voice is materially close to source duration;
+- [ ] Standard v4 artifacts remain valid;
+- [ ] P1->P2 unlock only after valid narration/TTS artifacts.
+
+## Owner manual run B — Semantic ON
+ON HOLD until Standard PASS.
+- [ ] explicitly enable Semantic Remix before Start;
+- [ ] `ScriptMode=semantic-remix`;
+- [ ] strategy/beat duration coherence passes;
+- [ ] scene/action/CTA mappings are grounded;
+- [ ] unsupported claims fail closed;
+- [ ] predicted narration coverage is 70-130% of beat plan;
+- [ ] inspect fresh v4 semantic artifacts if the run passes.
+
+## Queue/regression
+- [ ] failed Standard/Semantic Job does not stop the next queued P1 Job;
+- [ ] manual Job browsing remains independent of processing Job;
+- [ ] queued Jobs retain their snapshotted mode;
+- [ ] no segmented `/api/tts-retry` narration regression;
+- [ ] P2/P3 behavior unchanged.
 
 ## Gates
-Execution PASS for BUG-034 source publication; automated/static WAITING; code review PASS logic/scope (`4912891690`); Owner P1 verification WAITING; Owner P3 listening/runtime WAITING; documentation synchronization PASS after canonical sync; merge BLOCKED.
+- Execution: PASS for source publication.
+- Automated/static: WAITING on final exact-head command output.
+- Code review: WAITING final static confirmation.
+- Owner Standard: FAIL on prior flow; corrected retest WAITING after static PASS.
+- Owner Semantic: ON HOLD until Standard PASS.
+- Documentation synchronization: PASS once dynamic docs/bug ledger/PR body are aligned to the final docs head.
+- Merge: BLOCKED.

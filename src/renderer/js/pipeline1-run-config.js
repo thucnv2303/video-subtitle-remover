@@ -5,6 +5,8 @@ import './pipeline1-run-ux.js';
  * Snapshots the approved UI before the legacy queue handler runs.
  */
 
+const SEMANTIC_REMIX_KEY = 'p1_semantic_remix_enabled';
+
 function _readProviderKeys(provider) {
   try {
     const raw = JSON.parse(localStorage.getItem(`ai_api_keys_${provider}`) || '[]');
@@ -23,6 +25,45 @@ function _resolvePrompt(select) {
   const selected = Array.isArray(prompts) ? prompts.find(item => item?.id === promptId) : null;
   const prompt = selected?.content || localStorage.getItem('ai_prompt') || '';
   return { promptId, prompt: prompt.trim() };
+}
+
+function _semanticRemixEnabled() {
+  return localStorage.getItem(SEMANTIC_REMIX_KEY) === 'true';
+}
+
+function installSemanticRemixControl() {
+  if (document.getElementById('step1-semantic-remix')) return true;
+  const startButton = document.getElementById('btn-start-all');
+  const actionRow = startButton?.parentElement;
+  if (!startButton || !actionRow) return false;
+
+  const group = document.createElement('div');
+  group.id = 'step1-script-mode-group';
+  group.className = 'tk-group';
+  group.style.cssText = 'margin-top:12px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);';
+
+  const row = document.createElement('label');
+  row.style.cssText = 'display:flex;gap:9px;align-items:flex-start;cursor:pointer;';
+
+  const checkbox = document.createElement('input');
+  checkbox.id = 'step1-semantic-remix';
+  checkbox.type = 'checkbox';
+  checkbox.checked = _semanticRemixEnabled();
+  checkbox.style.marginTop = '3px';
+
+  const copy = document.createElement('span');
+  copy.innerHTML = '<strong>Semantic Remix</strong><br><small style="color:var(--text-muted)">Phân tích video / sản phẩm / khách hàng và lập kế hoạch dựng lại theo cảnh. Mặc định tắt.</small>';
+
+  row.append(checkbox, copy);
+  group.appendChild(row);
+  actionRow.insertAdjacentElement('beforebegin', group);
+  if (!group.isConnected) return false;
+
+  checkbox.addEventListener('change', () => {
+    localStorage.setItem(SEMANTIC_REMIX_KEY, checkbox.checked ? 'true' : 'false');
+    window.addLog?.(`[P1] ScriptMode=${checkbox.checked ? 'semantic-remix' : 'standard'} cho lần chạy tiếp theo.`, 'info');
+  });
+  return true;
 }
 
 function _failStart(event, message) {
@@ -44,6 +85,7 @@ function snapshotPipeline1RunConfig(event) {
   const promptEl = document.getElementById('ai-prompt-select');
   const voiceEl = document.getElementById('step1-tts-voice');
   const speedEl = document.getElementById('step1-tts-speed');
+  const semanticEl = document.getElementById('step1-semantic-remix');
 
   const provider = providerEl?.value || localStorage.getItem('ai_provider') || 'gemini';
   const model = (modelEl?.value || localStorage.getItem(`ai_model_${provider}`) || '').trim();
@@ -51,6 +93,7 @@ function snapshotPipeline1RunConfig(event) {
   const voice = voiceEl?.value || localStorage.getItem('tts_voice') || 'none';
   const endpoint = localStorage.getItem('ai_endpoint') || (provider === 'ollama' ? 'http://localhost:11434/api/chat' : '');
   const apiKeys = _readProviderKeys(provider);
+  const semanticRemixEnabled = semanticEl ? Boolean(semanticEl.checked) : _semanticRemixEnabled();
 
   if (!['gemini', 'deepseek', 'ollama'].includes(provider)) {
     _failStart(event, `Nhà cung cấp AI không hợp lệ: ${provider}`);
@@ -78,6 +121,7 @@ function snapshotPipeline1RunConfig(event) {
   if (promptId) localStorage.setItem('ai_active_prompt_id', promptId);
   localStorage.setItem('ai_prompt', prompt);
   localStorage.setItem('tts_voice', voice);
+  localStorage.setItem(SEMANTIC_REMIX_KEY, semanticRemixEnabled ? 'true' : 'false');
   if (speedEl?.value) localStorage.setItem('tts_speed', speedEl.value);
 
   const ttsEnabled = Boolean(voice && voice !== 'none');
@@ -91,6 +135,7 @@ function snapshotPipeline1RunConfig(event) {
     ttsEnabled,
     ttsSpeed: Number(speedEl?.value || localStorage.getItem('tts_speed') || 1),
     analysisMode: 'multimodal-keyframes-v1',
+    semanticRemixEnabled,
   };
 
   idleJobs.forEach(job => {
@@ -102,6 +147,7 @@ function snapshotPipeline1RunConfig(event) {
     job.p1ArtifactsReady = false;
     job.p1Analysis = null;
     job.p1Artifacts = null;
+    job._p1DurationCheckpoint = null;
     job._aiTriggered = false;
     job._ttsTriggered = false;
     job._ttsRunning = false;
@@ -110,12 +156,18 @@ function snapshotPipeline1RunConfig(event) {
   });
 
   window.addLog?.(
-    `[P1] Cấu hình chạy: ASR=auto; Analysis=multimodal; AI=${provider}/${model}; TTS=${ttsEnabled ? voice : 'tắt'}.`,
+    `[P1] Cấu hình chạy: ASR=auto; Analysis=multimodal; ScriptMode=${semanticRemixEnabled ? 'semantic-remix' : 'standard'}; AI=${provider}/${model}; TTS=${ttsEnabled ? voice : 'tắt'}.`,
     'info'
   );
 }
 
+let attempts = 0;
+const controlTimer = setInterval(() => {
+  attempts += 1;
+  if (installSemanticRemixControl() || attempts >= 40) clearInterval(controlTimer);
+}, 100);
+
 const startButton = document.getElementById('btn-start-all');
 if (startButton) startButton.addEventListener('click', snapshotPipeline1RunConfig, true);
 
-export { snapshotPipeline1RunConfig };
+export { snapshotPipeline1RunConfig, installSemanticRemixControl };

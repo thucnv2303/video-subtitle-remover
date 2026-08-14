@@ -1,5 +1,21 @@
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
+async function cancelAnyP1Vision(payload) {
+  const results = await Promise.allSettled([
+    ipcRenderer.invoke('ollama:p1CancelVision', payload),
+    ipcRenderer.invoke('ollama:p1CancelStandardVision', payload),
+  ]);
+  for (const result of results) {
+    if (result.status === 'fulfilled' && result.value?.cancelled) return result.value;
+  }
+  for (const result of results) {
+    if (result.status === 'fulfilled' && result.value?.ok) return result.value;
+  }
+  const failure = results.find(result => result.status === 'rejected');
+  if (failure) throw failure.reason;
+  return { ok: true, cancelled: false };
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
   openFile: (filters) => ipcRenderer.invoke('dialog:openFile', filters),
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
@@ -9,13 +25,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPythonStatus: () => ipcRenderer.invoke('python:status'),
   listOllamaModels: (endpoint) => ipcRenderer.invoke('ollama:listModels', endpoint),
   analyzeP1Vision: (payload) => ipcRenderer.invoke('ollama:p1AnalyzeVision', payload),
+  analyzeP1StandardVision: (payload) => ipcRenderer.invoke('ollama:p1AnalyzeStandardVision', payload),
   fitP1Narration: (payload) => ipcRenderer.invoke('ollama:p1FitNarration', payload),
-  cancelP1Vision: (payload) => ipcRenderer.invoke('ollama:p1CancelVision', payload),
+  cancelP1Vision: (payload) => cancelAnyP1Vision(payload),
+  cancelP1StandardVision: (payload) => ipcRenderer.invoke('ollama:p1CancelStandardVision', payload),
   persistP1Audio: (payload) => ipcRenderer.invoke('p1:persistAudio', payload),
   prepareP1NarrationAudio: (payload) => ipcRenderer.invoke('p1:prepareNarrationAudio', payload),
   getPathForFile: (file) => webUtils.getPathForFile(file),
   openPath: (p) => ipcRenderer.invoke('app:openPath', p),
   getAppPath: () => ipcRenderer.invoke('app:getPath'),
+  getSystemInfo: () => ipcRenderer.invoke('app:systemInfo'),
+  mergeWavFiles: (inputPaths, outputPath) => ipcRenderer.invoke('voice-render:mergeWavFiles', inputPaths, outputPath),
+  applyVoiceTempo: (inputPath, speedFactor) => ipcRenderer.invoke('voice-render:applyTempo', inputPath, speedFactor),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   onP1VisionProgress: (callback) => {
@@ -169,11 +190,31 @@ function installP2RuntimeScript() {
   document.head.appendChild(script);
 }
 
+function installVoiceRenderScript() {
+  if (document.querySelector('script[data-voice-render]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/voice-render.js';
+  script.defer = true;
+  script.dataset.voiceRender = 'true';
+  document.head.appendChild(script);
+}
+
+function installVoiceRenderQualityFixScript() {
+  if (document.querySelector('script[data-voice-render-quality-fix]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/voice-render-quality-fix.js';
+  script.defer = true;
+  script.dataset.voiceRenderQualityFix = 'true';
+  document.head.appendChild(script);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   installFilePathCompatScript();
   installP1SpinnerPhaseScript();
   installP1RunUxScript();
   installP2RuntimeScript();
+  installVoiceRenderScript();
+  installVoiceRenderQualityFixScript();
   let attempts = 0;
   const timer = setInterval(() => {
     attempts += 1;

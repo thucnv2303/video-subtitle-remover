@@ -1,49 +1,40 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-CONTINUOUS-NARRATION-006
-
-## Name
-Pipeline 1 Continuous Narration — P1/P3 Duration Responsibility Redesign
+PIPELINE1-SEMANTIC-REMIX-007
 
 ## Status
-BUG034_SOURCE_PUBLISHED_PM_REVIEW_PASS_STATIC_AND_OWNER_RUNTIME_WAITING
+STANDARD_PRE_TTS_ORDERING_FIX_PUBLISHED_STATIC_OWNER_RETEST_WAITING
 
 ## Authority
-- Branch: `review/PIPELINE1-CONTINUOUS-NARRATION-006`.
-- Draft PR: #47.
-- Base: `review/PIPELINE1-FINAL-RUNTIME-GUARDS-005@68c750524f9604b7799d97a2b5604d87368f889c`.
-- Approved BUG-034 spec: `c046adca8394652cae94fb47821ac8927cb62f74`.
-- P1 source: `97a8e31350b9a0ff40d93207d3de8164b98b458a`.
-- P3 source: `55faf3e734120edec93ba22798599eaf16b6be13`.
-- PM review: `4912891690` — PASS logic/scope only.
+- Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`
+- Draft PR: #48
+- Base: `9981da334ca10fd845c971241d541894d736c13b`
+- Prior docs head: `f03ab512b25fb0193b17b3468d5ac865d3c0c2d1`
+- Latest source correction: `c8fecb95164c39fe82cddf24711ccfc3386d23c6`
 
-## User outcome
-A good P1 narration must not fail merely because it is much shorter than the original video. P1 produces grounded natural narration/TTS; P3 owns final duration alignment after the final video timeline is known.
+## Latest Owner failure
+For the ~97.57s Standard regression case, global reasoning completed but draft quality found `CJK_CHARACTERS`. Standalone `Narration quality` repair failed the same gate, so P1 stopped before the grounded Standard duration/pre-TTS recompose and before TTS.
 
-## Implemented
-1. P1 no longer requires 95–100% source occupancy.
-2. P1 does not launch evidence-fit/second TTS solely for duration occupancy.
-3. P1 logs duration telemetry; outside 90–110% is warning only.
-4. P1 blocks only pathological overlength above 150% of source duration.
-5. P1 late retry retains same-session reuse of valid analysis/TTS checkpoint.
-6. P3 preserves clean-video playback speed; no `adjustVideoTempo()` for voice matching.
-7. P3 keeps natural voice below 90% occupancy.
-8. P3 may derive pitch-preserving voice between 90–115% occupancy.
-9. P3 blocks automatic stretch above 115%.
-10. P3 derived audio/SRT live under sibling `p3/` and do not overwrite P1 artifacts.
-11. P3 rescales subtitle timing using measured derived-audio duration.
+## Root cause
+The Standard IPC quality repair ran too early. An underfilled draft could be rejected before the wrapper received the analysis, despite D-016 requiring grounded recomposition from full transcript + Vision evidence before TTS.
 
-## Verification required
-- Exact final `git rev-parse HEAD`.
-- `node --check src/renderer/js/pipelines/pipeline1-ai.js`.
-- `node --check src/renderer/js/pipelines/pipeline3-finalize.js`.
-- `git diff --check 68c750524f9604b7799d97a2b5604d87368f889c..HEAD`.
-- Same 97.57s P1 case completes after one valid full-text TTS without `Narration evidence-fit`.
-- Underlength P1 warning does not block P2 handoff.
-- P3 listening/runtime tests at representative <0.90, ~0.90, ~1.00, ~1.10–1.15 and >1.15 ratios.
-- P3 preserves video speed and P1 artifacts.
-- Adjusted P3 subtitle timing follows derived voice.
+## Corrected behavior
+- Under-min Standard drafts no longer run the standalone quality repair first.
+- The draft plus deterministic quality report is returned to the wrapper.
+- The wrapper's evidence-backed pre-TTS recompose remains responsible for bringing the underfilled narration into hard range and passing CJK/repetition quality gates.
+- Prompt wording no longer claims a later TTS duration-fit will solve underfill.
+- Non-underfilled Standard behavior, Semantic, P2, P3 and TTS engine are unchanged.
 
-## Gates
-Execution PASS; automated/static WAITING; code review PASS logic/scope; Owner verification WAITING; docs sync PASS after final canonical sync; merge BLOCKED.
+## Verification
+- Source publication: PASS.
+- Compare `f03ab512... -> c8fecb95...`: one app file, `src/main/p1-standard-vision-ipc.js`, +26/-9.
+- Exact-head syntax/diff: WAITING.
+- Code review final confirmation: WAITING.
+- Owner Standard corrected runtime: WAITING after static PASS.
+- Owner Semantic: ON HOLD.
+- Documentation synchronization: IN PROGRESS until all canonical docs/PR metadata are aligned.
+- Merge: BLOCKED.
+
+## Next verification
+Finish docs sync, then run exact-head `node --check` for Standard IPC + wrapper and `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`. If clean, Owner reruns Standard/default OFF. Expected: underfilled+CJK draft is deferred to grounded pre-TTS recompose, then hard duration + quality PASS occurs before one TTS request.
