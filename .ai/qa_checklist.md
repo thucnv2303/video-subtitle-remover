@@ -1,64 +1,53 @@
 # QA Checklist
 
 ## Active task
-`PIPELINE1-STANDARD-CJK-GUARD-008 — Standard CJK Prompt Guard`
+`PIPELINE1-LOG-OBSERVABILITY-009 — P1 Log Observability`
 
 ## Review basis
-- [x] Corrective branch `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
-- [x] Draft PR #51.
-- [x] Base SHA `7df7e45c277feb56b5a8a45195007f5e41b69638`.
-- [x] Source correction `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
-- [x] Exact Owner-tested application-source state `6e023808891a4c5ff5e886aa62a18838c7fb42ae`.
-- [x] Later commits through prior head `96e4c5dd...` were documentation-only.
+- [x] Draft PR #52.
+- [x] Base `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
+- [x] PM source commit `ba24b24011669c24565ad8b3a685b45fb046996f`.
+- [x] Final application source scope is only `src/renderer/js/pipeline1-run-ux.js`.
+- [x] `app.js` has no net final diff after rejected CRLF-churn attempt was neutralized without force push.
 
-## Static/code review
-- [x] `node --check src/main/p1-standard-vision-wrapper.js` PASS on Owner-tested source state.
-- [x] `node --check src/main/p1-standard-vision-ipc.js` PASS.
-- [x] `git diff --check 7df7e45...HEAD` PASS.
-- [x] Owner worktree clean at static verification.
-- [x] Source isolation PASS: prompt-contract source change limited to `src/main/p1-standard-vision-wrapper.js`.
-- [x] Code review PASS for the CJK prompt-contract correction.
+## BUG-039 source behavior
+- [x] P1 log retention target is bounded at 2000 entries.
+- [x] Legacy 100-entry removal is guarded only for the P1 log container.
+- [x] P1-only observer removes routine successful Python/Uvicorn GET access lines for exact `/api/health`, `/api/tts/status`, `/api/gpu-info`.
+- [x] Match requires `200 OK`.
+- [x] Non-200 for same endpoint is retained by deterministic test.
+- [x] Unrelated backend log is retained by deterministic test.
+- [x] Normal P1 log is retained by deterministic test.
+- [x] Global logger and background polling source are unchanged.
+- [x] Copy/Clear code is unchanged.
 
-## Owner Standard runtime — 2026-08-14
-- [x] App runs well.
-- [x] AI-generated Standard narration/script is correct by Owner review.
-- [x] Voice render is stable.
-- [x] Voice duration is reported materially matched to source in the successful configured run.
-- [x] Standard functional runtime outcome PASS for the corrected configured prompt.
+## Static / review
+- [x] GitHub source-commit compare: `pipeline1-run-ux.js` only, +40/-1.
+- [x] Parent-to-head application scope contains no `app.js` change.
+- [x] Deterministic filter + retention-value test: PASS.
+- [x] PM logic/scope review: PASS.
+- [ ] `node --check src/renderer/js/pipeline1-run-ux.js` on exact PR #52 HEAD.
+- [ ] `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD` on exact PR #52 HEAD.
 
-## Closeout findings that remain open
-### BUG-039 — P1 log observability
-- [x] Owner reports P1 card log cuts earlier data.
-- [x] Source confirms Step1 log removes oldest entries after 100 DOM nodes.
-- [x] Owner reports `/api/health`, `/api/tts/status`, `/api/gpu-info` 200 access lines while idle.
-- [x] Source confirms all Python stdout is cloned into Step1 log.
-- [x] Source confirms background global-status refresh legitimately calls those endpoints.
-- [ ] Dedicated log-observability source correction published.
-- [ ] Idle P1 console runtime retest PASS.
-- [ ] Successful Standard run retains beginning-to-completion evidence and Copy output.
-
-### BUG-040 — product default prompt
-- [x] Source confirms default prompt remains subtitle-translation/SRT-oriented.
-- [x] Source confirms P1 run snapshots that prompt.
-- [x] Owner success required manually replacing the configurable prompt.
-- [ ] Product default synchronized to proven continuous-narration / ZERO-CJK contract.
-- [ ] Fresh/reset default runtime retest PASS.
-
-## Regression constraints for next tasks
-- [ ] No change to Standard reasoning/guard semantics during BUG-039 fix.
-- [ ] No TTS generation behavior change during BUG-039 fix.
-- [ ] No P2/P3 source change during BUG-039 fix.
-- [ ] Backend/global status continues refreshing after routine heartbeat lines are removed from P1 presentation.
+## Owner manual verification — WAITING STATIC PASS
+- [ ] Exact checkout HEAD equals current PR #52 head.
+- [ ] Full app restart.
+- [ ] Idle >=30s: no routine 200 health/TTS/GPU access lines accumulate in P1 console.
+- [ ] Global Backend/TTS/GPU status continues refreshing.
+- [ ] Standard P1 Job completes with normal behavior unchanged.
+- [ ] Meaningful P1 history remains visible beyond the old 100-line cap.
+- [ ] Copy Log contains retained P1 history.
+- [ ] Clear Log clears the P1 console.
 - [ ] Non-routine errors remain diagnosable.
 
-## Semantic mode
-- [ ] Semantic runtime remains DEFERRED until Standard closeout follow-ups BUG-039 and BUG-040 are verified.
+## Inherited Standard state
+- [x] Task 008 Standard functional runtime PASS for corrected configured prompt.
+- [ ] `BUG-040` product default prompt sync remains a separate follow-up after BUG-039.
 
 ## Gates
-- Execution: PASS for task 008 source.
-- Automated/static: PASS for task 008 source.
-- Code review: PASS for task 008 source.
-- Owner Standard runtime: PASS for corrected configured prompt.
-- Documentation synchronization: PASS after this corrective knowledge sync.
-- Follow-up observability/default prompt: OPEN.
+- Execution: PASS.
+- Automated/static: PARTIAL — deterministic PASS; exact Node/diff commands WAITING.
+- Code review: PASS.
+- Owner runtime: WAITING.
+- Documentation synchronization: PASS after dynamic-doc sync.
 - Merge permission: BLOCKED.
