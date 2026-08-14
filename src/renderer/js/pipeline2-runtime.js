@@ -111,25 +111,29 @@
   }
 
   function isNoisyAccessLog(text) {
-    const successfulPolling = /\bINFO:\s+127\.0\.0\.1:\d+\s+-\s+"(?:GET|POST) \/api\/(?:status|preview|health|gpu-info|frame\/[^\s?"]+)\b[^\"]*HTTP\/1\.1"\s+200\s+OK/i.test(text);
+    const successfulPolling = /\bINFO:\s+127\.0\.0\.1:\d+\s+-\s+"(?:GET|POST) \/api\/(?:status|preview|health|tts\/status|gpu-info|frame\/[^\s?"]+)\b[^\"]*HTTP\/1\.1"\s+200\s+OK/i.test(text);
     const expectedPreviewNotReady = /\bINFO:\s+127\.0\.0\.1:\d+\s+-\s+"GET \/api\/preview\b[^\"]*HTTP\/1\.1"\s+404\s+Not Found/i.test(text);
     return successfulPolling || expectedPreviewNotReady;
   }
 
   function isHeartbeat(text) {
-    return /\[Inpaint\]\s+Đang xử lý|processing frame\s+\d+\s+to\s+\d+|Processing:\s*\d+\s*-\s*\d+\s*\/\s*Total/i.test(text);
+    return /\[Inpaint\]\s+Đang xử lý|processing frame\s+\d+\s+to\s+\d+|Processing:\s*\d+\s*-\s*\d+\s*\/\s*Total|(?:processing|xử lý)[^\n]*frame\s+\d+\s*\/\s*\d+/i.test(text);
   }
 
   function extractHeartbeat(text, job) {
     const pctMatch = text.match(/tiến độ:\s*(\d+(?:\.\d+)?)%/i);
     const frameRange = text.match(/processing frame\s+(\d+)\s+to\s+(\d+)/i);
     const processingRange = text.match(/Processing:\s*(\d+)\s*-\s*(\d+)\s*\/\s*Total:\s*(\d+)/i);
+    const simpleFrame = text.match(/frame\s+(\d+)\s*\/\s*(\d+)/i);
     if (frameRange) {
       lastFrame = Math.max(0, Number(frameRange[2]) - 1);
       lastStage = `Xóa subtitle frame ${frameRange[1]}–${frameRange[2]}`;
     } else if (processingRange) {
       lastFrame = Math.max(0, Number(processingRange[2]) - 1);
       lastStage = `Xử lý frame ${processingRange[1]}–${processingRange[2]}`;
+    } else if (simpleFrame) {
+      lastFrame = Math.max(0, Number(simpleFrame[1]) - 1);
+      lastStage = `Xử lý frame ${simpleFrame[1]}/${simpleFrame[2]}`;
     } else {
       lastStage = 'Đang xử lý video';
     }
@@ -144,7 +148,6 @@
 
     new MutationObserver((mutations) => {
       const job = currentP2Job();
-      if (!job) return;
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
           if (!(node instanceof HTMLElement) || !node.classList.contains('log-entry')) continue;
@@ -154,7 +157,7 @@
             node.remove();
             continue;
           }
-          if (isHeartbeat(text)) {
+          if (job && isHeartbeat(text)) {
             extractHeartbeat(text, job);
             node.remove();
           }
