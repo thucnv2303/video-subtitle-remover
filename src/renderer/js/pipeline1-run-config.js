@@ -1,4 +1,5 @@
 import './pipeline1-run-ux.js';
+import './pipeline1-log-router.js';
 
 /**
  * Pipeline 1 run configuration bridge.
