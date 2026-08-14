@@ -4,7 +4,7 @@
 PIPELINE1-STANDARD-CJK-GUARD-008
 
 ## Status
-PROMPT_CONTRACT_FIX_PUBLISHED_STATIC_OWNER_RETEST_WAITING
+STATIC_PASS_OWNER_STANDARD_PARTIAL_POSITIVE_FULL_RUNTIME_EVIDENCE_WAITING
 
 ## Authority
 - Parent task: `PIPELINE1-SEMANTIC-REMIX-007`.
@@ -13,31 +13,32 @@ PROMPT_CONTRACT_FIX_PUBLISHED_STATIC_OWNER_RETEST_WAITING
 - Corrective Draft PR: #51.
 - Starting SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
 - Source correction: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
+- Exact Owner-tested source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`; later commits are `.ai/`-only.
 
-## Latest Owner failure
-On the ~97.57s Standard regression case, the corrected pre-TTS ordering worked: a 585-char draft reached the grounded duration guard, the first recompose produced 1610 chars, and retry preserved that rejected candidate. Both attempts still failed deterministic `CJK_CHARACTERS` before TTS.
-
-## Root cause
-The recompose prompt treated CJK as a general language-quality preference while full transcript/Vision evidence can legitimately contain source CJK text. The model can copy a few source glyphs into the output. This is a prompt/source-boundary defect; the deterministic zero-CJK gate is behaving correctly.
-
-## Corrected behavior
-- Transcript/Vision CJK is explicitly INPUT-ONLY.
-- `narration_script` must contain ZERO Han/Hiragana/Katakana/Hangul glyphs.
-- Uncertain CJK-only textual evidence must be omitted rather than copied or guessed.
-- Retry receives `cjk_count` and must repair the retained candidate, not restart from the short draft.
-- Model must self-scan before returning JSON.
-- Existing hard length and repetition/CJK validators remain unchanged.
-- No output sanitizer, extra retry, P2/P3/TTS/dependency change.
-
-## Verification
+## Verified source/static state
 - Source publication: PASS.
 - Source isolation: PASS — only `src/main/p1-standard-vision-wrapper.js`, +14/-4 from starting SHA.
-- Exact-head syntax/diff: WAITING.
-- Code review final confirmation: WAITING.
-- Owner Standard corrected runtime: WAITING after static PASS.
-- Owner Semantic: ON HOLD.
-- Documentation synchronization: PASS.
+- Owner exact-head `node --check` for wrapper + IPC: PASS.
+- Owner exact-head `git diff --check 7df7e45...HEAD`: PASS.
+- Owner worktree clean at static verification.
+- Code review: PASS for the prompt-contract correction.
+
+## Latest Owner runtime observation
+After manually replacing the configurable narration prompt with the corrected continuous-narration / ZERO-CJK contract, Owner reports Standard now processes successfully enough to generate a voice track with duration matching the source video. This is PARTIAL POSITIVE runtime evidence only; full acceptance is still waiting on the complete successful P1 log and listening confirmation.
+
+The additional log supplied afterward contains only repeated backend health/status polling (`GET /api/health`, `GET /api/tts/status`, `GET /api/gpu-info` => HTTP 200). It proves the Python backend remained responsive during that interval, but contains no `Voice-aware narration budget`, Standard guard, narration quality, TTS generation request, or Job completion evidence and therefore cannot close Owner runtime verification.
+
+## Product-contract implication
+The successful run used both PR #51 source correction and a manually updated user-configurable prompt. A stale SRT-oriented prompt can conflict with the current continuous narration contract. If the successful prompt is not already the application default, product-default prompt synchronization is required before closeout.
+
+## Gates
+- Execution: PASS.
+- Automated/static: PASS.
+- Code review: PASS.
+- Owner Standard runtime: PARTIAL POSITIVE / FULL EVIDENCE WAITING.
+- Owner Semantic: ON HOLD until Standard full PASS.
+- Documentation synchronization: PASS after current dynamic-doc sync.
 - Merge: BLOCKED.
 
 ## Next verification
-Checkout corrective branch #51, verify exact HEAD, run `node --check src/main/p1-standard-vision-wrapper.js`, `node --check src/main/p1-standard-vision-ipc.js`, and `git diff --check 7df7e45c277feb56b5a8a45195007f5e41b69638..HEAD`. If clean, rerun Standard/default OFF and require `cjk=0` before TTS.
+Provide the successful Standard log beginning at `Voice-aware narration budget` and continuing through Job completion, plus listening result. Required proof: hard-range narration, deterministic `cjk=0`, no repetition-quality failure, `Standard duration guard PASS` before TTS, exactly one continuous full-text TTS request, successful Job completion, and natural/grounded/non-repetitive narration.
