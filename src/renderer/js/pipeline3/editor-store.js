@@ -7,6 +7,7 @@ const state = {
   renderingJobId: null,
   videoInfoByJob: new Map(),
   cuesByJob: new Map(),
+  selectedCueByJob: new Map(),
 };
 
 export function getP3EditorState() {
@@ -40,12 +41,15 @@ export function p3Jobs() {
 export function ensureP3Config(job) {
   if (!job) return null;
   const defaults = {
-    preset: 'youtube', subtitleEnabled: Boolean(job.ttsTimedSrt || job.voiceSubContent || job.karaokeAss),
+    preset: 'youtube',
+    subtitleEnabled: Boolean(job.ttsTimedSrt || job.voiceSubContent || job.karaokeAss),
     fontFamily: 'Arial', fontSize: 46, bold: true, italic: false,
     textColor: '#ffffff', outlineColor: '#000000', outlineWidth: 3, shadow: 2,
     bgEnabled: true, bgColor: '#000000', bgOpacity: 62, padding: 10,
     lineHeight: 1.18, maxWidth: 80, align: 'center', x: 50, y: 82,
     safeZone: true, snap: true, effect: 'none', effectMs: 180,
+    coverEnabled: false, coverColor: '#0a0a0a', coverOpacity: 76, coverWidth: 92, coverHeightPx: 112,
+    fitMode: 'auto',
     removeVocal: localStorage.getItem('tts_remove_vocal') === 'true',
     bgVolume: Number(localStorage.getItem('tts_bg_volume') || 10),
     preserveKaraoke: true,
@@ -65,4 +69,15 @@ export function selectedP3Job() {
   }
   ensureP3Config(job);
   return job;
+}
+
+export function selectedCueIndex(job) {
+  if (!job) return -1;
+  return Number(state.selectedCueByJob.get(job.id) ?? -1);
+}
+
+export function selectCue(job, index) {
+  if (!job) return;
+  state.selectedCueByJob.set(job.id, Number(index));
+  listeners.forEach(listener => listener(state));
 }
