@@ -1,56 +1,53 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-STANDARD-CJK-GUARD-008
+PIPELINE1-PROMPT-MANAGER-V2-010
 
 ## Status
-OWNER_STANDARD_FUNCTIONAL_PASS_FOLLOWUP_OBSERVABILITY_AND_DEFAULT_PROMPT_SYNC_REQUIRED
+SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_NOT_STARTED
 
-## Authority
-- Parent task: `PIPELINE1-SEMANTIC-REMIX-007`.
-- Parent branch/PR: `review/PIPELINE1-SEMANTIC-REMIX-007` / #48.
-- Corrective branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
-- Corrective Draft PR: #51.
-- Starting SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
-- Source correction: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
-- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`.
+## Basis
+- Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
+- Review branch / Draft PR: `review/PIPELINE1-PROMPT-MANAGER-V2-010` / #53.
+- Approved task spec: `.ai/task_specs/PIPELINE1-PROMPT-MANAGER-V2-010.md`.
+- Application-source head before docs sync: `2d4fc7e05f71a38daa406647226e883bd7ed69f8`.
+- Bug: `BUG-040`.
 
-## Verified source/static state
-- Source publication: PASS.
-- Source isolation: PASS — only `src/main/p1-standard-vision-wrapper.js`, +14/-4 from starting SHA.
-- Owner exact-head Node syntax for wrapper + IPC: PASS.
-- Owner exact-head `git diff --check`: PASS.
-- Owner worktree clean at static verification.
-- Code review: PASS for the prompt-contract correction.
+## Owner outcome
+Complete Prompt Manager as a standalone task using the approved dark navy / blue design before returning to the log task.
 
-## Owner runtime result — 2026-08-14
-Owner reports:
-- app runs well;
-- Standard AI narration/script is correct;
-- voice rendering is stable.
+## Application scope
+- `src/renderer/js/components/prompt-manager.js`
+- `src/renderer/js/pipeline1-run-config.js`
+- `src/renderer/styles/prompt-manager-v2.css`
 
-Owner Standard functional outcome is therefore PASS for the corrected configured prompt.
+## Implemented behavior
+- One persisted `ai_prompts` store; saved `[]` remains empty after reopen/restart.
+- First V2 migration replaces only the untouched obsolete single legacy seed; customized lists remain user data.
+- Active and default IDs are reconciled only against real stored prompts.
+- `ai_prompt` is compatibility mirror only.
+- Any prompt can be deleted; delete-active selects a valid replacement or clears state when empty.
+- Delete-all persists `[]` and clears active/default/mirror.
+- Create/edit/reorder/set-default/use-active supported.
+- Step 1 prompt list is dynamic from the same store, replacing hard-coded rows.
+- Compatibility dropdown is driven from the same store.
+- Modal is rebuilt dynamically using the approved two-column V2 UI; `index.html` remains untouched.
+- P1 run config no longer resurrects stale `ai_prompt`; empty/invalid store reaches the existing prompt-required start error.
 
-## Follow-up defects discovered during closeout
-### BUG-039 — P1 log observability
-- P1 card console is hard-capped at 100 DOM entries and removes the oldest lines.
-- Global Python stdout is cloned into P1 console.
-- Routine successful background `/api/health`, `/api/tts/status`, `/api/gpu-info` access logs appear even with no P1 Job.
-- Voice Render/global status refreshes legitimately make those requests; the P1 console should not present them as Job activity.
+## Verification
+- Source scope/isolation: PASS by GitHub compare.
+- PM logic/scope review: PASS.
+- Exact Node syntax checks: WAITING.
+- Exact `git diff --check`: WAITING.
+- Owner real-app runtime: NOT STARTED.
 
-### BUG-040 — stale product default prompt
-- `src/renderer/js/components/prompt-manager.js` still seeds a subtitle-translation/SRT-oriented default prompt.
-- `pipeline1-run-config.js` snapshots the selected/default prompt into P1 runs.
-- Owner success required manually replacing the configurable prompt with the corrected continuous-narration / ZERO-CJK contract.
+## Paused work
+`PIPELINE1-LOG-OBSERVABILITY-009` / Draft PR #52 remains open and PAUSED by Owner direction. Do not modify/merge it while task 010 is under verification.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PASS.
+- Automated/static: WAITING.
 - Code review: PASS.
-- Owner Standard runtime: PASS for corrected configured prompt.
-- Owner Semantic: DEFERRED.
-- Documentation synchronization: PASS after current corrective sync.
+- Owner runtime: NOT STARTED.
+- Documentation synchronization: PARTIAL.
 - Merge: BLOCKED.
-
-## Next task
-`PIPELINE1-LOG-OBSERVABILITY-009` — narrow stacked task from the synchronized PR #51 head. Fix only P1 log retention/noise routing and project knowledge. No AI/TTS/P2/P3 behavior change. Default-prompt source synchronization remains a separate follow-up task after log observability is runtime-verified.
