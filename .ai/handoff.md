@@ -4,53 +4,44 @@
 `PIPELINE3-EDITOR-REBUILD-016`
 
 ## Status
-SOURCE PUBLISHED / PM REVIEW IN PROGRESS / STATIC WAITING / OWNER RUNTIME NOT STARTED / MERGE BLOCKED
+SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC WAITING / OWNER RUNTIME NOT STARTED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
-- Branch: `review/PIPELINE3-EDITOR-REBUILD-016`
+- Branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58
 - Exact starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1`
-- Spec: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016.md`
+- Main spec: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016.md`
 - Bootstrap amendment: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016-BOOTSTRAP-AMENDMENT.md`
-- Application-source head before docs: `936ddb32ceed3fda2839fc6a000e593a37f4a75d`
+- Reviewed application-source head: `205ced27e8c203300f656114d2bcfd7d529d4a35`
 
-## Owner-approved design
+## Owner-approved design implemented
 - dedicated left Job Manager;
-- center logical video canvas preserving real source aspect ratio;
-- bottom assembly timeline;
-- right detailed settings inspector;
-- related settings grouped in click-to-expand fold/accordion sections;
-- direct smooth subtitle drag;
-- app navy/blue-gray/blue palette with limited purple CTA;
+- center aspect-correct logical video canvas;
+- bottom assembly timeline with actual timed subtitle cue blocks;
+- right inspector with click-to-expand fold/accordion groups;
+- per-Job settings and direct smooth subtitle drag;
+- app navy/blue-gray/blue palette with limited purple render accent;
 - no additional local clone/worktree/test directory.
 
-## Source published
-- `src/renderer/js/pipeline3/editor.js`
-- `src/renderer/js/pipeline3/editor-store.js`
-- `src/renderer/js/pipeline3/preview-geometry.js`
-- `src/renderer/js/pipeline3/subtitle-ass.js`
-- `src/renderer/js/pipeline3/render-controller.js`
-- `src/renderer/styles/pipeline3-editor.css`
-- `src/renderer/js/pipeline1-run-config.js`: one import-only P3 bootstrap line.
-
-Finalizer/backend/P1/P2 logic are otherwise unchanged.
-
-## Safety / architecture
-The existing hidden Step-3 compatibility DOM is retained so legacy renderer state code continues to work. Visible P3 UI is event/mutation driven rather than using a dedicated fixed polling loop. P3 preserves original karaoke ASS, writes derived ASS only into Job memory, and preserves/restores the P2 clean input path for re-render safety.
+## Review corrections already included
+- P3 ASS is rebuilt from the final SRT passed into burn after any P3 voice retime.
+- Original karaoke timing is not reused when retime makes it stale.
+- P3 render controller allows only one active render at a time.
+- P2 clean source path is preserved/restored before each render.
 
 ## Static limitation
-ChatGPT attempted an isolated Node syntax run, but its container cannot resolve GitHub raw-content DNS. This does not indicate a code failure; required exact-checkout static evidence remains WAITING for Owner/local execution after PM GitHub review PASS.
+Exact Node syntax and `git diff --check` evidence is still required locally. ChatGPT's isolated container could not resolve GitHub raw-content DNS, so static remains WAITING rather than inferred PASS.
 
 ## Local safety
-Reuse only the existing local test directory. Dirty `git status --short` => STOP. No reset/restore/clean and no new clone/worktree.
+Reuse only the existing test directory. Before switching ref, `git status --short` must be empty. Dirty => STOP; no reset/restore/clean. Do not create a new worktree or clone.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING.
-- Code review: WAITING final PR/full-file review.
+- Code review: PASS.
 - Owner runtime: NOT STARTED.
 - Documentation synchronization: PASS pre-runtime.
 - Merge: BLOCKED.
 
 ## Next permitted action
-Open Draft PR, review exact changed files/patches/full source and status/comments. If code review PASS, provide Owner exact-head update/static/runtime instructions for the existing test directory only.
+Verify live PR #58 exact head/files/status/comments. If consistent, Owner may switch the existing clean test directory to the exact head and run required static + P3 real-app verification.
