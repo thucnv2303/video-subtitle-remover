@@ -1,6 +1,6 @@
 # PIPELINE1-PROMPT-MANAGER-V2-010
 
-Status: APPROVED FOR PM DIRECT EXECUTION — RUNTIME REVISION 1
+Status: APPROVED FOR PM DIRECT EXECUTION — RUNTIME REVISION 2 / NEW-PROMPT ROUTING
 
 ## Repository / refs
 - Repository: `thucnv2303/video-subtitle-remover`
@@ -8,56 +8,41 @@ Status: APPROVED FOR PM DIRECT EXECUTION — RUNTIME REVISION 1
 - Exact base SHA: `330d756fcce1b71ca8745b3292d7ac655bc32d13`
 - Review branch: `review/PIPELINE1-PROMPT-MANAGER-V2-010`
 - Draft PR: #53
-- Runtime-revision-1 starting HEAD: `3430fc166c39beed1f44815faad7efe8e60dd59b`
+- Runtime-revision-2 starting HEAD: `2a19d71dc3456013c764ee5894e74f90295a6340`
 - Bug: `BUG-040`
 - `PIPELINE1-LOG-OBSERVABILITY-009` / PR #52 remains paused and OUT OF SCOPE.
 
 ## Owner requirement
-Finish Prompt Manager as an isolated task before returning to log work. UI must follow the approved dark navy / blue mockup and the persistence workflow must be redesigned, not patched superficially.
+Finish Prompt Manager as an isolated task before returning to log work. UI must follow the approved dark navy / blue mockup and the persistence workflow must be reliable for create/edit/delete/default/active/empty states.
 
-## Verified defects
+## Verified legacy/product defects
 1. Legacy `prompt-manager.js::getPrompts()` restored defaults whenever saved array length was 0, so an explicitly saved empty list resurrected old data after reopening/restart.
 2. Legacy `p1` was hard-blocked from deletion.
 3. Step 1 contained a separate hard-coded prompt list while modal/dropdown read localStorage, creating multiple UI sources of truth.
 4. Legacy `pipeline1-run-config.js::_resolvePrompt()` could fall back to stale `ai_prompt` when no selected prompt was found.
 5. Product default prompt was obsolete subtitle/SRT translation content instead of the proven grounded continuous Vietnamese narration / ZERO-CJK contract.
 
-## Owner runtime failure — 2026-08-14 / revision 1
-Owner successfully launched the exact task worktree after dependency installation, but clicking Prompt Management / Quản lý does not open the Prompt Manager modal. Backend health, WebSocket, GPU and application startup are otherwise healthy.
+## Runtime revision 1 result
+Revision 1 made Prompt Manager self-initializing and delegated the Step 1 Manage/Add launch controls. Owner then confirmed exact local HEAD `2a19d71dc3456013c764ee5894e74f90295a6340` and reported:
+- Prompt Manager can now be reached;
+- clicking `+ Prompt mới` does NOT expose/reset the Name/Content editor for a new draft.
 
-### Verified wiring gap
-- `src/renderer/js/app.js` performs a one-shot delayed module initialization after only 100 ms:
-  - if `window.initPromptManager` exists, it calls it;
-  - otherwise it only emits a console warning;
-  - there is no retry, yet the app continues and logs `App khởi động thành công.`.
-- Prompt Manager V2 currently depends on `initPromptManager()` to build the modal and attach launch handlers.
-- Therefore a cold ES-module load that is not ready inside that 100 ms window can leave Prompt Manager uninitialized while the rest of the app appears healthy.
-- This task will NOT edit `app.js`; the Prompt Manager module must become self-initializing and launch wiring must tolerate dynamically replaced Step 1 buttons.
+This is an Owner runtime FAIL for the create-prompt entry path.
 
-## Product design
-Prompt Manager V2 uses ONE persisted prompt store and explicit UI states.
+## Verified current-source routing inconsistency
+Current `prompt-manager.js` has two different routes for the same new-prompt intent:
+- Step 1 `#step1-btn-add-prompt` is handled by delegated document routing and calls `openModal(null, true)`;
+- modal-local `#prompt-v2-new` still has its own direct listener that only calls `fillEditor(null, true)`.
 
-### Layout
-- Large two-column modal matching approved dark navy / blue design.
-- Left: prompt count, `+ Prompt mới`, prompt cards, active/default badges, reorder controls, `Xóa tất cả`, empty state.
-- Right: selected/draft prompt editor with Name, optional Description, Prompt Content, character counts, save/default/delete actions.
-- Footer: `Đóng` and primary `Sử dụng Prompt này`.
-- Destructive actions red; primary/selected actions blue; active state green.
+Owner runtime proves the modal-local direct route is not reliable in the current renderer lifecycle. The revision-2 correction must unify it with the already delegated Step 1 new-prompt route instead of duplicating prompt persistence logic.
 
-### State model
-Persist in existing compatibility keys:
-- `ai_prompts`: array of `{ id, name, description, content }`; explicitly saved `[]` remains authoritative.
-- `ai_active_prompt_id`: prompt used by next P1 run.
-- `ai_default_prompt_id`: preferred replacement/default prompt.
-- `ai_prompt`: compatibility mirror of active content only, never independent authority.
-- `ai_prompts_v2_initialized=true`: records V2 initialization/migration.
-
-### Initialization / migration
-- If `ai_prompts` is absent, seed one corrected Standard prompt and persist it once.
-- If `ai_prompts` exists and parses to an array, preserve the user list, including `[]`.
-- On first V2 migration only, replace exactly the untouched legacy single seed (`id=p1` + old subtitle-translation content). Preserve customized or multi-item lists.
-- Never use `array.length === 0` as a signal to restore defaults.
-- Normalize invalid/missing active/default IDs against actual stored items.
+## Product design / state model
+Prompt Manager V2 remains ONE persisted prompt store:
+- `ai_prompts`: array of `{ id, name, description, content }`; explicitly saved `[]` is authoritative;
+- `ai_active_prompt_id`: prompt used by next P1 run;
+- `ai_default_prompt_id`: preferred replacement/default prompt;
+- `ai_prompt`: compatibility mirror of active content only, never independent authority;
+- `ai_prompts_v2_initialized=true`: V2 migration marker.
 
 ### CRUD behavior
 - Create starts a clean draft; Save creates a new ID.
@@ -71,46 +56,32 @@ Persist in existing compatibility keys:
 - Name/content required; description optional.
 
 ### Step 1 integration
-- Replace hard-coded prompt rows dynamically from the same store.
-- Step 1 selected state follows `ai_active_prompt_id`.
-- Add/Edit/Delete operate on the same V2 store/modal.
-- Existing `#ai-prompt-select` dropdown renders from the same store for compatibility.
-- Empty store shows an empty state and no phantom/default prompt.
+- Step 1 rows, modal and compatibility dropdown all read the same store.
+- Empty store shows no phantom/default prompt.
+- P1 run config resolves only a real stored prompt and must not resurrect stale `ai_prompt`.
 
-### P1 run safety
-`pipeline1-run-config.js` resolves prompt exclusively from `ai_prompts` + active/select ID. It must NOT use stale `ai_prompt` as fallback when store is empty or selection invalid. Starting P1 with no valid prompt must fail with the existing prompt-required error.
+## Runtime revision 2 implementation design
+Avoid another GitHub contents-API rewrite of CRLF `prompt-manager.js` for a two-line event-routing correction. Instead add a narrow LF compatibility bridge loaded through existing LF `pipeline1-run-config.js`.
 
-## Corrected seeded Standard prompt
-Seed only when `ai_prompts` is absent or during exact untouched-legacy-seed migration. It must require:
-- analyze the whole source video using transcript + visual evidence;
-- one coherent natural Vietnamese narration;
-- grounded source evidence, no unsupported claims;
-- no SRT-format narration contract;
-- no copied CJK in final narration; translate/paraphrase to Vietnamese/Latin or omit uncertain source text;
-- flowing narration rather than bullet list;
-- concise natural TTS; deterministic P1 quality guards remain authoritative.
+Authorized source for revision 2:
+- new `src/renderer/js/components/prompt-manager-new-flow.js`;
+- `src/renderer/js/pipeline1-run-config.js` only to import that bridge.
 
-## Runtime revision 1 implementation requirements
-Only `src/renderer/js/components/prompt-manager.js` may change for this runtime correction.
-1. Prompt Manager module self-initializes when its ES module is evaluated. If DOM is still loading, initialize once on `DOMContentLoaded`; otherwise schedule initialization immediately.
-2. Existing exported `initPromptManager()` remains idempotent so the legacy `app.js` call is harmless when it arrives before/after self-init.
-3. Launch wiring uses one delegated document-level click handler for:
-   - `#btn-manage-prompts` → open current/active prompt;
-   - `#step1-btn-edit-prompt` → open current/active prompt;
-   - `#step1-btn-add-prompt` → open clean new-prompt draft.
-4. Delegated launcher must survive `renderStep1PromptBox()` replacing its child buttons.
-5. Remove duplicate direct add/edit/manage launch bindings so one click cannot double-open/re-render.
-6. Step 1 delete may remain locally bound or be delegated once, but must not duplicate.
-7. If modal shell is absent, fail safely without affecting the rest of app.
-8. No app/backend/log/P2/P3 changes.
+Bridge requirements:
+1. Install exactly one document capture listener for modal-local `#prompt-v2-new`.
+2. Intercept only that button.
+3. Prevent its unreliable direct target listener from running for this click.
+4. Forward the intent through the existing `#step1-btn-add-prompt` delegated path so the canonical private `openModal(null, true)` state transition runs.
+5. If the Step 1 Add element is temporarily absent, create a temporary hidden proxy with the same id, dispatch its click, then remove it; do not persist any extra UI/state.
+6. Do NOT implement create/save/localStorage logic in the bridge. Persistence remains solely in Prompt Manager V2.
+7. Do not touch modal close/save/delete/default/use/reorder behavior.
+8. Do not change log routing, backend, P2/P3, AI/TTS processing, `app.js`, `index.html`, dependencies, or prompt quality gates.
 
-## Authorized application source
-Final task scope remains:
+## Full task application scope
 - `src/renderer/js/components/prompt-manager.js`
 - `src/renderer/js/pipeline1-run-config.js`
 - `src/renderer/styles/prompt-manager-v2.css`
-
-Runtime revision 1 modifies only `prompt-manager.js`.
+- `src/renderer/js/components/prompt-manager-new-flow.js` (revision-2 compatibility bridge)
 
 ## Forbidden changes
 - no log routing / PR #52 source
@@ -122,36 +93,36 @@ Runtime revision 1 modifies only `prompt-manager.js`.
 - no force push/history rewrite
 
 ## Verification
-Required source review:
-- revision-1 source diff limited to `prompt-manager.js`;
-- self-init is idempotent and does not create duplicate modal handlers;
-- delegated launch survives Step 1 DOM replacement;
-- one click produces one open action;
-- persistence/state behavior from V2 remains unchanged;
-- log/P2/P3 source unchanged.
+Required source review for revision 2:
+- revision-2 source diff is exactly the new bridge + one import in `pipeline1-run-config.js`;
+- bridge matches only `#prompt-v2-new`;
+- one modal-local click produces exactly one forwarded Step 1 Add click;
+- no prompt/localStorage CRUD code exists in the bridge;
+- prompt-manager persistence/state code remains unchanged;
+- log/P2/P3/backend source unchanged.
 
 Executable checks on exact latest checkout:
 ```text
+node --check src/renderer/js/components/prompt-manager-new-flow.js
 node --check src/renderer/js/components/prompt-manager.js
 node --check src/renderer/js/pipeline1-run-config.js
 git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD
 ```
 
 ## Owner runtime acceptance
-1. Clicking `Quản lý` or the compatibility `Quản lý` button always opens Prompt Manager V2 after cold app startup.
-2. `+ Prompt mới` opens a clean new draft.
-3. UI matches approved dark navy / blue hierarchy.
-4. Create/edit/save/reorder persists after close/reopen and full restart.
-5. Delete any prompt works, including initially seeded/default.
-6. Delete all -> close -> reopen -> restart stays empty; old prompt does not return.
-7. Active/default badge/action is consistent in modal, Step 1 and dropdown.
-8. Delete active selects a valid replacement or clears active when empty.
-9. P1 refuses to start when prompt list is empty; after selecting a valid prompt it snapshots exactly that content.
+1. Cold-start app; `Quản lý` opens Prompt Manager V2.
+2. Click modal-local `+ Prompt mới`: Name/Description/Content become a clean new draft and state pill shows `Prompt mới`.
+3. Enter valid Name + Content and Save: exactly one new prompt is created and remains after close/reopen.
+4. Full restart preserves created/edited/reordered prompts.
+5. Any prompt including seeded/default can be deleted.
+6. Delete all -> close -> reopen -> restart remains empty; old prompt does not return.
+7. Active/default state is consistent in modal, Step 1 and dropdown.
+8. Empty prompt list blocks P1 start until a valid prompt exists.
 
 ## Gates
-- Execution: revision 1 authorized.
-- Automated/static: prior source PASS; revision-1 static WAITING.
-- Code review: revision-1 WAITING.
-- Owner runtime: FAIL on prior source / RETEST WAITING.
+- Execution: revision 2 authorized.
+- Automated/static: prior revision evidence superseded for changed files; revision-2 static WAITING.
+- Code review: revision-2 WAITING.
+- Owner runtime: FAIL on exact `2a19d71...`; revision-2 RETEST WAITING.
 - Documentation synchronization: PARTIAL.
 - Merge: BLOCKED.
