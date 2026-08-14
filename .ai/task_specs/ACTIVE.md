@@ -1,63 +1,55 @@
 # Active PM Execution Spec
 
-Status: PIPELINE3_WORKSPACE_015_SOURCE_PUBLISHED_CODE_REVIEW_PASS_OWNER_VERIFY_WAITING
+Status: PIPELINE3_WORKSPACE_015_OWNER_RUNTIME_FAIL_REBUILD_DESIGN_WAITING
 
 Task: `PIPELINE3-WORKSPACE-015`
 Repository: `thucnv2303/video-subtitle-remover`
 Review branch / Draft PR: `review/PIPELINE3-WORKSPACE-015` / #57
 Exact starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1`
-Main spec: `.ai/task_specs/PIPELINE3-WORKSPACE-015.md`
-Revision-1 safety spec: `.ai/task_specs/PIPELINE3-WORKSPACE-015-REV1-RERENDER-SAFETY.md`
-Reviewed application-source head: `198aa12d376cc7bdea23da6ea791717b07a73d4b`
+Owner-tested prototype HEAD: `75b7a62fe5b7892dc2de9fb78ae60e82cc8825c9`
+Failure/research record: `.ai/task_specs/PIPELINE3-WORKSPACE-015-OWNER-FAIL-OPENCUT-RESEARCH.md`
 
-## Purpose
-Implement the Owner-approved Pipeline 3 final render workspace with current app visual tokens, detailed subtitle styling, smooth direct subtitle placement, final preview/timeline, current audio controls and existing render path.
+## Current decision
+NEEDS_REVISION.
 
-## Application source scope
-- new `src/renderer/js/pipeline3-workspace.js`
-- new `src/renderer/styles/pipeline3-workspace.css`
-- new `src/renderer/js/pipeline3-rerender-safety.js`
-- two loader imports in `src/renderer/js/pipeline1-run-config.js`
+Owner runtime rejected the current P3 prototype because:
+- its color/tone is inconsistent with the approved demo and app;
+- dedicated Job Management is missing;
+- preview geometry/aspect presentation is wrong;
+- P3 should be researched against OpenCut editor architecture before rebuild.
 
-No backend, P1 reasoning/TTS, P2, existing P3 finalizer or dependency changes.
+## Frozen source rule
+PR #57 application source is frozen as prototype/reference evidence. Do not cosmetically patch it and do not merge it.
 
-## Required invariants
-- P3 consumes P1 artifacts + P2 clean video and does not overwrite immutable artifacts.
-- Settings live per Job in `job.p3Config`.
-- Subtitle position is directly draggable and maps to exact derived ASS placement.
-- Existing P1 karaoke ASS is preserved before P3 runtime derivation.
-- Subsequent renders restore preserved `job.p3CleanVideoPath` before finalization.
-- Render calls existing `window.finalizeVideo(job)` once and prevents duplicate render clicks.
-- Only actual current audio/export capabilities are shown as actionable controls.
-- UI uses current CSS variables and P3-namespaced selectors.
-- Existing pipeline.js remains Step 1/2/3 visibility authority.
-- No new local clone/worktree/test directory.
+## Verified redesign basis
+OpenCut research supports the following architecture patterns for adaptation, not wholesale copying:
+- left source/assets panel;
+- center preview logical canvas;
+- right properties inspector;
+- bottom timeline;
+- resizable editor regions;
+- aspect-correct logical canvas fitted into viewport;
+- explicit preview coordinate transforms;
+- modular timeline/editor state/interactions;
+- UI separated from render engine/core.
 
-## Required verification on exact final HEAD
-```text
-git rev-parse HEAD
-node --check src/renderer/js/pipeline3-workspace.js
-node --check src/renderer/js/pipeline3-rerender-safety.js
-node --check src/renderer/js/pipeline1-run-config.js
-git diff --check abfe33510523b800654dcf3b1b56f25f4ccd43d1..HEAD
-```
-
-## Owner runtime acceptance
-- P3 UI follows approved demo composition and app color tone.
-- P3 empty/ready/rendering/completed states are clear.
-- Drag subtitle to multiple locations; controls/preview remain synchronized and smooth.
-- Style/preset settings preview immediately and remain isolated between Jobs.
-- One short final render places/styles burned subtitle close to preview.
-- Change settings and render again; second render must use the original clean P2 source, not previous final output.
-- Existing P1 per-Job Remix and P2 flow remain unchanged.
+## Required replacement design
+- Left: visible P3 Job Manager / Source Bin.
+- Center: Player + logical source canvas preserving source aspect ratio with letterbox/pillarbox.
+- Right: Subtitle / Audio / Export inspector.
+- Bottom: assembly timeline with Video / Voice / Subtitle / Effect tracks and shared playhead.
+- Theme: approved app navy/blue-gray/blue palette; no independent purple P3 theme.
+- State: event-driven editor/job state where possible; no 300 ms polling as primary authority.
+- Modules: editor/store, job panel, preview geometry, timeline, inspector, subtitle ASS adapter, render controller/re-render safety.
+- Keep existing P3 finalizer/backend and immutable P1/P2 artifact boundaries unless a separately verified missing capability requires contract work.
 
 ## Gates
-- Execution: PASS.
+- Execution: PASS for prototype publication only.
 - Automated/static: WAITING.
-- Code review: PASS.
-- Owner runtime: NOT STARTED.
-- Documentation synchronization: PASS pre-runtime.
+- Code review: prior source review historical only; current product decision NEEDS_REVISION.
+- Owner runtime: FAIL.
+- Documentation synchronization: PASS after Owner-fail sync.
 - Merge: BLOCKED.
 
 ## Next permitted action
-PM verifies live PR #57 exact final head/files/checks/comments. Then Owner updates the existing clean local test directory to that exact head and runs static/UI/manual render verification. Do not merge.
+PM presents/reviews the revised P3 design/spec. Only after Owner approval create a fresh dedicated rebuild task/branch from the approved integration base. No implementation on PR #57 and no merge.
