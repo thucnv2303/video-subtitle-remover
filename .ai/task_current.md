@@ -1,72 +1,68 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-INTEGRATION-013
+PIPELINE3-EDITOR-REBUILD-016
 
 ## Status
-SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_WAITING
+SOURCE_PUBLISHED_PM_REVIEW_IN_PROGRESS_STATIC_WAITING_OWNER_RUNTIME_NOT_STARTED
 
-## Basis
-- Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56.
-- Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`.
-- Long-video Revision-3 source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`.
-- Per-Job Remix authority: PR #54 application source `c3662ea84f32c25bf5bf633888affe39fd2cb6fa`.
-- Integration source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`.
-- Spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`.
+## Exact basis
+- Branch: `review/PIPELINE3-EDITOR-REBUILD-016`.
+- Starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1`.
+- Main spec: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016.md`.
+- Bootstrap amendment: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016-BOOTSTRAP-AMENDMENT.md`.
+- Application-source head before docs sync: `936ddb32ceed3fda2839fc6a000e593a37f4a75d`.
 
 ## User outcome
-One Owner-testable Pipeline 1 build must contain both the long-video Standard fix and the already-implemented per-Job Semantic Remix behavior. Owner must not be asked to create another local clone/worktree directory.
+Rebuild Pipeline 3 to match the approved editor demo and current app tone: visible Job Manager, aspect-correct preview, assembly timeline, detailed settings, smooth subtitle drag, and collapsible fold/accordion groups for related settings.
 
-## Integrated application behavior
-### Long Standard narration
-- Targets >3200 chars with >=2 Vision chunks use sequential chronological sections.
-- Each section receives local SRT + local Vision evidence and a bounded continuity handoff.
-- Opening only occurs in section 1; only final section may conclude/CTA.
-- Sections join into one continuous narration.
-- Original global hard-length, ZERO-CJK and repetition gates remain fail-closed.
-- TTS receives one joined narration only after `Standard duration guard PASS`.
+## Implemented source
+- focused P3 editor/store/geometry/subtitle-ASS/render-controller modules;
+- P3-specific navy/blue-gray CSS;
+- one import-only bootstrap addition to `pipeline1-run-config.js`;
+- inherited finalizer/backend remain unchanged.
 
-### Per-Job Semantic Remix
-- No global Semantic Remix checkbox/localStorage authority.
-- Each Job card owns `job.semanticRemixEnabled`, default OFF/Standard.
-- queued/processing locks that Job's switch; idle/error remains editable.
-- run snapshot copies each Job's own value to `job.p1Config.semanticRemixEnabled`.
-- changing one Job does not modify another Job or future Jobs.
+## Core behavior
+1. P3-ready Jobs are visible in a dedicated searchable/filterable Job panel.
+2. Real video resolution defines the logical canvas; viewport fit preserves aspect ratio.
+3. Subtitle X/Y is per Job and stable through resize; pointer drag maps viewport to logical canvas coordinates.
+4. Subtitle styling generates in-memory derived ASS with exact `\\pos(x,y)` while preserving original karaoke ASS separately.
+5. Settings are grouped in native collapsible folds: Phụ đề, Bố cục & Vị trí, Hiệu ứng chữ, Audio, Nhạc nền, Xuất video, Nâng cao.
+6. Timed subtitle cues appear as individual timeline blocks and support seek.
+7. Re-render restores preserved P2 clean video before calling the existing finalizer.
+8. No P1/P2/backend/dependency implementation change.
 
-### Log routing
-`pipeline1-run-config.js` preserves `import './pipeline1-log-router.js';`; integration must not regress P1/Ollama isolation from the P2 console.
-
-## Review evidence
-Compare `4ff0712... -> e6d43ced...` changes exactly the integration spec and 3 authorized renderer files. The inherited `src/main/p1-standard-vision-wrapper.js` is unchanged by integration. PM logic/scope review PASS; static/runtime evidence is still required.
-
-## Owner local policy
-Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. Do not create any additional clone/worktree/test directory. If that existing directory is dirty, STOP rather than reset/restore/clean it.
-
-## Required verification
+## Required static on exact final HEAD
 ```text
-git rev-parse HEAD
-node --check src/main/p1-standard-vision-wrapper.js
+node --check src/renderer/js/pipeline3/editor.js
+node --check src/renderer/js/pipeline3/editor-store.js
+node --check src/renderer/js/pipeline3/preview-geometry.js
+node --check src/renderer/js/pipeline3/subtitle-ass.js
+node --check src/renderer/js/pipeline3/render-controller.js
 node --check src/renderer/js/pipeline1-run-config.js
-node --check src/renderer/js/pipeline1-semantic-remix-per-job.js
-git diff --check 4ff0712a909f12929373e6f457aa96329e9c3610..HEAD
+git diff --check abfe33510523b800654dcf3b1b56f25f4ccd43d1..HEAD
 ```
 
-Then Owner runtime acceptance:
-1. no global Semantic Remix block;
-2. 2+ Job cards each show independent Remix OFF/Standard;
-3. Job A ON does not change Job B;
-4. queued/processing switch locks and run uses per-Job mode;
-5. ~497s Standard uses chunked long narration and joined global PASS before TTS;
-6. one continuous TTS flow starts only after the final joined narration passes;
-7. P1/Ollama logs remain out of P2 console.
+## Owner runtime acceptance
+- reuse existing local test directory only;
+- Job Manager visible and responsive;
+- preview does not stretch for available aspect ratios;
+- resize window preserves canvas ratio/subtitle logical position;
+- drag subtitle to multiple positions and confirm X/Y sync;
+- accordion sections expand/collapse without resetting preview/playback;
+- per-Job settings persist while switching Jobs;
+- timeline cue blocks align with subtitle timing and seek correctly;
+- short render matches preview placement/style closely;
+- second render starts from original P2 clean video;
+- P1 per-Job Remix/P2 remain unchanged.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending exact final-head/static/runtime/QA closeout.
+- Code review: WAITING final PR/full-file review.
+- Owner runtime: NOT STARTED.
+- Documentation synchronization: PASS pre-runtime.
 - Merge: BLOCKED.
 
 ## Next action
-Finish canonical integration-doc synchronization, verify live PR #56 exact head/files/checks, then authorize Owner to update the existing LONG012 directory to that exact head. No new local directory and no merge.
+Open Draft PR, complete exact GitHub code review, then authorize Owner static/runtime test only if review PASS.
