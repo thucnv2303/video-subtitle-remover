@@ -1,4 +1,5 @@
 import './pipeline1-run-ux.js';
+import './components/prompt-manager-new-flow.js';
 
 /**
  * Pipeline 1 run configuration bridge.
