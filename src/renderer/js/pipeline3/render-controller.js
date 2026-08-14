@@ -1,4 +1,32 @@
 import { ensureP3Config } from './editor-store.js';
+import { updateJobDerivedAss } from './subtitle-ass.js';
+
+function installBurnTimingBridge(job, config) {
+  const api = window.api;
+  const original = api?.burnSubtitlePositioned;
+  if (typeof original !== 'function') return () => {};
+
+  api.burnSubtitlePositioned = async function p3TimingAwareBurn(
+    videoPath,
+    srtContent,
+    outputPath,
+    positions,
+    styleArgs,
+    karaokeAss
+  ) {
+    const info = job.p3VideoInfo || {};
+    if (String(srtContent || '').trim() && Number(info.width) > 0 && Number(info.height) > 0) {
+      job.p3TimedSrt = srtContent;
+      const derived = updateJobDerivedAss(job, config, info.width, info.height);
+      return original.call(api, videoPath, srtContent, outputPath, positions, styleArgs, derived || karaokeAss || null);
+    }
+    return original.call(api, videoPath, srtContent, outputPath, positions, styleArgs, karaokeAss);
+  };
+
+  return () => {
+    if (api.burnSubtitlePositioned !== original) api.burnSubtitlePositioned = original;
+  };
+}
 
 export async function renderP3Job(job, onState) {
   if (!job) return false;
@@ -18,6 +46,7 @@ export async function renderP3Job(job, onState) {
   localStorage.setItem('tts_remove_vocal', String(Boolean(config.removeVocal)));
   localStorage.setItem('tts_bg_volume', String(Math.max(0, Math.min(100, Number(config.bgVolume) || 0))));
 
+  const restoreBurn = installBurnTimingBridge(job, config);
   onState?.('rendering');
   job.p3Status = 'rendering';
   try {
@@ -30,6 +59,8 @@ export async function renderP3Job(job, onState) {
     onState?.('error', error);
     window.addLog?.(`[P3] Render lỗi: ${error?.message || error}`, 'error');
     return false;
+  } finally {
+    restoreBurn();
   }
 }
 
