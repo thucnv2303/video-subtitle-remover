@@ -19,6 +19,8 @@
 
   // ─── Constants ───────────────────────────────────────────────────────────
   const REGION_COLORS = ['#7c3aed', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#ef4444'];
+  const P1_LOG_LIMIT = 2000;
+  const P1_HEARTBEAT_ACCESS_LOG_RE = /^\[Py\]\s+INFO:\s+\S+\s+-\s+"GET \/api\/(?:health|tts\/status|gpu-info) HTTP\/1\.[01]"\s+200 OK\s*$/i;
 
   // ─── State ───────────────────────────────────────────────────────────────
   const state = {
@@ -156,12 +158,12 @@
       el.logOutput.scrollTop = el.logOutput.scrollHeight;
     }
 
-    // Console nhỏ Step 1
+    // Console nhỏ Step 1: giữ lịch sử dài hơn nhưng không mirror heartbeat 200 OK nền.
     const step1Log = document.getElementById('step1-log-output');
-    if (step1Log) {
+    if (step1Log && !P1_HEARTBEAT_ACCESS_LOG_RE.test(String(message || ''))) {
       const clone = entry.cloneNode(true);
       step1Log.appendChild(clone);
-      if (step1Log.childNodes.length > 100) step1Log.removeChild(step1Log.firstChild);
+      while (step1Log.children.length > P1_LOG_LIMIT) step1Log.removeChild(step1Log.firstElementChild);
       step1Log.scrollTop = step1Log.scrollHeight;
     }
   }
