@@ -4,41 +4,44 @@
 `PIPELINE1-PROMPT-MANAGER-V2-010`
 
 ## Status
-RUNTIME REVISION 1 SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC RETEST WAITING / OWNER RETEST WAITING / MERGE BLOCKED
+RUNTIME REVISION 2 SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC RETEST WAITING / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
 - Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`
 - Active branch / Draft PR: `review/PIPELINE1-PROMPT-MANAGER-V2-010` / #53
-- Runtime-revision-1 spec: `6ae8fb027d8ba5fee946f8d5caa076c47ac5e53f`
-- Runtime-revision-1 source: `f996edb5b8614843325768c0e98b68fedf16ffc0`
+- Owner runtime-failed HEAD: `2a19d71dc3456013c764ee5894e74f90295a6340`
+- Runtime-revision-2 spec: `9cce60e52aff0e5d590314d774edfc9a86669b1b`
+- Runtime-revision-2 source: `da5c81f0cc78d072bf034e416f0ed0cde9ec7977`
 - Active bug: `BUG-040`
 
 ## Owner evidence
-Prior V2 static checks PASS. After installing dependencies the app starts normally, but Owner reports Prompt Management / Quản lý click does not open the modal. Backend/GPU/WebSocket startup is healthy, so this is treated as a renderer wiring failure.
+On exact local `2a19d71...`, Prompt Manager opens, but clicking the modal-local `+ Prompt mới` does not expose/reset Name/Content as a new draft.
 
 ## Verified correction
-- Existing `app.js` uses a one-shot 100 ms `window.initPromptManager` check with no retry.
-- Runtime revision 1 leaves `app.js` untouched.
-- `prompt-manager.js` now self-initializes at module/DOM readiness.
-- `initPromptManager()` remains idempotent and does not mark itself initialized before `#prompt-modal` exists.
-- Manage/Edit/Add use one delegated document click listener, so Step 1 DOM replacement no longer discards launch wiring.
-- Direct duplicate Manage/Edit/Add listeners were removed.
-- Source correction diff: only `prompt-manager.js`, +30/-4; PM review PASS.
+- Step 1 Add already uses delegated canonical `openModal(null, true)` routing.
+- Modal-local New used a different direct listener.
+- Revision 2 adds a narrow capture bridge that intercepts only `#prompt-v2-new` and forwards one click to the canonical Step 1 Add path.
+- If Step 1 Add is temporarily absent, a hidden temporary proxy with the same id is used only for dispatch and removed immediately.
+- Bridge contains no prompt/localStorage CRUD logic.
+- Revision-2 source diff: new bridge +40; run-config +1 import; PM review PASS.
 
 ## Required verification
 On latest PR #53 HEAD:
-1. rerun Node syntax check for prompt-manager and run-config;
-2. rerun exact `git diff --check` from `330d756f...`;
-3. cold-start app and click Quản lý — modal must open;
-4. click `+ Prompt mới` — clean draft must open;
-5. if launcher passes, continue CRUD/delete-all/restart/active/default/empty-store acceptance.
+1. `node --check src/renderer/js/components/prompt-manager-new-flow.js`
+2. `node --check src/renderer/js/components/prompt-manager.js`
+3. `node --check src/renderer/js/pipeline1-run-config.js`
+4. `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD`
+5. cold-start app; open Prompt Manager;
+6. click modal-local `+ Prompt mới`: clean Name/Description/Content draft must appear;
+7. save one valid prompt: exactly one item must be created and persist after close/reopen;
+8. then continue full delete/default/active/delete-all/restart/empty-store acceptance.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING revision-1 retest.
+- Automated/static: WAITING revision-2 retest.
 - Code review: PASS.
-- Owner runtime: RETEST WAITING after prior FAIL.
+- Owner runtime: RETEST WAITING after FAIL on prior exact head.
 - Documentation synchronization: PARTIAL pending final runtime/bug/QA result.
 - Merge: BLOCKED.
 
