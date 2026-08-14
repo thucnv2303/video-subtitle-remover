@@ -1,63 +1,50 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-STANDARD-CJK-GUARD-008`
+`PIPELINE1-PROMPT-MANAGER-V2-010`
 
 ## Status
-OWNER STANDARD FUNCTIONAL PASS / P1 LOG OBSERVABILITY + DEFAULT-PROMPT FOLLOW-UP REQUIRED / MERGE BLOCKED
+SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC WAITING / OWNER RUNTIME NOT STARTED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
-- Parent branch/PR: `review/PIPELINE1-SEMANTIC-REMIX-007` / #48
-- Corrective branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`
-- Corrective Draft PR: #51
-- Starting SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`
-- Source correction: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`
-- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`
+- Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`
+- Active branch / Draft PR: `review/PIPELINE1-PROMPT-MANAGER-V2-010` / #53
+- Application-source head before docs sync: `2d4fc7e05f71a38daa406647226e883bd7ed69f8`
+- Active bug: `BUG-040`
 
-## Verified source/static state
-- Source publication and isolation: PASS.
-- Exact-head Node syntax for Standard wrapper + IPC: PASS.
-- Exact-head `git diff --check`: PASS.
-- Owner worktree clean at static verification.
-- Code review: PASS for the CJK prompt-contract correction.
+## Owner sequencing decision
+Prompt Manager V2 is the only active implementation task. Finish and verify it before returning to logs. `PIPELINE1-LOG-OBSERVABILITY-009` / PR #52 stays open, Draft and PAUSED; no further source work on that PR is permitted during task 010 verification.
 
-## Owner Standard result — 2026-08-14
-Owner reports the real app runs well, AI-generated Standard narration/script is correct, and voice rendering is stable. Treat Standard functional runtime as PASS for the corrected configured prompt.
+## Verified source correction
+- Prompt state has one authority: `ai_prompts`.
+- An explicitly saved empty array remains empty and no longer restores product defaults.
+- A one-time migration only replaces the exact untouched obsolete legacy seed.
+- Legacy undeletable `p1` rule is removed; any prompt may be deleted.
+- Active/default/compatibility mirror state is reconciled after deletion and empty state clears all selection keys.
+- Prompt Manager modal and Step 1 prompt panel render from the same store.
+- Approved navy/blue two-column design is implemented through `prompt-manager-v2.css` without rewriting `index.html`.
+- P1 run config resolves only an actual stored selected/active prompt; stale `ai_prompt` cannot resurrect deleted content.
+- Source compare is limited to `prompt-manager.js`, `pipeline1-run-config.js`, and new `prompt-manager-v2.css` plus task spec.
 
-## Newly verified follow-up defects
-### BUG-039 — P1 log observability
-- `src/renderer/js/app.js` clones all global logs into `#step1-log-output`.
-- P1 console drops oldest data after 100 entries.
-- Python access logs for successful background `/api/health`, `/api/tts/status`, `/api/gpu-info` polls therefore appear in P1 console even with no P1 Job.
-- Voice Render/global status performs legitimate background health refreshes; preserve that functionality but stop presenting routine successful heartbeat access lines as P1 activity.
-
-### BUG-040 — stale product default prompt
-- `src/renderer/js/components/prompt-manager.js` still seeds an SRT/subtitle-translation default.
-- `pipeline1-run-config.js` snapshots the selected/default prompt into the P1 run.
-- Owner success required manually replacing the prompt with the corrected continuous-narration / ZERO-CJK contract.
-
-## Knowledge correction
-The previous `.ai/qa_checklist.md` and `.ai/task_specs/ACTIVE.md` were stale: QA still pointed to task/PR #48, while ACTIVE still pointed to already-merged Voice Render PR #50. They must not be used as execution authority until this synchronization commit is published.
+## Required verification
+On the latest PR #53 HEAD:
+1. Run Node syntax checks for `prompt-manager.js` and `pipeline1-run-config.js`.
+2. Run exact `git diff --check` from `330d756f...` to HEAD.
+3. Open app and confirm V2 modal hierarchy/colors match approved design.
+4. Create/edit/reorder prompt, close/reopen and restart; data persists.
+5. Delete seeded/default prompt; deletion succeeds.
+6. Delete all; close/reopen and full restart; list remains empty and old prompt does not return.
+7. Empty store shows no phantom Step 1 prompt and P1 refuses to start until a valid prompt exists.
+8. Create/select/default/use a prompt; modal, Step 1 and dropdown agree after restart.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PASS for task 008 application source.
-- Code review: PASS for task 008 application source.
-- Owner Standard runtime: PASS for corrected configured prompt.
-- Owner Semantic: DEFERRED.
-- Documentation synchronization: PASS after the corrective knowledge commit containing this handoff.
+- Automated/static: WAITING.
+- Code review: PASS for source logic/scope.
+- Owner runtime: NOT STARTED.
+- Documentation synchronization: PARTIAL until verification result is recorded in bug/QA ledgers.
 - Merge: BLOCKED.
 
-## Next permitted action
-Create a dedicated stacked review task `PIPELINE1-LOG-OBSERVABILITY-009` from this synchronized PR #51 head. Fix only P1 log retention/noise routing and required `.ai/` state. Do not change AI reasoning, TTS generation, P2, P3, or backend/status behavior. After Owner runtime PASS for logging, synchronize the proven continuous-narration prompt into the product default in a separate task before any merge consideration.
-
-## New-tab bootstrap package
-1. Use GitHub as source of truth.
-2. Verify PR #51 and exact current head.
-3. Read `.ai/current_state.md`, `.ai/task_current.md`, `.ai/handoff.md`, `.ai/qa_checklist.md`, and `.ai/task_specs/ACTIVE.md` from that exact ref.
-4. Task 008 Standard functional runtime is PASS for the corrected configured prompt; do not reopen the CJK source correction without new failure evidence.
-5. BUG-039 log observability is the immediate next source task.
-6. BUG-040 product-default prompt sync remains required after log observability.
-7. Semantic remains deferred until Standard closeout follow-ups are verified.
-8. Merge permission remains BLOCKED.
+## Merge / next task
+Do not merge PR #53 or PR #52. After Prompt Manager Owner result is recorded and task 010 gates are complete, resume BUG-039 log work as a separate task/PR.
