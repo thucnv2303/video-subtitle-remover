@@ -1,7 +1,7 @@
 # Current State
 
 ## Status
-PIPELINE1-STANDARD-LONG-VIDEO-012 — REVISION 2 RUNTIME FAIL / REVISION 3 CHUNKED AUTHORIZED / MERGE BLOCKED
+PIPELINE1-STANDARD-LONG-VIDEO-012 — REVISION 3 CHUNKED SOURCE PUBLISHED / PM REVIEW PASS / STATIC WAITING / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -10,51 +10,46 @@ PIPELINE1-STANDARD-LONG-VIDEO-012 — REVISION 2 RUNTIME FAIL / REVISION 3 CHUNK
 - Revision-2 application source: `6e047bf120dde6543386c50c725bf8f73418d441`.
 - Revision-3 spec: `.ai/task_specs/PIPELINE1-STANDARD-LONG-VIDEO-012-REV3-CHUNKED.md`.
 - Revision-3 spec commit: `628fae6cde8ee3a9a82fb26fd65ca44acae68b66`.
-- Active spec pointer updated on `51852eeedc19ba2225d69773ac2a7378b8f4c6dc`.
+- Revision-3 application source: `f00b5e8711ec737ad5c474987647171161226cb5`.
 - Active bug: `BUG-041`.
 
-## Fresh Owner runtime — 2026-08-14
-Owner reports testing the new long-video build; exact local `git rev-parse HEAD` was not pasted, so exact tested SHA remains unverified.
+## Owner runtime basis — Revision 2 FAIL
+Latest ~497.1s Standard run completed ASR, 80-keyframe/10-chunk Vision and global reasoning. Hard target was 7792-8202 chars. The prior grammar HTTP 400 was gone, but both monolithic recompose attempts completed at only ~1610 chars and failed before TTS.
 
-Runtime facts:
-- ~497.1s Standard video.
-- ASR PASS: 7 transcript segments.
-- Vision PASS: 80 keyframes / 10 chronological chunks.
-- Global reasoning PASS: clean draft 1051 chars.
-- Hard target: 7792-8202 chars.
-- Revision-2 recompose telemetry: evidence=11255 chars; input≈7792 token; output_limit=5772; num_ctx=16384; timeout=380s.
-- Previous grammar-init HTTP 400 is gone.
-- First recompose returned 1610 chars and failed deterministic length validation.
-- One retained-candidate retry again returned 1610 chars and failed before TTS.
+## Revision 3 implementation
+Only `src/main/p1-standard-vision-wrapper.js` changes application behavior from the prior branch head.
+- Long target trigger: >3200 chars with at least 2 Vision chunks.
+- Chronological contiguous section planning, aiming around <=1650 chars per section.
+- Global min/target/max budget is allocated proportionally to section timeline duration, accounting for join separators.
+- Each section receives only overlapping SRT and local Vision chunks/scenes.
+- Section requests run sequentially on the same reasoning model; no concurrent GPU inference.
+- Each section has at most one retained-candidate retry for retryable JSON/length/quality failures.
+- Continuity is preserved by a compact global brief plus up to the last 3 sentences / 520 chars from the previously accepted section.
+- Only section 1 may open; only the final section may conclude/CTA; middle sections must continue directly.
+- Accepted sections are joined into exactly one continuous narration, then original global hard-length + ZERO-CJK + repetition gates run fail-closed.
+- There is no final monolithic AI rewrite.
+- TTS ordering is unchanged: TTS receives one joined narration only after `Standard duration guard PASS`.
 
-## Verified diagnosis
-The remaining failure is not timeout, context allocation, output ceiling, grammar initialization or TTS. One request is still expected to expand a ~1k draft into one ~8k continuous narration. The model completes normally but stops around ~1.6k chars twice.
+## PM source review
+PASS for scope/logic review of source commit `f00b5e87...`.
+- Compare `98052170... -> f00b5e87...` changes exactly one application file: `src/main/p1-standard-vision-wrapper.js` (+337/-4).
+- Short/medium single-request path remains.
+- Long section planning is chronological and bounded.
+- No TTS/P2/P3/renderer/Prompt Manager/Remix/log/dependency source was changed.
+- Exact runtime/static execution is still required; no release PASS is claimed.
 
-## Revision 3 decision
-Long Standard scripts must be composed as sequential chronological sections from local evidence, then joined and validated globally.
-- Trigger only for materially long targets (>~3200 chars) with >=2 Vision chunks.
-- Plan roughly <=1700 chars per section; observed 8k target / 10 chunks should produce about 5 sections.
-- Allocate section budgets by timeline duration so they sum to the original global hard range.
-- Each section receives only overlapping SRT + local Vision chunk/scenes, not the entire source again.
-- Calls are sequential; no parallel GPU inference.
-- Exactly one retained-candidate retry per section for retryable failures.
-- First section handles opening; final section alone handles conclusion/CTA.
-- Join to one continuous narration; then preserve global hard-length, ZERO-CJK and repetition gates.
-- No monolithic final AI rewrite.
-- TTS remains blocked until global `Standard duration guard PASS`.
-
-## Semantic Remix clarification
-PR #54 is the separate per-Job Semantic Remix implementation. PR #55 intentionally does not contain PR #54 renderer source, so the global Remix checkbox in the current long-video test build is expected branch isolation, not evidence that PR #54 is broken.
+## Semantic Remix / Owner build policy
+PR #54 remains the per-Job Semantic Remix source. PR #55 by itself does not contain that sibling renderer change.
+Owner requested no further clone/worktree directories. Future Owner tests must reuse one existing test directory/worktree and switch/fetch the approved remote ref; do not create additional `owner-test-*` folders.
+Before the next product-level Owner test, PM should create one explicit integration review branch on GitHub that combines the verified long-video source with per-Job Remix, rather than asking Owner to test another isolated sibling build.
 
 ## Gates
-- Revision-2 Execution: PASS.
-- Revision-2 static: previously PASS on earlier exact test; exact current runtime-head static association is not verified in the latest message.
-- Revision-2 Owner runtime: FAIL.
-- Revision-3 Execution: AUTHORIZED.
+- Revision-3 Execution: PASS.
 - Revision-3 Automated/static: WAITING.
-- Revision-3 Code review: WAITING.
-- Documentation synchronization: PARTIAL until Revision-3 source + runtime/bug/QA closeout.
+- Revision-3 Code review: PASS (logic/scope only).
+- Owner runtime: WAITING.
+- Documentation synchronization: PARTIAL pending final-head static/runtime/QA closeout and integration state.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Implement only `src/main/p1-standard-vision-wrapper.js` according to the remote Revision-3 spec, publish source commit, then PM reviews exact diff/full file before Owner retest.
+Create/review a GitHub-only integration branch containing Revision 3 long-video + per-Job Semantic Remix, with no new local clone/worktree. Then give Owner commands that reuse the existing LONG012 test directory and verify the exact integration HEAD before runtime.
