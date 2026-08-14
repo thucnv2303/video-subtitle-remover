@@ -12,6 +12,7 @@ const EFFECTS = [
   ['blur_in', 'Mờ → rõ'],
   ['fade_up', 'Fade + trượt lên'],
 ];
+const RESIZE_INPUT_IDS = new Set(['p3e-max-width', 'p3e-x', 'p3e-y']);
 
 let installed = false;
 let observer = null;
@@ -19,10 +20,7 @@ let activePointerId = null;
 let activeHandle = null;
 
 function el(id) { return document.getElementById(id); }
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, Number(value) || 0));
-}
+function clamp(value, min, max) { return Math.max(min, Math.min(max, Number(value) || 0)); }
 
 function installStyle() {
   if (document.getElementById(STYLE_ID)) return;
@@ -113,9 +111,9 @@ function syncResizeUi() {
   const width = clamp(config.maxWidth || 80, 20, 100);
   const x = clamp(config.x ?? 50, 0, 100);
   const visible = !sub.classList.contains('placeholder');
-
-  sub.style.width = `${width}%`;
-  sub.style.maxWidth = `${width}%`;
+  const widthCss = `${width}%`;
+  if (sub.style.width !== widthCss) sub.style.width = widthCss;
+  if (sub.style.maxWidth !== widthCss) sub.style.maxWidth = widthCss;
 
   const half = width / 2;
   const positions = { left: x - half, right: x + half };
@@ -147,17 +145,13 @@ function updateWidthFromPointer(event) {
 
 function onResizeStart(event) {
   event.preventDefault();
+  event.stopPropagation();
   activePointerId = event.pointerId;
   activeHandle = event.currentTarget;
   activeHandle.setPointerCapture(event.pointerId);
   activeHandle.classList.add('dragging');
 }
-
-function onResizeMove(event) {
-  if (event.pointerId !== activePointerId || event.currentTarget !== activeHandle) return;
-  updateWidthFromPointer(event);
-}
-
+function onResizeMove(event) { if (event.pointerId === activePointerId && event.currentTarget === activeHandle) updateWidthFromPointer(event); }
 function onResizeEnd(event) {
   if (event.pointerId !== activePointerId) return;
   try { activeHandle?.releasePointerCapture(event.pointerId); } catch {}
@@ -174,7 +168,13 @@ function bindObservers() {
     syncResizeUi();
     if (mutations.some(item => item.type === 'childList' || item.type === 'characterData')) replayEffect();
   });
-  observer.observe(sub, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+  observer.observe(sub, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+  document.addEventListener('input', event => {
+    if (RESIZE_INPUT_IDS.has(event.target?.id)) requestAnimationFrame(syncResizeUi);
+  }, true);
+  document.addEventListener('click', event => {
+    if (event.target?.closest?.('[data-job], [data-anchor], .p3e-preset')) requestAnimationFrame(syncResizeUi);
+  }, true);
   window.addEventListener('resize', () => requestAnimationFrame(syncResizeUi));
   return true;
 }
@@ -196,8 +196,5 @@ export function installP3SubtitleResizeEffects() {
   installWhenReady();
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', installP3SubtitleResizeEffects, { once: true });
-} else {
-  installP3SubtitleResizeEffects();
-}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installP3SubtitleResizeEffects, { once: true });
+else installP3SubtitleResizeEffects();
