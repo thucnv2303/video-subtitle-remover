@@ -1,57 +1,62 @@
 # PIPELINE1-LOG-OBSERVABILITY-009
 
-Status: APPROVED FOR PM DIRECT EXECUTION — RUNTIME REVISION 2
+Status: APPROVED FOR PM DIRECT EXECUTION — RUNTIME REVISION 3
 
 ## Repository / refs
 - Repository: `thucnv2303/video-subtitle-remover`
 - Base branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`
 - Expected base SHA: `330d756fcce1b71ca8745b3292d7ac655bc32d13`
 - Review branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52
-- Runtime-revision starting HEAD: `3ab395128d841626d689182853beea8c10c58aa1`
+- Runtime-revision-3 starting HEAD: `a7e05b1cd2fe2a4d78b74d7b7b3b59a7c9f08ba7`
 - Bug: `BUG-039`
 
-## Owner runtime evidence — revision 2
-Owner reports routine access logs still visibly repeat, including duplicate successful requests for `/api/health`, `/api/tts/status`, and `/api/gpu-info`. Owner also requires frame-processing progress to occupy one live line whose frame/progress value updates, instead of appending many frame lines.
+## Owner runtime evidence — revision 3
+Owner reports that Pipeline 1 log information is also appearing in the Pipeline 2 log panel even though Pipeline 2 has not run. Direct source review confirms `app.js::addLog()` appends every log entry to `#log-output` first and then clones the same entry into `#step1-log-output`; `#log-output` is rendered inside the Step 2 pane. This means P1-marked activity can leak into the P2-visible history by design.
+
+A second Owner finding concerns Prompt Manager deletion persistence. That issue is `BUG-040` and is explicitly OUT OF SCOPE for this PR; it remains a separate follow-up.
 
 ## Revised user outcome
-Log presentation must be operationally useful rather than a raw stdout mirror:
-- successful routine status/access polling must not spam visible console history;
-- P2 frame-processing progress must use one live progress row that updates in place;
-- stage changes, warnings, errors, and completion remain distinct durable lines;
-- no polling frequency or backend processing behavior changes.
+Log presentation must respect pipeline ownership:
+- P1 operational entries remain visible in the P1 console;
+- P1 operational entries must not remain in the P2 log panel, including while P2 has never started;
+- existing P1 retention/heartbeat cleanup remains intact;
+- existing P2 routine-access cleanup and one-line frame progress remain intact;
+- warnings/errors stay visible in their owning pipeline console;
+- no polling frequency, backend processing, AI/TTS processing, Prompt Manager, Settings, or P3 behavior changes.
 
 ## Verified code basis
-1. `src/renderer/js/pipeline1-run-ux.js` owns P1 console cleanup/retention from the first BUG-039 correction.
-2. `src/renderer/js/pipeline2-runtime.js` is the existing P2 runtime UX/log-coalescing layer.
-3. `pipeline2-runtime.js::installLogCoalescing` currently returns without inspecting added log entries when there is no active P2 Job, so idle access-log noise remains in the global log.
-4. `pipeline2-runtime.js::isNoisyAccessLog` covers several routine endpoints but does not cover `/api/tts/status`.
-5. The same file already owns a single `liveRow` for P2 progress and removes recognized frame heartbeat lines after updating that row.
+1. `src/renderer/js/app.js::addLog()` appends the original entry to `#log-output`, then synchronously clones it into `#step1-log-output`.
+2. `src/renderer/index.html` places `#step1-log-output` in Step 1 and `#log-output` in Step 2.
+3. `src/renderer/js/pipeline1-run-ux.js` already owns P1 console observability/retention and is LF-normalized, so a narrow observer there can remove P1-owned entries from the Step 2 container after the P1 clone has already been created.
+4. P1 source uses explicit markers including `[P1]`; legacy P1 activity also uses `[ASR]`, `[AI]`, `[TTS]`, `[Voice]`, and `[VoiceSub]` markers.
+5. `src/renderer/js/pipeline2-runtime.js` already owns routine access-log suppression and P2 live frame coalescing from runtime revision 2 and should remain unchanged unless review proves necessary.
 
 ## Authorized application source
 Exactly:
-- `src/renderer/js/pipeline1-run-ux.js` only if P1 heartbeat cleanup requires a narrow correction;
-- `src/renderer/js/pipeline2-runtime.js` for global routine-access cleanup and P2 frame coalescing.
+- `src/renderer/js/pipeline1-run-ux.js` for P1-to-P2 log isolation;
+- `src/renderer/js/pipeline2-runtime.js` only if a regression in existing revision-2 filtering is discovered during review.
 
-No other application source is authorized.
+`src/renderer/js/app.js` remains no-net-change; do not re-edit it because its CRLF format previously caused broad formatting churn through contents-API replacement.
 
 ## Required implementation
-1. Keep existing P1 retention at 2000 and P1 heartbeat suppression behavior.
-2. In the global/main log, remove routine successful Python/Uvicorn access lines for status/preview polling even when no P2 Job is active.
-3. Include exact successful `GET /api/tts/status ... 200 OK` in routine-access suppression.
-4. Preserve all non-200 responses, warnings, Python errors, renderer errors, and unrelated backend logs.
-5. Do not reduce or disable health/TTS/GPU/status polling. This is presentation-only.
-6. Preserve one P2 live progress row and update its text in place.
-7. Raw frame/progress heartbeat variants recognized by the P2 UX layer must update that live row and then be removed from console history.
-8. Support common frame-counter forms without swallowing arbitrary messages, including existing `processing frame A to B`, `Processing: A-B / Total: N`, and simple `frame N/TOTAL` progress forms when they are clearly processing/progress messages.
-9. Stage transitions, start, warning/error, cancellation, and completion remain separate durable rows.
-10. Copy/Clear behavior remains intact.
+1. Preserve P1 log retention at 2000 and P1 routine heartbeat suppression.
+2. Install a narrow P1 log-isolation observer on `#log-output`.
+3. Remove only entries that are explicitly identifiable as P1-owned operational logs by their rendered marker, including `[P1]`, `[ASR]`, `[AI]`, `[TTS]`, `[Voice]`, and `[VoiceSub]` after the timestamp prefix.
+4. The removal must occur after normal `addLog()` execution so the synchronous P1 clone in `#step1-log-output` remains available.
+5. Do not suppress generic system entries or P2 `[Inpaint]` / `[Py]` entries merely because P1 is active.
+6. Preserve warning/error styling and visibility inside the P1 console.
+7. Preserve Pipeline 2 revision-2 routine access-log cleanup and single live frame-progress row.
+8. Preserve Copy/Clear behavior in both consoles.
+9. Do not change polling/timers/backend processing or cross-pipeline state transitions.
 
 ## Forbidden changes
-- no `api/server.py`
+- no `api/*`
 - no `src/main/*`
-- no Voice Render polling/timer changes
+- no `src/renderer/js/app.js`
+- no Prompt Manager / `components/prompt-manager.js`
 - no Settings changes
-- no P1 AI/Vision/reasoning/TTS changes
+- no Voice Render polling/timer changes
+- no P1 AI/Vision/reasoning/TTS processing changes
 - no Pipeline 3 changes
 - no dependency changes
 - no unrelated formatting/refactor
@@ -59,13 +64,12 @@ No other application source is authorized.
 
 ## Verification
 Required source review:
-- final application diff limited to the two authorized renderer UX files;
-- no polling/timer/backend changes;
-- `/api/tts/status` successful access log is classified as routine noise;
-- access-log cleanup is executed even while no P2 job exists;
-- non-200 same-endpoint access line is retained;
-- frame heartbeat updates one live row and raw heartbeat row is removed;
-- warning/error rows remain durable.
+- revision-3 app-source diff limited to `pipeline1-run-ux.js` unless an explicitly justified P2 regression is found;
+- P1 marker matcher is narrow and timestamp-aware;
+- P1 entry is removed from `#log-output` but remains in `#step1-log-output`;
+- generic system/P2 entries are not consumed by the P1 isolation observer;
+- revision-2 P2 access-noise/frame-coalescing logic remains unchanged;
+- no backend/timer/Prompt Manager/P3 changes.
 
 Required executable checks when an exact checkout is available:
 ```text
@@ -75,11 +79,16 @@ git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD
 ```
 
 ## Owner runtime acceptance
-1. Restart app on exact PR #52 HEAD and leave idle >=30 seconds: visible log does not accumulate routine successful `/api/health`, `/api/tts/status`, `/api/gpu-info` rows.
-2. Backend/TTS/GPU status still refreshes normally.
-3. Run P2: frame progress is represented by one live row whose frame/progress values advance, not hundreds of appended frame lines.
-4. Trigger/observe a warning or error: it remains visible as a distinct line.
-5. P1 meaningful history still retains >100 entries and Copy/Clear still work.
+On the latest PR #52 HEAD:
+1. Start/restart app and run P1 without starting P2: P1 operational logs remain in the P1 console and do not accumulate in the P2 log panel.
+2. Leave idle >=30 seconds: routine successful health/TTS/GPU rows do not accumulate in the visible P2 log.
+3. Backend/TTS/GPU status still refreshes normally.
+4. Run P2: frame progress remains one live updating row, not hundreds of appended raw frame rows.
+5. Trigger/observe a P1 warning/error: it remains visible in P1 and does not leak into P2.
+6. Copy/Clear in both consoles remain functional.
+
+## Separate follow-up — BUG-040
+Prompt Manager deletion persistence is confirmed source-defective but must not be mixed into PR #52. After BUG-039 runtime PASS, open a separate task/branch so an explicitly saved empty prompt list remains empty after restart and active-prompt keys are reconciled correctly.
 
 ## Gates
-Owner runtime has invalidated the prior closeout assumption. Source revision is authorized. Merge remains BLOCKED.
+Owner runtime evidence invalidates revision-2 closeout for pipeline log isolation. Revision 3 is authorized. Merge remains BLOCKED.
