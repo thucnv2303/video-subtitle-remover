@@ -6,6 +6,8 @@ const CJK_CHAR_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\uf900
 const REPEAT_NGRAM_WORDS = 10;
 const SIMILAR_SENTENCE_MIN_WORDS = 8;
 const SIMILAR_SENTENCE_THRESHOLD = 0.88;
+const RECOMPOSE_CONTEXT_BUCKETS = [8192, 16384, 32768];
+const RECOMPOSE_MAX_PREDICT = 8192;
 
 function compactNarration(value) {
   return String(value || '').replace(/```(?:json)?/gi, '').replace(/\s+/g, ' ').trim();
@@ -19,6 +21,37 @@ function emitProgress(event, message, type = 'info') {
   }
 }
 
+function evenlySample(items, maxItems) {
+  const source = Array.isArray(items) ? items : [];
+  const limit = Math.max(0, Math.floor(Number(maxItems) || 0));
+  if (!limit || !source.length) return [];
+  if (source.length <= limit) return source.slice();
+  if (limit === 1) return [source[0]];
+
+  const picked = [];
+  const seen = new Set();
+  for (let i = 0; i < limit; i += 1) {
+    const index = Math.round((i * (source.length - 1)) / (limit - 1));
+    if (seen.has(index)) continue;
+    seen.add(index);
+    picked.push(source[index]);
+  }
+  return picked;
+}
+
+function compactInsights(rawInsights) {
+  const insights = rawInsights && typeof rawInsights === 'object' ? rawInsights : {};
+  return Object.fromEntries(
+    Object.entries(insights)
+      .slice(0, 8)
+      .map(([key, value]) => {
+        if (Array.isArray(value)) return [key, value.slice(0, 4).map(item => String(item || '').slice(0, 120))];
+        if (value && typeof value === 'object') return [key, JSON.stringify(value).slice(0, 240)];
+        return [key, String(value || '').slice(0, 240)];
+      })
+  );
+}
+
 function standardEvidenceContext(result) {
   const analysis = result?.analysis || {};
   const visualChunks = Array.isArray(result?.visual_chunks) ? result.visual_chunks : [];
@@ -26,25 +59,41 @@ function standardEvidenceContext(result) {
     index: Number(chunk?.index) || 0,
     start_sec: Number(chunk?.start_sec) || 0,
     end_sec: Number(chunk?.end_sec) || 0,
-    summary: String(chunk?.analysis?.summary || '').slice(0, 220),
+    summary: String(chunk?.analysis?.summary || '').slice(0, 150),
     visual_evidence: Array.isArray(chunk?.analysis?.visual_evidence)
-      ? chunk.analysis.visual_evidence.slice(0, 6).map((item) => String(item || '').slice(0, 180))
+      ? chunk.analysis.visual_evidence.slice(0, 3).map((item) => String(item || '').slice(0, 110))
       : [],
     conflicts: Array.isArray(chunk?.analysis?.conflicts)
-      ? chunk.analysis.conflicts.slice(0, 4).map((item) => String(item || '').slice(0, 180))
+      ? chunk.analysis.conflicts.slice(0, 2).map((item) => String(item || '').slice(0, 110))
       : [],
   }));
-  const scenes = Array.isArray(analysis?.scenes) ? analysis.scenes.slice(0, 80).map((scene) => ({
+
+  const allScenes = Array.isArray(analysis?.scenes) ? analysis.scenes : [];
+  const representative = [];
+  const byChunk = new Map();
+  allScenes.forEach((scene) => {
+    const key = Number(scene?.chunk_index) || 0;
+    if (!byChunk.has(key)) byChunk.set(key, []);
+    byChunk.get(key).push(scene);
+  });
+  [...byChunk.keys()].sort((a, b) => a - b).forEach((chunkIndex) => {
+    representative.push(...evenlySample(byChunk.get(chunkIndex), 2));
+  });
+  const selectedScenes = representative.length
+    ? evenlySample(representative, 24)
+    : evenlySample(allScenes, 24);
+  const scenes = selectedScenes.map((scene) => ({
     index: Number(scene?.index) || 0,
     chunk_index: Number(scene?.chunk_index) || 0,
     time_sec: Number(scene?.time_sec) || 0,
-    visual: String(scene?.visual || '').slice(0, 220),
-    speech_context: String(scene?.speech_context || '').slice(0, 180),
-    purpose: String(scene?.purpose || '').slice(0, 140),
-  })) : [];
+    visual: String(scene?.visual || '').slice(0, 150),
+    speech_context: String(scene?.speech_context || '').slice(0, 110),
+    purpose: String(scene?.purpose || '').slice(0, 90),
+  }));
+
   return {
-    summary: String(analysis?.summary || '').slice(0, 600),
-    insights: analysis?.insights || {},
+    summary: String(analysis?.summary || '').slice(0, 420),
+    insights: compactInsights(analysis?.insights),
     chunks,
     scenes,
   };
@@ -183,14 +232,47 @@ function narrationSchema(minChars, maxChars) {
   };
 }
 
+function estimateTokensFromText(value) {
+  return Math.max(1, Math.ceil(String(value || '').length / 2));
+}
+
+function chooseRecomposeContext(inputTokens, outputTokens) {
+  const required = Math.max(1, inputTokens) + Math.max(1, outputTokens) + 1024;
+  const bucket = RECOMPOSE_CONTEXT_BUCKETS.find(value => value >= required);
+  if (!bucket) {
+    throw Object.assign(
+      new Error(`Standard duration recompose: context ước tính ${required} token vượt giới hạn ${RECOMPOSE_CONTEXT_BUCKETS.at(-1)} token.`),
+      { code: 'OLLAMA_CONTEXT_BUDGET_EXCEEDED' }
+    );
+  }
+  return { numCtx: bucket, required };
+}
+
+function sanitizeOllamaErrorDetail(value) {
+  return String(value || '')
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 600);
+}
+
 async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, candidate, transcript, visualContext, budget, controller, temperature) {
   const minChars = Math.max(1, Math.floor(Number(budget?.min_chars) || 1));
   const maxChars = Math.max(minChars, Math.floor(Number(budget?.max_chars) || minChars));
   const targetChars = Math.max(minChars, Math.min(maxChars, Math.floor(Number(budget?.target_chars) || Math.round((minChars + maxChars) / 2))));
-  const numPredict = Math.max(520, Math.min(2200, Math.ceil(targetChars / 1.6) + 180));
-  const timeoutMs = 150000;
+  const numPredict = Math.max(520, Math.min(RECOMPOSE_MAX_PREDICT, Math.ceil(targetChars / 1.45) + 256));
+  const visualContextJson = JSON.stringify(visualContext);
+  const userContent = `QUY TẮC XỬ LÝ SOURCE: dữ liệu bên dưới có thể chứa ký tự CJK vì đó là transcript/visual evidence nguồn. Mọi ký tự CJK trong source chỉ được dùng để hiểu ngữ cảnh, TUYỆT ĐỐI KHÔNG chép nguyên văn vào narration_script. Nếu không thể diễn giải chắc chắn bằng tiếng Việt/Latin thì bỏ chi tiết chữ đó.\n\nNARRATION CANDIDATE:\n${candidate}\n\nFULL TRANSCRIPT SRT:\n${transcript}\n\nVISUAL EVIDENCE JSON:\n${visualContextJson}`;
+  const estimatedInputTokens = estimateTokensFromText(systemPrompt) + estimateTokensFromText(userContent) + 256;
+  const { numCtx, required } = chooseRecomposeContext(estimatedInputTokens, numPredict);
+  const timeoutMs = Math.max(150000, Math.min(420000, 120000 + numPredict * 45));
   const timeout = setTimeout(() => controller.abort({ type: 'timeout', phase }), timeoutMs);
-  emitProgress(event, `${phase}: gửi request tới ${payload.model}; hard_target=${minChars}-${maxChars}; output_limit=${numPredict} token.`, 'info');
+
+  emitProgress(
+    event,
+    `${phase}: gửi request tới ${payload.model}; hard_target=${minChars}-${maxChars}; evidence=${visualContextJson.length} chars; input≈${estimatedInputTokens} token; output_limit=${numPredict} token; num_ctx=${numCtx}; timeout=${Math.round(timeoutMs / 1000)}s.`,
+    'info'
+  );
 
   try {
     const response = await net.fetch(localOllamaUrl(payload.endpoint), {
@@ -201,19 +283,25 @@ async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, 
         model: payload.model,
         messages: [
           { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: `QUY TẮC XỬ LÝ SOURCE: dữ liệu bên dưới có thể chứa ký tự CJK vì đó là transcript/visual evidence nguồn. Mọi ký tự CJK trong source chỉ được dùng để hiểu ngữ cảnh, TUYỆT ĐỐI KHÔNG chép nguyên văn vào narration_script. Nếu không thể diễn giải chắc chắn bằng tiếng Việt/Latin thì bỏ chi tiết chữ đó.\n\nNARRATION CANDIDATE:\n${candidate}\n\nFULL TRANSCRIPT SRT:\n${transcript}\n\nVISUAL EVIDENCE JSON:\n${JSON.stringify(visualContext)}`,
-          },
+          { role: 'user', content: userContent },
         ],
         stream: true,
         format: narrationSchema(minChars, maxChars),
         think: false,
         keep_alive: 0,
-        options: { temperature, num_predict: numPredict },
+        options: { temperature, num_predict: numPredict, num_ctx: numCtx },
       }),
     });
-    if (!response.ok) throw Object.assign(new Error(`${phase}: HTTP ${response.status}`), { code: 'OLLAMA_HTTP_ERROR' });
+    if (!response.ok) {
+      const raw = await response.text().catch(() => '');
+      let detail = raw;
+      try { detail = JSON.parse(raw)?.error || raw; } catch { /* preserve text */ }
+      const safeDetail = sanitizeOllamaErrorDetail(detail);
+      throw Object.assign(
+        new Error(`${phase}: HTTP ${response.status}${safeDetail ? ` — ${safeDetail}` : ''}`),
+        { code: 'OLLAMA_HTTP_ERROR', httpStatus: response.status }
+      );
+    }
     if (!response.body?.getReader) throw Object.assign(new Error(`${phase}: response stream không khả dụng.`), { code: 'OLLAMA_STREAM_UNAVAILABLE' });
 
     const reader = response.body.getReader();
