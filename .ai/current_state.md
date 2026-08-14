@@ -1,56 +1,54 @@
 # Current State
 
 ## Status
-PIPELINE3-WORKSPACE-015 — SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC WAITING / OWNER RUNTIME NOT STARTED / MERGE BLOCKED
+PIPELINE3-WORKSPACE-015 — OWNER RUNTIME FAIL / NEEDS_REVISION / RESEARCH COMPLETE / REBUILD DESIGN WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Review branch / Draft PR: `review/PIPELINE3-WORKSPACE-015` / #57.
-- Exact starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1` from `review/PIPELINE1-INTEGRATION-013`.
-- Task spec: `.ai/task_specs/PIPELINE3-WORKSPACE-015.md`.
-- Re-render safety amendment: `.ai/task_specs/PIPELINE3-WORKSPACE-015-REV1-RERENDER-SAFETY.md`.
-- Exact reviewed application-source head before this docs update: `198aa12d376cc7bdea23da6ea791717b07a73d4b`.
+- Owner-tested exact prototype head: `75b7a62fe5b7892dc2de9fb78ae60e82cc8825c9`.
+- Owner runtime evidence: two real-app screenshots supplied 2026-08-14.
+- Failure/research record: `.ai/task_specs/PIPELINE3-WORKSPACE-015-OWNER-FAIL-OPENCUT-RESEARCH.md`.
 
-## Owner-approved product direction
-Owner approved the PEP3 Final Render & Assembly mockup and explicitly authorized implementation. Required visual direction: retain the current app dark tokens, use a large final preview + compact timeline + detailed settings inspector, and allow direct mouse dragging of subtitle position.
+## Verified Owner result
+Owner rejected the current P3 V1 for product/UI reasons:
+1. P3 color/tone does not match the approved demo or the rest of the app.
+2. Dedicated Job Management is missing.
+3. Final video preview uses the wrong workspace geometry/aspect presentation.
+4. Owner requested OpenCut research before P3 is rebuilt.
 
-Owner also explicitly requires no more local clone/worktree/test directories. Future runtime verification must reuse the existing test directory only when clean.
+This invalidates Owner acceptance for PR #57. The existing source remains prototype/reference evidence only and must not be merged.
 
-## Reviewed application source
-Application delta is limited to:
-- new `src/renderer/js/pipeline3-workspace.js`;
-- new `src/renderer/styles/pipeline3-workspace.css`;
-- new `src/renderer/js/pipeline3-rerender-safety.js`;
-- two loader imports in `src/renderer/js/pipeline1-run-config.js`.
+## Verified source causes
+- P3 introduced its own black/purple visual hierarchy instead of deriving from the approved P1/P2 navy/blue-gray system.
+- P3 exposes only a top Job selector; the compatibility `#step3-job-list` is hidden, so there is no visible Job Manager.
+- Preview panel geometry is flex/card-driven; video uses `object-fit: contain` inside that arbitrary viewport instead of making logical video canvas dimensions authoritative.
+- Current P3 workspace is largely monolithic and driven by periodic 300 ms sync, which is not the preferred architecture for the rebuild.
 
-No backend, existing Pipeline 3 finalizer, P1 reasoning/TTS, P2, dependency or package changes are included.
+## OpenCut research result
+Official OpenCut sources were reviewed. The current OpenCut project is being rewritten; `opencut-classic` is the usable archived reference. Relevant verified patterns:
+- editor layout separates left Assets, center Preview, right Properties and bottom Timeline in independently resizable panels;
+- preview viewport keeps logical canvas size separate from viewport size and fits via `min(viewportWidth/canvasWidth, viewportHeight/canvasHeight)`;
+- timeline logic is decomposed into track/playhead/ruler/snapping/interaction/store helpers rather than one UI monolith;
+- engine/core and UI are separated, which maps well to preserving this project's existing P3 finalizer/backend while rebuilding editor UI/state.
 
-### Workspace behavior
-- Replaces the legacy minimal Step 3 pane at runtime while respecting existing pipeline-pane show/hide control.
-- Shows only P3-eligible Jobs and stores settings per Job in `job.p3Config`.
-- Real local-video preview with play/pause/seek and timed-SRT cue preview.
-- Subtitle presets plus font, size, bold/italic, text/outline colors, outline/shadow, optional background box, opacity, padding, line-height, max width, alignment and fade/pop text effects.
-- Subtitle can be dragged with Pointer Events; pointer capture + `requestAnimationFrame` keeps X/Y updates smooth. Optional snap/grid and safe-zone overlay are available.
-- Preview X/Y becomes exact ASS `\\pos(x,y)` placement in a P3-derived ASS stored only in Job memory; immutable P1/P2 artifacts are not overwritten.
-- Existing P1 karaoke ASS is preserved separately before a P3-derived ASS is installed.
-- Re-render safety preserves the first clean P2 path in `job.p3CleanVideoPath` and restores it before later workspace renders, preventing composition on top of a previous final output.
-- Audio controls map only to currently supported finalizer inputs: remove original vocal and background/original-bed volume.
-- Export summary exposes the real current MP4/H.264 path only; no fake backend controls.
-- Render CTA calls existing `window.finalizeVideo(job)` once and blocks duplicate clicks while rendering.
-
-## Parent integration status
-Per-Job Semantic Remix was observed by Owner as functionally OK in the parent integration build. The long Standard narration issue remains a separate unresolved P1 design problem; task 014 research proposal exists but no corrective source is part of this P3 task.
-
-## Review result
-PM full-file/scope review identified and corrected one blocker before Owner test: the first CSS revision forced Step 3 visible even when another pipeline pane was active. Source commit `8cf874b...` removed that override and restored ownership to the existing step navigation. A second review identified re-render input reuse risk and added the isolated clean-source safety module before declaring code review PASS.
+## Revised P3 direction
+Do not cosmetically patch PR #57. Next P3 design must use:
+- left visible Job Manager / source bin;
+- center aspect-ratio-correct logical video canvas/player;
+- right Properties Inspector for Subtitle/Audio/Export;
+- bottom assembly Timeline;
+- existing app navy/blue-gray/blue visual system;
+- explicit event/state updates rather than 300 ms polling as primary authority;
+- focused modules for editor/store, jobs, preview geometry, timeline, inspector, subtitle ASS adapter and render controller.
 
 ## Gates
-- Execution: PASS.
-- Automated/static: WAITING on exact final checkout.
-- Code review: PASS.
-- Owner manual app verification: NOT STARTED for P3 workspace.
-- Documentation synchronization: PASS for pre-runtime state after final docs sync.
+- Execution: PASS for failed prototype publication only.
+- Automated/static: WAITING.
+- Code review: historical source review PASS; current product decision NEEDS_REVISION.
+- Owner manual app verification: FAIL.
+- Documentation synchronization: PASS after this update.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Verify live PR #57 exact final head/files/checks/comments, then Owner may reuse the existing clean test directory to run static checks and verify the approved P3 UI/drag/render behavior. Do not create another local directory and do not merge yet.
+Freeze application-source changes on PR #57. Produce a revised P3 editor design/spec based on the verified Owner failures and OpenCut architecture patterns. Only after Owner approves that revised design/spec may a fresh dedicated rebuild branch/task be created from the approved integration base. No merge.
