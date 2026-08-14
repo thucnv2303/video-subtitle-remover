@@ -12,10 +12,11 @@ function installBurnTimingBridge(job, config) {
     const info = job.p3VideoInfo || {};
     if (String(srtContent || '').trim() && Number(info.width) > 0 && Number(info.height) > 0) {
       job.p3RenderTimedSrt = srtContent;
-      job.p3AssTimedSrt = srtContent;
       const sourceSrt = job.p3BaseTimedSrt || job.ttsTimedSrt || '';
       const timingChanged = String(srtContent).trim() !== String(sourceSrt).trim();
       const renderConfig = timingChanged ? { ...config, preserveKaraoke: false } : config;
+      if (timingChanged) job.p3AssTimedSrt = srtContent;
+      else delete job.p3AssTimedSrt;
       const derived = updateJobDerivedAss(job, renderConfig, info.width, info.height);
       delete job.p3AssTimedSrt;
       if (timingChanged && config.preserveKaraoke && job.p3OriginalKaraokeAss) {
@@ -53,8 +54,6 @@ export async function renderP3Job(job, onState) {
   if (!job.p3BaseTimedSrt) {
     job.p3BaseTimedSrt = (job.p3CueEdited && job.p3TimedSrt) ? job.p3TimedSrt : (job.ttsTimedSrt || job.p3TimedSrt || '');
   }
-  // Every render starts from the stable editable source. Any tempo-derived timing
-  // from a previous render must never be scaled a second time.
   if (job.p3BaseTimedSrt) job.p3TimedSrt = job.p3BaseTimedSrt;
 
   activeRenderJobId = job.id;
