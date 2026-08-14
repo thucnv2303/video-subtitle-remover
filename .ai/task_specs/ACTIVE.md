@@ -1,29 +1,37 @@
 # Active PM Execution Spec
 
-Status: PIPELINE1_LOG_OBSERVABILITY_009_RESUMED_RUNTIME_REVISION_4_OWNER_RETEST_WAITING
+Status: PIPELINE1_STANDARD_LONG_VIDEO_012_SOURCE_REVISION_1_OWNER_RETEST_WAITING
 
-Task: `PIPELINE1-LOG-OBSERVABILITY-009`
+Task: `PIPELINE1-STANDARD-LONG-VIDEO-012`
 Repository: `thucnv2303/video-subtitle-remover`
-Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`
-Review branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52
-Current pre-resume HEAD: `20f42653806b2ba048b8f598f3ade0d725169cca`
-Revision-4 source head: `e25792663f9c66cfd54b25c4f60de61b14341e8e`
+Failing runtime basis: `review/PIPELINE1-LOG-OBSERVABILITY-009@6bc43e65726150a3dbef37ded52f1ed1958ffaa8`
+Corrective review branch: `review/PIPELINE1-STANDARD-LONG-VIDEO-012`
+Task spec: `.ai/task_specs/PIPELINE1-STANDARD-LONG-VIDEO-012.md`
+Spec commit: `57eef8ffed818fe8c2047c8df8e91efd9c6b3d29`
+Source Revision 1: `0547593fa7de7986d2202683847b27bf1e26ec42`
+Bug: `BUG-041`
 
-## Current authority
-No new application-source revision is authorized until revision-4 runtime evidence is collected.
+## Execution authority
+No further application-source change is authorized until static verification and fresh Owner long-video runtime evidence are collected.
 
-## Required Owner retest
-1. Run P1 while P2 has never been started. P1 `[P1]`/`[Ollama]`/AI/TTS logs must remain in P1 and must not appear in P2 Console/Log.
-2. Confirm P1 keyed progress and warning/error remain visible in P1.
-3. Leave app idle >=30 seconds; successful health/TTS/GPU/preview polling must not accumulate in visible P2 log.
-4. Run one P2 job; frame/progress must remain a single updating live row.
-5. Confirm Copy/Clear in both consoles.
+## Current source behavior
+- Long Standard pre-TTS recompose uses compact timeline-preserving evidence.
+- Output budget scales with the actual narration target and is finitely capped.
+- Ollama context is explicitly chosen from finite 8K/16K/32K buckets.
+- Long-generation timeout scales but remains finite.
+- Non-2xx Ollama response detail is sanitized and surfaced.
+- Existing duration/CJK/repetition/grounding/cancellation gates remain fail-closed.
 
-## If runtime still fails
-Capture exact leaked P2 line text and whether P2 had an active job. Root-cause and authorize a narrow revision from those lines only. Do not add broad state-based filtering blindly.
+## Required verification
+1. Exact current branch HEAD.
+2. `node --check src/main/p1-standard-vision-wrapper.js`.
+3. `git diff --check 6bc43e65726150a3dbef37ded52f1ed1958ffaa8..HEAD`.
+4. Retest the same/equivalent ~497s Standard video.
+5. Expected success: underfilled draft -> recompose telemetry with target-aware output/context -> `Standard duration guard PASS` -> one TTS start.
+6. If failure remains, capture exact sanitized server reason and recompose telemetry.
 
-## Separate task
-Prompt Manager V2 / PR #53 remains separate. Do not edit Prompt Manager source on PR #52.
+## Separate tasks
+PR #52 log observability, PR #53 Prompt Manager, and PR #54 per-Job Remix remain separate. No source mixing is authorized.
 
 ## Merge
 BLOCKED.
