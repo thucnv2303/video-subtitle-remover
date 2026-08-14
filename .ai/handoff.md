@@ -4,7 +4,7 @@
 `PIPELINE1-STANDARD-CJK-GUARD-008`
 
 ## Status
-STATIC PASS / OWNER STANDARD PARTIAL POSITIVE / FULL P1 RUNTIME LOG WAITING
+OWNER STANDARD FUNCTIONAL PASS / P1 LOG OBSERVABILITY + DEFAULT-PROMPT FOLLOW-UP REQUIRED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
@@ -13,44 +13,51 @@ STATIC PASS / OWNER STANDARD PARTIAL POSITIVE / FULL P1 RUNTIME LOG WAITING
 - Corrective Draft PR: #51
 - Starting SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`
 - Source correction: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`
-- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`; subsequent branch commits are `.ai/`-only.
+- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`
 
 ## Verified source/static state
 - Source publication and isolation: PASS.
 - Exact-head Node syntax for Standard wrapper + IPC: PASS.
 - Exact-head `git diff --check`: PASS.
 - Owner worktree clean at static verification.
-- Code review: PASS for the prompt-contract correction.
+- Code review: PASS for the CJK prompt-contract correction.
 
-## Latest Owner runtime evidence
-Owner manually replaced the configurable narration prompt with the corrected continuous-narration / ZERO-CJK contract and reports that Standard generated a voice track with duration matching the source video. This is PARTIAL POSITIVE evidence only.
+## Owner Standard result — 2026-08-14
+Owner reports the real app runs well, AI-generated Standard narration/script is correct, and voice rendering is stable. Treat Standard functional runtime as PASS for the corrected configured prompt.
 
-The later pasted log consists solely of backend health/status polls (`/api/health`, `/api/tts/status`, `/api/gpu-info`) returning HTTP 200. It proves backend responsiveness but does not prove Standard narration contract, `cjk=0`, guard-before-TTS ordering, TTS request count, or Job completion.
+## Newly verified follow-up defects
+### BUG-039 — P1 log observability
+- `src/renderer/js/app.js` clones all global logs into `#step1-log-output`.
+- P1 console drops oldest data after 100 entries.
+- Python access logs for successful background `/api/health`, `/api/tts/status`, `/api/gpu-info` polls therefore appear in P1 console even with no P1 Job.
+- Voice Render/global status performs legitimate background health refreshes; preserve that functionality but stop presenting routine successful heartbeat access lines as P1 activity.
 
-## Product-contract implication
-The successful run combines PR #51 source correction with a manually updated configurable prompt. If the successful prompt is not already the product default, source/default prompt synchronization remains required before closeout so reset/fresh-install settings cannot restore the stale SRT-oriented contract.
+### BUG-040 — stale product default prompt
+- `src/renderer/js/components/prompt-manager.js` still seeds an SRT/subtitle-translation default.
+- `pipeline1-run-config.js` snapshots the selected/default prompt into the P1 run.
+- Owner success required manually replacing the prompt with the corrected continuous-narration / ZERO-CJK contract.
+
+## Knowledge correction
+The previous `.ai/qa_checklist.md` and `.ai/task_specs/ACTIVE.md` were stale: QA still pointed to task/PR #48, while ACTIVE still pointed to already-merged Voice Render PR #50. They must not be used as execution authority until this synchronization commit is published.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PASS.
-- Code review: PASS.
-- Owner Standard runtime: PARTIAL POSITIVE / FULL EVIDENCE WAITING.
-- Owner Semantic: ON HOLD.
-- Documentation synchronization: PASS for current state.
+- Automated/static: PASS for task 008 application source.
+- Code review: PASS for task 008 application source.
+- Owner Standard runtime: PASS for corrected configured prompt.
+- Owner Semantic: DEFERRED.
+- Documentation synchronization: PASS after the corrective knowledge commit containing this handoff.
 - Merge: BLOCKED.
 
-## Next action
-Collect the successful Pipeline 1 log from `Voice-aware narration budget` through Job completion and Owner listening result. Verify hard-range narration, deterministic `cjk=0`, no repetition-quality failure, `Standard duration guard PASS` before TTS, exactly one continuous full-text TTS request, successful Job completion, and natural/grounded/non-repetitive narration. Then synchronize the successful configurable prompt into the product default/source if necessary.
+## Next permitted action
+Create a dedicated stacked review task `PIPELINE1-LOG-OBSERVABILITY-009` from this synchronized PR #51 head. Fix only P1 log retention/noise routing and required `.ai/` state. Do not change AI reasoning, TTS generation, P2, P3, or backend/status behavior. After Owner runtime PASS for logging, synchronize the proven continuous-narration prompt into the product default in a separate task before any merge consideration.
 
 ## New-tab bootstrap package
-When continuing in a new ChatGPT project tab/chat:
-1. Use GitHub as source of truth; do not rely on the previous chat summary alone.
-2. Verify Draft PR #51 live and record its exact current head before any action.
-3. Read `.ai/current_state.md`, `.ai/task_current.md`, and `.ai/handoff.md` from `review/PIPELINE1-STANDARD-CJK-GUARD-008` and confirm they agree.
-4. Treat `6e023808891a4c5ff5e886aa62a18838c7fb42ae` as the exact application-source revision already statically verified by Owner; later commits on the corrective branch are documentation-only unless GitHub proves otherwise.
-5. Do not merge PR #51. Owner Standard full runtime proof is still missing.
-6. Immediate permitted action: inspect the successful P1 runtime log from `Voice-aware narration budget` through Job completion and the Owner listening result.
-7. Required full-pass evidence: hard-range narration, `cjk=0`, no repetition-quality failure, `Standard duration guard PASS` before TTS, one continuous full-text TTS request, successful Job completion, natural/grounded/non-repetitive narration, and voice duration materially equal/close to the source.
-8. After Standard full PASS, synchronize the successful configurable prompt into the product default/source contract if it currently exists only in Settings; then record Owner result in canonical `.ai/` before any merge consideration.
-9. Semantic mode remains ON HOLD until Standard full PASS.
-10. Merge permission remains BLOCKED until all gates pass and Owner explicitly requests merge in the current turn.
+1. Use GitHub as source of truth.
+2. Verify PR #51 and exact current head.
+3. Read `.ai/current_state.md`, `.ai/task_current.md`, `.ai/handoff.md`, `.ai/qa_checklist.md`, and `.ai/task_specs/ACTIVE.md` from that exact ref.
+4. Task 008 Standard functional runtime is PASS for the corrected configured prompt; do not reopen the CJK source correction without new failure evidence.
+5. BUG-039 log observability is the immediate next source task.
+6. BUG-040 product-default prompt sync remains required after log observability.
+7. Semantic remains deferred until Standard closeout follow-ups are verified.
+8. Merge permission remains BLOCKED.

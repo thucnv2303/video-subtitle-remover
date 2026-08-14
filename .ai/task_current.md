@@ -4,7 +4,7 @@
 PIPELINE1-STANDARD-CJK-GUARD-008
 
 ## Status
-STATIC_PASS_OWNER_STANDARD_PARTIAL_POSITIVE_FULL_RUNTIME_EVIDENCE_WAITING
+OWNER_STANDARD_FUNCTIONAL_PASS_FOLLOWUP_OBSERVABILITY_AND_DEFAULT_PROMPT_SYNC_REQUIRED
 
 ## Authority
 - Parent task: `PIPELINE1-SEMANTIC-REMIX-007`.
@@ -13,32 +13,44 @@ STATIC_PASS_OWNER_STANDARD_PARTIAL_POSITIVE_FULL_RUNTIME_EVIDENCE_WAITING
 - Corrective Draft PR: #51.
 - Starting SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
 - Source correction: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
-- Exact Owner-tested source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`; later commits are `.ai/`-only.
+- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`.
 
 ## Verified source/static state
 - Source publication: PASS.
 - Source isolation: PASS — only `src/main/p1-standard-vision-wrapper.js`, +14/-4 from starting SHA.
-- Owner exact-head `node --check` for wrapper + IPC: PASS.
-- Owner exact-head `git diff --check 7df7e45...HEAD`: PASS.
+- Owner exact-head Node syntax for wrapper + IPC: PASS.
+- Owner exact-head `git diff --check`: PASS.
 - Owner worktree clean at static verification.
 - Code review: PASS for the prompt-contract correction.
 
-## Latest Owner runtime observation
-After manually replacing the configurable narration prompt with the corrected continuous-narration / ZERO-CJK contract, Owner reports Standard now processes successfully enough to generate a voice track with duration matching the source video. This is PARTIAL POSITIVE runtime evidence only; full acceptance is still waiting on the complete successful P1 log and listening confirmation.
+## Owner runtime result — 2026-08-14
+Owner reports:
+- app runs well;
+- Standard AI narration/script is correct;
+- voice rendering is stable.
 
-The additional log supplied afterward contains only repeated backend health/status polling (`GET /api/health`, `GET /api/tts/status`, `GET /api/gpu-info` => HTTP 200). It proves the Python backend remained responsive during that interval, but contains no `Voice-aware narration budget`, Standard guard, narration quality, TTS generation request, or Job completion evidence and therefore cannot close Owner runtime verification.
+Owner Standard functional outcome is therefore PASS for the corrected configured prompt.
 
-## Product-contract implication
-The successful run used both PR #51 source correction and a manually updated user-configurable prompt. A stale SRT-oriented prompt can conflict with the current continuous narration contract. If the successful prompt is not already the application default, product-default prompt synchronization is required before closeout.
+## Follow-up defects discovered during closeout
+### BUG-039 — P1 log observability
+- P1 card console is hard-capped at 100 DOM entries and removes the oldest lines.
+- Global Python stdout is cloned into P1 console.
+- Routine successful background `/api/health`, `/api/tts/status`, `/api/gpu-info` access logs appear even with no P1 Job.
+- Voice Render/global status refreshes legitimately make those requests; the P1 console should not present them as Job activity.
+
+### BUG-040 — stale product default prompt
+- `src/renderer/js/components/prompt-manager.js` still seeds a subtitle-translation/SRT-oriented default prompt.
+- `pipeline1-run-config.js` snapshots the selected/default prompt into P1 runs.
+- Owner success required manually replacing the configurable prompt with the corrected continuous-narration / ZERO-CJK contract.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: PASS.
 - Code review: PASS.
-- Owner Standard runtime: PARTIAL POSITIVE / FULL EVIDENCE WAITING.
-- Owner Semantic: ON HOLD until Standard full PASS.
-- Documentation synchronization: PASS after current dynamic-doc sync.
+- Owner Standard runtime: PASS for corrected configured prompt.
+- Owner Semantic: DEFERRED.
+- Documentation synchronization: PASS after current corrective sync.
 - Merge: BLOCKED.
 
-## Next verification
-Provide the successful Standard log beginning at `Voice-aware narration budget` and continuing through Job completion, plus listening result. Required proof: hard-range narration, deterministic `cjk=0`, no repetition-quality failure, `Standard duration guard PASS` before TTS, exactly one continuous full-text TTS request, successful Job completion, and natural/grounded/non-repetitive narration.
+## Next task
+`PIPELINE1-LOG-OBSERVABILITY-009` — narrow stacked task from the synchronized PR #51 head. Fix only P1 log retention/noise routing and project knowledge. No AI/TTS/P2/P3 behavior change. Default-prompt source synchronization remains a separate follow-up task after log observability is runtime-verified.

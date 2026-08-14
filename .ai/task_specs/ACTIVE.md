@@ -1,68 +1,44 @@
 # Active PM Execution Spec
 
-Status: OWNER_PARTIAL_PASS_RUNTIME_CORRECTIONS_PUBLISHED_RETEST_WAITING
+Status: NO_EXECUTOR_AUTHORIZED_STANDARD_FUNCTIONAL_PASS_FOLLOWUP_PLANNING
 
-Task: `VOICE-RENDER-SHARED-LIBRARY-009`
+Task: `PIPELINE1-STANDARD-CJK-GUARD-008`
 Repository: `thucnv2303/video-subtitle-remover`
-Single active review branch: `review/VOICE-RENDER-SHARED-LIBRARY-009`
-Single active Draft PR: #50
-Base: `review/PIPELINE1-SEMANTIC-REMIX-007@0b3ee3a63f06d17334b2c295491c50039326febb`
-Superseded PR #49: CLOSED/OBSOLETE — do not use
+Active review branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`
+Active Draft PR: #51
+Base: `review/PIPELINE1-SEMANTIC-REMIX-007@7df7e45c277feb56b5a8a45195007f5e41b69638`
 
 ## Execution authority
-Project Manager direct GitHub implementation. No Anti/external executor.
+No executor source work is authorized by this ACTIVE file.
+Task 008 application source has already been published, statically verified, code-reviewed, and functionally runtime-verified by Owner with the corrected configured prompt.
 
-## Latest Owner evidence
-PASS:
-- Voice Render mounts.
-- Shared voice preview works.
+## Verified application source
+- Prompt-contract source commit: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
+- Exact Owner-tested application-source state: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`.
+- Later known task-008 commits before this knowledge sync are documentation-only.
 
-FAIL requiring correction:
-- Log is too small.
-- Global status presentation/CPU/RAM data not acceptable.
-- `Render toàn bộ` does not start; queue remains empty.
+## Owner runtime — 2026-08-14
+PASS for Standard functional outcome with corrected configured prompt:
+- app runs well;
+- generated narration/script is correct;
+- voice render is stable.
 
-## Current correction contract
-- Main-process save dialog is parented to the VSR window and constrained to WAV.
-- `app:systemInfo` IPC supplies real CPU/RAM/app/Electron metrics.
-- Preload exposes system info through that IPC.
-- Owner-fix CSS increases Log readability and makes sidebar status metric-card based.
-- Owner-fix JS refreshes real Backend/TTS/GPU/CPU/RAM values and emits explicit diagnostic when render bridges are missing.
-- Existing long-text queue remains sequential and final output still requires all chunks + constrained WAV merge.
-- Voice Render must not mutate video Jobs or P1/P2/P3 gates/artifacts.
+## Open closeout follow-ups
+1. `BUG-039` / planned `PIPELINE1-LOG-OBSERVABILITY-009`: P1 console truncates at 100 entries and displays routine background Python health/TTS/GPU access logs while idle.
+2. `BUG-040`: product default prompt remains SRT/subtitle-translation oriented; Owner success required a manual continuous-narration / ZERO-CJK prompt replacement.
 
-## Active application source
-- `src/main/main.js`
-- `src/main/preload.js`
-- `src/renderer/js/voice-render.js`
-- `src/renderer/styles/voice-render.css`
-- `src/renderer/js/voice-render-owner-fixes.js`
-- `src/renderer/styles/voice-render-owner-fixes.css`
-
-## Verification required
-On the final exact PR #50 HEAD in `E:\Project AI\Video-sub-remove-owner-test-P1`:
-```text
-node --check src/main/main.js
-node --check src/main/preload.js
-node --check src/renderer/js/voice-render.js
-node --check src/renderer/js/voice-render-owner-fixes.js
-git diff --check 0b3ee3a63f06d17334b2c295491c50039326febb..HEAD
-```
-
-After static PASS, fully restart the app and retest only:
-1. Log readable without zoom.
-2. Global status shows Backend/TTS/GPU and real CPU/RAM metrics and remains across tabs.
-3. `Render toàn bộ` opens WAV save dialog.
-4. After choosing output, queue appears and chunk 1 starts.
-5. If rendering starts, allow completion and verify final merged WAV/playback.
-6. No P1/P2/P3 state mutation.
-
-Unexpected behavior => STOP and report observation; do not modify Owner-test worktree.
+## Next execution routing
+Before any source change for BUG-039:
+1. Create dedicated branch `review/PIPELINE1-LOG-OBSERVABILITY-009` from the exact synchronized PR #51 head.
+2. Publish a task-specific spec on that branch and make that branch's `.ai/task_specs/ACTIVE.md` point to it.
+3. Re-read the exact remote branch HEAD and spec before execution.
+4. No source changes are authorized on `review/PIPELINE1-STANDARD-CJK-GUARD-008` for BUG-039.
 
 ## Gates
-- Execution: PASS corrective source published.
-- Automated/static: WAITING.
-- Code review: WAITING on final correction head.
-- Owner runtime: PARTIAL; RETEST WAITING.
-- Documentation synchronization: PASS.
+- Task 008 Execution: PASS.
+- Task 008 Automated/static: PASS.
+- Task 008 Code review: PASS.
+- Task 008 Owner Standard runtime: PASS for corrected configured prompt.
+- Semantic: DEFERRED.
+- Documentation synchronization: PASS after the corrective knowledge sync.
 - Merge permission: BLOCKED.
