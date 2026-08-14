@@ -1,6 +1,8 @@
 import { ensureP3Config } from './editor-store.js';
 import { updateJobDerivedAss } from './subtitle-ass.js';
 
+let activeRenderJobId = null;
+
 function installBurnTimingBridge(job, config) {
   const api = window.api;
   const original = api?.burnSubtitlePositioned;
@@ -35,6 +37,11 @@ function installBurnTimingBridge(job, config) {
 
 export async function renderP3Job(job, onState) {
   if (!job) return false;
+  if (activeRenderJobId) {
+    window.showToast?.(`Pipeline 3 đang render Job khác (${activeRenderJobId}). Hãy chờ hoàn tất.`, 'warning', 3500);
+    return false;
+  }
+
   const config = ensureP3Config(job);
   if (!job.p3CleanVideoPath) job.p3CleanVideoPath = job.outputPath || '';
   if (!job.p3CleanVideoPath) {
@@ -46,6 +53,7 @@ export async function renderP3Job(job, onState) {
     return false;
   }
 
+  activeRenderJobId = job.id;
   job.outputPath = job.p3CleanVideoPath;
   job.voiceSub = Boolean(config.subtitleEnabled);
   localStorage.setItem('tts_remove_vocal', String(Boolean(config.removeVocal)));
@@ -66,9 +74,14 @@ export async function renderP3Job(job, onState) {
     return false;
   } finally {
     restoreBurn();
+    activeRenderJobId = null;
   }
 }
 
 export function restoreCleanP3Input(job) {
   if (job?.p3CleanVideoPath) job.outputPath = job.p3CleanVideoPath;
+}
+
+export function getActiveP3RenderJobId() {
+  return activeRenderJobId;
 }
