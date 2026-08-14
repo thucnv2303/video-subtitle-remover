@@ -4,36 +4,35 @@
 PIPELINE1-PROMPT-MANAGER-V2-010
 
 ## Status
-SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_PASS_OWNER_RUNTIME_WAITING
+RUNTIME_REVISION_1_SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_RETEST_WAITING_OWNER_RETEST_WAITING
 
 ## Basis
 - Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
 - Review branch / Draft PR: `review/PIPELINE1-PROMPT-MANAGER-V2-010` / #53.
-- Application-source head: `2d4fc7e05f71a38daa406647226e883bd7ed69f8`.
-- Exact Owner static-tested HEAD: `04f358ad07a2bbf9af38759668bfd4756635d620`.
+- Original application source: `2d4fc7e05f71a38daa406647226e883bd7ed69f8`.
+- Prior static-tested HEAD: `04f358ad07a2bbf9af38759668bfd4756635d620`.
+- Runtime-revision-1 spec/source: `6ae8fb027d8ba5fee946f8d5caa076c47ac5e53f` / `f996edb5b8614843325768c0e98b68fedf16ffc0`.
 - Bug: `BUG-040`.
 
-## Verification result — 2026-08-14
-Owner clean detached worktree confirmed exact HEAD `04f358ad...`.
-PASS:
-- `node --check src/renderer/js/components/prompt-manager.js`
-- `node --check src/renderer/js/pipeline1-run-config.js`
-- `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD`
+## Prior static result
+PASS on exact `04f358ad...` for both Node syntax checks and exact `git diff --check`.
 
-All three commands returned to PowerShell without error/output.
+## Owner runtime result
+FAIL on prior source: app launches, but clicking Prompt Management / Quản lý does not open the modal.
 
-`npm start` did not launch the app because `electron` was not available in the new clean worktree. Repository `package.json` declares Electron as a local devDependency and `node_modules/` is gitignored. This is an environment/dependency availability issue, not a verified application-source failure.
+## Runtime revision 1
+Source inspection found a one-shot 100 ms initialization dependency in `app.js` with no retry and dynamically replaced Step 1 buttons. Without editing `app.js`, `prompt-manager.js` now self-initializes and uses one delegated launcher for Manage/Edit/Add. Diff is one source file, +30/-4; PM code review PASS.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PASS.
+- Automated/static: WAITING revision-1 retest.
 - Code review: PASS.
-- Owner runtime: WAITING — app launch not yet reached.
+- Owner runtime: RETEST WAITING.
 - Documentation synchronization: PARTIAL.
 - Merge: BLOCKED.
 
 ## Next action
-Make dependencies available in the Owner-test worktree, launch the app, then execute Prompt Manager V2 runtime acceptance. No source change is authorized without concrete runtime failure evidence.
+Update the clean Owner worktree to the latest PR #53 HEAD, rerun static checks, launch the app, and verify modal opening first. Continue full Prompt Manager persistence acceptance only after the launcher passes.
 
 ## Paused work
 `PIPELINE1-LOG-OBSERVABILITY-009` / PR #52 remains open and PAUSED.
