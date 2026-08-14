@@ -1,37 +1,37 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-SEMANTIC-REMIX-007`
+`PIPELINE1-STANDARD-CJK-GUARD-008`
 
 ## Status
-STANDARD PRE-TTS ORDERING FIX PUBLISHED / STATIC + OWNER RETEST WAITING
+PROMPT CONTRACT FIX PUBLISHED / STATIC + OWNER RETEST WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
-- Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`
-- Draft PR: #48
-- Base: `9981da334ca10fd845c971241d541894d736c13b`
-- Prior docs head: `f03ab512b25fb0193b17b3468d5ac865d3c0c2d1`
-- Latest source correction: `c8fecb95164c39fe82cddf24711ccfc3386d23c6`
+- Parent branch/PR: `review/PIPELINE1-SEMANTIC-REMIX-007` / #48
+- Corrective branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`
+- Corrective Draft PR: #51
+- Starting SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`
+- Source correction: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`
 
 ## Latest Owner runtime evidence
-On the ~97.57s Standard regression case, global reasoning completed but the draft quality gate reported `CJK_CHARACTERS`. The standalone one-shot `Narration quality` repair also failed that gate, so Pipeline 1 stopped before the wrapper's grounded Standard pre-TTS recompose and before TTS.
+The prior ordering correction is proven effective. Standard/default OFF reached `Standard duration guard`, first grounded recompose returned a 1610-char candidate, and the retry retained that rejected candidate. Both attempts failed only because `CJK_CHARACTERS` remained, so P1 stopped before TTS.
 
 ## Root cause
-For an underfilled Standard draft, `p1-standard-vision-ipc.js` ran standalone narration quality repair before returning analysis to `p1-standard-vision-wrapper.js`. That ordering allowed a draft-quality failure to terminate P1 before D-016's full-transcript + Vision grounded pre-TTS recomposition could run.
+The recompose request includes full transcript/Vision evidence that may contain CJK source text, but the prompt previously said only `không CJK lạc ngữ cảnh`. That wording did not create a strict source/output boundary, so qwen3-coder:30b could copy source glyphs into otherwise valid narration. The deterministic CJK gate correctly rejected the result.
 
 ## Published correction
-Source commit `c8fecb95164c39fe82cddf24711ccfc3386d23c6` changes only `src/main/p1-standard-vision-ipc.js` from the prior docs head. Under-min Standard drafts now defer the standalone quality repair, keep the deterministic quality report, and reach the existing wrapper recomposition path. The global prompt now states that under-min drafts are recomposed before TTS with full transcript + Vision evidence. Non-underfilled Standard behavior, Semantic, P2, P3 and the TTS engine are unchanged.
+Commit `e2cf430971fb75d5ef794fafc6879e35ba0a608e` modifies only `src/main/p1-standard-vision-wrapper.js` (+14/-4): source CJK is INPUT-ONLY; output must be ZERO CJK; uncertain text must be omitted rather than guessed; retry gets the exact `cjk_count`; and the model is instructed to self-scan before returning JSON. Hard duration/CJK/repetition validation remains unchanged. No sanitizer, extra retry, P2/P3/TTS/dependency change.
 
 ## Verification
 - Source publication: PASS.
-- Compare `f03ab512... -> c8fecb95...`: only `src/main/p1-standard-vision-ipc.js`, +26/-9.
-- Exact-head syntax/diff checks: WAITING.
-- Code review final confirmation: WAITING until static verification.
-- Owner Standard corrected runtime: WAITING after static PASS.
+- Source isolation: PASS.
+- Exact-head syntax/diff: WAITING.
+- Code review final confirmation: WAITING.
+- Owner Standard runtime: WAITING after static PASS.
 - Owner Semantic: ON HOLD.
-- Documentation synchronization: IN PROGRESS until bug/QA/current-state metadata and PR body are aligned.
+- Documentation synchronization: PASS.
 - Merge: BLOCKED.
 
 ## Next action
-Finish canonical synchronization. Then check out the final PR head and run `node --check src/main/p1-standard-vision-ipc.js`, `node --check src/main/p1-standard-vision-wrapper.js`, and `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`. If static checks pass, rerun Standard/default OFF. The underfilled+CJK case must reach grounded Standard pre-TTS recomposition before any TTS request.
+Owner fetches/checks out `review/PIPELINE1-STANDARD-CJK-GUARD-008`, confirms exact HEAD, runs Node syntax checks and `git diff --check 7df7e45c277feb56b5a8a45195007f5e41b69638..HEAD`. If static PASS, rerun Standard/default OFF. Acceptance requires hard-range narration with deterministic `cjk=0` before one full-text TTS request.
