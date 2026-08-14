@@ -1,44 +1,48 @@
 # Active PM Execution Spec
 
-Status: NO_EXECUTOR_AUTHORIZED_STANDARD_FUNCTIONAL_PASS_FOLLOWUP_PLANNING
+Status: PIPELINE1_PROMPT_MANAGER_V2_010_RUNTIME_REVISION_1_OWNER_RETEST_WAITING
 
-Task: `PIPELINE1-STANDARD-CJK-GUARD-008`
+Task: `PIPELINE1-PROMPT-MANAGER-V2-010`
 Repository: `thucnv2303/video-subtitle-remover`
-Active review branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`
-Active Draft PR: #51
-Base: `review/PIPELINE1-SEMANTIC-REMIX-007@7df7e45c277feb56b5a8a45195007f5e41b69638`
+Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`
+Review branch / Draft PR: `review/PIPELINE1-PROMPT-MANAGER-V2-010` / #53
+Runtime-revision-1 spec/source: `6ae8fb027d8ba5fee946f8d5caa076c47ac5e53f` / `f996edb5b8614843325768c0e98b68fedf16ffc0`
+Bug: `BUG-040`
 
-## Execution authority
-No executor source work is authorized by this ACTIVE file.
-Task 008 application source has already been published, statically verified, code-reviewed, and functionally runtime-verified by Owner with the corrected configured prompt.
+## Current authority
+Runtime revision 1 source is published. No further application-source change is authorized without new exact-head static/runtime evidence.
 
-## Verified application source
-- Prompt-contract source commit: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
-- Exact Owner-tested application-source state: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`.
-- Later known task-008 commits before this knowledge sync are documentation-only.
+## Owner failure being retested
+Prior app run starts normally but Prompt Management / Quản lý does not open. Source inspection identified a one-shot initialization dependency plus direct listeners on dynamically replaced Step 1 buttons.
 
-## Owner runtime — 2026-08-14
-PASS for Standard functional outcome with corrected configured prompt:
-- app runs well;
-- generated narration/script is correct;
-- voice render is stable.
+## Published correction
+Only `src/renderer/js/components/prompt-manager.js` changed for runtime revision 1:
+- module self-init at DOM/module readiness;
+- idempotent init with modal-presence guard;
+- one delegated Manage/Edit/Add launcher surviving Step 1 DOM replacement;
+- duplicate direct Manage/Edit/Add launch listeners removed.
 
-## Open closeout follow-ups
-1. `BUG-039` / planned `PIPELINE1-LOG-OBSERVABILITY-009`: P1 console truncates at 100 entries and displays routine background Python health/TTS/GPU access logs while idle.
-2. `BUG-040`: product default prompt remains SRT/subtitle-translation oriented; Owner success required a manual continuous-narration / ZERO-CJK prompt replacement.
+GitHub compare from revision-1 spec to source: one file, +30/-4. PM code review PASS.
 
-## Next execution routing
-Before any source change for BUG-039:
-1. Create dedicated branch `review/PIPELINE1-LOG-OBSERVABILITY-009` from the exact synchronized PR #51 head.
-2. Publish a task-specific spec on that branch and make that branch's `.ai/task_specs/ACTIVE.md` point to it.
-3. Re-read the exact remote branch HEAD and spec before execution.
-4. No source changes are authorized on `review/PIPELINE1-STANDARD-CJK-GUARD-008` for BUG-039.
+## Required verification
+On latest PR #53 HEAD:
+```text
+node --check src/renderer/js/components/prompt-manager.js
+node --check src/renderer/js/pipeline1-run-config.js
+git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD
+```
+Then cold-start app and verify:
+- Quản lý opens Prompt Manager V2;
+- `+ Prompt mới` opens clean draft;
+- if those pass, execute full CRUD/reorder/delete-all/restart/active/default/empty-store acceptance.
+
+## Paused task
+`PIPELINE1-LOG-OBSERVABILITY-009` / PR #52 remains PAUSED.
 
 ## Gates
-- Task 008 Execution: PASS.
-- Task 008 Automated/static: PASS.
-- Task 008 Code review: PASS.
-- Task 008 Owner Standard runtime: PASS for corrected configured prompt.
-- Semantic: DEFERRED.
-- Documentation synchronization: PASS after the corrective knowledge sync.
+- Execution: PASS.
+- Automated/static: WAITING revision-1 retest.
+- Code review: PASS.
+- Owner runtime: RETEST WAITING after prior FAIL.
+- Documentation synchronization: PARTIAL.
 - Merge permission: BLOCKED.

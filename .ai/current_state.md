@@ -1,51 +1,44 @@
 # Current State
 
 ## Status
-PIPELINE1-STANDARD-CJK-GUARD-008 — OWNER STANDARD FUNCTIONAL PASS / FOLLOW-UP OBSERVABILITY + DEFAULT-PROMPT SYNC REQUIRED / MERGE BLOCKED
+PIPELINE1-PROMPT-MANAGER-V2-010 — RUNTIME REVISION 2 SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC RETEST WAITING / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Parent task/review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
-- Parent Draft PR: #48.
-- Active corrective review branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
-- Active corrective Draft PR: #51.
-- Corrective base SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
-- Prompt-contract source commit: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
-- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`; commits through prior head `96e4c5dded4dc6e80b3434c6b9bae5d2ebe27b03` after that source state are documentation-only.
+- Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
+- Active review branch: `review/PIPELINE1-PROMPT-MANAGER-V2-010`.
+- Active Draft PR: #53.
+- Runtime-revision-2 starting Owner-tested HEAD: `2a19d71dc3456013c764ee5894e74f90295a6340`.
+- Runtime-revision-2 spec commit: `9cce60e52aff0e5d590314d774edfc9a86669b1b`.
+- Runtime-revision-2 source head: `da5c81f0cc78d072bf034e416f0ed0cde9ec7977`.
+- Active bug: `BUG-040`.
 
-## Verified source/static state
-Owner worktree on exact `6e023808...` reported:
-- `node --check src/main/p1-standard-vision-wrapper.js` PASS;
-- `node --check src/main/p1-standard-vision-ipc.js` PASS;
-- `git diff --check 7df7e45...HEAD` PASS;
-- `git status --short` clean.
-- Code review: PASS for the published CJK prompt-contract correction.
+## Owner sequencing
+Prompt Manager V2 remains the only active task. `PIPELINE1-LOG-OBSERVABILITY-009` / PR #52 remains open and PAUSED.
 
-## Owner Standard runtime result — 2026-08-14
-Owner reports the real app now runs well, AI-generated Standard narration/script is correct, and voice rendering is stable. This closes the user-facing Standard runtime outcome as PASS for the corrected configured prompt.
+## Owner runtime evidence
+On exact local HEAD `2a19d71dc3456013c764ee5894e74f90295a6340`, Prompt Manager is reachable but clicking modal-local `+ Prompt mới` does not expose/reset the Name/Content editor for a new draft. This is a runtime FAIL for the create-prompt entry path.
 
-The prior missing full log is now explained by a separate observability defect rather than a demonstrated Standard processing failure.
+## Verified source cause / correction
+Current V2 had two routes for the same intent:
+- Step 1 `#step1-btn-add-prompt` used delegated routing to canonical `openModal(null, true)`.
+- Modal-local `#prompt-v2-new` used its own direct listener calling only `fillEditor(null, true)`.
 
-## Newly verified follow-up defects
-### BUG-039 — P1 log observability
-Direct source review confirms:
-- `src/renderer/js/app.js` clones every global log into `#step1-log-output`;
-- the P1 console is hard-capped at 100 DOM entries and drops the oldest lines;
-- successful Python access logs for background `/api/health`, `/api/tts/status`, and `/api/gpu-info` requests are therefore copied into the P1 console even when no P1 Job is running;
-- Voice Render/global status code legitimately performs background status refreshes, so the P1 console must filter routine successful health polling rather than treating it as P1 activity.
+Revision 2 unifies the modal-local button with the canonical Step 1 Add route through a narrow compatibility bridge. The bridge contains no prompt/localStorage CRUD logic.
 
-### BUG-040 — product default prompt is stale
-`src/renderer/js/components/prompt-manager.js` still seeds a subtitle-translation/SRT-oriented default prompt, while `pipeline1-run-config.js` snapshots that selected/default prompt into each P1 run. Owner success required manually replacing the configurable prompt with the corrected continuous-narration / ZERO-CJK contract. Fresh install/reset can therefore restore the stale contract until source/default prompt synchronization is completed.
+Source diff from revision-2 spec to source head:
+- add `src/renderer/js/components/prompt-manager-new-flow.js`: +40/-0;
+- `src/renderer/js/pipeline1-run-config.js`: +1 import only.
+
+No `prompt-manager.js`, `app.js`, `index.html`, log routing, backend, P2/P3, AI/TTS processing or dependency changes in revision 2. PM source review: PASS.
 
 ## Gates
-- Execution: PASS for PIPELINE1-STANDARD-CJK-GUARD-008 source publication.
-- Source isolation: PASS.
-- Automated/static: PASS on exact tested application source `6e023808...`.
-- Code review: PASS for the CJK prompt-contract correction.
-- Owner Standard runtime: PASS for the corrected configured prompt.
-- Owner Semantic runtime: DEFERRED until observability follow-up is fixed and Standard closeout state is synchronized.
-- Documentation synchronization: PASS after this corrective knowledge sync.
-- Merge permission: BLOCKED — BUG-039 and BUG-040 remain open; no merge requested.
+- Execution: PASS — revision 2 source published.
+- Automated/static: WAITING revision-2 retest.
+- Code review: PASS for revision-2 diff.
+- Owner manual app verification: RETEST WAITING after FAIL on `2a19d71...`.
+- Documentation synchronization: PARTIAL until final runtime result updates bug/QA ledgers.
+- Merge permission: BLOCKED.
 
 ## Next permitted action
-Open a dedicated stacked review task `PIPELINE1-LOG-OBSERVABILITY-009` from the synchronized PR #51 head. Scope only P1 console retention/noise filtering and required project knowledge; do not modify AI reasoning, TTS generation, P2, P3, or status functionality. After that runtime PASS, synchronize the proven continuous-narration prompt into the product default in a separate task before merge consideration.
+Owner updates the clean Prompt010 worktree to latest PR #53 HEAD, reruns syntax/diff checks, launches app, and first verifies modal-local `+ Prompt mới` shows a clean draft and can save exactly one new prompt. Do not resume log work yet.

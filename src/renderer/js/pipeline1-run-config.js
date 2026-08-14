@@ -1,4 +1,5 @@
 import './pipeline1-run-ux.js';
+import './components/prompt-manager-new-flow.js';
 
 /**
  * Pipeline 1 run configuration bridge.
@@ -19,12 +20,19 @@ function _readProviderKeys(provider) {
 }
 
 function _resolvePrompt(select) {
-  const promptId = select?.value || localStorage.getItem('ai_active_prompt_id') || '';
+  const requestedId = select?.value || localStorage.getItem('ai_active_prompt_id') || '';
   let prompts = [];
-  try { prompts = JSON.parse(localStorage.getItem('ai_prompts') || '[]'); } catch { prompts = []; }
-  const selected = Array.isArray(prompts) ? prompts.find(item => item?.id === promptId) : null;
-  const prompt = selected?.content || localStorage.getItem('ai_prompt') || '';
-  return { promptId, prompt: prompt.trim() };
+  try {
+    const parsed = JSON.parse(localStorage.getItem('ai_prompts') || '[]');
+    prompts = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    prompts = [];
+  }
+  const selected = prompts.find(item => item?.id === requestedId) || null;
+  return {
+    promptId: selected?.id || '',
+    prompt: String(selected?.content || '').trim(),
+  };
 }
 
 function _semanticRemixEnabled() {
