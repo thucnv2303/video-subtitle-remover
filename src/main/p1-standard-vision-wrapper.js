@@ -6,6 +6,12 @@ const CJK_CHAR_RE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\uf900
 const REPEAT_NGRAM_WORDS = 10;
 const SIMILAR_SENTENCE_MIN_WORDS = 8;
 const SIMILAR_SENTENCE_THRESHOLD = 0.88;
+const RECOMPOSE_CONTEXT_BUCKETS = [8192, 16384, 32768];
+const RECOMPOSE_MAX_PREDICT = 8192;
+const LONG_RECOMPOSE_TRIGGER_CHARS = 3200;
+const LONG_SECTION_TARGET_CHARS = 1650;
+const CONTINUITY_TAIL_SENTENCES = 3;
+const CONTINUITY_TAIL_MAX_CHARS = 520;
 
 function compactNarration(value) {
   return String(value || '').replace(/```(?:json)?/gi, '').replace(/\s+/g, ' ').trim();
@@ -19,6 +25,37 @@ function emitProgress(event, message, type = 'info') {
   }
 }
 
+function evenlySample(items, maxItems) {
+  const source = Array.isArray(items) ? items : [];
+  const limit = Math.max(0, Math.floor(Number(maxItems) || 0));
+  if (!limit || !source.length) return [];
+  if (source.length <= limit) return source.slice();
+  if (limit === 1) return [source[0]];
+
+  const picked = [];
+  const seen = new Set();
+  for (let i = 0; i < limit; i += 1) {
+    const index = Math.round((i * (source.length - 1)) / (limit - 1));
+    if (seen.has(index)) continue;
+    seen.add(index);
+    picked.push(source[index]);
+  }
+  return picked;
+}
+
+function compactInsights(rawInsights) {
+  const insights = rawInsights && typeof rawInsights === 'object' ? rawInsights : {};
+  return Object.fromEntries(
+    Object.entries(insights)
+      .slice(0, 8)
+      .map(([key, value]) => {
+        if (Array.isArray(value)) return [key, value.slice(0, 4).map(item => String(item || '').slice(0, 120))];
+        if (value && typeof value === 'object') return [key, JSON.stringify(value).slice(0, 240)];
+        return [key, String(value || '').slice(0, 240)];
+      })
+  );
+}
+
 function standardEvidenceContext(result) {
   const analysis = result?.analysis || {};
   const visualChunks = Array.isArray(result?.visual_chunks) ? result.visual_chunks : [];
@@ -26,28 +63,216 @@ function standardEvidenceContext(result) {
     index: Number(chunk?.index) || 0,
     start_sec: Number(chunk?.start_sec) || 0,
     end_sec: Number(chunk?.end_sec) || 0,
-    summary: String(chunk?.analysis?.summary || '').slice(0, 220),
+    summary: String(chunk?.analysis?.summary || '').slice(0, 150),
     visual_evidence: Array.isArray(chunk?.analysis?.visual_evidence)
-      ? chunk.analysis.visual_evidence.slice(0, 6).map((item) => String(item || '').slice(0, 180))
+      ? chunk.analysis.visual_evidence.slice(0, 3).map((item) => String(item || '').slice(0, 110))
       : [],
     conflicts: Array.isArray(chunk?.analysis?.conflicts)
-      ? chunk.analysis.conflicts.slice(0, 4).map((item) => String(item || '').slice(0, 180))
+      ? chunk.analysis.conflicts.slice(0, 2).map((item) => String(item || '').slice(0, 110))
       : [],
   }));
-  const scenes = Array.isArray(analysis?.scenes) ? analysis.scenes.slice(0, 80).map((scene) => ({
+
+  const allScenes = Array.isArray(analysis?.scenes) ? analysis.scenes : [];
+  const representative = [];
+  const byChunk = new Map();
+  allScenes.forEach((scene) => {
+    const key = Number(scene?.chunk_index) || 0;
+    if (!byChunk.has(key)) byChunk.set(key, []);
+    byChunk.get(key).push(scene);
+  });
+  [...byChunk.keys()].sort((a, b) => a - b).forEach((chunkIndex) => {
+    representative.push(...evenlySample(byChunk.get(chunkIndex), 2));
+  });
+  const selectedScenes = representative.length
+    ? evenlySample(representative, 24)
+    : evenlySample(allScenes, 24);
+  const scenes = selectedScenes.map((scene) => ({
     index: Number(scene?.index) || 0,
     chunk_index: Number(scene?.chunk_index) || 0,
     time_sec: Number(scene?.time_sec) || 0,
-    visual: String(scene?.visual || '').slice(0, 220),
-    speech_context: String(scene?.speech_context || '').slice(0, 180),
-    purpose: String(scene?.purpose || '').slice(0, 140),
-  })) : [];
+    visual: String(scene?.visual || '').slice(0, 150),
+    speech_context: String(scene?.speech_context || '').slice(0, 110),
+    purpose: String(scene?.purpose || '').slice(0, 90),
+  }));
+
   return {
-    summary: String(analysis?.summary || '').slice(0, 600),
-    insights: analysis?.insights || {},
+    summary: String(analysis?.summary || '').slice(0, 420),
+    insights: compactInsights(analysis?.insights),
     chunks,
     scenes,
   };
+}
+
+function chunkDuration(chunk) {
+  return Math.max(0.001, (Number(chunk?.end_sec) || 0) - (Number(chunk?.start_sec) || 0));
+}
+
+function planLongSections(visualContext, targetChars) {
+  const chunks = (Array.isArray(visualContext?.chunks) ? visualContext.chunks : [])
+    .slice()
+    .sort((left, right) => (Number(left?.start_sec) || 0) - (Number(right?.start_sec) || 0) || (Number(left?.index) || 0) - (Number(right?.index) || 0));
+  if (chunks.length < 2) return [];
+
+  const desiredCount = Math.min(
+    chunks.length,
+    Math.max(2, Math.ceil(Math.max(1, Number(targetChars) || 1) / LONG_SECTION_TARGET_CHARS))
+  );
+  const sections = [];
+  let cursor = 0;
+
+  for (let sectionIndex = 0; sectionIndex < desiredCount; sectionIndex += 1) {
+    const sectionsLeft = desiredCount - sectionIndex;
+    let endExclusive;
+    if (sectionsLeft === 1) {
+      endExclusive = chunks.length;
+    } else {
+      const maxEndExclusive = chunks.length - (sectionsLeft - 1);
+      const remainingDuration = chunks.slice(cursor).reduce((sum, chunk) => sum + chunkDuration(chunk), 0);
+      const desiredDuration = remainingDuration / sectionsLeft;
+      endExclusive = cursor + 1;
+      let accumulated = chunkDuration(chunks[cursor]);
+      while (endExclusive < maxEndExclusive) {
+        const nextDuration = chunkDuration(chunks[endExclusive]);
+        if (Math.abs((accumulated + nextDuration) - desiredDuration) > Math.abs(accumulated - desiredDuration)) break;
+        accumulated += nextDuration;
+        endExclusive += 1;
+      }
+    }
+
+    const group = chunks.slice(cursor, endExclusive);
+    const startSec = Number(group[0]?.start_sec) || 0;
+    const endSec = Number(group.at(-1)?.end_sec) || startSec;
+    sections.push({
+      index: sectionIndex,
+      start_sec: startSec,
+      end_sec: endSec,
+      duration_sec: Math.max(0.001, endSec - startSec),
+      chunks: group,
+      chunk_indexes: group.map(chunk => Number(chunk?.index) || 0),
+    });
+    cursor = endExclusive;
+  }
+
+  return sections;
+}
+
+function allocateProportional(total, weights) {
+  const target = Math.max(0, Math.floor(Number(total) || 0));
+  const safeWeights = (Array.isArray(weights) ? weights : []).map(value => Math.max(0.001, Number(value) || 0.001));
+  if (!safeWeights.length) return [];
+  const weightTotal = safeWeights.reduce((sum, value) => sum + value, 0);
+  const raw = safeWeights.map(value => (target * value) / weightTotal);
+  const allocated = raw.map(value => Math.floor(value));
+  let remainder = target - allocated.reduce((sum, value) => sum + value, 0);
+  const order = raw
+    .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+    .sort((left, right) => right.fraction - left.fraction || left.index - right.index);
+  for (let i = 0; i < remainder; i += 1) allocated[order[i % order.length].index] += 1;
+  return allocated;
+}
+
+function allocateWithinBounds(total, minimums, maximums, weights) {
+  const mins = minimums.slice();
+  const maxs = maximums.slice();
+  const minTotal = mins.reduce((sum, value) => sum + value, 0);
+  const maxTotal = maxs.reduce((sum, value) => sum + value, 0);
+  const target = Math.max(minTotal, Math.min(maxTotal, Math.floor(Number(total) || minTotal)));
+  const result = mins.slice();
+  let remaining = target - minTotal;
+
+  while (remaining > 0) {
+    const eligible = result
+      .map((value, index) => ({ index, capacity: Math.max(0, maxs[index] - value) }))
+      .filter(item => item.capacity > 0);
+    if (!eligible.length) break;
+    const shares = allocateProportional(remaining, eligible.map(item => weights[item.index]));
+    let consumed = 0;
+    eligible.forEach((item, position) => {
+      const add = Math.min(item.capacity, shares[position]);
+      if (add > 0) {
+        result[item.index] += add;
+        consumed += add;
+      }
+    });
+    if (consumed === 0) {
+      result[eligible[0].index] += 1;
+      consumed = 1;
+    }
+    remaining -= consumed;
+  }
+
+  return result;
+}
+
+function allocateSectionBudgets(globalBudget, sections) {
+  const minChars = Math.max(1, Math.floor(Number(globalBudget?.min_chars) || 1));
+  const maxChars = Math.max(minChars, Math.floor(Number(globalBudget?.max_chars) || minChars));
+  const targetChars = Math.max(minChars, Math.min(maxChars, Math.floor(Number(globalBudget?.target_chars) || Math.round((minChars + maxChars) / 2))));
+  const separatorChars = Math.max(0, sections.length - 1);
+  const sectionMinTotal = Math.max(sections.length, minChars - separatorChars);
+  const sectionMaxTotal = Math.max(sectionMinTotal, maxChars - separatorChars);
+  const sectionTargetTotal = Math.max(sectionMinTotal, Math.min(sectionMaxTotal, targetChars - separatorChars));
+  const weights = sections.map(section => Math.max(0.001, Number(section?.duration_sec) || 0.001));
+  const minimums = allocateProportional(sectionMinTotal, weights);
+  const extraMax = allocateProportional(sectionMaxTotal - sectionMinTotal, weights);
+  const maximums = minimums.map((value, index) => value + extraMax[index]);
+  const targets = allocateWithinBounds(sectionTargetTotal, minimums, maximums, weights);
+
+  return sections.map((section, index) => ({
+    ...section,
+    budget: {
+      min_chars: minimums[index],
+      max_chars: maximums[index],
+      target_chars: targets[index],
+    },
+  }));
+}
+
+function parseSrtTime(value) {
+  const match = String(value || '').trim().match(/^(\d+):(\d+):(\d+)[,.](\d+)$/);
+  if (!match) return null;
+  const [, hours, minutes, seconds, millis] = match;
+  return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds) + Number(`0.${millis}`);
+}
+
+function filterSrtForRange(transcript, startSec, endSec) {
+  const blocks = String(transcript || '').replace(/\r/g, '').split(/\n{2,}/).map(block => block.trim()).filter(Boolean);
+  return blocks.filter((block) => {
+    const timestamp = block.split('\n').find(line => line.includes('-->'));
+    if (!timestamp) return false;
+    const [rawStart, rawEnd] = timestamp.split('-->').map(value => value.trim().split(/\s+/)[0]);
+    const blockStart = parseSrtTime(rawStart);
+    const blockEnd = parseSrtTime(rawEnd);
+    if (!Number.isFinite(blockStart) || !Number.isFinite(blockEnd)) return false;
+    return blockEnd >= startSec && blockStart <= endSec;
+  }).join('\n\n');
+}
+
+function sectionVisualContext(visualContext, section) {
+  const indexes = new Set(section.chunk_indexes);
+  const chunks = (Array.isArray(visualContext?.chunks) ? visualContext.chunks : []).filter(chunk => indexes.has(Number(chunk?.index) || 0));
+  const scenes = (Array.isArray(visualContext?.scenes) ? visualContext.scenes : []).filter((scene) => {
+    const chunkIndex = Number(scene?.chunk_index) || 0;
+    const timeSec = Number(scene?.time_sec) || 0;
+    return indexes.has(chunkIndex) || (timeSec >= section.start_sec && timeSec <= section.end_sec);
+  });
+  return {
+    range: { start_sec: section.start_sec, end_sec: section.end_sec },
+    chunks,
+    scenes,
+  };
+}
+
+function continuityTail(value) {
+  const sentences = narrationSentences(value);
+  const picked = [];
+  for (let index = sentences.length - 1; index >= 0 && picked.length < CONTINUITY_TAIL_SENTENCES; index -= 1) {
+    const candidate = [sentences[index], ...picked].join(' ');
+    if (candidate.length > CONTINUITY_TAIL_MAX_CHARS && picked.length) break;
+    picked.unshift(sentences[index]);
+  }
+  const tail = picked.join(' ');
+  return tail.length <= CONTINUITY_TAIL_MAX_CHARS ? tail : tail.slice(-CONTINUITY_TAIL_MAX_CHARS);
 }
 
 function effectiveCharsPerSecond(budget) {
@@ -172,25 +397,59 @@ function qualitySummary(report) {
   return `issues=${(report?.issues || []).join('|') || 'none'}; cjk=${report?.cjk_count || 0}; repeated_sentence=${report?.repeated_sentence_pairs || 0}; near_duplicate=${report?.near_duplicate_sentence_pairs || 0}; repeated_10gram=${report?.repeated_10gram_count || 0}`;
 }
 
-function narrationSchema(minChars, maxChars) {
+function narrationSchema() {
   return {
     type: 'object',
     additionalProperties: false,
     properties: {
-      narration_script: { type: 'string', minLength: minChars, maxLength: maxChars },
+      narration_script: { type: 'string' },
     },
     required: ['narration_script'],
   };
+}
+
+function estimateTokensFromText(value) {
+  return Math.max(1, Math.ceil(String(value || '').length / 2));
+}
+
+function chooseRecomposeContext(inputTokens, outputTokens) {
+  const required = Math.max(1, inputTokens) + Math.max(1, outputTokens) + 1024;
+  const bucket = RECOMPOSE_CONTEXT_BUCKETS.find(value => value >= required);
+  if (!bucket) {
+    throw Object.assign(
+      new Error(`Standard duration recompose: context ước tính ${required} token vượt giới hạn ${RECOMPOSE_CONTEXT_BUCKETS.at(-1)} token.`),
+      { code: 'OLLAMA_CONTEXT_BUDGET_EXCEEDED' }
+    );
+  }
+  return { numCtx: bucket, required };
+}
+
+function sanitizeOllamaErrorDetail(value) {
+  return String(value || '')
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 600);
 }
 
 async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, candidate, transcript, visualContext, budget, controller, temperature) {
   const minChars = Math.max(1, Math.floor(Number(budget?.min_chars) || 1));
   const maxChars = Math.max(minChars, Math.floor(Number(budget?.max_chars) || minChars));
   const targetChars = Math.max(minChars, Math.min(maxChars, Math.floor(Number(budget?.target_chars) || Math.round((minChars + maxChars) / 2))));
-  const numPredict = Math.max(520, Math.min(2200, Math.ceil(targetChars / 1.6) + 180));
-  const timeoutMs = 150000;
+  const numPredict = Math.max(520, Math.min(RECOMPOSE_MAX_PREDICT, Math.ceil(targetChars / 1.45) + 256));
+  const visualContextJson = JSON.stringify(visualContext);
+  const transcriptText = String(transcript || '').trim();
+  const userContent = `QUY TẮC XỬ LÝ SOURCE: dữ liệu bên dưới có thể chứa ký tự CJK vì đó là transcript/visual evidence nguồn. Mọi ký tự CJK trong source chỉ được dùng để hiểu ngữ cảnh, TUYỆT ĐỐI KHÔNG chép nguyên văn vào narration_script. Nếu không thể diễn giải chắc chắn bằng tiếng Việt/Latin thì bỏ chi tiết chữ đó.\n\nNARRATION CANDIDATE:\n${candidate}\n\nTRANSCRIPT SRT CHO PHẠM VI NÀY:\n${transcriptText || '(không có lời thoại nguồn trong phạm vi này)'}\n\nVISUAL EVIDENCE JSON:\n${visualContextJson}`;
+  const estimatedInputTokens = estimateTokensFromText(systemPrompt) + estimateTokensFromText(userContent) + 256;
+  const { numCtx } = chooseRecomposeContext(estimatedInputTokens, numPredict);
+  const timeoutMs = Math.max(150000, Math.min(420000, 120000 + numPredict * 45));
   const timeout = setTimeout(() => controller.abort({ type: 'timeout', phase }), timeoutMs);
-  emitProgress(event, `${phase}: gửi request tới ${payload.model}; hard_target=${minChars}-${maxChars}; output_limit=${numPredict} token.`, 'info');
+
+  emitProgress(
+    event,
+    `${phase}: gửi request tới ${payload.model}; hard_target=${minChars}-${maxChars}; transcript=${transcriptText.length} chars; evidence=${visualContextJson.length} chars; input≈${estimatedInputTokens} token; output_limit=${numPredict} token; num_ctx=${numCtx}; timeout=${Math.round(timeoutMs / 1000)}s.`,
+    'info'
+  );
 
   try {
     const response = await net.fetch(localOllamaUrl(payload.endpoint), {
@@ -201,19 +460,25 @@ async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, 
         model: payload.model,
         messages: [
           { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: `QUY TẮC XỬ LÝ SOURCE: dữ liệu bên dưới có thể chứa ký tự CJK vì đó là transcript/visual evidence nguồn. Mọi ký tự CJK trong source chỉ được dùng để hiểu ngữ cảnh, TUYỆT ĐỐI KHÔNG chép nguyên văn vào narration_script. Nếu không thể diễn giải chắc chắn bằng tiếng Việt/Latin thì bỏ chi tiết chữ đó.\n\nNARRATION CANDIDATE:\n${candidate}\n\nFULL TRANSCRIPT SRT:\n${transcript}\n\nVISUAL EVIDENCE JSON:\n${JSON.stringify(visualContext)}`,
-          },
+          { role: 'user', content: userContent },
         ],
         stream: true,
-        format: narrationSchema(minChars, maxChars),
+        format: narrationSchema(),
         think: false,
         keep_alive: 0,
-        options: { temperature, num_predict: numPredict },
+        options: { temperature, num_predict: numPredict, num_ctx: numCtx },
       }),
     });
-    if (!response.ok) throw Object.assign(new Error(`${phase}: HTTP ${response.status}`), { code: 'OLLAMA_HTTP_ERROR' });
+    if (!response.ok) {
+      const raw = await response.text().catch(() => '');
+      let detail = raw;
+      try { detail = JSON.parse(raw)?.error || raw; } catch { /* preserve text */ }
+      const safeDetail = sanitizeOllamaErrorDetail(detail);
+      throw Object.assign(
+        new Error(`${phase}: HTTP ${response.status}${safeDetail ? ` — ${safeDetail}` : ''}`),
+        { code: 'OLLAMA_HTTP_ERROR', httpStatus: response.status }
+      );
+    }
     if (!response.body?.getReader) throw Object.assign(new Error(`${phase}: response stream không khả dụng.`), { code: 'OLLAMA_STREAM_UNAVAILABLE' });
 
     const reader = response.body.getReader();
@@ -276,10 +541,165 @@ async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, 
   }
 }
 
+function longSectionPrompt(section, sectionCount, globalBudget, globalBrief, previousTail, lastError, attempt) {
+  const isFirst = section.index === 0;
+  const isFinal = section.index === sectionCount - 1;
+  const retryReason = lastError
+    ? `${lastError.code}: ${lastError.message}${lastError?.quality ? `; ${qualitySummary(lastError.quality)}` : ''}`
+    : '';
+  const cjkRetryRule = lastError?.quality?.cjk_count
+    ? `LỖI BẮT BUỘC PHẢI SỬA: candidate có ${lastError.quality.cjk_count} ký tự CJK. Hãy loại/diễn giải lại toàn bộ bằng tiếng Việt/Latin.`
+    : '';
+  const continuityRule = isFirst
+    ? 'Đây là phần mở đầu duy nhất của toàn narration. Mở tự nhiên, đi thẳng vào nội dung; chưa được kết luận hoặc CTA.'
+    : isFinal
+      ? 'Đây là phần cuối. Bắt đầu như sự tiếp nối trực tiếp của phần trước; không chào/mở bài lại. Chỉ phần này mới được kết luận hoặc CTA tối đa một lần nếu phù hợp.'
+      : 'Đây là phần giữa. Bắt đầu như sự tiếp nối trực tiếp của phần trước; không chào/mở bài lại, không giới thiệu lại chủ thể, không kết luận và không CTA. Kết thúc mở để phần sau nối tiếp tự nhiên.';
+
+  return [
+    `Bạn viết PHẦN ${section.index + 1}/${sectionCount} của MỘT narration tiếng Việt liên tục cho Pipeline 1 trước TTS.`,
+    `Timeline local: ${section.start_sec.toFixed(1)}-${section.end_sec.toFixed(1)}s. Hard target local ${section.budget.min_chars}-${section.budget.max_chars} ký tự, ưu tiên khoảng ${section.budget.target_chars}.`,
+    `Toàn bài vẫn phải đạt hard target ${globalBudget.min_chars}-${globalBudget.max_chars} ký tự sau khi ghép.`,
+    continuityRule,
+    previousTail ? `ĐUÔI PHẦN TRƯỚC để nối mạch, chỉ dùng làm continuity context và KHÔNG lặp lại: ${previousTail}` : '',
+    `GLOBAL CONTINUITY BRIEF để giữ nhất quán chủ thể/phong cách, KHÔNG dùng nó để bịa chi tiết ngoài local evidence: ${globalBrief}`,
+    attempt === 0
+      ? 'Viết mới phần local này từ transcript + Vision evidence đúng timeline của phần.'
+      : `Candidate local vừa bị code từ chối (${retryReason}). Giữ phần tốt và chỉ sửa lỗi contract; không quay về viết lại toàn bài.`,
+    cjkRetryRule,
+    'Transcript và Vision evidence local là nguồn sự thật duy nhất cho chi tiết của phần này.',
+    'Source có thể chứa chữ Hán/Hiragana/Katakana/Hangul. Các glyph đó chỉ là INPUT, tuyệt đối không copy vào narration_script.',
+    'Không được nhắc số phần, section, chunk, timestamp, timecode hoặc cấu trúc nội bộ trong narration.',
+    'Không được lặp lại câu cuối của phần trước. Hãy nối ý bằng câu chuyển tự nhiên rồi tiếp tục diễn biến mới.',
+    'Ưu tiên hành động, vật thể, quy trình và diễn biến nhìn thấy/nghe thấy trong local evidence; không bịa claim, số liệu, nguyên liệu, công dụng hoặc chi tiết không có căn cứ.',
+    'Không filler chỉ để đủ ký tự. Không lặp câu, lặp cụm dài, lặp CTA/kết luận hoặc diễn đạt cùng một ý nhiều lần.',
+    'QUY TẮC NGÔN NGỮ: ZERO ký tự CJK; chỉ dùng tiếng Việt tự nhiên, ký tự Latin, số và dấu câu cần thiết.',
+    'Output chỉ là JSON đúng schema với một narration_script liền mạch; không SRT, numbering, bullet hoặc scene label.',
+  ].filter(Boolean).join('\n');
+}
+
+async function recomposeLongStandardNarration(net, event, payload, transcript, visualContext, budget, controller) {
+  const minChars = Math.max(1, Math.floor(Number(budget?.min_chars) || 1));
+  const maxChars = Math.max(minChars, Math.floor(Number(budget?.max_chars) || minChars));
+  const targetChars = Math.max(minChars, Math.min(maxChars, Math.floor(Number(budget?.target_chars) || Math.round((minChars + maxChars) / 2))));
+  const planned = planLongSections(visualContext, targetChars);
+  if (planned.length < 2) throw Object.assign(new Error('Standard long narration: không tạo được section plan đủ coverage.'), { code: 'STANDARD_LONG_SECTION_PLAN_INVALID' });
+  const sections = allocateSectionBudgets({ min_chars: minChars, max_chars: maxChars, target_chars: targetChars }, planned);
+  const globalBrief = JSON.stringify({ summary: visualContext?.summary || '', insights: visualContext?.insights || {} }).slice(0, 1600);
+  const accepted = [];
+
+  emitProgress(
+    event,
+    `Standard long narration: chunked mode ${sections.length} section; global_target=${minChars}-${maxChars}; target≈${targetChars}; section_target≈<=${LONG_SECTION_TARGET_CHARS} chars; TTS vẫn nhận một narration sau khi ghép.`,
+    'warning'
+  );
+
+  for (const section of sections) {
+    const localTranscript = filterSrtForRange(transcript, section.start_sec, section.end_sec);
+    const localVisual = sectionVisualContext(visualContext, section);
+    if (!localVisual.chunks.length && !localVisual.scenes.length) {
+      throw Object.assign(
+        new Error(`Standard long section ${section.index + 1}/${sections.length}: thiếu local Vision evidence.`),
+        { code: 'STANDARD_LONG_SECTION_EVIDENCE_MISSING' }
+      );
+    }
+
+    const previousTail = accepted.length ? continuityTail(accepted.at(-1).narration) : '';
+    let candidate = '';
+    let lastError = null;
+    let acceptedResult = null;
+
+    emitProgress(
+      event,
+      `Standard long section ${section.index + 1}/${sections.length}: timeline=${section.start_sec.toFixed(1)}-${section.end_sec.toFixed(1)}s; chunks=${section.chunk_indexes.join(',')}; local_target=${section.budget.min_chars}-${section.budget.max_chars}; transcript=${localTranscript.length} chars; evidence=${JSON.stringify(localVisual).length} chars.`,
+      'info'
+    );
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const phase = attempt === 0
+        ? `Standard long section ${section.index + 1}/${sections.length}`
+        : `Standard long section ${section.index + 1}/${sections.length} retry`;
+      const prompt = longSectionPrompt(
+        section,
+        sections.length,
+        { min_chars: minChars, max_chars: maxChars, target_chars: targetChars },
+        globalBrief,
+        previousTail,
+        lastError,
+        attempt
+      );
+
+      try {
+        acceptedResult = await ollamaNarrationRequest(
+          net,
+          event,
+          payload,
+          phase,
+          prompt,
+          candidate,
+          localTranscript,
+          localVisual,
+          section.budget,
+          controller,
+          attempt === 0 ? 0.2 : 0.3
+        );
+        break;
+      } catch (error) {
+        lastError = error;
+        if (error?.candidate) candidate = compactNarration(error.candidate);
+        const retryable = ['OLLAMA_OUTPUT_TRUNCATED', 'OLLAMA_JSON_INVALID', 'NARRATION_LENGTH_OUT_OF_BUDGET', 'NARRATION_QUALITY_FAILED'].includes(error?.code);
+        if (attempt === 0 && retryable && !controller.signal.aborted) {
+          emitProgress(
+            event,
+            `${phase}: chưa đạt contract (${error.code}); retry chỉ sửa candidate section này${candidate ? ` (${candidate.length} chars)` : ''}.`,
+            'warning'
+          );
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (!acceptedResult) throw lastError || new Error(`Standard long section ${section.index + 1}/${sections.length} thất bại.`);
+    accepted.push({ ...acceptedResult, section });
+    emitProgress(
+      event,
+      `Standard long section ${section.index + 1}/${sections.length}: accepted ${acceptedResult.narration.length} chars; nối tiếp section trước bằng continuity tail=${previousTail.length} chars.`,
+      'success'
+    );
+  }
+
+  const joined = compactNarration(accepted.map(item => item.narration).join(' '));
+  if (joined.length < minChars || joined.length > maxChars) {
+    throw Object.assign(
+      new Error(`Standard long narration joined: ${joined.length} chars ngoài ${minChars}-${maxChars}.`),
+      { code: 'NARRATION_LENGTH_OUT_OF_BUDGET', candidate: joined }
+    );
+  }
+  const quality = narrationQualityReport(joined);
+  if (!quality.ok) {
+    throw Object.assign(
+      new Error(`Standard long narration joined không đạt global quality gate: ${quality.issues.join(', ')}.`),
+      { code: 'NARRATION_QUALITY_FAILED', candidate: joined, quality }
+    );
+  }
+
+  emitProgress(
+    event,
+    `Standard long narration joined PASS: sections=${sections.length}; narration=${joined.length} chars; ${qualitySummary(quality)}. Chuyển một narration duy nhất sang TTS sau duration guard.`,
+    'success'
+  );
+  return { narration: joined, quality, section_count: sections.length };
+}
+
 async function recomposeStandardNarration(net, event, payload, narration, transcript, visualContext, budget, controller) {
   const minChars = Math.max(1, Math.floor(Number(budget?.min_chars) || 1));
   const maxChars = Math.max(minChars, Math.floor(Number(budget?.max_chars) || minChars));
   const targetChars = Math.max(minChars, Math.min(maxChars, Math.floor(Number(budget?.target_chars) || Math.round((minChars + maxChars) / 2))));
+  if (targetChars > LONG_RECOMPOSE_TRIGGER_CHARS && (Array.isArray(visualContext?.chunks) ? visualContext.chunks.length : 0) >= 2) {
+    return recomposeLongStandardNarration(net, event, payload, transcript, visualContext, budget, controller);
+  }
+
   let candidate = narration;
   let lastError = null;
 
@@ -388,7 +808,7 @@ module.exports = function registerP1StandardVisionIPC({ ipcMain, net }) {
         const predictedBeforeSec = narration.length / cps;
         emitProgress(
           event,
-          `Standard duration guard: draft=${narration.length} chars (~${predictedBeforeSec.toFixed(1)}s) dưới hard target ${minChars}-${maxChars} chars. Recompose bằng full transcript + Vision evidence trước TTS.`,
+          `Standard duration guard: draft=${narration.length} chars (~${predictedBeforeSec.toFixed(1)}s) dưới hard target ${minChars}-${maxChars} chars. Recompose bằng transcript + Vision evidence trước TTS.`,
           'warning'
         );
 
@@ -412,6 +832,7 @@ module.exports = function registerP1StandardVisionIPC({ ipcMain, net }) {
           pre_tts_duration_recomposed: true,
           initial_narration_chars: narration.length,
           final_narration_chars: recomposed.narration.length,
+          long_section_count: Number(recomposed.section_count) || 0,
         };
 
         emitProgress(

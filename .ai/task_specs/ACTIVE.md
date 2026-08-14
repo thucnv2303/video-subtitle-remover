@@ -1,29 +1,43 @@
 # Active PM Execution Spec
 
-Status: PIPELINE1_LOG_OBSERVABILITY_009_RESUMED_RUNTIME_REVISION_4_OWNER_RETEST_WAITING
+Status: PIPELINE1_STANDARD_LONG_VIDEO_012_REVISION_3_SOURCE_PUBLISHED
 
-Task: `PIPELINE1-LOG-OBSERVABILITY-009`
+Task: `PIPELINE1-STANDARD-LONG-VIDEO-012`
 Repository: `thucnv2303/video-subtitle-remover`
-Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`
-Review branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52
-Current pre-resume HEAD: `20f42653806b2ba048b8f598f3ade0d725169cca`
-Revision-4 source head: `e25792663f9c66cfd54b25c4f60de61b14341e8e`
+Corrective review branch / Draft PR: `review/PIPELINE1-STANDARD-LONG-VIDEO-012` / #55
+Original failing basis: `review/PIPELINE1-LOG-OBSERVABILITY-009@6bc43e65726150a3dbef37ded52f1ed1958ffaa8`
+Revision-3 spec: `.ai/task_specs/PIPELINE1-STANDARD-LONG-VIDEO-012-REV3-CHUNKED.md`
+Revision-3 source: `f00b5e8711ec737ad5c474987647171161226cb5`
+Bug: `BUG-041`
 
-## Current authority
-No new application-source revision is authorized until revision-4 runtime evidence is collected.
+## Revision 3 source result
+`src/main/p1-standard-vision-wrapper.js` now uses chunked chronological composition for materially long Standard narration targets (>3200 chars with >=2 Vision chunks).
+- section target approximately <=1650 chars;
+- local budget proportional to timeline duration;
+- only overlapping SRT + local Vision evidence per section;
+- sequential calls, one retained-candidate retry per section;
+- global subject/style brief + previous accepted tail for continuity;
+- opening only first section; conclusion/CTA only final section;
+- joined narration must pass original global hard length, ZERO-CJK and repetition gates;
+- no final monolithic rewrite;
+- TTS receives one joined narration only after `Standard duration guard PASS`.
 
-## Required Owner retest
-1. Run P1 while P2 has never been started. P1 `[P1]`/`[Ollama]`/AI/TTS logs must remain in P1 and must not appear in P2 Console/Log.
-2. Confirm P1 keyed progress and warning/error remain visible in P1.
-3. Leave app idle >=30 seconds; successful health/TTS/GPU/preview polling must not accumulate in visible P2 log.
-4. Run one P2 job; frame/progress must remain a single updating live row.
-5. Confirm Copy/Clear in both consoles.
+## Review
+PM source logic/scope review PASS. Compare `98052170... -> f00b5e87...` changes exactly one application file (+337/-4). Static/runtime still WAITING.
 
-## If runtime still fails
-Capture exact leaked P2 line text and whether P2 had an active job. Root-cause and authorize a narrow revision from those lines only. Do not add broad state-based filtering blindly.
+## Owner local policy
+Do not create more clone/worktree directories. Reuse the existing LONG012 test directory for the next approved ref.
 
-## Separate task
-Prompt Manager V2 / PR #53 remains separate. Do not edit Prompt Manager source on PR #52.
+## Integration requirement
+PR #54 is the authoritative per-Job Semantic Remix implementation. Before the next product-level Owner test, create a GitHub-only integration review branch that combines Revision 3 long-video with per-Job Remix while preserving the existing log-router import from the long-video lineage. Do not merge PRs.
 
-## Merge
-BLOCKED.
+## Gates
+- Execution: PASS.
+- Automated/static: WAITING.
+- Code review: PASS logic/scope.
+- Owner runtime: WAITING.
+- Documentation synchronization: PARTIAL.
+- Merge: BLOCKED.
+
+## Next permitted action
+Create/review the integration branch on GitHub only; then Owner updates the existing LONG012 directory to the exact integration HEAD and runs static/runtime acceptance.

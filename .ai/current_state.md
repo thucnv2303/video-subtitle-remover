@@ -1,45 +1,55 @@
 # Current State
 
 ## Status
-PIPELINE1-LOG-OBSERVABILITY-009 — RUNTIME REVISION 4 SOURCE PUBLISHED / PM REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
+PIPELINE1-STANDARD-LONG-VIDEO-012 — REVISION 3 CHUNKED SOURCE PUBLISHED / PM REVIEW PASS / STATIC WAITING / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Parent: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
-- Active branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52.
-- Current pre-resume HEAD: `20f42653806b2ba048b8f598f3ade0d725169cca`.
-- Revision-4 source head: `e25792663f9c66cfd54b25c4f60de61b14341e8e`.
-- Active bug: `BUG-039`.
+- Corrective branch / Draft PR: `review/PIPELINE1-STANDARD-LONG-VIDEO-012` / #55.
+- Original failing basis: `review/PIPELINE1-LOG-OBSERVABILITY-009@6bc43e65726150a3dbef37ded52f1ed1958ffaa8`.
+- Revision-2 application source: `6e047bf120dde6543386c50c725bf8f73418d441`.
+- Revision-3 spec: `.ai/task_specs/PIPELINE1-STANDARD-LONG-VIDEO-012-REV3-CHUNKED.md`.
+- Revision-3 spec commit: `628fae6cde8ee3a9a82fb26fd65ca44acae68b66`.
+- Revision-3 application source: `f00b5e8711ec737ad5c474987647171161226cb5`.
+- Active bug: `BUG-041`.
 
-## Owner sequencing update — 2026-08-14
-Owner has finished the immediate Prompt Manager work and explicitly directed Project Control to resume the Pipeline 2 log issue now.
-`PIPELINE1-PROMPT-MANAGER-V2-010` / PR #53 remains a separate Draft PR and is NOT merged into this log branch. The Owner has verified the previously blocked create-prompt path can now add prompts. Full PR #53 closeout/static/merge gates are not silently inferred here.
+## Owner runtime basis — Revision 2 FAIL
+Latest ~497.1s Standard run completed ASR, 80-keyframe/10-chunk Vision and global reasoning. Hard target was 7792-8202 chars. The prior grammar HTTP 400 was gone, but both monolithic recompose attempts completed at only ~1610 chars and failed before TTS.
 
-## Verified BUG-039 history
-- Revision 3 failed Owner runtime because P2 Console/Log displayed P1 `[Ollama]` vision/reasoning progress while P2 had no job.
-- Source review confirmed `[Ollama]` was omitted from the revision-3 matcher and `updateP1ProgressLog()` dual-wrote keyed P1 progress into P1 and global/P2 containers.
+## Revision 3 implementation
+Only `src/main/p1-standard-vision-wrapper.js` changes application behavior from the prior branch head.
+- Long target trigger: >3200 chars with at least 2 Vision chunks.
+- Chronological contiguous section planning, aiming around <=1650 chars per section.
+- Global min/target/max budget is allocated proportionally to section timeline duration, accounting for join separators.
+- Each section receives only overlapping SRT and local Vision chunks/scenes.
+- Section requests run sequentially on the same reasoning model; no concurrent GPU inference.
+- Each section has at most one retained-candidate retry for retryable JSON/length/quality failures.
+- Continuity is preserved by a compact global brief plus up to the last 3 sentences / 520 chars from the previously accepted section.
+- Only section 1 may open; only the final section may conclude/CTA; middle sections must continue directly.
+- Accepted sections are joined into exactly one continuous narration, then original global hard-length + ZERO-CJK + repetition gates run fail-closed.
+- There is no final monolithic AI rewrite.
+- TTS ordering is unchanged: TTS receives one joined narration only after `Standard duration guard PASS`.
 
-## Revision-4 source state
-- `src/renderer/js/pipeline1-log-router.js` routes explicit P1 owners `[P1]`, `[ASR]`, `[AI]`, `[TTS]`, `[Voice]`, `[VoiceSub]`, `[Ollama]`, `[Gemini]` directly to `#step1-log-output` when P1 DOM is available.
-- `window.updateP1ProgressLog` is replaced by a P1-only keyed updater with fallback when P1 DOM is unavailable.
-- Already-rendered explicit P1 rows are removed from `#log-output` on router install.
-- Existing P2 runtime still suppresses routine successful health/TTS/GPU/preview access rows and coalesces frame heartbeat into one P2 live row.
-- `app.js` remains unchanged and its legacy logger is still the generic fallback.
+## PM source review
+PASS for scope/logic review of source commit `f00b5e87...`.
+- Compare `98052170... -> f00b5e87...` changes exactly one application file: `src/main/p1-standard-vision-wrapper.js` (+337/-4).
+- Short/medium single-request path remains.
+- Long section planning is chronological and bounded.
+- No TTS/P2/P3/renderer/Prompt Manager/Remix/log/dependency source was changed.
+- Exact runtime/static execution is still required; no release PASS is claimed.
 
-## Verification
-- Source isolation: PASS — log router + one import only for revision 4.
-- PM source review: PASS.
-- GitHub CI/status checks on current head: none present.
-- Exact executable Node syntax / diff-check: WAITING.
-- Owner runtime revision-4 retest: WAITING.
+## Semantic Remix / Owner build policy
+PR #54 remains the per-Job Semantic Remix source. PR #55 by itself does not contain that sibling renderer change.
+Owner requested no further clone/worktree directories. Future Owner tests must reuse one existing test directory/worktree and switch/fetch the approved remote ref; do not create additional `owner-test-*` folders.
+Before the next product-level Owner test, PM should create one explicit integration review branch on GitHub that combines the verified long-video source with per-Job Remix, rather than asking Owner to test another isolated sibling build.
 
 ## Gates
-- Execution: PASS.
-- Automated/static: PARTIAL.
-- Code review: PASS.
-- Owner manual app verification: WAITING.
-- Documentation synchronization: PARTIAL until runtime closeout updates bug/QA ledgers.
+- Revision-3 Execution: PASS.
+- Revision-3 Automated/static: WAITING.
+- Revision-3 Code review: PASS (logic/scope only).
+- Owner runtime: WAITING.
+- Documentation synchronization: PARTIAL pending final-head static/runtime/QA closeout and integration state.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Do not make another log source revision without new revision-4 runtime evidence. First run exact static checks on the latest PR #52 head, then Owner retests P1/P2 log ownership. If revision 4 still leaks P1 rows into P2, capture the exact leaked line(s) and revise narrowly from that evidence.
+Create/review a GitHub-only integration branch containing Revision 3 long-video + per-Job Semantic Remix, with no new local clone/worktree. Then give Owner commands that reuse the existing LONG012 test directory and verify the exact integration HEAD before runtime.

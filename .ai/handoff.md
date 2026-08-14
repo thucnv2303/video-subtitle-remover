@@ -1,39 +1,47 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-LOG-OBSERVABILITY-009`
+`PIPELINE1-STANDARD-LONG-VIDEO-012`
 
 ## Status
-RUNTIME REVISION 4 SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
+REVISION 3 SOURCE PUBLISHED / PM REVIEW PASS / STATIC + OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
-- Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`
-- Active branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52
-- Current pre-resume HEAD: `20f42653806b2ba048b8f598f3ade0d725169cca`
-- Revision-4 source head: `e25792663f9c66cfd54b25c4f60de61b14341e8e`
-- Active bug: `BUG-039`
+- Corrective branch / Draft PR: `review/PIPELINE1-STANDARD-LONG-VIDEO-012` / #55
+- Original failing basis: `review/PIPELINE1-LOG-OBSERVABILITY-009@6bc43e65726150a3dbef37ded52f1ed1958ffaa8`
+- Revision-3 spec: `.ai/task_specs/PIPELINE1-STANDARD-LONG-VIDEO-012-REV3-CHUNKED.md`
+- Revision-3 application source: `f00b5e8711ec737ad5c474987647171161226cb5`
+- Bug: `BUG-041`
 
-## Resumed by Owner
-Owner has explicitly returned focus to P2 log isolation. Prompt Manager V2 remains separate on PR #53 and is not part of this branch.
+## Current implementation
+Long Standard targets no longer depend on one ~8k generation call.
+- chronological contiguous section planning;
+- approximately <=1650 chars per section;
+- duration-proportional local budgets;
+- section-local SRT + Vision evidence;
+- sequential same-model requests only;
+- one retained-candidate retry per section;
+- global continuity brief + previous accepted tail for transitions;
+- opening only in first section, conclusion/CTA only in last;
+- joined to one narration then global length/CJK/repetition gates;
+- no monolithic final rewrite;
+- exactly one final narration is passed downstream; TTS ordering remains after `Standard duration guard PASS`.
 
-## Verified revision-4 behavior by source
-- P1-owned markers `[P1]`, `[ASR]`, `[AI]`, `[TTS]`, `[Voice]`, `[VoiceSub]`, `[Ollama]`, `[Gemini]` bypass the legacy global/P2 sink when the P1 console exists.
-- P1 keyed progress writes only to the P1 console.
-- Existing P2 routine access-noise suppression and one-line frame heartbeat coalescing remain.
+## Review evidence
+Compare prior branch head `98052170...` -> source `f00b5e87...`: exactly one application file, `src/main/p1-standard-vision-wrapper.js`, +337/-4. PM source logic/scope review PASS. Static/runtime execution still WAITING.
 
-## Evidence still missing
-- exact Node syntax/diff-check on latest PR #52 head;
-- Owner runtime retest proving no P1 rows appear in P2 before P2 starts;
-- P2 live-row behavior under an actual P2 job.
+## Product integration / local safety
+PR #54 is still the per-Job Semantic Remix implementation; isolated PR #55 does not include it.
+Owner explicitly requires no more clone/worktree folders. Future testing must reuse the existing LONG012 test directory. PM should create a GitHub-only integration branch combining Revision 3 + per-Job Remix, then Owner switches the existing directory to the exact approved integration ref.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PARTIAL.
-- Code review: PASS.
+- Automated/static: WAITING.
+- Code review: PASS logic/scope.
 - Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL.
+- Documentation synchronization: PARTIAL pending integration/final runtime/QA closeout.
 - Merge: BLOCKED.
 
 ## Next permitted action
-Run exact static checks and Owner runtime acceptance on latest PR #52 HEAD. If leakage remains, capture exact leaked rows; do not broaden filtering without that evidence.
+Create/review the GitHub-only integration branch. Do not create local clone/worktree directories and do not merge any PR.
