@@ -1,51 +1,72 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-STANDARD-LONG-VIDEO-012
+PIPELINE1-INTEGRATION-013
 
 ## Status
-REVISION_3_CHUNKED_SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RETEST_WAITING
+SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_WAITING
 
 ## Basis
-- Corrective branch / Draft PR: `review/PIPELINE1-STANDARD-LONG-VIDEO-012` / #55.
-- Original failing basis: `review/PIPELINE1-LOG-OBSERVABILITY-009@6bc43e65726150a3dbef37ded52f1ed1958ffaa8`.
-- Revision-2 source: `6e047bf120dde6543386c50c725bf8f73418d441`.
-- Revision-3 spec: `.ai/task_specs/PIPELINE1-STANDARD-LONG-VIDEO-012-REV3-CHUNKED.md`.
-- Revision-3 spec commit: `628fae6cde8ee3a9a82fb26fd65ca44acae68b66`.
-- Revision-3 application source: `f00b5e8711ec737ad5c474987647171161226cb5`.
-- Bug: `BUG-041`.
+- Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56.
+- Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`.
+- Long-video Revision-3 source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`.
+- Per-Job Remix authority: PR #54 application source `c3662ea84f32c25bf5bf633888affe39fd2cb6fa`.
+- Integration source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`.
+- Spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`.
 
-## Revision-2 runtime failure
-The ~497s Standard run reached target-aware recompose without grammar HTTP 400, but both full-script calls returned only ~1610 chars against target 7792-8202 and failed before TTS.
+## User outcome
+One Owner-testable Pipeline 1 build must contain both the long-video Standard fix and the already-implemented per-Job Semantic Remix behavior. Owner must not be asked to create another local clone/worktree directory.
 
-## Revision-3 implementation
-Authorized source only: `src/main/p1-standard-vision-wrapper.js`.
-- Long targets >3200 chars + >=2 Vision chunks use sequential timeline sections.
-- Approximate section target is <=1650 chars; observed 8k/10-chunk case plans about 5 chronological sections.
-- Section min/target/max budgets are allocated by section duration and preserve the original joined hard range.
-- Full SRT is filtered to each section range; compact Vision context is filtered to matching chunks/scenes.
-- Requests are sequential on the same model with one retained-candidate retry per section.
-- A global brief preserves subject/style consistency; each later section receives only the previous accepted tail (max 3 sentences / 520 chars) for continuity.
-- Opening is allowed only in section 1; only the final section may conclude/CTA.
-- Sections are compact-joined into one narration, then original global hard-length, ZERO-CJK and repetition gates run fail-closed.
-- No final monolithic AI rewrite.
-- TTS receives one final narration only after `Standard duration guard PASS`.
+## Integrated application behavior
+### Long Standard narration
+- Targets >3200 chars with >=2 Vision chunks use sequential chronological sections.
+- Each section receives local SRT + local Vision evidence and a bounded continuity handoff.
+- Opening only occurs in section 1; only final section may conclude/CTA.
+- Sections join into one continuous narration.
+- Original global hard-length, ZERO-CJK and repetition gates remain fail-closed.
+- TTS receives one joined narration only after `Standard duration guard PASS`.
 
-## Review
-PM source scope/logic review: PASS for `f00b5e87...`.
-Compare from prior branch head changes exactly one application file (+337/-4). No renderer/TTS/P2/P3/Prompt Manager/Remix/log/dependency source changes.
+### Per-Job Semantic Remix
+- No global Semantic Remix checkbox/localStorage authority.
+- Each Job card owns `job.semanticRemixEnabled`, default OFF/Standard.
+- queued/processing locks that Job's switch; idle/error remains editable.
+- run snapshot copies each Job's own value to `job.p1Config.semanticRemixEnabled`.
+- changing one Job does not modify another Job or future Jobs.
 
-## Owner-test policy
-Do not create additional clone/worktree directories. Reuse the existing LONG012 test directory for the next approved ref.
-The next product-level test should use a GitHub integration branch combining Revision 3 with PR #54 per-Job Remix so Owner does not test another isolated build with the obsolete global Remix UI.
+### Log routing
+`pipeline1-run-config.js` preserves `import './pipeline1-log-router.js';`; integration must not regress P1/Ollama isolation from the P2 console.
+
+## Review evidence
+Compare `4ff0712... -> e6d43ced...` changes exactly the integration spec and 3 authorized renderer files. The inherited `src/main/p1-standard-vision-wrapper.js` is unchanged by integration. PM logic/scope review PASS; static/runtime evidence is still required.
+
+## Owner local policy
+Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. Do not create any additional clone/worktree/test directory. If that existing directory is dirty, STOP rather than reset/restore/clean it.
+
+## Required verification
+```text
+git rev-parse HEAD
+node --check src/main/p1-standard-vision-wrapper.js
+node --check src/renderer/js/pipeline1-run-config.js
+node --check src/renderer/js/pipeline1-semantic-remix-per-job.js
+git diff --check 4ff0712a909f12929373e6f457aa96329e9c3610..HEAD
+```
+
+Then Owner runtime acceptance:
+1. no global Semantic Remix block;
+2. 2+ Job cards each show independent Remix OFF/Standard;
+3. Job A ON does not change Job B;
+4. queued/processing switch locks and run uses per-Job mode;
+5. ~497s Standard uses chunked long narration and joined global PASS before TTS;
+6. one continuous TTS flow starts only after the final joined narration passes;
+7. P1/Ollama logs remain out of P2 console.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING.
-- Code review: PASS (logic/scope).
+- Code review: PASS logic/scope.
 - Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending final-head static/runtime/QA closeout and integration state.
+- Documentation synchronization: PARTIAL pending exact final-head/static/runtime/QA closeout.
 - Merge: BLOCKED.
 
 ## Next action
-PM creates and reviews the GitHub-only integration ref containing long-video Revision 3 + per-Job Remix. No new local clone/worktree. Owner then updates the existing LONG012 test directory to that exact ref and runs static/runtime acceptance.
+Finish canonical integration-doc synchronization, verify live PR #56 exact head/files/checks, then authorize Owner to update the existing LONG012 directory to that exact head. No new local directory and no merge.
