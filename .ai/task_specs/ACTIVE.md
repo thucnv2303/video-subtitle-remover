@@ -1,32 +1,34 @@
 # Active PM Execution Spec
 
-Status: APPROVED_FOR_PM_DIRECT_EXECUTION
+Status: SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_PARTIAL_OWNER_RETEST_WAITING
 
 Task: `PIPELINE1-LOG-OBSERVABILITY-009`
 Repository: `thucnv2303/video-subtitle-remover`
-Base branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`
-Expected base SHA: `330d756fcce1b71ca8745b3292d7ac655bc32d13`
-Review branch: `review/PIPELINE1-LOG-OBSERVABILITY-009`
+Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`
+Review branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52
+PM source commit: `ba24b24011669c24565ad8b3a685b45fb046996f`
 
 Execution spec:
 `.ai/task_specs/PIPELINE1-LOG-OBSERVABILITY-009.md`
 
-## Execution authority
-Project Manager direct GitHub implementation. No external executor.
-
-## Revised application scope
-Single application file authorized:
+## Final source authority
+Application source change is exactly:
 - `src/renderer/js/pipeline1-run-ux.js`
 
-`src/renderer/js/app.js` must remain byte-identical to the base/source blob. The first direct contents-API attempt caused whole-file CRLF churn and was neutralized by a non-force corrective commit; final compare must show no `app.js` change.
+`src/renderer/js/app.js` has no net final diff. The rejected CRLF churn attempt was neutralized without force push/history rewrite.
 
-## Primary objective
-- keep useful P1 console history beyond the legacy 100-line truncation;
-- remove only routine successful background health/TTS/GPU access-log entries from the P1 console presentation;
-- preserve global log and status polling behavior.
+## Verified state
+- GitHub source-commit scope: PASS, `pipeline1-run-ux.js` +40/-1 only.
+- PM code review: PASS.
+- Deterministic filter/retention checks: PASS.
+- Exact Node syntax: WAITING executable checkout.
+- Exact `git diff --check`: WAITING executable checkout.
+- Owner runtime: WAITING.
 
-## Stop rule
-Any unexpected condition, scope mismatch, remote HEAD mismatch, or inability to isolate the final review diff => STOP. No history rewrite or force push.
+No further source modification is authorized unless a new verified failure requires a PM revision.
+
+## Next permitted action
+Run the exact static commands on current PR #52 HEAD. Only after static PASS perform Owner runtime acceptance for idle heartbeat suppression, status refresh, >100-line P1 retention, Copy and Clear.
 
 ## Merge
-BLOCKED. Owner runtime begins only after PM code review and static verification PASS.
+BLOCKED.
