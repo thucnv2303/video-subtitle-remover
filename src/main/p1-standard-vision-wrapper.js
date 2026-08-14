@@ -221,12 +221,12 @@ function qualitySummary(report) {
   return `issues=${(report?.issues || []).join('|') || 'none'}; cjk=${report?.cjk_count || 0}; repeated_sentence=${report?.repeated_sentence_pairs || 0}; near_duplicate=${report?.near_duplicate_sentence_pairs || 0}; repeated_10gram=${report?.repeated_10gram_count || 0}`;
 }
 
-function narrationSchema(minChars, maxChars) {
+function narrationSchema() {
   return {
     type: 'object',
     additionalProperties: false,
     properties: {
-      narration_script: { type: 'string', minLength: minChars, maxLength: maxChars },
+      narration_script: { type: 'string' },
     },
     required: ['narration_script'],
   };
@@ -286,7 +286,7 @@ async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, 
           { role: 'user', content: userContent },
         ],
         stream: true,
-        format: narrationSchema(minChars, maxChars),
+        format: narrationSchema(),
         think: false,
         keep_alive: 0,
         options: { temperature, num_predict: numPredict, num_ctx: numCtx },
