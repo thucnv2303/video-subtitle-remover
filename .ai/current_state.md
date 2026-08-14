@@ -1,45 +1,57 @@
 # Current State
 
 ## Status
-PIPELINE1-LOG-OBSERVABILITY-009 — RUNTIME REVISION 4 SOURCE PUBLISHED / PM REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
+PIPELINE1-STANDARD-LONG-VIDEO-012 — SOURCE REVISION 1 PUBLISHED / PM SOURCE REVIEW PASS / STATIC WAITING / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Parent: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
-- Active branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52.
-- Current pre-resume HEAD: `20f42653806b2ba048b8f598f3ade0d725169cca`.
-- Revision-4 source head: `e25792663f9c66cfd54b25c4f60de61b14341e8e`.
-- Active bug: `BUG-039`.
+- Exact Owner-tested failing basis: `review/PIPELINE1-LOG-OBSERVABILITY-009@6bc43e65726150a3dbef37ded52f1ed1958ffaa8`.
+- Corrective branch: `review/PIPELINE1-STANDARD-LONG-VIDEO-012`.
+- Task spec commit: `57eef8ffed818fe8c2047c8df8e91efd9c6b3d29`.
+- Source Revision 1: `0547593fa7de7986d2202683847b27bf1e26ec42`.
+- Active bug: `BUG-041`.
 
-## Owner sequencing update — 2026-08-14
-Owner has finished the immediate Prompt Manager work and explicitly directed Project Control to resume the Pipeline 2 log issue now.
-`PIPELINE1-PROMPT-MANAGER-V2-010` / PR #53 remains a separate Draft PR and is NOT merged into this log branch. The Owner has verified the previously blocked create-prompt path can now add prompts. Full PR #53 closeout/static/merge gates are not silently inferred here.
+## Verified Owner failure — 2026-08-14
+Standard mode on a ~497.1s video completed ASR, 80-keyframe/10-chunk Vision, and global reasoning. The clean draft was only 922 chars against a voice-aware hard target of 7792-8202 chars. Standard pre-TTS duration recompose then failed before TTS with HTTP 400 on `qwen3-coder:30b`.
 
-## Verified BUG-039 history
-- Revision 3 failed Owner runtime because P2 Console/Log displayed P1 `[Ollama]` vision/reasoning progress while P2 had no job.
-- Source review confirmed `[Ollama]` was omitted from the revision-3 matcher and `updateP1ProgressLog()` dual-wrote keyed P1 progress into P1 and global/P2 containers.
+This is not a TTS/Voice Render failure. The failure occurs in Standard pre-TTS recompose.
 
-## Revision-4 source state
-- `src/renderer/js/pipeline1-log-router.js` routes explicit P1 owners `[P1]`, `[ASR]`, `[AI]`, `[TTS]`, `[Voice]`, `[VoiceSub]`, `[Ollama]`, `[Gemini]` directly to `#step1-log-output` when P1 DOM is available.
-- `window.updateP1ProgressLog` is replaced by a P1-only keyed updater with fallback when P1 DOM is unavailable.
-- Already-rendered explicit P1 rows are removed from `#log-output` on router install.
-- Existing P2 runtime still suppresses routine successful health/TTS/GPU/preview access rows and coalesces frame heartbeat into one P2 live row.
-- `app.js` remains unchanged and its legacy logger is still the generic fallback.
+## Verified source defects at failing HEAD
+- Long-video recompose output was hard-capped at 2200 tokens even when the target narration required roughly 8k characters.
+- One request included candidate + full transcript + a large visual context without explicit context sizing.
+- Non-2xx Ollama responses discarded the server body and exposed only `HTTP <status>`.
+
+## Revision 1 source state
+Only `src/main/p1-standard-vision-wrapper.js` changed from the task spec commit.
+- Evidence context is compacted while preserving chronological chunk coverage and representative scenes across the timeline.
+- Recompose `num_predict` now scales with narration target and remains hard-capped at 8192.
+- Request context uses finite 8K/16K/32K buckets via `options.num_ctx`, selected from a conservative input/output estimate.
+- Long-generation timeout scales with output budget and is capped at 420s.
+- Non-2xx Ollama body is read and only sanitized error detail is surfaced; transcript/request payload is not logged.
+- Existing hard narration length, ZERO-CJK, repetition, bounded retry, cancellation, and TTS-after-guard behavior remains.
+
+Official Ollama documentation confirms `/api/chat` accepts runtime `options`, structured JSON schema through `format`, and `num_ctx` is a valid runtime parameter.
 
 ## Verification
-- Source isolation: PASS — log router + one import only for revision 4.
-- PM source review: PASS.
-- GitHub CI/status checks on current head: none present.
-- Exact executable Node syntax / diff-check: WAITING.
-- Owner runtime revision-4 retest: WAITING.
+- Source isolation: PASS — spec -> source changes exactly one authorized application file.
+- PM full-source review: PASS for scope/logic.
+- Exact executable `node --check`: WAITING.
+- Exact `git diff --check`: WAITING.
+- GitHub CI/status: none configured yet for this revision.
+- Owner ~497s corrected runtime: WAITING.
+
+## Sibling tasks
+- PR #52 log observability remains separate; Owner reported the log behavior fixed but final static/docs closeout is separate.
+- PR #53 Prompt Manager remains separate.
+- PR #54 per-Job Remix remains separate.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PARTIAL.
+- Automated/static: WAITING.
 - Code review: PASS.
-- Owner manual app verification: WAITING.
-- Documentation synchronization: PARTIAL until runtime closeout updates bug/QA ledgers.
+- Owner manual app verification: WAITING after prior exact-head FAIL.
+- Documentation synchronization: PARTIAL until bug/QA ledgers and Owner outcome are closed out.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Do not make another log source revision without new revision-4 runtime evidence. First run exact static checks on the latest PR #52 head, then Owner retests P1/P2 log ownership. If revision 4 still leaks P1 rows into P2, capture the exact leaked line(s) and revise narrowly from that evidence.
+Run exact static checks on the current corrective HEAD, then retest the same/equivalent ~497s Standard video. No further source revision is authorized without new runtime evidence.
