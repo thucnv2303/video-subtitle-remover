@@ -4,40 +4,44 @@
 `PIPELINE1-LOG-OBSERVABILITY-009`
 
 ## Status
-SPEC PUBLISHED / EXECUTION READY / OWNER RETEST NOT STARTED / MERGE BLOCKED
+SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
-- Base branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`
-- Base SHA: `330d756fcce1b71ca8745b3292d7ac655bc32d13`
-- Active review branch: `review/PIPELINE1-LOG-OBSERVABILITY-009`
+- Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`
+- Active branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52
+- PM source commit: `ba24b24011669c24565ad8b3a685b45fb046996f`
 - Active bug: `BUG-039`
-- Exact execution spec: `.ai/task_specs/PIPELINE1-LOG-OBSERVABILITY-009.md`
 
-## Why this task exists
-Owner reports P1 itself now works well: AI narration/script is correct and voice render is stable. The remaining immediate defect is observability: the P1 log card truncates older data and displays routine health/TTS/GPU access logs even while idle.
+## Verified implementation
+Final application change is only `src/renderer/js/pipeline1-run-ux.js` (+40/-1 source commit). `app.js` is net-identical to the base after PM rejected and neutralized an initial CRLF whole-file churn attempt without force push.
 
-Direct source review confirmed:
-- every global log is cloned into Step1 console;
-- Step1 history is capped at 100 entries;
-- background status refreshes legitimately call `/api/health`, `/api/tts/status`, `/api/gpu-info`.
+The P1 UX layer now protects the P1 console from the legacy 100-line eviction until 2000 log entries, observes only the P1 log container, removes routine Python/Uvicorn `200 OK` GET access entries for exact `/api/health`, `/api/tts/status`, `/api/gpu-info`, and trims oldest meaningful P1 entries only above 2000.
 
-## Scope
-Only `src/renderer/js/app.js` application source may change. Preserve status polling, global logging, AI/TTS/P2/P3 behavior.
+Global logging, status polling, AI/TTS/P2/P3 and Voice Render source are unchanged.
 
-## Required runtime after PM review PASS
-1. Idle >=30s: no routine 200 heartbeat access lines accumulate in P1 console.
-2. Global status still refreshes.
-3. Standard Job retains useful start-to-completion log history beyond 100 entries.
-4. Copy/Clear still work.
+## Verification state
+- GitHub scope/diff review: PASS.
+- Deterministic filter cases + 2000 bound: PASS.
+- PM code review: PASS.
+- Exact Node syntax command: WAITING executable checkout.
+- Exact git diff-check command: WAITING executable checkout.
+- Owner runtime: NOT STARTED.
+
+## Owner acceptance after static PASS
+1. Fully restart app on exact PR #52 HEAD.
+2. Leave idle >=30 seconds: P1 console must not accumulate routine 200 heartbeat lines.
+3. Verify Backend/TTS/GPU/global status continues refreshing.
+4. Run one Standard P1 Job and verify meaningful history remains available beyond 100 lines through completion.
+5. Verify Copy Log and Clear Log.
 
 ## Separate follow-up
-`BUG-040`: product default prompt is stale and must later be synchronized to the continuous-narration / ZERO-CJK contract proven by Owner. Do not mix that source change into BUG-039.
+`BUG-040` stale product default prompt remains separate. Do not mix it into PR #52.
 
 ## Gates
-- Execution: NOT STARTED.
-- Automated/static: WAITING.
-- Code review: WAITING.
-- Owner manual app verification: NOT STARTED.
-- Documentation synchronization: PASS for task-open state.
+- Execution: PASS.
+- Automated/static: PARTIAL.
+- Code review: PASS.
+- Owner manual verification: WAITING.
+- Documentation synchronization: PASS after dynamic-doc sync.
 - Merge: BLOCKED.
