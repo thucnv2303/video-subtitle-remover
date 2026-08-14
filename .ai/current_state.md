@@ -1,48 +1,68 @@
 # Current State
 
 ## Status
-PIPELINE1-INTEGRATION-013 — SOURCE PUBLISHED / PM REVIEW PASS / STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
+PIPELINE3-EDITOR-REBUILD-016 — SOURCE PUBLISHED / PM REVIEW IN PROGRESS / STATIC WAITING / OWNER RUNTIME NOT STARTED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56.
-- Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`.
-- Long-video Revision-3 source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`.
-- Per-Job Remix authority: PR #54 application source `c3662ea84f32c25bf5bf633888affe39fd2cb6fa`.
-- Integration source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`.
-- Integration spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`.
+- Review branch: `review/PIPELINE3-EDITOR-REBUILD-016`.
+- Exact starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1` from `review/PIPELINE1-INTEGRATION-013`.
+- Approved spec: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016.md`.
+- Bootstrap safety amendment: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016-BOOTSTRAP-AMENDMENT.md`.
+- Exact application-source head before docs sync: `936ddb32ceed3fda2839fc6a000e593a37f4a75d`.
+- Rejected prototype PR #57 remains frozen/unmerged and is not the source basis for this rebuild.
 
-## Verified integration source
-Compare `4ff0712... -> e6d43ced...` changes exactly the integration spec plus 3 renderer files:
-- `src/renderer/js/pipeline1-run-config.js`
-- new `src/renderer/js/pipeline1-semantic-remix-per-job.js`
-- new `src/renderer/styles/pipeline1-semantic-remix-per-job.css`
+## Owner-approved P3 V2 direction
+- visible dedicated Job Manager;
+- aspect-correct logical video canvas in a resizable viewport;
+- direct subtitle dragging in logical video coordinates;
+- bottom assembly timeline with timed subtitle cue blocks;
+- detailed per-Job inspector;
+- related settings grouped as collapsible fold/accordion sections, opened by clicking the section header;
+- app navy/blue-gray/blue visual system with purple limited to accent/primary render CTA;
+- no new local clone/worktree/test directory.
 
-The inherited long-video wrapper is not changed by integration.
+## Published application source
+New focused modules:
+- `src/renderer/js/pipeline3/editor.js`
+- `src/renderer/js/pipeline3/editor-store.js`
+- `src/renderer/js/pipeline3/preview-geometry.js`
+- `src/renderer/js/pipeline3/subtitle-ass.js`
+- `src/renderer/js/pipeline3/render-controller.js`
+- `src/renderer/styles/pipeline3-editor.css`
 
-### Per-Job Remix
-- global `p1_semantic_remix_enabled` localStorage authority and injected Action-area checkbox are removed;
-- every Job card receives its own Remix switch, default OFF/Standard;
-- changing a Job updates only that Job; queued/processing locks the switch;
-- run snapshot stores each Job's own `semanticRemixEnabled` into its own `p1Config`;
-- new Jobs do not inherit another Job's Remix state;
-- existing `import './pipeline1-log-router.js';` is preserved.
+Bootstrap delta:
+- `src/renderer/js/pipeline1-run-config.js`: exactly one import-only addition for `./pipeline3/editor.js`; no P1 symbol/run behavior changed.
 
-### Long-video Standard
-Inherited Revision 3 composes long narration in sequential chronological sections from section-local transcript/Vision evidence. A compact global brief + previous accepted tail provides continuity. Sections join into exactly one final narration; original global hard-length/ZERO-CJK/repetition gates remain fail-closed. TTS receives one continuous narration only after `Standard duration guard PASS`.
+`src/renderer/js/pipelines/pipeline3-finalize.js` remains unchanged.
 
-## Owner local safety
-Owner explicitly requested no more clone/worktree folders. Do not create additional local directories. The next Owner test reuses only:
-`E:\Project AI\Video-sub-remove-owner-test-LONG012`
-by fetching and switching that existing clean directory to the exact integration ref.
+## Implementation behavior
+- P3 consumes the existing `window._appState` and P2 readiness state.
+- Legacy `#step3-job-list` and old P3 controls are preserved inside a hidden compatibility container so inherited app/pipeline state code can continue synchronization.
+- Visible Job Manager has search/filter and per-Job selection.
+- Preview logical canvas uses actual video metadata and `min(viewport/video)` fit geometry, preventing stretch and keeping expected letterbox/pillarbox.
+- Subtitle coordinates live in per-Job percentage/logical space and are converted to exact ASS `\\pos(x,y)` against source resolution.
+- Pointer capture + requestAnimationFrame handles drag.
+- Subtitle settings are per Job and grouped into native accessible `<details>` folds; Subtitle is open by default, related groups are collapsed by default.
+- Timeline shows distinct Video/Voice/Subtitle/Effects rows; subtitle cues are actual timed blocks and support click-to-seek.
+- Derived ASS stays in Job memory; original P1 karaoke ASS is preserved separately.
+- Render controller captures/restores `job.p3CleanVideoPath` before every render and maps supported audio controls into the existing finalizer contract.
+- No fixed 300 ms P3 polling loop is used as primary synchronization; hidden legacy list mutations trigger visible Job refresh.
+
+## Review status
+Scope compare from exact base currently contains only the approved P3 spec/docs, six P3 application assets, and one P3 bootstrap import line. PM source review is still in progress. ChatGPT environment could not execute repository Node static checks from GitHub source because the isolated container has no outbound DNS; this is not a source failure and static remains WAITING for exact local checkout evidence.
+
+## Parent project status
+- Per-Job Semantic Remix was previously observed by Owner as functionally OK in the parent integration build.
+- Long Standard narration remains a separate P1 design issue tracked by task 014 research and is not modified by P3 task 016.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending exact final-head static/runtime/QA closeout.
+- Code review: WAITING final PR/full-file review.
+- Owner manual app verification: NOT STARTED.
+- Documentation synchronization: PASS for current pre-runtime state.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Synchronize remaining canonical integration docs, verify exact PR #56 final head and changed files, then Owner may update the existing LONG012 directory to that exact head and run static + UI + long-video runtime acceptance. No merge.
+Open/update Draft PR for task 016, review exact PR files/patches/full source and GitHub status/comments, then if code review PASS authorize Owner to reuse the existing clean test directory for static and real-app verification. Do not create another local directory and do not merge.
