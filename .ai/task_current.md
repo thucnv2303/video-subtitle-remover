@@ -4,47 +4,53 @@
 PIPELINE1-STANDARD-LONG-VIDEO-012
 
 ## Status
-SOURCE_REVISION_2_PUBLISHED_CODE_REVIEW_WAITING_STATIC_WAITING_OWNER_RETEST_WAITING
+REVISION_2_RUNTIME_FAIL_REVISION_3_CHUNKED_AUTHORIZED
 
 ## Basis
-- Exact original failing branch/head: `review/PIPELINE1-LOG-OBSERVABILITY-009@6bc43e65726150a3dbef37ded52f1ed1958ffaa8`.
 - Corrective branch / Draft PR: `review/PIPELINE1-STANDARD-LONG-VIDEO-012` / #55.
-- Spec commit: `57eef8ffed818fe8c2047c8df8e91efd9c6b3d29`.
-- Source Revision 1: `0547593fa7de7986d2202683847b27bf1e26ec42`.
-- Exact Owner-tested Revision-1 HEAD: `10054d6b3e38667f342060e0b85ab7ea96555921`.
-- Source Revision 2: `6e047bf120dde6543386c50c725bf8f73418d441`.
+- Original failing basis: `review/PIPELINE1-LOG-OBSERVABILITY-009@6bc43e65726150a3dbef37ded52f1ed1958ffaa8`.
+- Revision-2 source: `6e047bf120dde6543386c50c725bf8f73418d441`.
+- Revision-3 spec: `.ai/task_specs/PIPELINE1-STANDARD-LONG-VIDEO-012-REV3-CHUNKED.md`.
+- Revision-3 spec commit: `628fae6cde8ee3a9a82fb26fd65ca44acae68b66`.
 - Bug: `BUG-041`.
 
-## Owner Revision-1 evidence
-Static PASS on exact tested HEAD. Runtime on the same ~497.1s Standard video reached the new target-aware recompose telemetry (`output_limit=5772`, `num_ctx=16384`, `timeout=380s`) but Ollama rejected sampler initialization with `Failed to initialize samplers: failed to parse grammar` before TTS.
+## Fresh runtime evidence
+Owner's latest ~497s Standard run shows Revision-2 behavior but exact local HEAD was not pasted.
+- ASR/Vision/global reasoning PASS.
+- Draft=1051 chars; global hard target=7792-8202.
+- Recompose request uses target-aware output/context/timeout and no longer hits grammar HTTP 400.
+- First request returns 1610 chars; deterministic hard-length gate rejects it.
+- One retained-candidate retry again returns 1610 chars and fails before TTS.
 
-## Revision 2 correction
-Authorized source scope remains only `src/main/p1-standard-vision-wrapper.js`.
-- Structured-output schema now constrains only JSON shape: required `narration_script` string.
-- Large `minLength` / `maxLength` are removed from the Ollama grammar path.
-- Hard narration range remains in prompt/budget and is still enforced deterministically after JSON parse.
-- Revision-1 output/context/timeout/error-observability fixes remain.
-- ZERO-CJK, repetition, retained-candidate retry, cancellation and TTS-after-guard ordering remain fail-closed.
+## Verified root cause
+One monolithic generation request is still expected to produce an ~8k narration. The model completes normally around ~1.6k twice. Further timeout/context increases are not supported by this evidence.
 
-## Sibling feature note
-PR #54 contains the per-Job Semantic Remix control. PR #55 does not include that sibling renderer source, so PR #55 runtime still showing the inherited global Remix checkbox is expected branch isolation, not a failure of PR #54.
+## Revision-3 required implementation
+Authorized application source only: `src/main/p1-standard-vision-wrapper.js`.
 
-## Required verification
-```text
-git rev-parse HEAD
-node --check src/main/p1-standard-vision-wrapper.js
-git diff --check 6bc43e65726150a3dbef37ded52f1ed1958ffaa8..HEAD
-```
+For long targets (>~3200 chars) with >=2 Vision chunks:
+1. Split chronological Vision chunks into bounded contiguous narration sections, targeting <=~1700 chars each.
+2. Allocate each section's min/target/max chars by timeline duration so the joined result retains the original global hard range.
+3. Filter full SRT into only blocks overlapping each section timeline.
+4. Filter compact visual chunks/scenes into the same section.
+5. Generate sections sequentially with section-local JSON `{ narration_script: string }`; one retained-candidate retry per section.
+6. Preserve continuity using only the previous accepted tail; opening only in section 1, CTA/conclusion only in final section.
+7. Join into one continuous narration and run existing global hard-length, ZERO-CJK and repetition gates.
+8. No final monolithic AI rewrite; TTS only after global guard PASS.
 
-Then retest the same/equivalent ~497s Standard case. Expected sequence: underfilled draft -> Standard duration recompose -> no grammar-init HTTP 400 -> accepted hard-range narration -> `Standard duration guard PASS` -> exactly one TTS start.
+Short/medium targets keep the current single-request path.
+
+## Sibling UI
+PR #54 is the separate per-Job Semantic Remix implementation. PR #55 does not contain that renderer source, so current global Remix UI is expected for this branch.
 
 ## Gates
-- Execution: PASS for Revision 2 publication.
-- Automated/static: WAITING on final Revision-2 HEAD.
-- Code review: WAITING for Revision 2.
-- Owner runtime: FAIL on Revision 1; Revision-2 retest WAITING.
-- Documentation synchronization: PARTIAL pending final review/runtime closeout.
+- Revision-2 Owner runtime: FAIL; exact tested SHA reconfirmation pending.
+- Revision-3 Execution: AUTHORIZED.
+- Revision-3 Automated/static: WAITING.
+- Revision-3 Code review: WAITING.
+- Owner runtime: WAITING after publication.
+- Documentation synchronization: PARTIAL.
 - Merge: BLOCKED.
 
 ## Next action
-PM reviews Revision-2 diff/full file and PR state, then Owner updates the existing LONG012 worktree to the new exact head, runs static checks and retests the long Standard video.
+Executor/PM implements the exact remote Revision-3 spec on this branch. Unexpected source condition => STOP; do not broaden scope.
