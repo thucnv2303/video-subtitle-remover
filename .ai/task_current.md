@@ -4,119 +4,78 @@
 PIPELINE3-FINAL-COMPOSITION-017
 
 ## Status
-SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_WAITING
+SUBTITLE_UX_REV1_SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_WAITING
 
 ## Exact basis
 - Branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58.
-- Revision starting SHA: `63cabee71f0faaf451138201da789ba0c935fc68`.
-- Reviewed application-source head: `91678a85bc3d15838c96b96b9f4fc768059f3fec`.
+- Revision-017 starting SHA: `63cabee71f0faaf451138201da789ba0c935fc68`.
+- Owner runtime-feedback basis: `8f00455b4cec869556be09d87e7e8366dfa5537c`.
+- Subtitle UX Rev1 reviewed source head: `ac84f58c69a503c4f7341a91eadc33025a3677b5`.
 - Main spec: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017.md`.
-- Backend amendment is superseded; no backend source change was needed.
+- Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-UX-REV1.md`.
 
-## User outcome
-Pipeline 3 is the focused final composition step:
-- P2 clean video + P1 voice;
-- new subtitle styled/positioned to cover residual old-subtitle blemishes;
-- conservative voice/video duration fit;
-- sufficient background/original audio composition;
-- high-quality final output with source geometry/FPS preserved.
+## Current user outcome
+Keep P3 focused on final composition and deepen subtitle authoring:
+- direct horizontal resize of the subtitle text frame;
+- richer subtitle effects;
+- retain existing cover-band, cue editing, voice/video fit and final render behavior.
 
-It is not a general-purpose OpenCut-like editor.
+## Subtitle UX Rev1 implementation
+### Resize
+- Two left/right handles on active subtitle.
+- Width change uses per-Job `maxWidth`.
+- Resize is symmetric around subtitle X and bounded to video canvas.
+- Existing width slider stays synchronized.
+- Preview uses the selected width.
+- Non-karaoke ASS line wrapping now responds to the chosen width.
 
-## Revision-017 implementation
-### Subtitle / cover
-- `Che vùng lem` preset.
-- Separate per-cue ASS cover band behind subtitle text.
-- Band color / opacity / width / logical pixel height.
-- Exact logical X/Y shared by band and subtitle.
-- Preview follows fitted logical canvas.
-- Existing typography, box, position, safe zone, snap and text effects remain.
+### Effects
+Available effects now include:
+- none;
+- fade;
+- pop;
+- slide up/down/left/right;
+- zoom in/out;
+- pulse;
+- blur in;
+- fade + slide up.
 
-### Cue edit
-- Timeline cue selection.
-- Edit text/start/end.
-- Reject invalid/overlapping timing.
-- Store stable P3-derived SRT without mutating P1 SRT.
+Preview and final ASS have corresponding implementations.
 
-### Fit planner
-Modes:
-- auto
-- natural
-- fit_voice
-- fit_video
-- balanced
+## Source scope for this feedback revision
+From `8f00455b4cec869556be09d87e7e8366dfa5537c` only:
+- `src/renderer/js/pipeline1-run-config.js` — one import line;
+- new `src/renderer/js/pipeline3/subtitle-resize-effects.js`;
+- `src/renderer/js/pipeline3/subtitle-ass.js`.
 
-Bounds:
-- voice `0.92–1.08x`
-- video `0.90–1.10x`
+No backend/P1 execution/P2/TTS/dependency/finalizer change.
 
-The plan is visible before render and fail-closed when unsafe.
-
-### Audio-aware fit rules
-- Video retime with no background is supported.
-- Video retime with separated background is supported when Remove Vocal is ON: background is derived from base clean video and retimed using the existing `applyVoiceTempo` bridge before mix.
-- Video retime with original/background audio >0 and Remove Vocal OFF is blocked because current engine has no safe generic original-audio retime contract.
-- Auto falls back to safe voice-only fit when possible.
-
-### Render / quality
-- Derived P3 media only; P1/P2 source artifacts stay immutable.
-- Stable subtitle source prevents double timing scale on re-render.
-- Burn ASS rebuilt from exact final SRT when voice timing changes.
-- Preserve source resolution/FPS; no resize.
-- Audio-only mix copies video stream.
-- Existing video retime uses H.264 CRF18.
-- Burn subtitle once at final stage.
-- No fake user-selectable CRF/codec controls.
-
-## Source scope reviewed
-Revision 017 changes only:
-- `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017.md`
-- `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-BACKEND-AMENDMENT.md`
-- `src/renderer/js/pipeline3/editor-store.js`
-- `src/renderer/js/pipeline3/editor.js`
-- new `src/renderer/js/pipeline3/fit-planner.js`
-- `src/renderer/js/pipeline3/render-controller.js`
-- `src/renderer/js/pipeline3/subtitle-ass.js`
-- `src/renderer/js/pipelines/pipeline3-finalize.js`
-- `src/renderer/styles/pipeline3-editor.css`
-
-No backend/P1/P2/TTS/dependency source change in this Revision-017 delta.
-
-## Required exact-checkout static verification
+## Required exact-checkout verification
 ```text
-node --check src/renderer/js/pipeline3/editor.js
-node --check src/renderer/js/pipeline3/editor-store.js
-node --check src/renderer/js/pipeline3/fit-planner.js
-node --check src/renderer/js/pipeline3/preview-geometry.js
+node --check src/renderer/js/pipeline3/subtitle-resize-effects.js
 node --check src/renderer/js/pipeline3/subtitle-ass.js
-node --check src/renderer/js/pipeline3/render-controller.js
-node --check src/renderer/js/pipelines/pipeline3-finalize.js
 node --check src/renderer/js/pipeline1-run-config.js
-git diff --check 63cabee71f0faaf451138201da789ba0c935fc68..HEAD
+git diff --check 8f00455b4cec869556be09d87e7e8366dfa5537c..HEAD
 ```
 
-## Owner runtime acceptance
-1. Reuse existing local test directory only; verify exact HEAD first.
-2. Use `Che vùng lem`; adjust band width/height/color/opacity and drag subtitle/band to bottom, center and top. Resize window; logical placement must remain stable.
-3. Render a short sample and verify the band is behind new subtitle text and actually hides the P2 residual area without hiding the text.
-4. Select a cue from timeline, edit text and start/end, save, render; P1 SRT must remain unchanged and final output must use edited P3 timing/text.
-5. Near-match duration: test Auto and inspect planned/logged voice/video speeds.
-6. Test explicit video-retime with background >0 + Remove Vocal OFF: UI/render must block clearly.
-7. Enable Remove Vocal with background >0 and a valid video-retime plan: background must remain synchronized after same-speed retime.
-8. Unsafe long voice must block instead of extreme tempo.
-9. Render twice after changing cue/style; no double timing scale or double-burn source reuse.
-10. Output keeps expected resolution/aspect/FPS and is visually acceptable for final publication.
-
-## Known honest limitation
-Explicit final subtitle-burn H.264 CRF/preset selection is not available in the backend contract, so Revision 017 does not expose fake quality controls. A dedicated backend quality task may follow only if runtime quality requires it.
+## Owner runtime acceptance for this revision
+1. Reuse existing test directory only; exact HEAD must match remote.
+2. During an active cue, verify two resize handles are visible.
+3. Drag width to approximately 35%, 60%, 90%; subtitle center must not jump.
+4. Verify `Độ rộng chữ tối đa` updates with handle drag.
+5. Resize application window; handles remain attached to subtitle frame.
+6. Confirm the effect selector contains all new effects.
+7. Preview at least `slide_up`, `zoom_in`, `blur_in`, `fade_up`.
+8. Render a short sample and confirm effect output is visible and subtitle wrapping follows selected width.
+9. Verify position drag, cover band, cue edit and render still work.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING exact-checkout evidence.
-- Code review: PASS.
-- Owner runtime: WAITING.
-- Documentation synchronization: PASS pre-runtime after final PR sync.
+- Automated/static: WAITING exact checkout.
+- Code review: PASS logic/scope.
+- Owner runtime: WAITING for Rev1.
+- Documentation synchronization: PASS pre-runtime after PR synchronization.
 - Merge: BLOCKED.
 
 ## Next action
-Finish dynamic-doc/PR synchronization and verify current PR exact HEAD/status/checks/comments. Then Owner may update the existing clean test directory and run the required static + runtime acceptance. No merge.
+Reverify PR #58 exact head/files/checks/comments; then Owner tests the exact head. No merge.
