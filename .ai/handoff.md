@@ -1,56 +1,56 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-INTEGRATION-013`
+`PIPELINE3-EDITOR-REBUILD-016`
 
 ## Status
-SOURCE PUBLISHED / PM REVIEW PASS / STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
+SOURCE PUBLISHED / PM REVIEW IN PROGRESS / STATIC WAITING / OWNER RUNTIME NOT STARTED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
-- Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56
-- Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`
-- Long-video Revision-3 source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`
-- Integration renderer source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`
-- Spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`
+- Branch: `review/PIPELINE3-EDITOR-REBUILD-016`
+- Exact starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1`
+- Spec: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016.md`
+- Bootstrap amendment: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016-BOOTSTRAP-AMENDMENT.md`
+- Application-source head before docs: `936ddb32ceed3fda2839fc6a000e593a37f4a75d`
 
-## Integration result
-One GitHub review branch now combines the Owner-visible features that previously lived on isolated sibling branches:
-- long Standard scripts are composed as bounded sequential timeline sections and then joined into one validated narration;
-- TTS remains downstream of the joined global guard and receives one continuous narration;
-- Semantic Remix is per Job, defaults OFF, locks on queued/processing, and no longer has global localStorage/UI authority;
-- existing P1 log-router import is preserved so the log fix is not intentionally regressed.
+## Owner-approved design
+- dedicated left Job Manager;
+- center logical video canvas preserving real source aspect ratio;
+- bottom assembly timeline;
+- right detailed settings inspector;
+- related settings grouped in click-to-expand fold/accordion sections;
+- direct smooth subtitle drag;
+- app navy/blue-gray/blue palette with limited purple CTA;
+- no additional local clone/worktree/test directory.
 
-## Source review evidence
-Compare `4ff0712... -> e6d43ced...` changes only:
-- `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`
-- `src/renderer/js/pipeline1-run-config.js`
-- `src/renderer/js/pipeline1-semantic-remix-per-job.js`
-- `src/renderer/styles/pipeline1-semantic-remix-per-job.css`
+## Source published
+- `src/renderer/js/pipeline3/editor.js`
+- `src/renderer/js/pipeline3/editor-store.js`
+- `src/renderer/js/pipeline3/preview-geometry.js`
+- `src/renderer/js/pipeline3/subtitle-ass.js`
+- `src/renderer/js/pipeline3/render-controller.js`
+- `src/renderer/styles/pipeline3-editor.css`
+- `src/renderer/js/pipeline1-run-config.js`: one import-only P3 bootstrap line.
 
-The inherited long-video wrapper is not modified by the integration delta. PM logic/scope review PASS. Automated/static and real-app runtime remain WAITING.
+Finalizer/backend/P1/P2 logic are otherwise unchanged.
 
-## Owner local safety
-Do not create another clone/worktree/test directory. Reuse only:
-`E:\Project AI\Video-sub-remove-owner-test-LONG012`
+## Safety / architecture
+The existing hidden Step-3 compatibility DOM is retained so legacy renderer state code continues to work. Visible P3 UI is event/mutation driven rather than using a dedicated fixed polling loop. P3 preserves original karaoke ASS, writes derived ASS only into Job memory, and preserves/restores the P2 clean input path for re-render safety.
 
-Before switching that existing directory, require `git status --short` to be empty. If it is dirty, STOP and inspect; do not reset, restore, clean or overwrite.
+## Static limitation
+ChatGPT attempted an isolated Node syntax run, but its container cannot resolve GitHub raw-content DNS. This does not indicate a code failure; required exact-checkout static evidence remains WAITING for Owner/local execution after PM GitHub review PASS.
 
-## Owner acceptance
-- no global Semantic Remix block;
-- each Job card has independent Remix OFF/Standard state;
-- mixed Standard/Remix queue respects each Job's own setting and locks during execution;
-- ~497s Standard case enters chunked long-narration sections, joins to one narration, passes global guard, then one TTS flow begins;
-- listening check confirms transition coherence/no repeated intro/CTA/filler/CJK;
-- P1/Ollama progress does not regress into P2 console.
+## Local safety
+Reuse only the existing local test directory. Dirty `git status --short` => STOP. No reset/restore/clean and no new clone/worktree.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending final-head/static/runtime/QA closeout.
+- Code review: WAITING final PR/full-file review.
+- Owner runtime: NOT STARTED.
+- Documentation synchronization: PASS pre-runtime.
 - Merge: BLOCKED.
 
 ## Next permitted action
-Synchronize ACTIVE, reverify live PR #56 exact head/files/checks/comments, then Owner may switch the existing LONG012 directory to the exact integration head and test. No merge.
+Open Draft PR, review exact changed files/patches/full source and status/comments. If code review PASS, provide Owner exact-head update/static/runtime instructions for the existing test directory only.
