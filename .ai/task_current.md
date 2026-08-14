@@ -1,73 +1,122 @@
 # Current Task
 
 ## Task ID
-PIPELINE3-EDITOR-REBUILD-016
+PIPELINE3-FINAL-COMPOSITION-017
 
 ## Status
-OWNER_FLOW_SMOKE_PASS_PRODUCT_SCOPE_REFINED_NEEDS_REVISION
+SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_WAITING
 
 ## Exact basis
 - Branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58.
-- Starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1`.
-- Main spec: `.ai/task_specs/PIPELINE3-EDITOR-REBUILD-016.md`.
-- Pre-feedback tested build: `8f0d502ea1c544deb083bedab9d6c7a4510f38c5`.
+- Revision starting SHA: `63cabee71f0faaf451138201da789ba0c935fc68`.
+- Reviewed application-source head: `91678a85bc3d15838c96b96b9f4fc768059f3fec`.
+- Main spec: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017.md`.
+- Backend amendment is superseded; no backend source change was needed.
 
-## Owner product clarification — 2026-08-14
-Pipeline 3 is NOT intended to become a broad general-purpose NLE.
-Its main job is:
-1. combine P2 clean video with P1 voice;
-2. create and style new subtitles primarily to cover residual/blemished areas left after burned-in subtitle removal;
-3. adjust voice speed and/or video speed conservatively so narration and picture fit naturally;
-4. export a high-quality final video.
+## User outcome
+Pipeline 3 is the focused final composition step:
+- P2 clean video + P1 voice;
+- new subtitle styled/positioned to cover residual old-subtitle blemishes;
+- conservative voice/video duration fit;
+- sufficient background/original audio composition;
+- high-quality final output with source geometry/FPS preserved.
 
-This means subtitle presentation/placement, voice-video fit and high-quality export are the product center. General editor features such as arbitrary clip rearrangement, complex transitions, masks, broad multi-track editing and plugin systems are non-goals unless later required by this focused workflow.
+It is not a general-purpose OpenCut-like editor.
 
-## Current V2 result
-The current editor proves useful foundations:
-- visible Job Manager;
-- aspect-correct preview;
-- direct subtitle drag;
-- per-Job subtitle style state;
-- timed cue preview/timeline;
-- derived ASS positioning;
-- voice-retime subtitle timing bridge;
-- re-render clean-source safety.
+## Revision-017 implementation
+### Subtitle / cover
+- `Che vùng lem` preset.
+- Separate per-cue ASS cover band behind subtitle text.
+- Band color / opacity / width / logical pixel height.
+- Exact logical X/Y shared by band and subtitle.
+- Preview follows fitted logical canvas.
+- Existing typography, box, position, safe zone, snap and text effects remain.
 
-Owner reports the processing flow is OK, but the feature set is not yet deep enough in the areas that matter most.
+### Cue edit
+- Timeline cue selection.
+- Edit text/start/end.
+- Reject invalid/overlapping timing.
+- Store stable P3-derived SRT without mutating P1 SRT.
 
-## Required revision focus
-### Subtitle-first
-- richer style controls and presets;
-- precise position/safe-zone placement;
-- background/box design specifically useful for covering residual inpaint blemishes;
-- cue text editing and timing adjustment where needed;
-- preview/render parity for ASS styling;
-- per-Job persistence.
+### Fit planner
+Modes:
+- auto
+- natural
+- fit_voice
+- fit_video
+- balanced
 
-### Voice/video fit
-- show video duration, voice duration and ratio clearly;
-- provide explicit strategy choices within safe bounds: keep video, fit voice; keep voice, fit video; balanced fit;
-- preview the resulting durations/speeds before render;
-- avoid extreme speed changes and block unsafe combinations.
+Bounds:
+- voice `0.92–1.08x`
+- video `0.90–1.10x`
 
-### Audio composition
-- original/background bed volume;
-- optional original-vocal removal using existing support;
-- voice level and simple fade controls only if supported by the actual render path.
+The plan is visible before render and fail-closed when unsafe.
 
-### High-quality export
-- preserve source resolution/FPS by default;
-- expose only real codec/quality controls backed by ffmpeg/backend;
-- quality presets should map to real CRF/bitrate/preset behavior, not UI-only labels;
-- provide final output summary before render.
+### Audio-aware fit rules
+- Video retime with no background is supported.
+- Video retime with separated background is supported when Remove Vocal is ON: background is derived from base clean video and retimed using the existing `applyVoiceTempo` bridge before mix.
+- Video retime with original/background audio >0 and Remove Vocal OFF is blocked because current engine has no safe generic original-audio retime contract.
+- Auto falls back to safe voice-only fit when possible.
+
+### Render / quality
+- Derived P3 media only; P1/P2 source artifacts stay immutable.
+- Stable subtitle source prevents double timing scale on re-render.
+- Burn ASS rebuilt from exact final SRT when voice timing changes.
+- Preserve source resolution/FPS; no resize.
+- Audio-only mix copies video stream.
+- Existing video retime uses H.264 CRF18.
+- Burn subtitle once at final stage.
+- No fake user-selectable CRF/codec controls.
+
+## Source scope reviewed
+Revision 017 changes only:
+- `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017.md`
+- `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-BACKEND-AMENDMENT.md`
+- `src/renderer/js/pipeline3/editor-store.js`
+- `src/renderer/js/pipeline3/editor.js`
+- new `src/renderer/js/pipeline3/fit-planner.js`
+- `src/renderer/js/pipeline3/render-controller.js`
+- `src/renderer/js/pipeline3/subtitle-ass.js`
+- `src/renderer/js/pipelines/pipeline3-finalize.js`
+- `src/renderer/styles/pipeline3-editor.css`
+
+No backend/P1/P2/TTS/dependency source change in this Revision-017 delta.
+
+## Required exact-checkout static verification
+```text
+node --check src/renderer/js/pipeline3/editor.js
+node --check src/renderer/js/pipeline3/editor-store.js
+node --check src/renderer/js/pipeline3/fit-planner.js
+node --check src/renderer/js/pipeline3/preview-geometry.js
+node --check src/renderer/js/pipeline3/subtitle-ass.js
+node --check src/renderer/js/pipeline3/render-controller.js
+node --check src/renderer/js/pipelines/pipeline3-finalize.js
+node --check src/renderer/js/pipeline1-run-config.js
+git diff --check 63cabee71f0faaf451138201da789ba0c935fc68..HEAD
+```
+
+## Owner runtime acceptance
+1. Reuse existing local test directory only; verify exact HEAD first.
+2. Use `Che vùng lem`; adjust band width/height/color/opacity and drag subtitle/band to bottom, center and top. Resize window; logical placement must remain stable.
+3. Render a short sample and verify the band is behind new subtitle text and actually hides the P2 residual area without hiding the text.
+4. Select a cue from timeline, edit text and start/end, save, render; P1 SRT must remain unchanged and final output must use edited P3 timing/text.
+5. Near-match duration: test Auto and inspect planned/logged voice/video speeds.
+6. Test explicit video-retime with background >0 + Remove Vocal OFF: UI/render must block clearly.
+7. Enable Remove Vocal with background >0 and a valid video-retime plan: background must remain synchronized after same-speed retime.
+8. Unsafe long voice must block instead of extreme tempo.
+9. Render twice after changing cue/style; no double timing scale or double-burn source reuse.
+10. Output keeps expected resolution/aspect/FPS and is visually acceptable for final publication.
+
+## Known honest limitation
+Explicit final subtitle-burn H.264 CRF/preset selection is not available in the backend contract, so Revision 017 does not expose fake quality controls. A dedicated backend quality task may follow only if runtime quality requires it.
 
 ## Gates
-- Execution: PASS for current V2 source.
-- Automated/static: WAITING.
-- Code review: PASS for current V2 logic only.
-- Owner runtime: PARTIAL PASS for basic flow; FAIL for focused feature completeness.
-- Documentation synchronization: PASS for clarified product intent.
+- Execution: PASS.
+- Automated/static: WAITING exact-checkout evidence.
+- Code review: PASS.
+- Owner runtime: WAITING.
+- Documentation synchronization: PASS pre-runtime after final PR sync.
 - Merge: BLOCKED.
 
 ## Next action
-Define a focused P3 V3 spec around Subtitle / Voice-Video Fit / Audio / High-Quality Export, verify current finalizer/backend capabilities, and only then implement missing controls. Do not expand into a general OpenCut-like NLE.
+Finish dynamic-doc/PR synchronization and verify current PR exact HEAD/status/checks/comments. Then Owner may update the existing clean test directory and run the required static + runtime acceptance. No merge.
