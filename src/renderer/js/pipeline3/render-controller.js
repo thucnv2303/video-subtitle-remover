@@ -18,12 +18,15 @@ function installBurnTimingBridge(job, config) {
   ) {
     const info = job.p3VideoInfo || {};
     if (String(srtContent || '').trim() && Number(info.width) > 0 && Number(info.height) > 0) {
-      job.p3TimedSrt = srtContent;
-      const wasRetimed = String(srtContent).trim() !== String(job.ttsTimedSrt || '').trim();
-      const renderConfig = wasRetimed ? { ...config, preserveKaraoke: false } : config;
+      job.p3RenderTimedSrt = srtContent;
+      job.p3AssTimedSrt = srtContent;
+      const sourceSrt = job.p3BaseTimedSrt || job.ttsTimedSrt || '';
+      const timingChanged = String(srtContent).trim() !== String(sourceSrt).trim();
+      const renderConfig = timingChanged ? { ...config, preserveKaraoke: false } : config;
       const derived = updateJobDerivedAss(job, renderConfig, info.width, info.height);
-      if (wasRetimed && config.preserveKaraoke && job.p3OriginalKaraokeAss) {
-        window.addLog?.('[P3] Voice đã retime: dùng ASS từ SRT timing thực tế thay cho karaoke timing P1 để tránh lệch subtitle.', 'info');
+      delete job.p3AssTimedSrt;
+      if (timingChanged && config.preserveKaraoke && job.p3OriginalKaraokeAss) {
+        window.addLog?.('[P3] Timing final đã đổi: dùng ASS từ SRT final thay cho karaoke timing P1 để tránh lệch subtitle.', 'info');
       }
       return original.call(api, videoPath, srtContent, outputPath, positions, styleArgs, derived || karaokeAss || null);
     }
@@ -31,6 +34,7 @@ function installBurnTimingBridge(job, config) {
   };
 
   return () => {
+    delete job.p3AssTimedSrt;
     if (api.burnSubtitlePositioned !== original) api.burnSubtitlePositioned = original;
   };
 }
@@ -53,6 +57,7 @@ export async function renderP3Job(job, onState) {
     return false;
   }
 
+  if (!job.p3BaseTimedSrt && job.ttsTimedSrt) job.p3BaseTimedSrt = job.ttsTimedSrt;
   activeRenderJobId = job.id;
   job.outputPath = job.p3CleanVideoPath;
   job.voiceSub = Boolean(config.subtitleEnabled);
