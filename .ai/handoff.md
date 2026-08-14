@@ -4,42 +4,37 @@
 `PIPELINE3-FINAL-COMPOSITION-017`
 
 ## Status
-SUBTITLE UX REV1 SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
+SUBTITLE TYPOGRAPHY REV2 SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
 - Branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58
-- Owner feedback basis: `8f00455b4cec869556be09d87e7e8366dfa5537c`
-- Reviewed Subtitle UX Rev1 source head: `ac84f58c69a503c4f7341a91eadc33025a3677b5`
-- Amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-UX-REV1.md`
+- Rev2 starting HEAD: `e906c5dcef863b6dc0183a1ce9c4a70845b3f46e`
+- Reviewed Typography Rev2 source head: `112fd48b29fe6c16a2e4b85488fd154fd3724e1a`
+- Amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-TYPOGRAPHY-REV2.md`
 
 ## New source behavior
-- active subtitle shows left/right resize handles;
-- handles update per-Job `maxWidth` and the existing width slider;
-- preview frame width follows the selected value;
-- non-karaoke ASS performs width-aware wrapping for closer preview/render parity;
-- new effects: slide up/down/left/right, zoom in/out, pulse, blur in, fade+slide up, in addition to fade/pop;
-- preview animations have matching ASS/libass tag implementations;
-- resize pointer capture remains separate from subtitle position drag;
-- cover band, cue edit, fit planner and finalizer are unchanged.
+- existing font selector expands to grouped practical font families;
+- custom installed family can be typed/applied without downloading or bundling a font;
+- quick typography styles: Clean UI, Heavy Caption, Impact, Serif Guide, Mono Tech, Soft Tutorial;
+- sample `Aa ĂÂĐ ÊÔƠƯ 0123` and current family name provide immediate inspector feedback;
+- typography changes continue through existing per-Job P3 controls and the final ASS `fontFamily` contract;
+- no numeric font-weight control is introduced because render parity is not verified;
+- existing width resize handles, subtitle effects, position drag, cover band, cue edit, fit planner and finalizer remain unchanged.
 
 ## Source scope
-From the Owner-tested basis only:
-- `src/renderer/js/pipeline1-run-config.js` — one import;
-- new `src/renderer/js/pipeline3/subtitle-resize-effects.js`;
-- `src/renderer/js/pipeline3/subtitle-ass.js`.
+Typography Rev2 changes only:
+- `src/renderer/js/pipeline3/subtitle-resize-effects.js`.
 
-No backend/P2/TTS/dependency/finalizer change.
+No backend/P1/P2/TTS/dependency/finalizer change.
 
 ## Required verification
 ```text
 node --check src/renderer/js/pipeline3/subtitle-resize-effects.js
-node --check src/renderer/js/pipeline3/subtitle-ass.js
-node --check src/renderer/js/pipeline1-run-config.js
-git diff --check 8f00455b4cec869556be09d87e7e8366dfa5537c..HEAD
+git diff --check e906c5dcef863b6dc0183a1ce9c4a70845b3f46e..HEAD
 ```
 
-Owner should test resize widths near 35%, 60%, 90%, window resize, and effects `slide_up`, `zoom_in`, `blur_in`, `fade_up`, then render one short sample.
+Owner should test Segoe UI / Georgia / Consolas / Impact, one known installed custom font, all six quick styles, Job isolation, width resize and one animation; then perform one short final burn to verify libass font resolution.
 
 ## Local safety
 Reuse only the existing test directory. `git status --short` must be empty before switching. Dirty => STOP. No reset/restore/clean and no new clone/worktree.
