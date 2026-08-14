@@ -1,47 +1,42 @@
 # Current State
 
 ## Status
-PIPELINE1-SEMANTIC-REMIX-007 — STANDARD PRE-TTS ORDERING FIX PUBLISHED / STATIC + OWNER RETEST WAITING
+PIPELINE1-STANDARD-CJK-GUARD-008 — PROMPT CONTRACT FIX PUBLISHED / STATIC + OWNER RETEST WAITING
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Active review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
-- Active Draft PR: #48.
-- Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
-- Prior final docs head: `f03ab512b25fb0193b17b3468d5ac865d3c0c2d1`.
-- Latest Standard pre-TTS ordering source correction: `c8fecb95164c39fe82cddf24711ccfc3386d23c6`.
+- Parent task/review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
+- Parent Draft PR: #48.
+- Active corrective review branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
+- Active corrective Draft PR: #51.
+- Corrective base SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
+- Latest prompt-contract source commit: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
 
 ## Latest Owner runtime evidence
-Standard/default OFF on the prior flow used a ~97.57s source with a 1529-1610 char voice-aware target. Global reasoning completed, then the draft quality gate found `CJK_CHARACTERS` and its standalone one-shot quality repair also failed `CJK_CHARACTERS`. Pipeline 1 failed before `Standard duration guard`/grounded recompose and before TTS.
+Standard/default OFF on the ~97.57s regression case now reaches the intended grounded pre-TTS path. Global reasoning produced an underfilled 585-char draft with 2 CJK glyphs; the draft was correctly deferred to `Standard duration guard`. The first grounded recompose reached 1610 chars but failed `CJK_CHARACTERS`; the retained-candidate retry also failed `CJK_CHARACTERS`. TTS did not run.
 
 ## Verified root cause
-`p1-standard-vision-ipc.js` performed standalone narration quality repair before returning the Standard analysis to `p1-standard-vision-wrapper.js`. For an underfilled draft, that repair had no full transcript/Vision recomposition responsibility and could fail before the wrapper's grounded duration guard had any chance to run. The old prompt also still described the narration range as soft and referenced later duration-fit behavior, conflicting with D-016 Standard policy.
+The previous ordering defect is fixed. The remaining failure is prompt-contract weakness: the recompose request supplies full transcript and Vision evidence that may contain CJK source text, while the prompt only said `không CJK lạc ngữ cảnh`. qwen3-coder:30b can therefore copy a small number of source CJK glyphs into an otherwise valid narration, and the deterministic zero-CJK gate correctly rejects it.
 
 ## Published correction
-Source commit `c8fecb95164c39fe82cddf24711ccfc3386d23c6` changes only `src/main/p1-standard-vision-ipc.js` from `f03ab512...` (+26/-9):
-- global reasoning prompt now states that an under-min Standard draft will be recomposed by the Standard pre-TTS guard using full transcript + Vision evidence;
-- the obsolete implication that a later TTS duration-fit will solve underfill is removed;
-- when the draft is below `budget.min_chars`, standalone quality repair is deferred instead of being allowed to fail the job first;
-- the raw deterministic draft quality report is returned to the wrapper;
-- prior rejected-candidate retention in the wrapper remains in force;
-- non-underfilled behavior remains unchanged;
-- Semantic/P2/P3/TTS engine are unchanged.
-
-## Verification evidence
-- GitHub compare `f03ab512... -> c8fecb95...`: exactly one application file changed, `src/main/p1-standard-vision-ipc.js`, 35 changed lines.
-- GitHub source inspection confirms the new under-min deferral path and updated prompt are published.
-- Canonical `current_state.md`, `task_current.md`, `handoff.md`, `bugs.md`, `qa_checklist.md` and PR #48 description are synchronized to this correction.
-- Exact-head Node syntax and diff checks have not yet been executed; GitHub CI is not configured.
+Source commit `e2cf430971fb75d5ef794fafc6879e35ba0a608e` changes only `src/main/p1-standard-vision-wrapper.js` from `7df7e45...` (+14/-4):
+- source CJK in transcript/Vision is explicitly INPUT-ONLY in the user message;
+- narration output contract requires ZERO Han/Hiragana/Katakana/Hangul glyphs;
+- source text that cannot be safely interpreted must be omitted rather than copied or guessed;
+- a retry after CJK failure receives the deterministic `cjk_count` and an explicit mandatory repair instruction on the retained candidate;
+- the model must self-scan the complete narration before returning JSON;
+- hard duration range and deterministic CJK/repetition gates remain unchanged;
+- no local output sanitization, no extra retry, no P2/P3/TTS/dependency change.
 
 ## Gates
 - Execution: PASS for source publication.
-- Automated/static: WAITING on exact final head.
-- Code review: WAITING final exact-head review/static confirmation.
-- Owner Standard runtime: FAIL on prior flow; RETEST WAITING on corrected head after static PASS.
+- Source isolation: PASS — one application file only.
+- Automated/static: WAITING on exact corrective head.
+- Code review: WAITING exact-head static confirmation.
+- Owner Standard runtime: FAIL on `7df7e45...`; RETEST WAITING on corrective head after static PASS.
 - Owner Semantic runtime: ON HOLD until Standard PASS.
-- Documentation synchronization: PASS.
-- P3 semantic cut/reorder: BLOCKED.
+- Documentation synchronization: PASS for current corrective state.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Owner checks out the final PR head and runs `node --check src/main/p1-standard-vision-ipc.js`, `node --check src/main/p1-standard-vision-wrapper.js`, and `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`. If static PASS, rerun Standard/default OFF. The underfilled+CJK case must now reach the grounded Standard pre-TTS recompose path rather than fail in standalone `Narration quality` before the wrapper.
+Owner checks out `review/PIPELINE1-STANDARD-CJK-GUARD-008`, verifies exact HEAD, runs Node syntax + diff checks, then reruns Standard/default OFF only if static PASS. Expected: grounded recompose must return hard-range narration with `cjk=0` before one full-text TTS request.
