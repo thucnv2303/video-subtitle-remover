@@ -8,14 +8,7 @@ function installBurnTimingBridge(job, config) {
   const original = api?.burnSubtitlePositioned;
   if (typeof original !== 'function') return () => {};
 
-  api.burnSubtitlePositioned = async function p3TimingAwareBurn(
-    videoPath,
-    srtContent,
-    outputPath,
-    positions,
-    styleArgs,
-    karaokeAss
-  ) {
+  api.burnSubtitlePositioned = async function p3TimingAwareBurn(videoPath,srtContent,outputPath,positions,styleArgs,karaokeAss) {
     const info = job.p3VideoInfo || {};
     if (String(srtContent || '').trim() && Number(info.width) > 0 && Number(info.height) > 0) {
       job.p3RenderTimedSrt = srtContent;
@@ -57,7 +50,13 @@ export async function renderP3Job(job, onState) {
     return false;
   }
 
-  if (!job.p3BaseTimedSrt && job.ttsTimedSrt) job.p3BaseTimedSrt = job.ttsTimedSrt;
+  if (!job.p3BaseTimedSrt) {
+    job.p3BaseTimedSrt = (job.p3CueEdited && job.p3TimedSrt) ? job.p3TimedSrt : (job.ttsTimedSrt || job.p3TimedSrt || '');
+  }
+  // Every render starts from the stable editable source. Any tempo-derived timing
+  // from a previous render must never be scaled a second time.
+  if (job.p3BaseTimedSrt) job.p3TimedSrt = job.p3BaseTimedSrt;
+
   activeRenderJobId = job.id;
   job.outputPath = job.p3CleanVideoPath;
   job.voiceSub = Boolean(config.subtitleEnabled);
@@ -83,10 +82,5 @@ export async function renderP3Job(job, onState) {
   }
 }
 
-export function restoreCleanP3Input(job) {
-  if (job?.p3CleanVideoPath) job.outputPath = job.p3CleanVideoPath;
-}
-
-export function getActiveP3RenderJobId() {
-  return activeRenderJobId;
-}
+export function restoreCleanP3Input(job) { if (job?.p3CleanVideoPath) job.outputPath = job.p3CleanVideoPath; }
+export function getActiveP3RenderJobId() { return activeRenderJobId; }
