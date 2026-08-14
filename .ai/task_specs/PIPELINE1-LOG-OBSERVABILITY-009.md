@@ -1,83 +1,85 @@
 # PIPELINE1-LOG-OBSERVABILITY-009
 
-Status: APPROVED FOR PM DIRECT EXECUTION — AMENDED
+Status: APPROVED FOR PM DIRECT EXECUTION — RUNTIME REVISION 2
 
 ## Repository / refs
 - Repository: `thucnv2303/video-subtitle-remover`
 - Base branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`
 - Expected base SHA: `330d756fcce1b71ca8745b3292d7ac655bc32d13`
-- Review branch: `review/PIPELINE1-LOG-OBSERVABILITY-009`
+- Review branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52
+- Runtime-revision starting HEAD: `3ab395128d841626d689182853beea8c10c58aa1`
 - Bug: `BUG-039`
 
-## User outcome
-Pipeline 1 Console Log must preserve useful run history and must not look active when the app is only performing routine background health/status polling.
+## Owner runtime evidence — revision 2
+Owner reports routine access logs still visibly repeat, including duplicate successful requests for `/api/health`, `/api/tts/status`, and `/api/gpu-info`. Owner also requires frame-processing progress to occupy one live line whose frame/progress value updates, instead of appending many frame lines.
 
-## Verified root cause
-1. Legacy `app.js::addLog` clones every global log entry into `#step1-log-output`.
-2. That legacy clone path removes the oldest node after 100 entries.
-3. Python stdout is forwarded into the same global logger.
-4. Voice Render/global status legitimately polls `/api/health`, `/api/tts/status`, and `/api/gpu-info` in the background.
+## Revised user outcome
+Log presentation must be operationally useful rather than a raw stdout mirror:
+- successful routine status/access polling must not spam visible console history;
+- P2 frame-processing progress must use one live progress row that updates in place;
+- stage changes, warnings, errors, and completion remain distinct durable lines;
+- no polling frequency or backend processing behavior changes.
 
-## Amendment / implementation location
-The first PM contents-API attempt against CRLF `app.js` produced whole-file line-ending churn. PM immediately rejected that diff and neutralized it without force push. Final review compare must contain no `app.js` change.
+## Verified code basis
+1. `src/renderer/js/pipeline1-run-ux.js` owns P1 console cleanup/retention from the first BUG-039 correction.
+2. `src/renderer/js/pipeline2-runtime.js` is the existing P2 runtime UX/log-coalescing layer.
+3. `pipeline2-runtime.js::installLogCoalescing` currently returns without inspecting added log entries when there is no active P2 Job, so idle access-log noise remains in the global log.
+4. `pipeline2-runtime.js::isNoisyAccessLog` covers several routine endpoints but does not cover `/api/tts/status`.
+5. The same file already owns a single `liveRow` for P2 progress and removes recognized frame heartbeat lines after updating that row.
 
-Authorized application source is now exactly:
-- `src/renderer/js/pipeline1-run-ux.js`
+## Authorized application source
+Exactly:
+- `src/renderer/js/pipeline1-run-ux.js` only if P1 heartbeat cleanup requires a narrow correction;
+- `src/renderer/js/pipeline2-runtime.js` for global routine-access cleanup and P2 frame coalescing.
 
-Rationale: this file already owns Pipeline 1 runtime UX and can observe only `#step1-log-output`, removing P1 presentation noise and enforcing retention without changing the global logger, Python forwarding, backend polling, Voice Render, or other pipelines.
+No other application source is authorized.
 
 ## Required implementation
-1. Install one idempotent `MutationObserver` on `#step1-log-output`.
-2. On existing entries at install time and newly added entries, remove only entries whose displayed text is a Python/Uvicorn-style successful `GET` access line for one of these exact endpoints:
-   - `/api/health`
-   - `/api/tts/status`
-   - `/api/gpu-info`
-3. Match must be narrow and require HTTP `200 OK`. Preserve non-200 lines, errors, unrelated backend logs, and all normal P1 logs.
-4. Enforce bounded P1 console retention of **2000 `.log-entry` elements** by removing oldest entries only when the bound is exceeded.
-5. Do not modify the global/main log. Heartbeat lines may remain there.
-6. Do not remove, slow, or redesign background polling.
-7. Preserve P1 Copy and Clear behavior.
-8. Observer installation must be idempotent and not create a feedback loop.
+1. Keep existing P1 retention at 2000 and P1 heartbeat suppression behavior.
+2. In the global/main log, remove routine successful Python/Uvicorn access lines for status/preview polling even when no P2 Job is active.
+3. Include exact successful `GET /api/tts/status ... 200 OK` in routine-access suppression.
+4. Preserve all non-200 responses, warnings, Python errors, renderer errors, and unrelated backend logs.
+5. Do not reduce or disable health/TTS/GPU/status polling. This is presentation-only.
+6. Preserve one P2 live progress row and update its text in place.
+7. Raw frame/progress heartbeat variants recognized by the P2 UX layer must update that live row and then be removed from console history.
+8. Support common frame-counter forms without swallowing arbitrary messages, including existing `processing frame A to B`, `Processing: A-B / Total: N`, and simple `frame N/TOTAL` progress forms when they are clearly processing/progress messages.
+9. Stage transitions, start, warning/error, cancellation, and completion remain separate durable rows.
+10. Copy/Clear behavior remains intact.
 
-## Forbidden application changes
-- `src/renderer/js/app.js` must remain unchanged in final diff
+## Forbidden changes
 - no `api/server.py`
 - no `src/main/*`
-- no `src/renderer/js/api.js`
-- no Voice Render source
-- no Settings source
-- no P1 reasoning/AI/Vision source
-- no TTS source
-- no Pipeline 2 or Pipeline 3 source
-- no HTML/CSS redesign
+- no Voice Render polling/timer changes
+- no Settings changes
+- no P1 AI/Vision/reasoning/TTS changes
+- no Pipeline 3 changes
 - no dependency changes
-- no unrelated formatting
+- no unrelated formatting/refactor
+- no force push/history rewrite
 
 ## Verification
-Required:
+Required source review:
+- final application diff limited to the two authorized renderer UX files;
+- no polling/timer/backend changes;
+- `/api/tts/status` successful access log is classified as routine noise;
+- access-log cleanup is executed even while no P2 job exists;
+- non-200 same-endpoint access line is retained;
+- frame heartbeat updates one live row and raw heartbeat row is removed;
+- warning/error rows remain durable.
+
+Required executable checks when an exact checkout is available:
 ```text
 node --check src/renderer/js/pipeline1-run-ux.js
+node --check src/renderer/js/pipeline2-runtime.js
 git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD
 ```
-Direct GitHub compare must prove final application diff is only `src/renderer/js/pipeline1-run-ux.js`.
-
-Deterministic behavior inspection must prove:
-- each exact heartbeat endpoint with `200 OK` is recognized for P1 removal;
-- same endpoint with non-200 is retained;
-- normal P1 log is retained;
-- retention bound is 2000;
-- global log/polling code is untouched.
 
 ## Owner runtime acceptance
-After PM review/static PASS:
-1. Idle app for at least 30 seconds: P1 console does not accumulate routine 200 heartbeat access lines.
-2. Global Backend/TTS/GPU status still refreshes.
-3. Run one Standard P1 Job: meaningful early-to-completion logs remain available beyond 100 entries.
-4. Copy Log contains retained P1 history.
-5. Clear Log still clears P1 console.
+1. Restart app on exact PR #52 HEAD and leave idle >=30 seconds: visible log does not accumulate routine successful `/api/health`, `/api/tts/status`, `/api/gpu-info` rows.
+2. Backend/TTS/GPU status still refreshes normally.
+3. Run P2: frame progress is represented by one live row whose frame/progress values advance, not hundreds of appended frame lines.
+4. Trigger/observe a warning or error: it remains visible as a distinct line.
+5. P1 meaningful history still retains >100 entries and Copy/Clear still work.
 
-## Publication / gates
-- source commit separate from docs/state commits;
-- Draft PR #52 remains based on `review/PIPELINE1-STANDARD-CJK-GUARD-008`;
-- Owner runtime: NOT STARTED until PM review/static PASS;
-- merge: BLOCKED.
+## Gates
+Owner runtime has invalidated the prior closeout assumption. Source revision is authorized. Merge remains BLOCKED.
