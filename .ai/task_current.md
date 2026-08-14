@@ -1,40 +1,43 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-SEMANTIC-REMIX-007
+PIPELINE1-STANDARD-CJK-GUARD-008
 
 ## Status
-STANDARD_PRE_TTS_ORDERING_FIX_PUBLISHED_STATIC_OWNER_RETEST_WAITING
+PROMPT_CONTRACT_FIX_PUBLISHED_STATIC_OWNER_RETEST_WAITING
 
 ## Authority
-- Branch: `review/PIPELINE1-SEMANTIC-REMIX-007`
-- Draft PR: #48
-- Base: `9981da334ca10fd845c971241d541894d736c13b`
-- Prior docs head: `f03ab512b25fb0193b17b3468d5ac865d3c0c2d1`
-- Latest source correction: `c8fecb95164c39fe82cddf24711ccfc3386d23c6`
+- Parent task: `PIPELINE1-SEMANTIC-REMIX-007`.
+- Parent branch/PR: `review/PIPELINE1-SEMANTIC-REMIX-007` / #48.
+- Corrective branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
+- Corrective Draft PR: #51.
+- Starting SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
+- Source correction: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
 
 ## Latest Owner failure
-For the ~97.57s Standard regression case, global reasoning completed but draft quality found `CJK_CHARACTERS`. Standalone `Narration quality` repair failed the same gate, so P1 stopped before the grounded Standard duration/pre-TTS recompose and before TTS.
+On the ~97.57s Standard regression case, the corrected pre-TTS ordering worked: a 585-char draft reached the grounded duration guard, the first recompose produced 1610 chars, and retry preserved that rejected candidate. Both attempts still failed deterministic `CJK_CHARACTERS` before TTS.
 
 ## Root cause
-The Standard IPC quality repair ran too early. An underfilled draft could be rejected before the wrapper received the analysis, despite D-016 requiring grounded recomposition from full transcript + Vision evidence before TTS.
+The recompose prompt treated CJK as a general language-quality preference while full transcript/Vision evidence can legitimately contain source CJK text. The model can copy a few source glyphs into the output. This is a prompt/source-boundary defect; the deterministic zero-CJK gate is behaving correctly.
 
 ## Corrected behavior
-- Under-min Standard drafts no longer run the standalone quality repair first.
-- The draft plus deterministic quality report is returned to the wrapper.
-- The wrapper's evidence-backed pre-TTS recompose remains responsible for bringing the underfilled narration into hard range and passing CJK/repetition quality gates.
-- Prompt wording no longer claims a later TTS duration-fit will solve underfill.
-- Non-underfilled Standard behavior, Semantic, P2, P3 and TTS engine are unchanged.
+- Transcript/Vision CJK is explicitly INPUT-ONLY.
+- `narration_script` must contain ZERO Han/Hiragana/Katakana/Hangul glyphs.
+- Uncertain CJK-only textual evidence must be omitted rather than copied or guessed.
+- Retry receives `cjk_count` and must repair the retained candidate, not restart from the short draft.
+- Model must self-scan before returning JSON.
+- Existing hard length and repetition/CJK validators remain unchanged.
+- No output sanitizer, extra retry, P2/P3/TTS/dependency change.
 
 ## Verification
 - Source publication: PASS.
-- Compare `f03ab512... -> c8fecb95...`: one app file, `src/main/p1-standard-vision-ipc.js`, +26/-9.
+- Source isolation: PASS — only `src/main/p1-standard-vision-wrapper.js`, +14/-4 from starting SHA.
 - Exact-head syntax/diff: WAITING.
 - Code review final confirmation: WAITING.
 - Owner Standard corrected runtime: WAITING after static PASS.
 - Owner Semantic: ON HOLD.
-- Documentation synchronization: IN PROGRESS until all canonical docs/PR metadata are aligned.
+- Documentation synchronization: PASS.
 - Merge: BLOCKED.
 
 ## Next verification
-Finish docs sync, then run exact-head `node --check` for Standard IPC + wrapper and `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`. If clean, Owner reruns Standard/default OFF. Expected: underfilled+CJK draft is deferred to grounded pre-TTS recompose, then hard duration + quality PASS occurs before one TTS request.
+Checkout corrective branch #51, verify exact HEAD, run `node --check src/main/p1-standard-vision-wrapper.js`, `node --check src/main/p1-standard-vision-ipc.js`, and `git diff --check 7df7e45c277feb56b5a8a45195007f5e41b69638..HEAD`. If clean, rerun Standard/default OFF and require `cjk=0` before TTS.
