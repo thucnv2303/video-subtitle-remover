@@ -1,47 +1,51 @@
 # Current State
 
 ## Status
-PIPELINE1-SEMANTIC-REMIX-007 — STANDARD PRE-TTS ORDERING FIX PUBLISHED / STATIC + OWNER RETEST WAITING
+PIPELINE1-STANDARD-CJK-GUARD-008 — OWNER STANDARD FUNCTIONAL PASS / FOLLOW-UP OBSERVABILITY + DEFAULT-PROMPT SYNC REQUIRED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Active review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
-- Active Draft PR: #48.
-- Base: `review/PIPELINE1-CONTINUOUS-NARRATION-006@9981da334ca10fd845c971241d541894d736c13b`.
-- Prior final docs head: `f03ab512b25fb0193b17b3468d5ac865d3c0c2d1`.
-- Latest Standard pre-TTS ordering source correction: `c8fecb95164c39fe82cddf24711ccfc3386d23c6`.
+- Parent task/review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
+- Parent Draft PR: #48.
+- Active corrective review branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
+- Active corrective Draft PR: #51.
+- Corrective base SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
+- Prompt-contract source commit: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
+- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`; commits through prior head `96e4c5dded4dc6e80b3434c6b9bae5d2ebe27b03` after that source state are documentation-only.
 
-## Latest Owner runtime evidence
-Standard/default OFF on the prior flow used a ~97.57s source with a 1529-1610 char voice-aware target. Global reasoning completed, then the draft quality gate found `CJK_CHARACTERS` and its standalone one-shot quality repair also failed `CJK_CHARACTERS`. Pipeline 1 failed before `Standard duration guard`/grounded recompose and before TTS.
+## Verified source/static state
+Owner worktree on exact `6e023808...` reported:
+- `node --check src/main/p1-standard-vision-wrapper.js` PASS;
+- `node --check src/main/p1-standard-vision-ipc.js` PASS;
+- `git diff --check 7df7e45...HEAD` PASS;
+- `git status --short` clean.
+- Code review: PASS for the published CJK prompt-contract correction.
 
-## Verified root cause
-`p1-standard-vision-ipc.js` performed standalone narration quality repair before returning the Standard analysis to `p1-standard-vision-wrapper.js`. For an underfilled draft, that repair had no full transcript/Vision recomposition responsibility and could fail before the wrapper's grounded duration guard had any chance to run. The old prompt also still described the narration range as soft and referenced later duration-fit behavior, conflicting with D-016 Standard policy.
+## Owner Standard runtime result — 2026-08-14
+Owner reports the real app now runs well, AI-generated Standard narration/script is correct, and voice rendering is stable. This closes the user-facing Standard runtime outcome as PASS for the corrected configured prompt.
 
-## Published correction
-Source commit `c8fecb95164c39fe82cddf24711ccfc3386d23c6` changes only `src/main/p1-standard-vision-ipc.js` from `f03ab512...` (+26/-9):
-- global reasoning prompt now states that an under-min Standard draft will be recomposed by the Standard pre-TTS guard using full transcript + Vision evidence;
-- the obsolete implication that a later TTS duration-fit will solve underfill is removed;
-- when the draft is below `budget.min_chars`, standalone quality repair is deferred instead of being allowed to fail the job first;
-- the raw deterministic draft quality report is returned to the wrapper;
-- prior rejected-candidate retention in the wrapper remains in force;
-- non-underfilled behavior remains unchanged;
-- Semantic/P2/P3/TTS engine are unchanged.
+The prior missing full log is now explained by a separate observability defect rather than a demonstrated Standard processing failure.
 
-## Verification evidence
-- GitHub compare `f03ab512... -> c8fecb95...`: exactly one application file changed, `src/main/p1-standard-vision-ipc.js`, 35 changed lines.
-- GitHub source inspection confirms the new under-min deferral path and updated prompt are published.
-- Canonical `current_state.md`, `task_current.md`, `handoff.md`, `bugs.md`, `qa_checklist.md` and PR #48 description are synchronized to this correction.
-- Exact-head Node syntax and diff checks have not yet been executed; GitHub CI is not configured.
+## Newly verified follow-up defects
+### BUG-039 — P1 log observability
+Direct source review confirms:
+- `src/renderer/js/app.js` clones every global log into `#step1-log-output`;
+- the P1 console is hard-capped at 100 DOM entries and drops the oldest lines;
+- successful Python access logs for background `/api/health`, `/api/tts/status`, and `/api/gpu-info` requests are therefore copied into the P1 console even when no P1 Job is running;
+- Voice Render/global status code legitimately performs background status refreshes, so the P1 console must filter routine successful health polling rather than treating it as P1 activity.
+
+### BUG-040 — product default prompt is stale
+`src/renderer/js/components/prompt-manager.js` still seeds a subtitle-translation/SRT-oriented default prompt, while `pipeline1-run-config.js` snapshots that selected/default prompt into each P1 run. Owner success required manually replacing the configurable prompt with the corrected continuous-narration / ZERO-CJK contract. Fresh install/reset can therefore restore the stale contract until source/default prompt synchronization is completed.
 
 ## Gates
-- Execution: PASS for source publication.
-- Automated/static: WAITING on exact final head.
-- Code review: WAITING final exact-head review/static confirmation.
-- Owner Standard runtime: FAIL on prior flow; RETEST WAITING on corrected head after static PASS.
-- Owner Semantic runtime: ON HOLD until Standard PASS.
-- Documentation synchronization: PASS.
-- P3 semantic cut/reorder: BLOCKED.
-- Merge permission: BLOCKED.
+- Execution: PASS for PIPELINE1-STANDARD-CJK-GUARD-008 source publication.
+- Source isolation: PASS.
+- Automated/static: PASS on exact tested application source `6e023808...`.
+- Code review: PASS for the CJK prompt-contract correction.
+- Owner Standard runtime: PASS for the corrected configured prompt.
+- Owner Semantic runtime: DEFERRED until observability follow-up is fixed and Standard closeout state is synchronized.
+- Documentation synchronization: PASS after this corrective knowledge sync.
+- Merge permission: BLOCKED — BUG-039 and BUG-040 remain open; no merge requested.
 
 ## Next permitted action
-Owner checks out the final PR head and runs `node --check src/main/p1-standard-vision-ipc.js`, `node --check src/main/p1-standard-vision-wrapper.js`, and `git diff --check f03ab512b25fb0193b17b3468d5ac865d3c0c2d1..HEAD`. If static PASS, rerun Standard/default OFF. The underfilled+CJK case must now reach the grounded Standard pre-TTS recompose path rather than fail in standalone `Narration quality` before the wrapper.
+Open a dedicated stacked review task `PIPELINE1-LOG-OBSERVABILITY-009` from the synchronized PR #51 head. Scope only P1 console retention/noise filtering and required project knowledge; do not modify AI reasoning, TTS generation, P2, P3, or status functionality. After that runtime PASS, synchronize the proven continuous-narration prompt into the product default in a separate task before merge consideration.
