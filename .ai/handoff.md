@@ -4,55 +4,61 @@
 `PIPELINE3-WORKSPACE-015`
 
 ## Status
-SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC WAITING / OWNER RUNTIME NOT STARTED / MERGE BLOCKED
+OWNER RUNTIME FAIL / NEEDS_REVISION / OPENCUT RESEARCH COMPLETE / REBUILD DESIGN WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
 - Review branch / Draft PR: `review/PIPELINE3-WORKSPACE-015` / #57
 - Exact starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1`
-- Main spec: `.ai/task_specs/PIPELINE3-WORKSPACE-015.md`
-- Revision-1 safety spec: `.ai/task_specs/PIPELINE3-WORKSPACE-015-REV1-RERENDER-SAFETY.md`
-- Reviewed application-source head: `198aa12d376cc7bdea23da6ea791717b07a73d4b`
+- Owner-tested prototype HEAD: `75b7a62fe5b7892dc2de9fb78ae60e82cc8825c9`
+- Owner-fail/research record: `.ai/task_specs/PIPELINE3-WORKSPACE-015-OWNER-FAIL-OPENCUT-RESEARCH.md`
 
-## Product decision
-Owner approved the concrete PEP3 workspace demo and authorized direct GitHub implementation. UI must stay consistent with existing app colors. Direct mouse positioning of subtitles is required and must be smooth.
+## Owner runtime evidence
+Two real-app screenshots show the current prototype does not meet the approved P3 product target:
+- color/tone is wrong relative to the approved demo and app;
+- there is no dedicated visible Job Management workspace;
+- preview geometry/aspect presentation is wrong;
+- Owner requested OpenCut research before redo.
 
-## Reviewed source
-- new `src/renderer/js/pipeline3-workspace.js`
-- new `src/renderer/styles/pipeline3-workspace.css`
-- new `src/renderer/js/pipeline3-rerender-safety.js`
-- `src/renderer/js/pipeline1-run-config.js`: two import-only additions
+Decision: NEEDS_REVISION. PR #57 is not eligible for merge.
 
-No backend, P1 reasoning/TTS, P2, existing P3 finalizer or dependency changes.
+## OpenCut findings to carry forward
+Use OpenCut only as editor-architecture reference:
+- left source/assets region, center preview, right properties, bottom timeline;
+- resizable layout boundaries;
+- logical video canvas dimensions remain authoritative independent of viewport size;
+- fit-to-viewport scale preserves aspect ratio;
+- explicit coordinate transforms for preview interaction;
+- timeline, editor state and interactions are modular;
+- editor UI is separated from rendering engine/core.
 
-## Behavior ready for Owner verification
-- P3-ready Job selector + independent `job.p3Config`.
-- Real clean/final video preview with play/pause/seek and timed subtitle cue preview.
-- Detailed subtitle settings and presets.
-- Pointer-captured drag using requestAnimationFrame, synchronized normalized X/Y, optional snap/grid/safe-zone.
-- P3-derived ASS exact positioning without overwriting P1/P2 artifacts.
-- Existing karaoke ASS preserved before P3 decoration.
-- Current supported audio controls and voice-fit telemetry only.
-- Existing finalizer used for output; duplicate click blocked while rendering.
-- Re-render guard preserves/restores the clean P2 path before subsequent renders.
+## Rebuild architecture
+Next approved P3 should comprise:
+1. Left visible Job Manager / Source Bin.
+2. Center Player + logical aspect-correct canvas.
+3. Right Properties Inspector for Subtitle / Audio / Export.
+4. Bottom assembly Timeline with a shared playhead/editor state.
 
-## PM self-review corrections
-1. Removed an initial CSS rule that could force Step 3 visible while Step 1/2 was selected. Existing `pipeline.js` remains visibility authority.
-2. Added re-render safety after verifying inherited finalizer changes `job.outputPath` to final output after completion.
+Theme authority is the existing approved app navy/blue-gray/blue system. Purple cannot be a standalone P3 identity.
+
+Implementation should replace 300 ms polling as primary state authority with explicit editor/job events and split responsibilities into focused modules (store/editor, jobs, preview geometry, timeline, inspector, subtitle ASS adapter, render controller).
+
+## Source disposition
+Freeze P3 application source on PR #57. Keep it only as prototype/reference evidence. Do not continue cosmetic fixes on this branch and do not merge it.
 
 ## Parent project note
-Per-Job Semantic Remix was observed by Owner as working. Long Standard narration remains a separate P1 design issue tracked by task-014 research; do not mix that redesign into P3 Workspace 015.
+Do not mix the unresolved long Standard P1 narration redesign into this P3 rebuild.
 
 ## Local safety
-No new clone/worktree/test directories. Reuse the existing local test directory only after `git status --short` is empty. Dirty => STOP; no reset/restore/clean overwrite.
+No new clone/worktree/test directories. Existing Owner test directory policy remains unchanged.
 
 ## Gates
-- Execution: PASS.
+- Execution: PASS for prototype publication only.
 - Automated/static: WAITING.
-- Code review: PASS.
-- Owner runtime: NOT STARTED.
-- Documentation synchronization: PASS pre-runtime after final sync.
+- Code review: historical source review only; product decision NEEDS_REVISION.
+- Owner runtime: FAIL.
+- Documentation synchronization: PASS after this handoff sync.
 - Merge: BLOCKED.
 
 ## Next permitted action
-Verify live PR #57 exact head/files/checks/comments, then Owner may switch the existing clean test directory to that exact head and run static + UI + short final-render verification. No merge yet.
+Approve the revised P3 editor design/spec. After approval, create a fresh dedicated rebuild branch/task from the approved integration base. PR #57 remains frozen/unmerged.
