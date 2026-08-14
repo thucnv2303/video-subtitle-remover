@@ -17,7 +17,12 @@ function installBurnTimingBridge(job, config) {
     const info = job.p3VideoInfo || {};
     if (String(srtContent || '').trim() && Number(info.width) > 0 && Number(info.height) > 0) {
       job.p3TimedSrt = srtContent;
-      const derived = updateJobDerivedAss(job, config, info.width, info.height);
+      const wasRetimed = String(srtContent).trim() !== String(job.ttsTimedSrt || '').trim();
+      const renderConfig = wasRetimed ? { ...config, preserveKaraoke: false } : config;
+      const derived = updateJobDerivedAss(job, renderConfig, info.width, info.height);
+      if (wasRetimed && config.preserveKaraoke && job.p3OriginalKaraokeAss) {
+        window.addLog?.('[P3] Voice đã retime: dùng ASS từ SRT timing thực tế thay cho karaoke timing P1 để tránh lệch subtitle.', 'info');
+      }
       return original.call(api, videoPath, srtContent, outputPath, positions, styleArgs, derived || karaokeAss || null);
     }
     return original.call(api, videoPath, srtContent, outputPath, positions, styleArgs, karaokeAss);
