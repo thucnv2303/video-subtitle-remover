@@ -1,6 +1,8 @@
 const P1_OWNED_MESSAGE_RE = /^\[(?:P1|ASR|AI|TTS|Voice|VoiceSub|Ollama|Gemini)\](?:\s|$)/i;
 const P1_RENDERED_MESSAGE_RE = /^\[[^\]]+\]\s+\[(?:P1|ASR|AI|TTS|Voice|VoiceSub|Ollama|Gemini)\](?:\s|$)/i;
 
+let legacyP1ProgressLog = null;
+
 function p1Container() {
   return document.getElementById('step1-log-output');
 }
@@ -35,7 +37,12 @@ function appendP1Entry(message, type = 'info') {
 function updateP1ProgressOnly(progressKey, message, type = 'info', done = false) {
   if (!progressKey || !message) return;
   const container = p1Container();
-  if (!container) return;
+  if (!container) {
+    if (typeof legacyP1ProgressLog === 'function') {
+      legacyP1ProgressLog(progressKey, message, type, done);
+    }
+    return;
+  }
 
   let entry = [...container.querySelectorAll('.log-entry')]
     .find(item => item.dataset.progressKey === progressKey) || null;
@@ -65,6 +72,10 @@ function installP1LogRouter() {
   if (typeof window.addLog !== 'function') return false;
 
   const originalAddLog = window.addLog;
+  legacyP1ProgressLog = typeof window.updateP1ProgressLog === 'function'
+    ? window.updateP1ProgressLog
+    : null;
+
   const routedAddLog = function routedP1Log(message, type = 'info') {
     if (isP1OwnedMessage(message) && appendP1Entry(message, type)) return;
     return originalAddLog.apply(this, arguments);
