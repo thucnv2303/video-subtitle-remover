@@ -39,8 +39,9 @@ Persist in existing compatibility keys:
 - `ai_prompts_v2_initialized=true`: records that V2 initialization/migration occurred.
 
 ### Initialization / migration
-- If `ai_prompts` exists and parses to an array, preserve it exactly, including `[]`.
 - If `ai_prompts` is absent, seed one corrected Standard prompt and persist it once.
+- If `ai_prompts` exists and parses to an array, preserve the user list exactly, including `[]`.
+- One narrow exception: on first V2 migration only, if the stored list is exactly the untouched legacy single seed (`id=p1` plus the old subtitle-translation content), replace that obsolete product seed with the corrected Standard seed. Do not apply this replacement to customized or multi-item user lists.
 - Never use `array.length === 0` as a signal to restore defaults.
 - Normalize invalid/missing active/default IDs against the actual store.
 
@@ -66,7 +67,7 @@ Persist in existing compatibility keys:
 `pipeline1-run-config.js` must resolve prompt exclusively from `ai_prompts` + active/select ID. It must NOT use stale `ai_prompt` as an independent fallback when the store is empty or selection is invalid. Starting P1 with no valid prompt must fail with the existing clear prompt-required error.
 
 ## Corrected seeded Standard prompt
-Seed only on first initialization when no `ai_prompts` key exists. The seed must require:
+Seed only when `ai_prompts` is absent or when performing the exact untouched-legacy-seed migration above. The seed must require:
 - analyze the entire source video using available transcript + visual evidence;
 - produce one coherent, natural Vietnamese narration for the whole video;
 - remain grounded in source evidence and not invent unsupported process/product claims;
@@ -102,6 +103,7 @@ Required source review:
 - dropdown and modal share store;
 - `_resolvePrompt()` cannot resurrect stale `ai_prompt`;
 - corrected seeded prompt is continuous narration / ZERO-CJK compatible;
+- exact untouched legacy seed migrates once without rewriting customized user lists;
 - log/P2/P3 source unchanged.
 
 Executable checks when exact checkout is available:
