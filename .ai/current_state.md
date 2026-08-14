@@ -1,34 +1,43 @@
 # Current State
 
 ## Status
-PIPELINE1-LOG-OBSERVABILITY-009 — SPEC PUBLISHED / EXECUTION READY / MERGE BLOCKED
+PIPELINE1-LOG-OBSERVABILITY-009 — SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Parent corrective branch/PR: `review/PIPELINE1-STANDARD-CJK-GUARD-008` / #51.
+- Parent branch/PR: `review/PIPELINE1-STANDARD-CJK-GUARD-008` / #51.
 - Exact parent SHA: `330d756fcce1b71ca8745b3292d7ac655bc32d13`.
-- Active review branch: `review/PIPELINE1-LOG-OBSERVABILITY-009`.
+- Active branch/PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52.
 - Active bug: `BUG-039`.
-- Remote execution spec: `.ai/task_specs/PIPELINE1-LOG-OBSERVABILITY-009.md`.
+- PM source commit: `ba24b24011669c24565ad8b3a685b45fb046996f`.
 
-## Inherited verified Standard state
-- Task 008 CJK correction: static PASS, code review PASS.
-- Owner Standard functional runtime: PASS for the corrected configured prompt; app runs well, narration/script is correct, voice render is stable.
-- `BUG-040` stale product-default prompt remains a separate follow-up after this task.
+## Source correction
+Final application diff is limited to `src/renderer/js/pipeline1-run-ux.js` (+40/-1). The earlier direct contents-API attempt on CRLF `app.js` created line-ending churn; PM rejected it and neutralized it with a non-force corrective commit. Final compare from the parent SHA contains no `app.js` change.
 
-## Current objective
-Fix only P1 console observability in `src/renderer/js/app.js`:
-- bounded retention 2000 entries instead of 100;
-- suppress routine successful Python access-log mirrors for exact GET `/api/health`, `/api/tts/status`, `/api/gpu-info` in the P1 console;
-- preserve global log, status polling, non-200/errors, P1 processing logs, Copy and Clear.
+The P1 run-UX layer now:
+- keeps the legacy Step1 logger from evicting oldest log entries at the old 100-line threshold;
+- bounds retained P1 `.log-entry` history at 2000;
+- removes only displayed Python/Uvicorn successful `GET` access lines for exact `/api/health`, `/api/tts/status`, `/api/gpu-info` endpoints ending `200 OK`;
+- preserves global log, backend polling, non-200/errors, P1 processing logs, Copy and Clear.
+
+## Verification
+- GitHub source-scope compare: PASS — source commit changes only `pipeline1-run-ux.js`, +40/-1.
+- Parent-to-head application scope: PASS — no net `app.js` change; only `pipeline1-run-ux.js` application source changes.
+- Deterministic heartbeat filter cases: PASS for all 3 exact 200 endpoints; PASS retaining non-200, unrelated endpoint and normal P1 log; bound=2000.
+- PM code review: PASS.
+- Exact remote-file `node --check`: WAITING — ChatGPT container cannot obtain connector-only repo bytes for direct execution.
+- Exact `git diff --check`: WAITING for an executable checkout; GitHub patch inspection shows no broad whitespace churn.
+
+## Inherited Standard result
+Task 008 Owner Standard functional runtime remains PASS for the corrected configured prompt. `BUG-040` stale product default prompt remains a separate follow-up and is not modified in PR #52.
 
 ## Gates
-- Execution: NOT STARTED — spec published.
-- Automated/static: WAITING.
-- Code review: WAITING.
-- Owner manual app verification: NOT STARTED.
-- Documentation synchronization: PASS for task-open state.
+- Execution: PASS — source published.
+- Automated/static: PARTIAL — deterministic verification PASS; exact Node/diff commands WAITING.
+- Code review: PASS.
+- Owner manual app verification: WAITING until exact static commands PASS.
+- Documentation synchronization: PASS for published-source state after dynamic-doc update.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Executor performs the exact remote spec on this branch, publishes separate source/docs commits and a Draft PR against `review/PIPELINE1-STANDARD-CJK-GUARD-008`, then PM verifies GitHub evidence before Owner retest.
+On an exact checkout of PR #52 head, run `node --check src/renderer/js/pipeline1-run-ux.js` and `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD`. If both PASS, Owner may restart the app and verify idle heartbeat suppression, status refresh, >100 meaningful P1 log retention, Copy and Clear. Do not merge.
