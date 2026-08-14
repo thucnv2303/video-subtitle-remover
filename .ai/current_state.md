@@ -7,40 +7,39 @@ PIPELINE1-LOG-OBSERVABILITY-009 — RUNTIME REVISION 4 SOURCE PUBLISHED / PM REV
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Parent: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
 - Active branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52.
-- Revision-4 starting HEAD: `0dc2723fde10c0b002af3efe52da94bc93978b6a`.
-- Revision-4 spec commit: `df6741fffa5c29250f13689b65813f9824bfbfad`.
-- Revision-4 source commits: `c08e09d1f260a86e2fff19f8c0e60ad103824347`, `326958d8a62aa8543643d1395633c1febf3d375d`, `e25792663f9c66cfd54b25c4f60de61b14341e8e`.
+- Current pre-resume HEAD: `20f42653806b2ba048b8f598f3ade0d725169cca`.
+- Revision-4 source head: `e25792663f9c66cfd54b25c4f60de61b14341e8e`.
 - Active bug: `BUG-039`.
 
-## Owner runtime evidence
-Owner screenshot on 2026-08-14 shows Pipeline 2 Console/Log still displaying P1 `[Ollama]` vision/reasoning progress while P2 has no job. Revision 3 is therefore NEEDS_REVISION and superseded.
+## Owner sequencing update — 2026-08-14
+Owner has finished the immediate Prompt Manager work and explicitly directed Project Control to resume the Pipeline 2 log issue now.
+`PIPELINE1-PROMPT-MANAGER-V2-010` / PR #53 remains a separate Draft PR and is NOT merged into this log branch. The Owner has verified the previously blocked create-prompt path can now add prompts. Full PR #53 closeout/static/merge gates are not silently inferred here.
 
-Direct source review found revision 3 incomplete because `pipeline1-analysis.js` emits `[Ollama] ...`, while the revision-3 matcher omitted `[Ollama]`; additionally `pipeline1-run-ux.js::updateP1ProgressLog()` explicitly wrote progress to both P1 and P2/global containers.
-
-A separate Owner screenshot confirms `BUG-040` Prompt Manager persistence/UI remains defective. That task stays separate from PR #52.
+## Verified BUG-039 history
+- Revision 3 failed Owner runtime because P2 Console/Log displayed P1 `[Ollama]` vision/reasoning progress while P2 had no job.
+- Source review confirmed `[Ollama]` was omitted from the revision-3 matcher and `updateP1ProgressLog()` dual-wrote keyed P1 progress into P1 and global/P2 containers.
 
 ## Revision-4 source state
-- New `src/renderer/js/pipeline1-log-router.js` owns P1 log presentation routing.
-- `src/renderer/js/pipeline1-run-config.js` imports the router after `pipeline1-run-ux.js`.
-- Explicit P1 owners `[P1]`, `[ASR]`, `[AI]`, `[TTS]`, `[Voice]`, `[VoiceSub]`, `[Ollama]`, `[Gemini]` are written directly to `#step1-log-output` instead of the legacy global/P2 sink when P1 DOM is available.
-- `window.updateP1ProgressLog` is replaced with a P1-only keyed progress updater; if P1 DOM is unavailable it falls back to the prior progress function.
-- Existing P1 retention/heartbeat cleanup remains intact.
-- Existing P2 routine-access cleanup and one-line frame coalescing remain unchanged.
-- No backend, polling/timer, Prompt Manager, Settings, AI processing, or P3 behavior changed.
+- `src/renderer/js/pipeline1-log-router.js` routes explicit P1 owners `[P1]`, `[ASR]`, `[AI]`, `[TTS]`, `[Voice]`, `[VoiceSub]`, `[Ollama]`, `[Gemini]` directly to `#step1-log-output` when P1 DOM is available.
+- `window.updateP1ProgressLog` is replaced by a P1-only keyed updater with fallback when P1 DOM is unavailable.
+- Already-rendered explicit P1 rows are removed from `#log-output` on router install.
+- Existing P2 runtime still suppresses routine successful health/TTS/GPU/preview access rows and coalesces frame heartbeat into one P2 live row.
+- `app.js` remains unchanged and its legacy logger is still the generic fallback.
 
 ## Verification
-- Revision-4 source isolation: PASS — new `pipeline1-log-router.js` (+98) plus one import in `pipeline1-run-config.js` (+1).
-- PM exact source review: PASS after adding progress fallback.
-- Exact executable `node --check` / `git diff --check`: WAITING executable checkout.
+- Source isolation: PASS — log router + one import only for revision 4.
+- PM source review: PASS.
+- GitHub CI/status checks on current head: none present.
+- Exact executable Node syntax / diff-check: WAITING.
 - Owner runtime revision-4 retest: WAITING.
 
 ## Gates
-- Execution: PASS — revision-4 source published.
+- Execution: PASS.
 - Automated/static: PARTIAL.
-- Code review: PASS for revision-4 exact source diff.
-- Owner manual app verification: WAITING on latest HEAD.
-- Documentation synchronization: PARTIAL until bug ledger/QA closeout after runtime evidence.
+- Code review: PASS.
+- Owner manual app verification: WAITING.
+- Documentation synchronization: PARTIAL until runtime closeout updates bug/QA ledgers.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Run exact static checks on latest PR #52 HEAD, then Owner retests P1/P2 log ownership. Do not merge. After BUG-039 runtime PASS, open separate `BUG-040` Prompt Manager V2 task/branch.
+Do not make another log source revision without new revision-4 runtime evidence. First run exact static checks on the latest PR #52 head, then Owner retests P1/P2 log ownership. If revision 4 still leaks P1 rows into P2, capture the exact leaked line(s) and revise narrowly from that evidence.
