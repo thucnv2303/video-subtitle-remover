@@ -4,44 +4,43 @@
 `PIPELINE1-LOG-OBSERVABILITY-009`
 
 ## Status
-RUNTIME REVISION 3 SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
+RUNTIME REVISION 4 SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
 - Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`
 - Active branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52
-- Revision-3 starting HEAD: `a7e05b1cd2fe2a4d78b74d7b7b3b59a7c9f08ba7`
-- Revision-3 spec commit: `a0c7d6b0de721ea11fa25aa0ae3c1618c3f939f0`
-- Revision-3 source commit: `de1a5e2cb25c46dffed383eb66cf54ca711af566`
+- Revision-4 starting HEAD: `0dc2723fde10c0b002af3efe52da94bc93978b6a`
+- Revision-4 spec: `df6741fffa5c29250f13689b65813f9824bfbfad`
+- Revision-4 source head: `e25792663f9c66cfd54b25c4f60de61b14341e8e`
 - Active bug: `BUG-039`
 
 ## Runtime finding
-Owner reports P1 log information also appears in the P2 log panel before P2 is run. Direct source review confirms the shared logger appends to Step 2 `#log-output` before cloning the same entry into Step 1 `#step1-log-output`.
+Owner screenshot proves revision 3 failed: P2 Console/Log showed P1 `[Ollama]` reasoning/vision progress while P2 had no job. Direct source review confirms `[Ollama]` was omitted from the revision-3 matcher and P1 keyed progress was explicitly dual-written to P1 and global/P2 containers.
 
-## Verified revision-3 source correction
-- `pipeline1-run-ux.js` adds only a narrow P1-owned log-isolation observer.
-- P1 markers `[P1]`, `[ASR]`, `[AI]`, `[TTS]`, `[Voice]`, `[VoiceSub]` are removed from Step 2 after normal logger execution, preserving their Step 1 clone.
-- Existing P1 retention/heartbeat cleanup remains intact.
-- Existing P2 access-noise suppression and one-line frame progress remain intact.
-- Revision-3 source isolation: exactly one file, +33/-0.
-- No `app.js`, backend, polling/timer, Prompt Manager, Settings or P3 changes.
+## Verified revision-4 correction
+- New P1 owner router writes explicit P1-owned messages directly to `#step1-log-output`.
+- Owned markers include `[Ollama]` and `[Gemini]` as well as `[P1]`, `[ASR]`, `[AI]`, `[TTS]`, `[Voice]`, `[VoiceSub]`.
+- P1 keyed progress updates only P1; missing P1 DOM falls back to prior progress implementation.
+- Existing P1 2000-entry retention/heartbeat cleanup stays intact.
+- Existing P2 access-noise suppression and one-line frame progress stay intact.
+- App source scope: new router + one import only.
 
 ## Required Owner retest
-On the latest PR #52 HEAD:
-1. Run P1 without starting P2: P1 operational logs remain in P1 and do not accumulate in P2.
-2. Leave idle >=30 seconds: no repeated successful health/TTS/GPU rows in visible P2 log.
-3. Confirm Backend/TTS/GPU status still refreshes.
-4. Run P2: frame/progress remains one updating live row.
-5. Confirm P1 warning/error remains visible in P1 and does not leak to P2.
-6. Confirm Copy/Clear works in both consoles.
+On latest PR #52 HEAD:
+1. Run P1 with P2 never started: `[P1]` and `[Ollama]` logs remain in P1 and do not appear in P2.
+2. Confirm P1 warning/error and keyed progress remain visible.
+3. Idle >=30s: no routine successful health/TTS/GPU spam in P2.
+4. Run P2: one live frame/progress row.
+5. Copy/Clear both consoles.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PARTIAL — exact executable checks still pending.
-- Code review: PASS for revision-3 exact diff.
-- Owner runtime: WAITING on latest HEAD.
-- Documentation synchronization: PARTIAL until bug ledger/QA closeout after runtime evidence.
+- Automated/static: PARTIAL — exact executable checks pending.
+- Code review: PASS.
+- Owner runtime: WAITING.
+- Documentation synchronization: PARTIAL until runtime closeout ledgers/checklists.
 - Merge: BLOCKED.
 
 ## Separate follow-up
-`BUG-040` Prompt Manager deletion persistence/default-prompt behavior is confirmed source-defective and must be handled in a separate task/branch after BUG-039 runtime PASS.
+`BUG-040` Prompt Manager is confirmed source/UI defective and requires a separate Prompt Manager V2 task after BUG-039 runtime PASS.
