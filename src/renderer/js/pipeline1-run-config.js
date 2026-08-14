@@ -1,5 +1,6 @@
 import './pipeline1-run-ux.js';
 import './pipeline1-log-router.js';
+import './pipeline3-workspace.js';
 import { installPerJobSemanticRemixControls } from './pipeline1-semantic-remix-per-job.js';
 
 /**
