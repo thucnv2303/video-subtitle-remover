@@ -1,54 +1,53 @@
 # Current State
 
 ## Status
-PIPELINE1-PROMPT-MANAGER-V2-010 — SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC PASS / OWNER RUNTIME WAITING / MERGE BLOCKED
+PIPELINE1-PROMPT-MANAGER-V2-010 — RUNTIME REVISION 1 SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC RETEST WAITING / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
 - Active review branch: `review/PIPELINE1-PROMPT-MANAGER-V2-010`.
 - Active Draft PR: #53.
-- Application-source head: `2d4fc7e05f71a38daa406647226e883bd7ed69f8`.
-- Exact Owner static-tested HEAD: `04f358ad07a2bbf9af38759668bfd4756635d620`.
+- Original V2 application-source head: `2d4fc7e05f71a38daa406647226e883bd7ed69f8`.
+- Prior Owner static-tested HEAD: `04f358ad07a2bbf9af38759668bfd4756635d620`.
+- Runtime-revision-1 spec commit: `6ae8fb027d8ba5fee946f8d5caa076c47ac5e53f`.
+- Runtime-revision-1 source commit: `f996edb5b8614843325768c0e98b68fedf16ffc0`.
 - Active bug: `BUG-040`.
 
 ## Owner sequencing
 Prompt Manager V2 remains the only active task. `PIPELINE1-LOG-OBSERVABILITY-009` / PR #52 remains open and PAUSED until task 010 reaches Owner result intake.
 
-## Published Prompt Manager V2
-- One persisted `ai_prompts` source of truth; an explicitly stored `[]` remains authoritative.
-- One-time migration replaces only the exact untouched obsolete legacy translation seed.
-- Any prompt may be deleted; delete-active/delete-all deterministically reconcile or clear active/default/mirror state.
-- Modal, Step 1 prompt panel and compatibility dropdown render from the same store.
-- `ai_prompt` is compatibility mirror only and cannot resurrect deleted data.
-- Empty/invalid prompt store reaches the existing prompt-required P1 start gate.
-- UI is implemented in `prompt-manager-v2.css` with the approved dark navy / blue two-column hierarchy.
-
-## Source review
-- GitHub compare from base to application-source head contains task spec plus exactly the three authorized application files.
-- No `index.html`, `app.js`, log routing, P2/P3/backend/TTS-engine/dependency source changes.
-- PM logic/scope code review: PASS.
-
-## Static verification — Owner 2026-08-14
-Owner created a clean detached worktree and verified exact HEAD `04f358ad07a2bbf9af38759668bfd4756635d620`.
-The following commands returned to PowerShell with no error/output:
+## Prior static verification — PASS
+Owner clean detached worktree on `04f358ad...` returned no error/output for:
 - `node --check src/renderer/js/components/prompt-manager.js`
 - `node --check src/renderer/js/pipeline1-run-config.js`
 - `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD`
 
-Automated/static gate: PASS.
+## Owner runtime failure — 2026-08-14
+After dependencies were installed and the app launched normally, Owner reported that clicking Prompt Management / Quản lý does not open the Prompt Manager modal. Backend startup, WebSocket and GPU/status behavior were otherwise healthy.
 
-## Runtime launch environment
-Owner then ran `npm start` in the new worktree. npm invoked `electron .`, but Windows reported `'electron' is not recognized...`.
-Repository evidence shows Electron is a local devDependency and `node_modules/` is gitignored. This is a clean-worktree dependency availability issue, not evidence of a Prompt Manager source failure. Owner real-app verification has therefore not started yet.
+## Verified source gap
+- `app.js` performs only one delayed `window.initPromptManager()` check after 100 ms and does not retry if the ES module has not exposed it yet.
+- Prompt Manager V2 previously depended on that call for modal construction and launcher binding.
+- Step 1 prompt buttons are dynamically replaced during render, so direct button listeners are also fragile.
+
+## Runtime revision 1
+Only `src/renderer/js/components/prompt-manager.js` changed from the approved runtime-revision spec:
+- module self-initializes when evaluated / DOM becomes ready;
+- exported `initPromptManager()` remains idempotent and returns without locking state if modal DOM is not yet present;
+- one delegated document-level launcher handles Manage/Edit/Add and survives Step 1 DOM replacement;
+- duplicate direct Manage/Edit/Add launch bindings were removed;
+- persistence/store/P1 run-config behavior is unchanged.
+
+GitHub compare `6ae8fb... -> f996edb...` is exactly one source file, +30/-4. PM code review: PASS. No `app.js`, index, log, P2/P3/backend/dependency change.
 
 ## Gates
-- Execution: PASS.
-- Automated/static: PASS on exact Owner-tested HEAD `04f358ad...`.
-- Code review: PASS.
-- Owner manual app verification: WAITING — app not launched in the clean worktree because local Electron dependency is unavailable there.
+- Execution: PASS — runtime revision 1 source published.
+- Automated/static: WAITING retest for revision 1; prior V2 source static PASS remains historical evidence only.
+- Code review: PASS for runtime revision 1 source diff.
+- Owner manual app verification: WAITING RETEST; prior source failed modal-open action.
 - Documentation synchronization: PARTIAL until runtime result updates bug/QA ledgers.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Make the existing Node/Electron dependencies available to the clean Owner-test worktree (or install exactly from the lockfile), launch the app, and perform Prompt Manager V2 runtime acceptance. No application-source revision is authorized from the current evidence.
+Owner updates the clean Prompt010 worktree to the latest PR #53 HEAD, reruns the required static commands, launches the app, and first verifies that Manage/Add always opens the V2 modal after a cold start. If that passes, continue the full CRUD/persistence acceptance. Do not resume log work yet.
