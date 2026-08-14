@@ -4,44 +4,44 @@
 `PIPELINE1-LOG-OBSERVABILITY-009`
 
 ## Status
-SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
+RUNTIME REVISION 2 SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC PARTIAL / OWNER RETEST WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
 - Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`
 - Active branch / Draft PR: `review/PIPELINE1-LOG-OBSERVABILITY-009` / #52
-- PM source commit: `ba24b24011669c24565ad8b3a685b45fb046996f`
+- Prior Owner-tested failing head: `3ab395128d841626d689182853beea8c10c58aa1`
+- Revision-2 spec commit: `19a5b4ca530a7567a5bd64b90ddb0228fd9399dd`
+- Revision-2 source commit: `c4d9911c8cb6cf99fdbeb3ca9cf561d2269d14c7`
 - Active bug: `BUG-039`
 
-## Verified implementation
-Final application change is only `src/renderer/js/pipeline1-run-ux.js` (+40/-1 source commit). `app.js` is net-identical to the base after PM rejected and neutralized an initial CRLF whole-file churn attempt without force push.
+## Runtime finding
+Owner confirmed the first observability revision did not fully solve visible log noise: successful `/api/health`, `/api/tts/status`, `/api/gpu-info` access logs still repeated. Owner also requires frame-processing logs to update one line instead of appending one line per frame/range.
 
-The P1 UX layer now protects the P1 console from the legacy 100-line eviction until 2000 log entries, observes only the P1 log container, removes routine Python/Uvicorn `200 OK` GET access entries for exact `/api/health`, `/api/tts/status`, `/api/gpu-info`, and trims oldest meaningful P1 entries only above 2000.
+## Verified source correction
+- `pipeline1-run-ux.js` retains the first P1-specific heartbeat/retention correction.
+- `pipeline2-runtime.js` revision 2 changes only 7 additions / 4 deletions.
+- Routine successful access-log removal no longer depends on an active P2 job.
+- `/api/tts/status` is now covered by the global routine-access filter.
+- Existing single P2 `liveRow` remains the frame/progress presentation authority.
+- Additional narrow `processing/xử lý ... frame N/TOTAL` formats update the same row.
+- No backend, polling interval, AI/TTS, P3, Settings or Voice Render changes.
 
-Global logging, status polling, AI/TTS/P2/P3 and Voice Render source are unchanged.
-
-## Verification state
-- GitHub scope/diff review: PASS.
-- Deterministic filter cases + 2000 bound: PASS.
-- PM code review: PASS.
-- Exact Node syntax command: WAITING executable checkout.
-- Exact git diff-check command: WAITING executable checkout.
-- Owner runtime: NOT STARTED.
-
-## Owner acceptance after static PASS
-1. Fully restart app on exact PR #52 HEAD.
-2. Leave idle >=30 seconds: P1 console must not accumulate routine 200 heartbeat lines.
-3. Verify Backend/TTS/GPU/global status continues refreshing.
-4. Run one Standard P1 Job and verify meaningful history remains available beyond 100 lines through completion.
-5. Verify Copy Log and Clear Log.
-
-## Separate follow-up
-`BUG-040` stale product default prompt remains separate. Do not mix it into PR #52.
+## Required Owner retest
+On the latest PR #52 HEAD:
+1. Restart app and leave idle >=30 seconds: no repeated successful health/TTS/GPU rows in visible log.
+2. Confirm Backend/TTS/GPU status still refreshes.
+3. Run P2: frame/progress should remain one updating live row, not hundreds of raw frame rows.
+4. Confirm warning/error remains a separate durable row.
+5. Confirm P1 log retention/Copy/Clear still behave correctly.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PARTIAL.
-- Code review: PASS.
-- Owner manual verification: WAITING.
-- Documentation synchronization: PASS after dynamic-doc sync.
+- Automated/static: PARTIAL — exact executable checks still pending.
+- Code review: PASS for revision-2 patch.
+- Owner runtime: WAITING on latest HEAD.
+- Documentation synchronization: PARTIAL until bug ledger/QA are synchronized.
 - Merge: BLOCKED.
+
+## Separate follow-up
+`BUG-040` stale product default prompt remains separate and must not be mixed into this task.
