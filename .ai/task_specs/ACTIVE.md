@@ -1,63 +1,55 @@
 # Active PM Execution Spec
 
-Status: PIPELINE1_INTEGRATION_013_SOURCE_PUBLISHED_OWNER_VERIFY_WAITING
+Status: PIPELINE3_WORKSPACE_015_OWNER_RUNTIME_FAIL_REBUILD_DESIGN_WAITING
 
-Task: `PIPELINE1-INTEGRATION-013`
+Task: `PIPELINE3-WORKSPACE-015`
 Repository: `thucnv2303/video-subtitle-remover`
-Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56
-Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`
-Integration spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`
-Long-video Revision-3 application source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`
-Integration renderer source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`
+Review branch / Draft PR: `review/PIPELINE3-WORKSPACE-015` / #57
+Exact starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1`
+Owner-tested prototype HEAD: `75b7a62fe5b7892dc2de9fb78ae60e82cc8825c9`
+Failure/research record: `.ai/task_specs/PIPELINE3-WORKSPACE-015-OWNER-FAIL-OPENCUT-RESEARCH.md`
 
-## Purpose
-Provide one Owner-testable Pipeline 1 build containing both:
-1. long-video Standard chunked narration; and
-2. per-Job Semantic Remix.
+## Current decision
+NEEDS_REVISION.
 
-This replaces the prior incorrect product-test sequence where Owner was asked to run isolated PR #55 and therefore still saw the old global Remix UI.
+Owner runtime rejected the current P3 prototype because:
+- its color/tone is inconsistent with the approved demo and app;
+- dedicated Job Management is missing;
+- preview geometry/aspect presentation is wrong;
+- P3 should be researched against OpenCut editor architecture before rebuild.
 
-## Source invariants
-- `src/main/p1-standard-vision-wrapper.js` remains inherited from Revision 3 and is not modified by integration.
-- `pipeline1-run-config.js` preserves `import './pipeline1-log-router.js';`.
-- global Semantic Remix localStorage/Action-area control is removed.
-- each Job snapshots its own `semanticRemixEnabled`.
-- per-Job switch defaults OFF and locks during queued/processing.
-- long Standard sections join into one narration and pass global gates before TTS.
-- TTS receives one continuous narration, not one audio render per AI section.
+## Frozen source rule
+PR #57 application source is frozen as prototype/reference evidence. Do not cosmetically patch it and do not merge it.
 
-## Owner local safety
-No new clone/worktree/test folders. Reuse only:
-`E:\Project AI\Video-sub-remove-owner-test-LONG012`
+## Verified redesign basis
+OpenCut research supports the following architecture patterns for adaptation, not wholesale copying:
+- left source/assets panel;
+- center preview logical canvas;
+- right properties inspector;
+- bottom timeline;
+- resizable editor regions;
+- aspect-correct logical canvas fitted into viewport;
+- explicit preview coordinate transforms;
+- modular timeline/editor state/interactions;
+- UI separated from render engine/core.
 
-Before changing ref, `git status --short` must be empty. Dirty state => STOP; do not reset/restore/clean.
-
-## Required verification on exact final integration HEAD
-```text
-git rev-parse HEAD
-node --check src/main/p1-standard-vision-wrapper.js
-node --check src/renderer/js/pipeline1-run-config.js
-node --check src/renderer/js/pipeline1-semantic-remix-per-job.js
-git diff --check 4ff0712a909f12929373e6f457aa96329e9c3610..HEAD
-```
-
-## Runtime acceptance
-1. No global Semantic Remix block remains in Action area.
-2. Add 2+ Jobs: each card independently shows Remix OFF/Standard.
-3. Enable only Job A; Job B stays Standard.
-4. During queued/processing, each relevant switch locks and run config respects the Job-specific mode.
-5. ~497s Standard Job logs chunked long-narration section plan rather than one ~8k generation request.
-6. Sections join to one narration, global hard-length/CJK/repetition gate passes, then exactly one TTS flow begins.
-7. Listening check: transitions coherent; no repeated opening/CTA/filler/CJK.
-8. P1/Ollama logs remain isolated from P2 console.
+## Required replacement design
+- Left: visible P3 Job Manager / Source Bin.
+- Center: Player + logical source canvas preserving source aspect ratio with letterbox/pillarbox.
+- Right: Subtitle / Audio / Export inspector.
+- Bottom: assembly timeline with Video / Voice / Subtitle / Effect tracks and shared playhead.
+- Theme: approved app navy/blue-gray/blue palette; no independent purple P3 theme.
+- State: event-driven editor/job state where possible; no 300 ms polling as primary authority.
+- Modules: editor/store, job panel, preview geometry, timeline, inspector, subtitle ASS adapter, render controller/re-render safety.
+- Keep existing P3 finalizer/backend and immutable P1/P2 artifact boundaries unless a separately verified missing capability requires contract work.
 
 ## Gates
-- Execution: PASS.
+- Execution: PASS for prototype publication only.
 - Automated/static: WAITING.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending exact final-head/static/runtime/QA closeout.
+- Code review: prior source review historical only; current product decision NEEDS_REVISION.
+- Owner runtime: FAIL.
+- Documentation synchronization: PASS after Owner-fail sync.
 - Merge: BLOCKED.
 
 ## Next permitted action
-PM reverifies PR #56 exact final head/files/checks/comments. If consistent, Owner updates the existing LONG012 directory to that exact head and runs the required checks/runtime. Do not merge.
+PM presents/reviews the revised P3 design/spec. Only after Owner approval create a fresh dedicated rebuild task/branch from the approved integration base. No implementation on PR #57 and no merge.

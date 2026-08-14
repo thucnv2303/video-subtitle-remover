@@ -1,48 +1,54 @@
 # Current State
 
 ## Status
-PIPELINE1-INTEGRATION-013 — SOURCE PUBLISHED / PM REVIEW PASS / STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
+PIPELINE3-WORKSPACE-015 — OWNER RUNTIME FAIL / NEEDS_REVISION / RESEARCH COMPLETE / REBUILD DESIGN WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56.
-- Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`.
-- Long-video Revision-3 source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`.
-- Per-Job Remix authority: PR #54 application source `c3662ea84f32c25bf5bf633888affe39fd2cb6fa`.
-- Integration source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`.
-- Integration spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`.
+- Review branch / Draft PR: `review/PIPELINE3-WORKSPACE-015` / #57.
+- Owner-tested exact prototype head: `75b7a62fe5b7892dc2de9fb78ae60e82cc8825c9`.
+- Owner runtime evidence: two real-app screenshots supplied 2026-08-14.
+- Failure/research record: `.ai/task_specs/PIPELINE3-WORKSPACE-015-OWNER-FAIL-OPENCUT-RESEARCH.md`.
 
-## Verified integration source
-Compare `4ff0712... -> e6d43ced...` changes exactly the integration spec plus 3 renderer files:
-- `src/renderer/js/pipeline1-run-config.js`
-- new `src/renderer/js/pipeline1-semantic-remix-per-job.js`
-- new `src/renderer/styles/pipeline1-semantic-remix-per-job.css`
+## Verified Owner result
+Owner rejected the current P3 V1 for product/UI reasons:
+1. P3 color/tone does not match the approved demo or the rest of the app.
+2. Dedicated Job Management is missing.
+3. Final video preview uses the wrong workspace geometry/aspect presentation.
+4. Owner requested OpenCut research before P3 is rebuilt.
 
-The inherited long-video wrapper is not changed by integration.
+This invalidates Owner acceptance for PR #57. The existing source remains prototype/reference evidence only and must not be merged.
 
-### Per-Job Remix
-- global `p1_semantic_remix_enabled` localStorage authority and injected Action-area checkbox are removed;
-- every Job card receives its own Remix switch, default OFF/Standard;
-- changing a Job updates only that Job; queued/processing locks the switch;
-- run snapshot stores each Job's own `semanticRemixEnabled` into its own `p1Config`;
-- new Jobs do not inherit another Job's Remix state;
-- existing `import './pipeline1-log-router.js';` is preserved.
+## Verified source causes
+- P3 introduced its own black/purple visual hierarchy instead of deriving from the approved P1/P2 navy/blue-gray system.
+- P3 exposes only a top Job selector; the compatibility `#step3-job-list` is hidden, so there is no visible Job Manager.
+- Preview panel geometry is flex/card-driven; video uses `object-fit: contain` inside that arbitrary viewport instead of making logical video canvas dimensions authoritative.
+- Current P3 workspace is largely monolithic and driven by periodic 300 ms sync, which is not the preferred architecture for the rebuild.
 
-### Long-video Standard
-Inherited Revision 3 composes long narration in sequential chronological sections from section-local transcript/Vision evidence. A compact global brief + previous accepted tail provides continuity. Sections join into exactly one final narration; original global hard-length/ZERO-CJK/repetition gates remain fail-closed. TTS receives one continuous narration only after `Standard duration guard PASS`.
+## OpenCut research result
+Official OpenCut sources were reviewed. The current OpenCut project is being rewritten; `opencut-classic` is the usable archived reference. Relevant verified patterns:
+- editor layout separates left Assets, center Preview, right Properties and bottom Timeline in independently resizable panels;
+- preview viewport keeps logical canvas size separate from viewport size and fits via `min(viewportWidth/canvasWidth, viewportHeight/canvasHeight)`;
+- timeline logic is decomposed into track/playhead/ruler/snapping/interaction/store helpers rather than one UI monolith;
+- engine/core and UI are separated, which maps well to preserving this project's existing P3 finalizer/backend while rebuilding editor UI/state.
 
-## Owner local safety
-Owner explicitly requested no more clone/worktree folders. Do not create additional local directories. The next Owner test reuses only:
-`E:\Project AI\Video-sub-remove-owner-test-LONG012`
-by fetching and switching that existing clean directory to the exact integration ref.
+## Revised P3 direction
+Do not cosmetically patch PR #57. Next P3 design must use:
+- left visible Job Manager / source bin;
+- center aspect-ratio-correct logical video canvas/player;
+- right Properties Inspector for Subtitle/Audio/Export;
+- bottom assembly Timeline;
+- existing app navy/blue-gray/blue visual system;
+- explicit event/state updates rather than 300 ms polling as primary authority;
+- focused modules for editor/store, jobs, preview geometry, timeline, inspector, subtitle ASS adapter and render controller.
 
 ## Gates
-- Execution: PASS.
+- Execution: PASS for failed prototype publication only.
 - Automated/static: WAITING.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending exact final-head static/runtime/QA closeout.
+- Code review: historical source review PASS; current product decision NEEDS_REVISION.
+- Owner manual app verification: FAIL.
+- Documentation synchronization: PASS after this update.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Synchronize remaining canonical integration docs, verify exact PR #56 final head and changed files, then Owner may update the existing LONG012 directory to that exact head and run static + UI + long-video runtime acceptance. No merge.
+Freeze application-source changes on PR #57. Produce a revised P3 editor design/spec based on the verified Owner failures and OpenCut architecture patterns. Only after Owner approves that revised design/spec may a fresh dedicated rebuild branch/task be created from the approved integration base. No merge.

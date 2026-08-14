@@ -1,72 +1,57 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-INTEGRATION-013
+PIPELINE3-WORKSPACE-015
 
 ## Status
-SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_WAITING
+OWNER_RUNTIME_FAIL_NEEDS_REVISION_REBUILD_DESIGN_WAITING
 
-## Basis
-- Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56.
-- Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`.
-- Long-video Revision-3 source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`.
-- Per-Job Remix authority: PR #54 application source `c3662ea84f32c25bf5bf633888affe39fd2cb6fa`.
-- Integration source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`.
-- Spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`.
+## Exact basis
+- Branch / Draft PR: `review/PIPELINE3-WORKSPACE-015` / #57.
+- Starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1`.
+- Owner-tested prototype HEAD: `75b7a62fe5b7892dc2de9fb78ae60e82cc8825c9`.
+- Failure/research record: `.ai/task_specs/PIPELINE3-WORKSPACE-015-OWNER-FAIL-OPENCUT-RESEARCH.md`.
 
-## User outcome
-One Owner-testable Pipeline 1 build must contain both the long-video Standard fix and the already-implemented per-Job Semantic Remix behavior. Owner must not be asked to create another local clone/worktree directory.
+## Owner runtime result
+FAIL / NEEDS_REVISION.
 
-## Integrated application behavior
-### Long Standard narration
-- Targets >3200 chars with >=2 Vision chunks use sequential chronological sections.
-- Each section receives local SRT + local Vision evidence and a bounded continuity handoff.
-- Opening only occurs in section 1; only final section may conclude/CTA.
-- Sections join into one continuous narration.
-- Original global hard-length, ZERO-CJK and repetition gates remain fail-closed.
-- TTS receives one joined narration only after `Standard duration guard PASS`.
+Observed in the real application:
+1. P3 color/tone is inconsistent with the approved demo and the rest of the application.
+2. Dedicated Job Management is missing.
+3. Final video preview is presented with the wrong editor geometry/aspect treatment.
+4. Owner requested OpenCut research before rebuilding P3.
 
-### Per-Job Semantic Remix
-- No global Semantic Remix checkbox/localStorage authority.
-- Each Job card owns `job.semanticRemixEnabled`, default OFF/Standard.
-- queued/processing locks that Job's switch; idle/error remains editable.
-- run snapshot copies each Job's own value to `job.p1Config.semanticRemixEnabled`.
-- changing one Job does not modify another Job or future Jobs.
+## Research result
+Official OpenCut sources were reviewed. Useful patterns for this project are architectural, not a request to copy OpenCut wholesale:
+- left assets/source panel, center preview, right properties, bottom timeline;
+- independently resizable editor regions;
+- logical canvas geometry separated from viewport geometry;
+- fit scale based on the source canvas aspect ratio;
+- modular timeline/state/interaction responsibilities;
+- editor UI separated from rendering engine/core.
 
-### Log routing
-`pipeline1-run-config.js` preserves `import './pipeline1-log-router.js';`; integration must not regress P1/Ollama isolation from the P2 console.
+## Revised product direction
+The current P3 V1 should not receive cosmetic patching. The replacement design should have:
+- visible left Job Manager / source bin;
+- center logical video canvas/player that preserves source aspect ratio and letterboxes/pillarboxes as needed;
+- right Subtitle/Audio/Export inspector;
+- bottom assembly timeline with synchronized playhead;
+- the approved app navy/blue-gray/blue visual system;
+- event/state driven synchronization instead of 300 ms polling as primary authority;
+- focused P3 modules instead of one large workspace module.
 
-## Review evidence
-Compare `4ff0712... -> e6d43ced...` changes exactly the integration spec and 3 authorized renderer files. The inherited `src/main/p1-standard-vision-wrapper.js` is unchanged by integration. PM logic/scope review PASS; static/runtime evidence is still required.
+Existing P3 finalizer/backend contracts remain the rendering boundary unless later research proves a missing capability.
 
-## Owner local policy
-Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. Do not create any additional clone/worktree/test directory. If that existing directory is dirty, STOP rather than reset/restore/clean it.
-
-## Required verification
-```text
-git rev-parse HEAD
-node --check src/main/p1-standard-vision-wrapper.js
-node --check src/renderer/js/pipeline1-run-config.js
-node --check src/renderer/js/pipeline1-semantic-remix-per-job.js
-git diff --check 4ff0712a909f12929373e6f457aa96329e9c3610..HEAD
-```
-
-Then Owner runtime acceptance:
-1. no global Semantic Remix block;
-2. 2+ Job cards each show independent Remix OFF/Standard;
-3. Job A ON does not change Job B;
-4. queued/processing switch locks and run uses per-Job mode;
-5. ~497s Standard uses chunked long narration and joined global PASS before TTS;
-6. one continuous TTS flow starts only after the final joined narration passes;
-7. P1/Ollama logs remain out of P2 console.
+## Current source disposition
+PR #57 is retained as prototype and forensic/reference evidence only. It is not merge-ready and is frozen for application-source changes while the replacement design/spec is reviewed.
 
 ## Gates
-- Execution: PASS.
+- Execution: PASS for prototype publication only.
 - Automated/static: WAITING.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending exact final-head/static/runtime/QA closeout.
+- Code review: prior source logic review is historical evidence; current product decision NEEDS_REVISION.
+- Owner runtime: FAIL.
+- Documentation synchronization: PASS after Owner-fail sync.
 - Merge: BLOCKED.
 
 ## Next action
-Finish canonical integration-doc synchronization, verify live PR #56 exact head/files/checks, then authorize Owner to update the existing LONG012 directory to that exact head. No new local directory and no merge.
+Review/approve a revised P3 editor design/spec based on the Owner failures and verified OpenCut patterns. Only after approval create a fresh dedicated rebuild branch/task from the approved integration base. Do not merge PR #57.

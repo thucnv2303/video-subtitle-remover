@@ -1,56 +1,64 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-INTEGRATION-013`
+`PIPELINE3-WORKSPACE-015`
 
 ## Status
-SOURCE PUBLISHED / PM REVIEW PASS / STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
+OWNER RUNTIME FAIL / NEEDS_REVISION / OPENCUT RESEARCH COMPLETE / REBUILD DESIGN WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
-- Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56
-- Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`
-- Long-video Revision-3 source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`
-- Integration renderer source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`
-- Spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`
+- Review branch / Draft PR: `review/PIPELINE3-WORKSPACE-015` / #57
+- Exact starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1`
+- Owner-tested prototype HEAD: `75b7a62fe5b7892dc2de9fb78ae60e82cc8825c9`
+- Owner-fail/research record: `.ai/task_specs/PIPELINE3-WORKSPACE-015-OWNER-FAIL-OPENCUT-RESEARCH.md`
 
-## Integration result
-One GitHub review branch now combines the Owner-visible features that previously lived on isolated sibling branches:
-- long Standard scripts are composed as bounded sequential timeline sections and then joined into one validated narration;
-- TTS remains downstream of the joined global guard and receives one continuous narration;
-- Semantic Remix is per Job, defaults OFF, locks on queued/processing, and no longer has global localStorage/UI authority;
-- existing P1 log-router import is preserved so the log fix is not intentionally regressed.
+## Owner runtime evidence
+Two real-app screenshots show the current prototype does not meet the approved P3 product target:
+- color/tone is wrong relative to the approved demo and app;
+- there is no dedicated visible Job Management workspace;
+- preview geometry/aspect presentation is wrong;
+- Owner requested OpenCut research before redo.
 
-## Source review evidence
-Compare `4ff0712... -> e6d43ced...` changes only:
-- `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`
-- `src/renderer/js/pipeline1-run-config.js`
-- `src/renderer/js/pipeline1-semantic-remix-per-job.js`
-- `src/renderer/styles/pipeline1-semantic-remix-per-job.css`
+Decision: NEEDS_REVISION. PR #57 is not eligible for merge.
 
-The inherited long-video wrapper is not modified by the integration delta. PM logic/scope review PASS. Automated/static and real-app runtime remain WAITING.
+## OpenCut findings to carry forward
+Use OpenCut only as editor-architecture reference:
+- left source/assets region, center preview, right properties, bottom timeline;
+- resizable layout boundaries;
+- logical video canvas dimensions remain authoritative independent of viewport size;
+- fit-to-viewport scale preserves aspect ratio;
+- explicit coordinate transforms for preview interaction;
+- timeline, editor state and interactions are modular;
+- editor UI is separated from rendering engine/core.
 
-## Owner local safety
-Do not create another clone/worktree/test directory. Reuse only:
-`E:\Project AI\Video-sub-remove-owner-test-LONG012`
+## Rebuild architecture
+Next approved P3 should comprise:
+1. Left visible Job Manager / Source Bin.
+2. Center Player + logical aspect-correct canvas.
+3. Right Properties Inspector for Subtitle / Audio / Export.
+4. Bottom assembly Timeline with a shared playhead/editor state.
 
-Before switching that existing directory, require `git status --short` to be empty. If it is dirty, STOP and inspect; do not reset, restore, clean or overwrite.
+Theme authority is the existing approved app navy/blue-gray/blue system. Purple cannot be a standalone P3 identity.
 
-## Owner acceptance
-- no global Semantic Remix block;
-- each Job card has independent Remix OFF/Standard state;
-- mixed Standard/Remix queue respects each Job's own setting and locks during execution;
-- ~497s Standard case enters chunked long-narration sections, joins to one narration, passes global guard, then one TTS flow begins;
-- listening check confirms transition coherence/no repeated intro/CTA/filler/CJK;
-- P1/Ollama progress does not regress into P2 console.
+Implementation should replace 300 ms polling as primary state authority with explicit editor/job events and split responsibilities into focused modules (store/editor, jobs, preview geometry, timeline, inspector, subtitle ASS adapter, render controller).
+
+## Source disposition
+Freeze P3 application source on PR #57. Keep it only as prototype/reference evidence. Do not continue cosmetic fixes on this branch and do not merge it.
+
+## Parent project note
+Do not mix the unresolved long Standard P1 narration redesign into this P3 rebuild.
+
+## Local safety
+No new clone/worktree/test directories. Existing Owner test directory policy remains unchanged.
 
 ## Gates
-- Execution: PASS.
+- Execution: PASS for prototype publication only.
 - Automated/static: WAITING.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending final-head/static/runtime/QA closeout.
+- Code review: historical source review only; product decision NEEDS_REVISION.
+- Owner runtime: FAIL.
+- Documentation synchronization: PASS after this handoff sync.
 - Merge: BLOCKED.
 
 ## Next permitted action
-Synchronize ACTIVE, reverify live PR #56 exact head/files/checks/comments, then Owner may switch the existing LONG012 directory to the exact integration head and test. No merge.
+Approve the revised P3 editor design/spec. After approval, create a fresh dedicated rebuild branch/task from the approved integration base. PR #57 remains frozen/unmerged.
