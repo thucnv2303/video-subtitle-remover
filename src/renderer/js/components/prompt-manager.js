@@ -31,6 +31,7 @@ Các quality gate và artifact schema của Pipeline 1 là ràng buộc kỹ thu
 let selectedId = null;
 let creatingNew = false;
 let initialized = false;
+let launchDelegationBound = false;
 
 function normalizePrompt(prompt) {
   if (!prompt || typeof prompt !== 'object') return null;
@@ -395,8 +396,6 @@ function renderStep1PromptBox() {
     });
   }
 
-  box.querySelector('#step1-btn-add-prompt')?.addEventListener('click', () => openModal(null, true));
-  box.querySelector('#step1-btn-edit-prompt')?.addEventListener('click', () => openModal(activeId || null, false));
   box.querySelector('#step1-btn-del-prompt')?.addEventListener('click', () => deletePrompt(activeId));
 }
 
@@ -563,18 +562,34 @@ function bindModalEvents() {
   });
 }
 
+function bindLaunchDelegation() {
+  if (launchDelegationBound) return;
+  launchDelegationBound = true;
+  document.addEventListener('click', event => {
+    const launcher = event.target?.closest?.('#btn-manage-prompts, #step1-btn-edit-prompt, #step1-btn-add-prompt');
+    if (!launcher) return;
+    if (launcher.id === 'step1-btn-add-prompt') {
+      openModal(null, true);
+      return;
+    }
+    openModal(localStorage.getItem(ACTIVE_KEY) || null, false);
+  });
+}
+
 export function initPromptManager() {
   if (initialized) {
     renderAll();
-    return;
+    return true;
   }
+  if (!document.getElementById('prompt-modal')) return false;
+
   initialized = true;
   installStyles();
   initializeStore();
   buildModalShell();
   bindModalEvents();
+  bindLaunchDelegation();
 
-  document.getElementById('btn-manage-prompts')?.addEventListener('click', () => openModal());
   document.getElementById('ai-prompt-select')?.addEventListener('change', event => {
     const prompts = getPrompts();
     if (setActivePrompt(event.target.value, prompts)) {
@@ -589,4 +604,15 @@ export function initPromptManager() {
   const selected = prompts.find(item => item.id === selectedId) || null;
   fillEditor(selected, false);
   renderAll();
+  return true;
 }
+
+function scheduleSelfInit() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => initPromptManager(), { once: true });
+    return;
+  }
+  queueMicrotask(() => initPromptManager());
+}
+
+scheduleSelfInit();
