@@ -1,51 +1,59 @@
 # Current State
 
 ## Status
-PIPELINE1-STANDARD-CJK-GUARD-008 — OWNER STANDARD FUNCTIONAL PASS / FOLLOW-UP OBSERVABILITY + DEFAULT-PROMPT SYNC REQUIRED / MERGE BLOCKED
+PIPELINE1-PROMPT-MANAGER-V2-010 — SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC WAITING / OWNER RUNTIME NOT STARTED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Parent task/review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
-- Parent Draft PR: #48.
-- Active corrective review branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
-- Active corrective Draft PR: #51.
-- Corrective base SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
-- Prompt-contract source commit: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
-- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`; commits through prior head `96e4c5dded4dc6e80b3434c6b9bae5d2ebe27b03` after that source state are documentation-only.
+- Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
+- Active review branch: `review/PIPELINE1-PROMPT-MANAGER-V2-010`.
+- Active Draft PR: #53.
+- Approved spec commits: `5e18f44be0e8cbaafd5a0f2e74cc03730fccf61c` + migration clarification `aac366743d1bd7e5437e512886806ce9810fc388`.
+- Current application-source head before this documentation sync: `2d4fc7e05f71a38daa406647226e883bd7ed69f8`.
+- Active bug: `BUG-040`.
 
-## Verified source/static state
-Owner worktree on exact `6e023808...` reported:
-- `node --check src/main/p1-standard-vision-wrapper.js` PASS;
-- `node --check src/main/p1-standard-vision-ipc.js` PASS;
-- `git diff --check 7df7e45...HEAD` PASS;
-- `git status --short` clean.
-- Code review: PASS for the published CJK prompt-contract correction.
+## Owner direction
+Owner explicitly changed sequencing: finish Prompt Manager V2 first, then return to log work. `PIPELINE1-LOG-OBSERVABILITY-009` / Draft PR #52 remains open but is PAUSED; it is not merged and is not part of PR #53.
 
-## Owner Standard runtime result — 2026-08-14
-Owner reports the real app now runs well, AI-generated Standard narration/script is correct, and voice rendering is stable. This closes the user-facing Standard runtime outcome as PASS for the corrected configured prompt.
+## Verified BUG-040 root causes
+- An explicitly saved `ai_prompts=[]` was treated as missing because legacy `getPrompts()` restored defaults whenever the array length was zero.
+- Legacy prompt `p1` was protected from deletion.
+- Step 1 displayed a hard-coded prompt list independent of the localStorage-backed modal/dropdown.
+- `pipeline1-run-config.js` could use stale `ai_prompt` even when the selected prompt no longer existed.
+- The legacy product seed was an obsolete subtitle/SRT translation prompt instead of the proven grounded continuous-narration / ZERO-CJK contract.
 
-The prior missing full log is now explained by a separate observability defect rather than a demonstrated Standard processing failure.
+## Published Prompt Manager V2 source
+Authorized application files only:
+- `src/renderer/js/components/prompt-manager.js`: single prompt store, one-time legacy-seed migration, explicit empty-state persistence, create/edit/delete/delete-all/reorder/default/active behavior, dynamic Step 1 and modal UI.
+- `src/renderer/js/pipeline1-run-config.js`: prompt resolution now requires an actual item in `ai_prompts`; stale `ai_prompt` is not a fallback authority.
+- `src/renderer/styles/prompt-manager-v2.css`: approved dark navy / blue two-column Prompt Manager UI with green active and red destructive states.
 
-## Newly verified follow-up defects
-### BUG-039 — P1 log observability
-Direct source review confirms:
-- `src/renderer/js/app.js` clones every global log into `#step1-log-output`;
-- the P1 console is hard-capped at 100 DOM entries and drops the oldest lines;
-- successful Python access logs for background `/api/health`, `/api/tts/status`, and `/api/gpu-info` requests are therefore copied into the P1 console even when no P1 Job is running;
-- Voice Render/global status code legitimately performs background status refreshes, so the P1 console must filter routine successful health polling rather than treating it as P1 activity.
+No `index.html`, `app.js`, log routing, P2, P3, backend, TTS engine or dependency source is changed by task 010.
 
-### BUG-040 — product default prompt is stale
-`src/renderer/js/components/prompt-manager.js` still seeds a subtitle-translation/SRT-oriented default prompt, while `pipeline1-run-config.js` snapshots that selected/default prompt into each P1 run. Owner success required manually replacing the configurable prompt with the corrected continuous-narration / ZERO-CJK contract. Fresh install/reset can therefore restore the stale contract until source/default prompt synchronization is completed.
+## Source review
+- GitHub compare `330d756f... -> 2d4fc7e...` contains task spec + exactly the three authorized application files.
+- Prompt Manager rewrite is a real logic/UI replacement (+556/-132), not broad repository formatting churn.
+- Run-config correction is narrow (+12/-5).
+- Explicit empty list remains authoritative; no `array.length` default resurrection path remains.
+- Delete-active/delete-all paths reconcile or clear active/default/mirror keys.
+- P1 run config fails closed when no valid stored prompt exists.
+- PM logic/scope code review: PASS.
+
+## Verification still required
+Exact executable checks on a clean checkout:
+- `node --check src/renderer/js/components/prompt-manager.js`
+- `node --check src/renderer/js/pipeline1-run-config.js`
+- `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD`
+
+Owner real-app verification is NOT STARTED.
 
 ## Gates
-- Execution: PASS for PIPELINE1-STANDARD-CJK-GUARD-008 source publication.
-- Source isolation: PASS.
-- Automated/static: PASS on exact tested application source `6e023808...`.
-- Code review: PASS for the CJK prompt-contract correction.
-- Owner Standard runtime: PASS for the corrected configured prompt.
-- Owner Semantic runtime: DEFERRED until observability follow-up is fixed and Standard closeout state is synchronized.
-- Documentation synchronization: PASS after this corrective knowledge sync.
-- Merge permission: BLOCKED — BUG-039 and BUG-040 remain open; no merge requested.
+- Execution: PASS — source published.
+- Automated/static: WAITING exact checkout evidence.
+- Code review: PASS for current logic/scope diff.
+- Owner manual app verification: NOT STARTED.
+- Documentation synchronization: PARTIAL until static/runtime result and affected ledgers/checklists are finalized.
+- Merge permission: BLOCKED.
 
 ## Next permitted action
-Open a dedicated stacked review task `PIPELINE1-LOG-OBSERVABILITY-009` from the synchronized PR #51 head. Scope only P1 console retention/noise filtering and required project knowledge; do not modify AI reasoning, TTS generation, P2, P3, or status functionality. After that runtime PASS, synchronize the proven continuous-narration prompt into the product default in a separate task before merge consideration.
+Run exact static checks on the latest PR #53 HEAD, then Owner verifies Prompt Manager V2 persistence and UI. Do not resume PR #52 log implementation until Prompt Manager V2 reaches Owner result intake.
