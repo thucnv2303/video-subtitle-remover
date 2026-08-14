@@ -1,56 +1,56 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-STANDARD-CJK-GUARD-008
+PIPELINE1-PER-JOB-SEMANTIC-REMIX-011
 
 ## Status
-OWNER_STANDARD_FUNCTIONAL_PASS_FOLLOWUP_OBSERVABILITY_AND_DEFAULT_PROMPT_SYNC_REQUIRED
+SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_NOT_STARTED
 
-## Authority
-- Parent task: `PIPELINE1-SEMANTIC-REMIX-007`.
-- Parent branch/PR: `review/PIPELINE1-SEMANTIC-REMIX-007` / #48.
-- Corrective branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
-- Corrective Draft PR: #51.
-- Starting SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
-- Source correction: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
-- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`.
+## Basis
+- Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
+- Review branch / Draft PR: `review/PIPELINE1-PER-JOB-SEMANTIC-REMIX-011` / #54.
+- Task spec commit: `280eafa57ff05268a378e82f468eec2f4feebe7d`.
+- Application source: `c3662ea84f32c25bf5bf633888affe39fd2cb6fa`.
 
-## Verified source/static state
-- Source publication: PASS.
-- Source isolation: PASS — only `src/main/p1-standard-vision-wrapper.js`, +14/-4 from starting SHA.
-- Owner exact-head Node syntax for wrapper + IPC: PASS.
-- Owner exact-head `git diff --check`: PASS.
-- Owner worktree clean at static verification.
-- Code review: PASS for the prompt-contract correction.
+## Product decision
+Semantic Remix belongs to each P1 Job. It is not a Settings preference and not one global start-mode checkbox.
 
-## Owner runtime result — 2026-08-14
-Owner reports:
-- app runs well;
-- Standard AI narration/script is correct;
-- voice rendering is stable.
+## Current implementation
+- Each P1 Job card gets a compact `Remix` switch.
+- Default state for a Job without the field is OFF / Standard.
+- Each switch updates only its owning Job.
+- Queued/processing Jobs lock the switch.
+- Idle/error Job changes update only that Job's existing `p1Config` when present so retry uses the selected mode.
+- At start, provider/model/prompt/TTS remain shared settings, but `p1Config.semanticRemixEnabled` is taken independently from each Job.
+- Legacy `p1_semantic_remix_enabled` localStorage is ignored and no longer written by run config.
 
-Owner Standard functional outcome is therefore PASS for the corrected configured prompt.
+## Scope
+Application source is limited to:
+- `src/renderer/js/pipeline1-run-config.js`
+- `src/renderer/js/pipeline1-semantic-remix-per-job.js`
+- `src/renderer/styles/pipeline1-semantic-remix-per-job.css`
 
-## Follow-up defects discovered during closeout
-### BUG-039 — P1 log observability
-- P1 card console is hard-capped at 100 DOM entries and removes the oldest lines.
-- Global Python stdout is cloned into P1 console.
-- Routine successful background `/api/health`, `/api/tts/status`, `/api/gpu-info` access logs appear even with no P1 Job.
-- Voice Render/global status refreshes legitimately make those requests; the P1 console should not present them as Job activity.
+## Verification
+- Source isolation: PASS.
+- PM code review: PASS.
+- Node syntax + exact diff-check: WAITING.
+- Owner runtime: NOT STARTED.
 
-### BUG-040 — stale product default prompt
-- `src/renderer/js/components/prompt-manager.js` still seeds a subtitle-translation/SRT-oriented default prompt.
-- `pipeline1-run-config.js` snapshots the selected/default prompt into P1 runs.
-- Owner success required manually replacing the configurable prompt with the corrected continuous-narration / ZERO-CJK contract.
+## Acceptance
+1. Two or more Jobs start Remix OFF independently.
+2. Turning Remix ON for Job A does not change Job B.
+3. Mixed queue runs A semantic-remix and B standard.
+4. Queued/processing Job cannot change mode.
+5. Newly added Job remains OFF regardless of previous Jobs.
+6. Restart does not globally enable Remix for new Jobs.
+
+## Sibling PRs
+PR #52 log and PR #53 Prompt Manager stay separate/unmerged. This task does not import their source.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PASS.
+- Automated/static: WAITING.
 - Code review: PASS.
-- Owner Standard runtime: PASS for corrected configured prompt.
-- Owner Semantic: DEFERRED.
-- Documentation synchronization: PASS after current corrective sync.
+- Owner runtime: NOT STARTED.
+- Documentation synchronization: PARTIAL.
 - Merge: BLOCKED.
-
-## Next task
-`PIPELINE1-LOG-OBSERVABILITY-009` — narrow stacked task from the synchronized PR #51 head. Fix only P1 log retention/noise routing and project knowledge. No AI/TTS/P2/P3 behavior change. Default-prompt source synchronization remains a separate follow-up task after log observability is runtime-verified.

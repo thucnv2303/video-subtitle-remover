@@ -1,51 +1,49 @@
 # Current State
 
 ## Status
-PIPELINE1-STANDARD-CJK-GUARD-008 — OWNER STANDARD FUNCTIONAL PASS / FOLLOW-UP OBSERVABILITY + DEFAULT-PROMPT SYNC REQUIRED / MERGE BLOCKED
+PIPELINE1-PER-JOB-SEMANTIC-REMIX-011 — SOURCE PUBLISHED / PM CODE REVIEW PASS / STATIC WAITING / OWNER RUNTIME NOT STARTED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Parent task/review branch: `review/PIPELINE1-SEMANTIC-REMIX-007`.
-- Parent Draft PR: #48.
-- Active corrective review branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
-- Active corrective Draft PR: #51.
-- Corrective base SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
-- Prompt-contract source commit: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
-- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`; commits through prior head `96e4c5dded4dc6e80b3434c6b9bae5d2ebe27b03` after that source state are documentation-only.
+- Base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
+- Active review branch: `review/PIPELINE1-PER-JOB-SEMANTIC-REMIX-011`.
+- Active Draft PR: #54.
+- Task spec commit: `280eafa57ff05268a378e82f468eec2f4feebe7d`.
+- Application-source head: `c3662ea84f32c25bf5bf633888affe39fd2cb6fa`.
 
-## Verified source/static state
-Owner worktree on exact `6e023808...` reported:
-- `node --check src/main/p1-standard-vision-wrapper.js` PASS;
-- `node --check src/main/p1-standard-vision-ipc.js` PASS;
-- `git diff --check 7df7e45...HEAD` PASS;
-- `git status --short` clean.
-- Code review: PASS for the published CJK prompt-contract correction.
+## Owner requirement
+Semantic Remix is optional per video/Job. A queue may contain a mixture of Standard and Remix Jobs. The mode must be visible/editable on each Job rather than being one global Pipeline 1 switch.
 
-## Owner Standard runtime result — 2026-08-14
-Owner reports the real app now runs well, AI-generated Standard narration/script is correct, and voice rendering is stable. This closes the user-facing Standard runtime outcome as PASS for the corrected configured prompt.
+## Verified prior behavior
+`pipeline1-run-config.js` previously created one global `#step1-semantic-remix` checkbox, persisted `p1_semantic_remix_enabled` in localStorage, then copied the same boolean into every idle Job at run start.
 
-The prior missing full log is now explained by a separate observability defect rather than a demonstrated Standard processing failure.
+Downstream P1 already supports true per-Job behavior: `runPipeline1MultimodalAnalysis(job)` reads `job.p1Config.semanticRemixEnabled` to choose Standard vs Semantic Remix for that specific Job.
 
-## Newly verified follow-up defects
-### BUG-039 — P1 log observability
-Direct source review confirms:
-- `src/renderer/js/app.js` clones every global log into `#step1-log-output`;
-- the P1 console is hard-capped at 100 DOM entries and drops the oldest lines;
-- successful Python access logs for background `/api/health`, `/api/tts/status`, and `/api/gpu-info` requests are therefore copied into the P1 console even when no P1 Job is running;
-- Voice Render/global status code legitimately performs background status refreshes, so the P1 console must filter routine successful health polling rather than treating it as P1 activity.
+## Published task-011 source
+- New `src/renderer/js/pipeline1-semantic-remix-per-job.js` mounts one compact Remix switch on each P1 Job card.
+- Missing Job value defaults to `job.semanticRemixEnabled = false`.
+- Toggle changes only that Job and, when a prior `p1Config` exists on an idle/error Job, synchronizes only that Job for retry correctness.
+- Queued/processing Jobs lock the switch.
+- New CSS `src/renderer/styles/pipeline1-semantic-remix-per-job.css` provides compact switch states.
+- `pipeline1-run-config.js` no longer creates/reads/writes the global Remix checkbox/localStorage mode. Shared provider/model/prompt/TTS settings remain shared, while each idle Job receives its own `semanticRemixEnabled` in its `p1Config` snapshot.
+- Run-start summary reports `Remix=X/Y jobs`.
 
-### BUG-040 — product default prompt is stale
-`src/renderer/js/components/prompt-manager.js` still seeds a subtitle-translation/SRT-oriented default prompt, while `pipeline1-run-config.js` snapshots that selected/default prompt into each P1 run. Owner success required manually replacing the configurable prompt with the corrected continuous-narration / ZERO-CJK contract. Fresh install/reset can therefore restore the stale contract until source/default prompt synchronization is completed.
+## Source review
+- Spec -> source compare: exactly 3 authorized files.
+- No `app.js`, `index.html`, P2/P3/backend/log router/Prompt Manager/AI analysis/TTS/dependency changes.
+- PM source review: PASS.
+
+## Sibling task state
+- PR #52 BUG-039 log observability remains a separate Draft PR. Owner reports the log behavior is now handled; formal static/docs closeout is still independent and not imported into PR #54.
+- PR #53 BUG-040 Prompt Manager V2 remains a separate Draft PR. Owner has verified prompt creation works after the latest runtime correction; formal closeout/merge remains independent and is not imported into PR #54.
 
 ## Gates
-- Execution: PASS for PIPELINE1-STANDARD-CJK-GUARD-008 source publication.
-- Source isolation: PASS.
-- Automated/static: PASS on exact tested application source `6e023808...`.
-- Code review: PASS for the CJK prompt-contract correction.
-- Owner Standard runtime: PASS for the corrected configured prompt.
-- Owner Semantic runtime: DEFERRED until observability follow-up is fixed and Standard closeout state is synchronized.
-- Documentation synchronization: PASS after this corrective knowledge sync.
-- Merge permission: BLOCKED — BUG-039 and BUG-040 remain open; no merge requested.
+- Execution: PASS.
+- Automated/static: WAITING exact checkout commands.
+- Code review: PASS.
+- Owner manual app verification: NOT STARTED.
+- Documentation synchronization: PARTIAL until runtime result/QA closeout.
+- Merge permission: BLOCKED.
 
 ## Next permitted action
-Open a dedicated stacked review task `PIPELINE1-LOG-OBSERVABILITY-009` from the synchronized PR #51 head. Scope only P1 console retention/noise filtering and required project knowledge; do not modify AI reasoning, TTS generation, P2, P3, or status functionality. After that runtime PASS, synchronize the proven continuous-narration prompt into the product default in a separate task before merge consideration.
+Run static checks on the latest PR #54 HEAD, then Owner tests at least two P1 Jobs with mixed Standard/Remix choices. Do not evaluate sibling Prompt Manager/log behavior from this isolated branch and do not merge.

@@ -1,0 +1,87 @@
+.p1-remix-job-control {
+  display: inline-grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.55);
+  cursor: pointer;
+  user-select: none;
+  max-width: 100%;
+}
+
+.p1-remix-job-control:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+
+.p1-remix-job-checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.p1-remix-job-track {
+  width: 30px;
+  height: 17px;
+  border-radius: 999px;
+  background: #334155;
+  position: relative;
+  transition: background 120ms ease;
+  flex: 0 0 auto;
+}
+
+.p1-remix-job-track::after {
+  content: '';
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  left: 2px;
+  top: 2px;
+  border-radius: 50%;
+  background: #f8fafc;
+  transition: transform 120ms ease;
+}
+
+.p1-remix-job-control.is-on .p1-remix-job-track {
+  background: var(--accent);
+}
+
+.p1-remix-job-control.is-on .p1-remix-job-track::after {
+  transform: translateX(13px);
+}
+
+.p1-remix-job-copy {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text);
+}
+
+.p1-remix-job-copy strong {
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.p1-remix-job-state {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.p1-remix-job-control.is-on .p1-remix-job-state {
+  color: var(--accent);
+}
+
+.p1-remix-job-control.is-locked {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.p1-remix-job-control:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
