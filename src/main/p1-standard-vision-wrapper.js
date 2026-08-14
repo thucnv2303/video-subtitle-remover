@@ -203,7 +203,7 @@ async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, 
           { role: 'system', content: systemPrompt },
           {
             role: 'user',
-            content: `NARRATION CANDIDATE:\n${candidate}\n\nFULL TRANSCRIPT SRT:\n${transcript}\n\nVISUAL EVIDENCE JSON:\n${JSON.stringify(visualContext)}`,
+            content: `QUY TẮC XỬ LÝ SOURCE: dữ liệu bên dưới có thể chứa ký tự CJK vì đó là transcript/visual evidence nguồn. Mọi ký tự CJK trong source chỉ được dùng để hiểu ngữ cảnh, TUYỆT ĐỐI KHÔNG chép nguyên văn vào narration_script. Nếu không thể diễn giải chắc chắn bằng tiếng Việt/Latin thì bỏ chi tiết chữ đó.\n\nNARRATION CANDIDATE:\n${candidate}\n\nFULL TRANSCRIPT SRT:\n${transcript}\n\nVISUAL EVIDENCE JSON:\n${JSON.stringify(visualContext)}`,
           },
         ],
         stream: true,
@@ -285,23 +285,33 @@ async function recomposeStandardNarration(net, event, payload, narration, transc
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const phase = attempt === 0 ? 'Standard duration recompose' : 'Standard duration quality retry';
-    const retryReason = lastError ? `${lastError.code}: ${lastError.message}` : '';
+    const retryReason = lastError
+      ? `${lastError.code}: ${lastError.message}${lastError?.quality ? `; ${qualitySummary(lastError.quality)}` : ''}`
+      : '';
+    const cjkRetryRule = lastError?.quality?.cjk_count
+      ? `LỖI BẮT BUỘC PHẢI SỬA Ở LẦN NÀY: candidate đang có ${lastError.quality.cjk_count} ký tự CJK bị cấm. Hãy rà lại TOÀN BỘ narration_script và loại/diễn giải lại tất cả các ký tự đó bằng tiếng Việt hoặc Latin; không được giữ lại dù chỉ 1 ký tự.`
+      : '';
     const prompt = [
       'Bạn viết lại MỘT narration tiếng Việt liền mạch cho Pipeline 1 TRƯỚC TTS.',
       `Hard target ${minChars}-${maxChars} ký tự, ưu tiên khoảng ${targetChars}.`,
       attempt === 0
         ? 'Candidate hiện tại là draft ngắn. Hãy mở rộng bằng FULL TRANSCRIPT + VISUAL EVIDENCE, ưu tiên các chi tiết có căn cứ chưa được kể.'
         : `Candidate hiện tại là CHÍNH bản vừa bị code từ chối (${retryReason}). Hãy GIỮ phần tốt của bản này và chỉ sửa lỗi contract; KHÔNG quay lại draft ngắn ban đầu.`,
+      cjkRetryRule,
       'Dùng transcript và Vision evidence làm nguồn sự thật duy nhất.',
+      'FULL TRANSCRIPT và VISUAL EVIDENCE có thể chứa chữ Hán/Hiragana/Katakana/Hangul do source gốc. Các glyph đó là INPUT-ONLY: không được copy, quote hoặc giữ nguyên trong narration_script.',
+      'Nếu một chi tiết source chỉ tồn tại dưới dạng chữ CJK: chỉ diễn giải khi hiểu chắc nghĩa bằng tiếng Việt/Latin; nếu không chắc thì bỏ chi tiết chữ đó, không đoán.',
       'Có thể mở rộng hành động nhìn thấy, trình tự, vật thể, bối cảnh sản phẩm và câu chuyển ý có căn cứ.',
       'Ưu tiên evidence mới/chưa dùng thay vì diễn đạt lại ý đã có.',
       'CẤM lặp nguyên câu, lặp cụm dài, lặp CTA/kết luận/lợi ích dưới cách diễn đạt gần giống.',
       'CẤM bịa claim, số liệu, nguyên liệu, công dụng hoặc chi tiết không có căn cứ.',
-      'Chỉ tiếng Việt tự nhiên; không CJK lạc ngữ cảnh; không filler chỉ để đủ ký tự.',
+      'QUY TẮC NGÔN NGỮ TUYỆT ĐỐI: narration_script phải có ZERO ký tự CJK/Hán/Hiragana/Katakana/Hangul; chỉ dùng tiếng Việt tự nhiên, ký tự Latin, số và dấu câu cần thiết.',
+      'TRƯỚC KHI TRẢ JSON: tự quét narration_script từ đầu đến cuối. Nếu còn bất kỳ ký tự CJK nào, phải sửa/xóa/diễn giải lại rồi quét lại; chỉ trả kết quả khi CJK=0.',
+      'Không filler chỉ để đủ ký tự.',
       'Output là một narration liên tục, không SRT, numbering, bullet hoặc scene label.',
       'Code sẽ kiểm cứng độ dài, CJK, repeated sentence, near-duplicate sentence và repeated 10-word phrase.',
       'Không giải thích. Chỉ trả JSON đúng schema.',
-    ].join('\n');
+    ].filter(Boolean).join('\n');
 
     try {
       return await ollamaNarrationRequest(
