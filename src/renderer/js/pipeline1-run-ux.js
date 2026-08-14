@@ -2,11 +2,13 @@ const SYNC_INTERVAL_MS = 250;
 const QUEUE_RECOVERY_DELAY_MS = 120;
 const P1_LOG_LIMIT = 2000;
 const P1_HEARTBEAT_ACCESS_LOG_RE = /\[Py\]\s+INFO:\s+\S+\s+-\s+"GET \/api\/(?:health|tts\/status|gpu-info) HTTP\/1\.[01]"\s+200 OK\s*$/i;
+const P1_OWNED_GLOBAL_LOG_RE = /^\[[^\]]+\]\s+\[(?:P1|ASR|AI|TTS|Voice|VoiceSub)\](?:\s|$)/i;
 
 let recoveryTimer = null;
 let recoveryJobId = null;
 let errorLogCaptureInstalled = false;
 let p1LogObserverInstalled = false;
+let p1IsolationObserverInstalled = false;
 
 function state() {
   return window._appState || null;
@@ -378,6 +380,35 @@ function cleanP1LogConsole(container) {
   for (let i = 0; i < excess; i += 1) Node.prototype.removeChild.call(container, entries[i]);
 }
 
+function isP1OwnedGlobalEntry(entry) {
+  return entry?.classList?.contains('log-entry')
+    && P1_OWNED_GLOBAL_LOG_RE.test(String(entry.textContent || '').trim());
+}
+
+function cleanP1EntriesFromGlobalLog(container) {
+  if (!container) return;
+  container.querySelectorAll(':scope > .log-entry').forEach(entry => {
+    if (isP1OwnedGlobalEntry(entry)) entry.remove();
+  });
+}
+
+function installP1LogIsolationObserver() {
+  if (p1IsolationObserverInstalled) return true;
+  const container = document.getElementById('log-output');
+  if (!container) return false;
+
+  cleanP1EntriesFromGlobalLog(container);
+  new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node instanceof HTMLElement && isP1OwnedGlobalEntry(node)) node.remove();
+      }
+    }
+  }).observe(container, { childList: true });
+  p1IsolationObserverInstalled = true;
+  return true;
+}
+
 function installP1LogObserver() {
   if (p1LogObserverInstalled) return true;
   const container = document.getElementById('step1-log-output');
@@ -440,6 +471,7 @@ function syncButton(button) {
 
   installP1ErrorCapture();
   installP1LogObserver();
+  installP1LogIsolationObserver();
   syncRunningJobSelection(appState);
   recoverStalledP1Queue();
   syncJobFeedback(appState);
@@ -511,6 +543,7 @@ async function stopP1(button) {
 function install() {
   injectStyles();
   installP1LogObserver();
+  installP1LogIsolationObserver();
   const button = document.getElementById('btn-start-all');
   if (!button || button.dataset.p1RunController === 'true') return Boolean(button);
   button.dataset.p1RunController = 'true';
