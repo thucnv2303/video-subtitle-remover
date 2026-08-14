@@ -41,3 +41,16 @@ The successful run combines PR #51 source correction with a manually updated con
 
 ## Next action
 Collect the successful Pipeline 1 log from `Voice-aware narration budget` through Job completion and Owner listening result. Verify hard-range narration, deterministic `cjk=0`, no repetition-quality failure, `Standard duration guard PASS` before TTS, exactly one continuous full-text TTS request, successful Job completion, and natural/grounded/non-repetitive narration. Then synchronize the successful configurable prompt into the product default/source if necessary.
+
+## New-tab bootstrap package
+When continuing in a new ChatGPT project tab/chat:
+1. Use GitHub as source of truth; do not rely on the previous chat summary alone.
+2. Verify Draft PR #51 live and record its exact current head before any action.
+3. Read `.ai/current_state.md`, `.ai/task_current.md`, and `.ai/handoff.md` from `review/PIPELINE1-STANDARD-CJK-GUARD-008` and confirm they agree.
+4. Treat `6e023808891a4c5ff5e886aa62a18838c7fb42ae` as the exact application-source revision already statically verified by Owner; later commits on the corrective branch are documentation-only unless GitHub proves otherwise.
+5. Do not merge PR #51. Owner Standard full runtime proof is still missing.
+6. Immediate permitted action: inspect the successful P1 runtime log from `Voice-aware narration budget` through Job completion and the Owner listening result.
+7. Required full-pass evidence: hard-range narration, `cjk=0`, no repetition-quality failure, `Standard duration guard PASS` before TTS, one continuous full-text TTS request, successful Job completion, natural/grounded/non-repetitive narration, and voice duration materially equal/close to the source.
+8. After Standard full PASS, synchronize the successful configurable prompt into the product default/source contract if it currently exists only in Settings; then record Owner result in canonical `.ai/` before any merge consideration.
+9. Semantic mode remains ON HOLD until Standard full PASS.
+10. Merge permission remains BLOCKED until all gates pass and Owner explicitly requests merge in the current turn.
