@@ -1,48 +1,51 @@
 # Current State
 
 ## Status
-PIPELINE1-INTEGRATION-013 — SOURCE PUBLISHED / PM REVIEW PASS / STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
+PIPELINE3-WORKSPACE-015 — SOURCE PUBLISHED / PM SOURCE REVIEW IN PROGRESS / STATIC WAITING / OWNER RUNTIME NOT STARTED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56.
-- Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`.
-- Long-video Revision-3 source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`.
-- Per-Job Remix authority: PR #54 application source `c3662ea84f32c25bf5bf633888affe39fd2cb6fa`.
-- Integration source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`.
-- Integration spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`.
+- Review branch: `review/PIPELINE3-WORKSPACE-015`.
+- Exact starting SHA: `abfe33510523b800654dcf3b1b56f25f4ccd43d1` from `review/PIPELINE1-INTEGRATION-013`.
+- Task spec: `.ai/task_specs/PIPELINE3-WORKSPACE-015.md`.
+- Spec commit: `1ca68db5672b0f710af8ce0b15171b7d6ebfd8cf`.
+- Application source commits published through `037c6627df5977e705a59a2ce5d6476b803637ea`.
 
-## Verified integration source
-Compare `4ff0712... -> e6d43ced...` changes exactly the integration spec plus 3 renderer files:
-- `src/renderer/js/pipeline1-run-config.js`
-- new `src/renderer/js/pipeline1-semantic-remix-per-job.js`
-- new `src/renderer/styles/pipeline1-semantic-remix-per-job.css`
+## Owner-approved product direction
+Owner approved the PEP3 Final Render & Assembly mockup and explicitly authorized implementation. Required visual direction: retain the current app dark tokens, use a large final preview + compact timeline + detailed settings inspector, and allow direct mouse dragging of subtitle position.
 
-The inherited long-video wrapper is not changed by integration.
+Owner also explicitly requires no more local clone/worktree/test directories. Future runtime verification must reuse the existing test directory only when clean.
 
-### Per-Job Remix
-- global `p1_semantic_remix_enabled` localStorage authority and injected Action-area checkbox are removed;
-- every Job card receives its own Remix switch, default OFF/Standard;
-- changing a Job updates only that Job; queued/processing locks the switch;
-- run snapshot stores each Job's own `semanticRemixEnabled` into its own `p1Config`;
-- new Jobs do not inherit another Job's Remix state;
-- existing `import './pipeline1-log-router.js';` is preserved.
+## Published application source
+Authorized application delta from starting SHA currently contains only:
+- new `src/renderer/js/pipeline3-workspace.js`;
+- new `src/renderer/styles/pipeline3-workspace.css`;
+- one loader import in `src/renderer/js/pipeline1-run-config.js`.
 
-### Long-video Standard
-Inherited Revision 3 composes long narration in sequential chronological sections from section-local transcript/Vision evidence. A compact global brief + previous accepted tail provides continuity. Sections join into exactly one final narration; original global hard-length/ZERO-CJK/repetition gates remain fail-closed. TTS receives one continuous narration only after `Standard duration guard PASS`.
+No backend, Pipeline 3 finalizer, P1 reasoning/TTS, P2, dependency or package changes are included.
 
-## Owner local safety
-Owner explicitly requested no more clone/worktree folders. Do not create additional local directories. The next Owner test reuses only:
-`E:\Project AI\Video-sub-remove-owner-test-LONG012`
-by fetching and switching that existing clean directory to the exact integration ref.
+### Workspace behavior
+- Replaces the legacy minimal Step 3 pane at runtime without changing the HTML shell.
+- Shows only P3-eligible Jobs and stores settings per Job in `job.p3Config`.
+- Real local-video preview with play/pause/seek and timed-SRT cue preview.
+- Subtitle preset library plus font, size, bold/italic, text/outline colors, outline/shadow, optional background box, opacity, padding, line-height, max width, alignment and fade/pop text effects.
+- Subtitle can be dragged with Pointer Events; pointer capture + `requestAnimationFrame` keeps X/Y updates smooth. Optional snap/grid and safe-zone overlay are available.
+- Preview X/Y becomes exact ASS `\\pos(x,y)` placement in a P3-derived ASS stored only in Job memory; immutable P1/P2 artifacts are not overwritten.
+- Existing P1 karaoke ASS is preserved separately before a P3-derived ASS is installed.
+- Audio controls map only to currently supported finalizer inputs: remove original vocal and background/original-bed volume.
+- Export summary exposes the real current MP4/H.264 path only; no fake backend controls.
+- Render CTA calls existing `window.finalizeVideo(job)` once and blocks duplicate clicks while rendering.
+
+## Parent integration status
+Per-Job Semantic Remix was observed by Owner as functionally OK in the parent integration build. The long Standard narration issue remains a separate unresolved P1 design problem; task 014 research proposal exists but no corrective source is part of this P3 task.
 
 ## Gates
-- Execution: PASS.
-- Automated/static: WAITING.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending exact final-head static/runtime/QA closeout.
+- Execution: PASS (source published).
+- Automated/static: WAITING on exact final checkout.
+- Code review: IN PROGRESS; GitHub scope review is clean so far.
+- Owner manual app verification: NOT STARTED for P3 workspace.
+- Documentation synchronization: PASS for pre-runtime state after this docs commit.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Synchronize remaining canonical integration docs, verify exact PR #56 final head and changed files, then Owner may update the existing LONG012 directory to that exact head and run static + UI + long-video runtime acceptance. No merge.
+Finish PM full-file/diff review, open/update Draft PR, verify exact head/files/checks/comments, then Owner may reuse the existing clean test directory to run static checks and verify the approved P3 UI/drag/render behavior. Do not create another local directory and do not merge yet.
