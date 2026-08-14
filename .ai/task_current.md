@@ -4,7 +4,7 @@
 PIPELINE1-STANDARD-LONG-VIDEO-012
 
 ## Status
-REVISION_2_RUNTIME_FAIL_REVISION_3_CHUNKED_AUTHORIZED
+REVISION_3_CHUNKED_SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RETEST_WAITING
 
 ## Basis
 - Corrective branch / Draft PR: `review/PIPELINE1-STANDARD-LONG-VIDEO-012` / #55.
@@ -12,45 +12,40 @@ REVISION_2_RUNTIME_FAIL_REVISION_3_CHUNKED_AUTHORIZED
 - Revision-2 source: `6e047bf120dde6543386c50c725bf8f73418d441`.
 - Revision-3 spec: `.ai/task_specs/PIPELINE1-STANDARD-LONG-VIDEO-012-REV3-CHUNKED.md`.
 - Revision-3 spec commit: `628fae6cde8ee3a9a82fb26fd65ca44acae68b66`.
+- Revision-3 application source: `f00b5e8711ec737ad5c474987647171161226cb5`.
 - Bug: `BUG-041`.
 
-## Fresh runtime evidence
-Owner's latest ~497s Standard run shows Revision-2 behavior but exact local HEAD was not pasted.
-- ASR/Vision/global reasoning PASS.
-- Draft=1051 chars; global hard target=7792-8202.
-- Recompose request uses target-aware output/context/timeout and no longer hits grammar HTTP 400.
-- First request returns 1610 chars; deterministic hard-length gate rejects it.
-- One retained-candidate retry again returns 1610 chars and fails before TTS.
+## Revision-2 runtime failure
+The ~497s Standard run reached target-aware recompose without grammar HTTP 400, but both full-script calls returned only ~1610 chars against target 7792-8202 and failed before TTS.
 
-## Verified root cause
-One monolithic generation request is still expected to produce an ~8k narration. The model completes normally around ~1.6k twice. Further timeout/context increases are not supported by this evidence.
+## Revision-3 implementation
+Authorized source only: `src/main/p1-standard-vision-wrapper.js`.
+- Long targets >3200 chars + >=2 Vision chunks use sequential timeline sections.
+- Approximate section target is <=1650 chars; observed 8k/10-chunk case plans about 5 chronological sections.
+- Section min/target/max budgets are allocated by section duration and preserve the original joined hard range.
+- Full SRT is filtered to each section range; compact Vision context is filtered to matching chunks/scenes.
+- Requests are sequential on the same model with one retained-candidate retry per section.
+- A global brief preserves subject/style consistency; each later section receives only the previous accepted tail (max 3 sentences / 520 chars) for continuity.
+- Opening is allowed only in section 1; only the final section may conclude/CTA.
+- Sections are compact-joined into one narration, then original global hard-length, ZERO-CJK and repetition gates run fail-closed.
+- No final monolithic AI rewrite.
+- TTS receives one final narration only after `Standard duration guard PASS`.
 
-## Revision-3 required implementation
-Authorized application source only: `src/main/p1-standard-vision-wrapper.js`.
+## Review
+PM source scope/logic review: PASS for `f00b5e87...`.
+Compare from prior branch head changes exactly one application file (+337/-4). No renderer/TTS/P2/P3/Prompt Manager/Remix/log/dependency source changes.
 
-For long targets (>~3200 chars) with >=2 Vision chunks:
-1. Split chronological Vision chunks into bounded contiguous narration sections, targeting <=~1700 chars each.
-2. Allocate each section's min/target/max chars by timeline duration so the joined result retains the original global hard range.
-3. Filter full SRT into only blocks overlapping each section timeline.
-4. Filter compact visual chunks/scenes into the same section.
-5. Generate sections sequentially with section-local JSON `{ narration_script: string }`; one retained-candidate retry per section.
-6. Preserve continuity using only the previous accepted tail; opening only in section 1, CTA/conclusion only in final section.
-7. Join into one continuous narration and run existing global hard-length, ZERO-CJK and repetition gates.
-8. No final monolithic AI rewrite; TTS only after global guard PASS.
-
-Short/medium targets keep the current single-request path.
-
-## Sibling UI
-PR #54 is the separate per-Job Semantic Remix implementation. PR #55 does not contain that renderer source, so current global Remix UI is expected for this branch.
+## Owner-test policy
+Do not create additional clone/worktree directories. Reuse the existing LONG012 test directory for the next approved ref.
+The next product-level test should use a GitHub integration branch combining Revision 3 with PR #54 per-Job Remix so Owner does not test another isolated build with the obsolete global Remix UI.
 
 ## Gates
-- Revision-2 Owner runtime: FAIL; exact tested SHA reconfirmation pending.
-- Revision-3 Execution: AUTHORIZED.
-- Revision-3 Automated/static: WAITING.
-- Revision-3 Code review: WAITING.
-- Owner runtime: WAITING after publication.
-- Documentation synchronization: PARTIAL.
+- Execution: PASS.
+- Automated/static: WAITING.
+- Code review: PASS (logic/scope).
+- Owner runtime: WAITING.
+- Documentation synchronization: PARTIAL pending final-head static/runtime/QA closeout and integration state.
 - Merge: BLOCKED.
 
 ## Next action
-Executor/PM implements the exact remote Revision-3 spec on this branch. Unexpected source condition => STOP; do not broaden scope.
+PM creates and reviews the GitHub-only integration ref containing long-video Revision 3 + per-Job Remix. No new local clone/worktree. Owner then updates the existing LONG012 test directory to that exact ref and runs static/runtime acceptance.
