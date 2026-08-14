@@ -1,9 +1,12 @@
 const SYNC_INTERVAL_MS = 250;
 const QUEUE_RECOVERY_DELAY_MS = 120;
+const P1_LOG_LIMIT = 2000;
+const P1_HEARTBEAT_ACCESS_LOG_RE = /\[Py\]\s+INFO:\s+\S+\s+-\s+"GET \/api\/(?:health|tts\/status|gpu-info) HTTP\/1\.[01]"\s+200 OK\s*$/i;
 
 let recoveryTimer = null;
 let recoveryJobId = null;
 let errorLogCaptureInstalled = false;
+let p1LogObserverInstalled = false;
 
 function state() {
   return window._appState || null;
@@ -360,6 +363,40 @@ function injectStyles() {
   document.head.appendChild(link);
 }
 
+function isRoutineP1HeartbeatEntry(entry) {
+  return entry?.classList?.contains('log-entry')
+    && P1_HEARTBEAT_ACCESS_LOG_RE.test(String(entry.textContent || '').replace(/^\[[^\]]+\]\s*/, ''));
+}
+
+function cleanP1LogConsole(container) {
+  if (!container) return;
+  container.querySelectorAll(':scope > .log-entry').forEach(entry => {
+    if (isRoutineP1HeartbeatEntry(entry)) Node.prototype.removeChild.call(container, entry);
+  });
+  const entries = container.querySelectorAll(':scope > .log-entry');
+  const excess = entries.length - P1_LOG_LIMIT;
+  for (let i = 0; i < excess; i += 1) Node.prototype.removeChild.call(container, entries[i]);
+}
+
+function installP1LogObserver() {
+  if (p1LogObserverInstalled) return true;
+  const container = document.getElementById('step1-log-output');
+  if (!container) return false;
+
+  const nativeRemoveChild = container.removeChild.bind(container);
+  container.removeChild = function guardedP1RemoveChild(child) {
+    const logCount = this.querySelectorAll(':scope > .log-entry').length;
+    const legacyOldestEviction = child === this.firstChild && child?.classList?.contains('log-entry');
+    if (legacyOldestEviction && logCount <= P1_LOG_LIMIT) return child;
+    return nativeRemoveChild(child);
+  };
+
+  cleanP1LogConsole(container);
+  new MutationObserver(() => cleanP1LogConsole(container)).observe(container, { childList: true });
+  p1LogObserverInstalled = true;
+  return true;
+}
+
 function logLine(container, progressKey) {
   if (!container || !progressKey) return null;
   return [...container.querySelectorAll('.log-entry')].find(entry => entry.dataset.progressKey === progressKey) || null;
@@ -402,6 +439,7 @@ function syncButton(button) {
   const hoverStop = button.matches(':hover') && active && !stopping;
 
   installP1ErrorCapture();
+  installP1LogObserver();
   syncRunningJobSelection(appState);
   recoverStalledP1Queue();
   syncJobFeedback(appState);
@@ -472,6 +510,7 @@ async function stopP1(button) {
 
 function install() {
   injectStyles();
+  installP1LogObserver();
   const button = document.getElementById('btn-start-all');
   if (!button || button.dataset.p1RunController === 'true') return Boolean(button);
   button.dataset.p1RunController = 'true';
