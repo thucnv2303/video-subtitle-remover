@@ -1,64 +1,70 @@
 # QA Checklist
 
 ## Active task
-`PIPELINE1-STANDARD-CJK-GUARD-008 — Standard CJK Prompt Guard`
+`STANDALONE-SUBTITLE-REMOVER-010 — Standalone Xoa Sub using existing Pipeline 2`
 
 ## Review basis
-- [x] Corrective branch `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
-- [x] Draft PR #51.
-- [x] Base SHA `7df7e45c277feb56b5a8a45195007f5e41b69638`.
-- [x] Source correction `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
-- [x] Exact Owner-tested application-source state `6e023808891a4c5ff5e886aa62a18838c7fb42ae`.
-- [x] Later commits through prior head `96e4c5dd...` were documentation-only.
+- [x] Branch `review/STANDALONE-SUBTITLE-REMOVER-010`.
+- [x] Draft PR #59.
+- [x] Task base `330d756fcce1b71ca8745b3292d7ac655bc32d13`.
+- [x] Remote `ACTIVE.md` and task spec define implementation authority.
+- [x] Verified pre-sync branch state contained task docs only; application source was not yet implemented.
+- [x] Previously attempted `src/renderer/js/standalone-subtitle-remover.js` absent at verified pre-sync ref.
 
-## Static/code review
-- [x] `node --check src/main/p1-standard-vision-wrapper.js` PASS on Owner-tested source state.
-- [x] `node --check src/main/p1-standard-vision-ipc.js` PASS.
-- [x] `git diff --check 7df7e45...HEAD` PASS.
-- [x] Owner worktree clean at static verification.
-- [x] Source isolation PASS: prompt-contract source change limited to `src/main/p1-standard-vision-wrapper.js`.
-- [x] Code review PASS for the CJK prompt-contract correction.
+## Architecture/scope checks after implementation
+- [ ] Existing Step 2 DOM reused; no duplicated P2 DOM IDs.
+- [ ] Existing `window._appState` reused; no second P2 job store.
+- [ ] Existing P2/backend inpaint path reused; no backend duplication.
+- [ ] Xoa Sub appears directly below Voice Render.
+- [ ] Voice Render processing unchanged.
+- [ ] P1/P3/TTS source unchanged outside strictly required navigation integration.
+- [ ] No dependency churn/broad renderer refactor.
 
-## Owner Standard runtime — 2026-08-14
-- [x] App runs well.
-- [x] AI-generated Standard narration/script is correct by Owner review.
-- [x] Voice render is stable.
-- [x] Voice duration is reported materially matched to source in the successful configured run.
-- [x] Standard functional runtime outcome PASS for the corrected configured prompt.
+## Manual region behavior
+- [ ] Region list exposes `box`, `tight`, `soft` per region.
+- [ ] New region inherits job mask default when appropriate.
+- [ ] Manual `runNextPass()` uses `region.maskMode || job.maskMode || 'box'`.
+- [ ] Auto path still uses job-level `job.maskMode || 'box'`.
+- [ ] Drawing crosshair appears only on drawable preview while Manual drawing is enabled.
+- [ ] Switching Auto / disabling Draw removes crosshair.
+- [ ] Successful first region does not disable drawing; second/third regions can be drawn continuously.
+- [ ] `canvas-inner-orig` coordinate mapping is preserved.
 
-## Closeout findings that remain open
-### BUG-039 — P1 log observability
-- [x] Owner reports P1 card log cuts earlier data.
-- [x] Source confirms Step1 log removes oldest entries after 100 DOM nodes.
-- [x] Owner reports `/api/health`, `/api/tts/status`, `/api/gpu-info` 200 access lines while idle.
-- [x] Source confirms all Python stdout is cloned into Step1 log.
-- [x] Source confirms background global-status refresh legitimately calls those endpoints.
-- [ ] Dedicated log-observability source correction published.
-- [ ] Idle P1 console runtime retest PASS.
-- [ ] Successful Standard run retains beginning-to-completion evidence and Copy output.
+## Standalone navigation/workspace
+- [ ] Click Xoa Sub opens existing Step 2 workspace without requiring P1.
+- [ ] Pipeline P1/P2/P3 chrome is hidden only while standalone mode is active.
+- [ ] Leaving Xoa Sub restores normal Home/Voice Render/Settings navigation/layout.
+- [ ] No page switch accidentally triggers P1 or P3.
 
-### BUG-040 — product default prompt
-- [x] Source confirms default prompt remains subtitle-translation/SRT-oriented.
-- [x] Source confirms P1 run snapshots that prompt.
-- [x] Owner success required manually replacing the configurable prompt.
-- [ ] Product default synchronized to proven continuous-narration / ZERO-CJK contract.
-- [ ] Fresh/reset default runtime retest PASS.
+## Static verification
+- [ ] Exact branch and HEAD recorded after source publication.
+- [ ] Changed files reviewed against scope.
+- [ ] `node --check src/renderer/js/app.js` PASS if changed.
+- [ ] `node --check` every other changed JS PASS.
+- [ ] `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD` PASS.
+- [ ] GitHub full diff + relevant full files reviewed by PM.
+- [ ] CI/check status reviewed; absent checks are not treated as PASS without other evidence.
 
-## Regression constraints for next tasks
-- [ ] No change to Standard reasoning/guard semantics during BUG-039 fix.
-- [ ] No TTS generation behavior change during BUG-039 fix.
-- [ ] No P2/P3 source change during BUG-039 fix.
-- [ ] Backend/global status continues refreshing after routine heartbeat lines are removed from P1 presentation.
-- [ ] Non-routine errors remain diagnosable.
-
-## Semantic mode
-- [ ] Semantic runtime remains DEFERRED until Standard closeout follow-ups BUG-039 and BUG-040 are verified.
+## Owner runtime QA — only after PM code-review PASS
+- [ ] Sidebar shows Voice Render -> Xoa Sub -> Settings.
+- [ ] Xoa Sub works without P1.
+- [ ] Auto removal smoke PASS.
+- [ ] Manual Draw shows `+` cursor on preview.
+- [ ] Draw Region 1 and Region 2 without toggling Draw again.
+- [ ] Both region overlays match drawn positions.
+- [ ] Region 1 = Box; Region 2 = Tight/Soft.
+- [ ] Processing uses correct mask per pass.
+- [ ] Progress/log remain functional.
+- [ ] Result preview works.
+- [ ] `_no_sub.mp4` exists and remains P3-compatible.
+- [ ] Auto removes crosshair.
+- [ ] Voice Render still works.
+- [ ] Normal main pipeline has no obvious regression.
 
 ## Gates
-- Execution: PASS for task 008 source.
-- Automated/static: PASS for task 008 source.
-- Code review: PASS for task 008 source.
-- Owner Standard runtime: PASS for corrected configured prompt.
-- Documentation synchronization: PASS after this corrective knowledge sync.
-- Follow-up observability/default prompt: OPEN.
+- Execution: NOT STARTED.
+- Automated/static: WAITING.
+- Code review: WAITING.
+- Owner manual verification: NOT STARTED.
+- Documentation synchronization: PASS for pre-implementation handoff.
 - Merge permission: BLOCKED.
