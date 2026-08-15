@@ -1,56 +1,71 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-STANDARD-CJK-GUARD-008
+STANDALONE-SUBTITLE-REMOVER-010
 
 ## Status
-OWNER_STANDARD_FUNCTIONAL_PASS_FOLLOWUP_OBSERVABILITY_AND_DEFAULT_PROMPT_SYNC_REQUIRED
+READY_FOR_PM_DIRECT_IMPLEMENTATION_SOURCE_NOT_YET_PUBLISHED
 
 ## Authority
-- Parent task: `PIPELINE1-SEMANTIC-REMIX-007`.
-- Parent branch/PR: `review/PIPELINE1-SEMANTIC-REMIX-007` / #48.
-- Corrective branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
-- Corrective Draft PR: #51.
-- Starting SHA: `7df7e45c277feb56b5a8a45195007f5e41b69638`.
-- Source correction: `e2cf430971fb75d5ef794fafc6879e35ba0a608e`.
-- Exact Owner-tested application-source head: `6e023808891a4c5ff5e886aa62a18838c7fb42ae`.
+- Repository: `thucnv2303/video-subtitle-remover`.
+- Branch / Draft PR: `review/STANDALONE-SUBTITLE-REMOVER-010` / #59.
+- Parent/base: `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
+- Active task spec: `.ai/task_specs/STANDALONE-SUBTITLE-REMOVER-010.md`.
+- Active execution pointer: `.ai/task_specs/ACTIVE.md`.
+- Exact live branch HEAD must be re-read from GitHub before source editing.
 
-## Verified source/static state
-- Source publication: PASS.
-- Source isolation: PASS — only `src/main/p1-standard-vision-wrapper.js`, +14/-4 from starting SHA.
-- Owner exact-head Node syntax for wrapper + IPC: PASS.
-- Owner exact-head `git diff --check`: PASS.
-- Owner worktree clean at static verification.
-- Code review: PASS for the prompt-contract correction.
+## User outcome
+Add a standalone `Xoa Sub` sidebar entry directly below Voice Render that reuses the existing active Pipeline 2 UI/controller/backend path, allowing burned-in subtitle removal without running P1 or P3.
 
-## Owner runtime result — 2026-08-14
-Owner reports:
-- app runs well;
-- Standard AI narration/script is correct;
-- voice rendering is stable.
+## Required implementation
+1. Reuse existing Step 2 DOM and `src/renderer/js/app.js`; no duplicate P2 DOM/state/backend.
+2. Standalone mode shows Step 2 workspace and hides pipeline chrome/P1/P3 while active; leaving the mode restores normal navigation.
+3. Manual region list exposes `box`, `tight`, `soft` per region.
+4. New regions inherit `job.maskMode || 'box'` by default.
+5. Manual execution uses `region.maskMode || job.maskMode || 'box'`.
+6. Auto execution keeps current job-level mask behavior.
+7. Manual drawing mode shows crosshair only on drawable preview.
+8. Successful region creation does not automatically disable drawing; user can draw multiple regions continuously.
+9. Preserve current `canvas-inner-orig` source-coordinate mapping.
+10. Preserve current `*_no_sub.mp4` output/P3 compatibility.
 
-Owner Standard functional outcome is therefore PASS for the corrected configured prompt.
+## Verified pre-implementation state
+- PR #59 is Draft/open/unmerged.
+- Verified pre-sync HEAD `6ad17f5ba3ec8c8654eb6086045408f821e7b777` contained task-spec/docs only; no application source changes.
+- `src/renderer/js/standalone-subtitle-remover.js` was absent at that ref.
+- Active `app.js` still uses job-level mask for manual pass and disables drawing after one successful region.
 
-## Follow-up defects discovered during closeout
-### BUG-039 — P1 log observability
-- P1 card console is hard-capped at 100 DOM entries and removes the oldest lines.
-- Global Python stdout is cloned into P1 console.
-- Routine successful background `/api/health`, `/api/tts/status`, `/api/gpu-info` access logs appear even with no P1 Job.
-- Voice Render/global status refreshes legitimately make those requests; the P1 console should not present them as Job activity.
+## Source scope
+Primary:
+- `src/renderer/js/app.js`
+- `src/renderer/index.html`
+- `src/renderer/styles/main.css`
 
-### BUG-040 — stale product default prompt
-- `src/renderer/js/components/prompt-manager.js` still seeds a subtitle-translation/SRT-oriented default prompt.
-- `pipeline1-run-config.js` snapshots the selected/default prompt into P1 runs.
-- Owner success required manually replacing the configurable prompt with the corrected continuous-narration / ZERO-CJK contract.
+A tiny helper is allowed only when it has an explicit safe bootstrap and avoids duplicating P2 processing/state.
+
+Forbidden:
+- P1 AI/Semantic changes
+- Voice Render processing/TTS changes
+- P3 changes
+- backend/inpaint duplication
+- BUG-039/BUG-040
+- broad refactor/dependency churn
+
+## Required verification after implementation
+- exact branch + HEAD
+- changed files/diff review
+- `node --check src/renderer/js/app.js`
+- `node --check` every additional changed JS file
+- `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD`
+- direct GitHub review of full source/diff before Owner runtime
 
 ## Gates
-- Execution: PASS.
-- Automated/static: PASS.
-- Code review: PASS.
-- Owner Standard runtime: PASS for corrected configured prompt.
-- Owner Semantic: DEFERRED.
-- Documentation synchronization: PASS after current corrective sync.
-- Merge: BLOCKED.
+- Execution: NOT STARTED.
+- Automated/static: WAITING.
+- Code review: WAITING.
+- Owner manual verification: NOT STARTED.
+- Documentation synchronization: PASS for pre-implementation state.
+- Merge permission: BLOCKED.
 
-## Next task
-`PIPELINE1-LOG-OBSERVABILITY-009` — narrow stacked task from the synchronized PR #51 head. Fix only P1 log retention/noise routing and project knowledge. No AI/TTS/P2/P3 behavior change. Default-prompt source synchronization remains a separate follow-up task after log observability is runtime-verified.
+## Next action
+New chat must verify PR #59 current exact HEAD and re-read ACTIVE/spec/current_state/task_current/handoff/qa from that exact ref. If still docs-only, PM implements directly on the existing task branch. No executor and no merge.
