@@ -4,61 +4,75 @@
 `PIPELINE3-FINAL-COMPOSITION-017`
 
 ## Status
-SUBTITLE STYLE ENGINE REV3 SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
+RUNTIME FIX REV4 SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RE-VERIFY WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
 - Branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58
-- Rev3 starting HEAD: `e2b8af05a4ea0baefa164534598cc25668110feb`
-- Reviewed Rev3 application-source head: `1d3544372e0323473b3de1771464aca9cc9d9b04`
-- Amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-STYLE-ENGINE-REV3.md`
+- Rev4 starting HEAD: `92deaf8fa72094fbad3f84c75c716967acbc509d`
+- Reviewed Rev4 application-source HEAD: `d5aae15c5471f0e23f35ac3ae7cc205fc47b0fe3`
+- Amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-RUNTIME-FIX-REV4.md`
 
-## New source behavior
-- 32 data-driven subtitle styles across Basic/Social/Tutorial/Karaoke/Highlight/Glow/Box/Cover;
-- visual category filtering and style cards inside existing `Phụ đề` fold;
-- legacy small preset row hidden from primary UX but compatibility path retained;
-- per-Job active style ID plus `custom` state after manual edits;
-- new render-backed underline, spacing, text-opacity and glow controls;
-- glow rendered as a real lower ASS text layer rather than CSS-only preview;
-- karaoke presets preserve original karaoke timing; glow presets use deterministic P3 SRT renderer;
-- existing font manager, width resize, position drag, cover band, cue edit, fit planner and finalizer behavior remain intact.
+## Owner runtime evidence that invalidated the previous build
+- P3 right inspector clipped/hid settings data.
+- Remove Vocal was checked but original vocal remained audible.
+- Export had no output destination picker or real quality selection.
 
-## Source scope
-Rev3 source changes only:
-- new `src/renderer/js/pipeline3/subtitle-style-engine.js`
-- `src/renderer/js/pipeline3/editor-store.js`
-- `src/renderer/js/pipeline3/subtitle-ass.js`
-- `src/renderer/js/pipeline1-run-config.js` — one import-only bootstrap line.
+Decision: pre-Rev4 Owner runtime FAIL / `NEEDS_REVISION`.
 
-No backend/P2/TTS/dependency/finalizer change.
+## Rev4 reviewed source behavior
+- inspector containment/wrapping is added without changing P1/P2 layout logic;
+- style category chips wrap instead of showing the clipped horizontal-scroll treatment;
+- output folder + filename are saved per Job;
+- final output cannot overwrite source/P2 clean video;
+- quality presets map to actual H.264 libx264 CRF/preset values;
+- new Electron P3 FFmpeg bridge handles video retime and final ASS burn with the selected quality;
+- Remove Vocal + background > 0 accepts only Demucs no-vocals output;
+- weak fallback methods block the render instead of being mixed as if removal succeeded;
+- final ASS is rebuilt from exact final SRT after voice timing adjustment before HQ burn;
+- subtitle burn failure now fails the P3 render instead of reporting final success with an intermediate video.
 
-## Required verification
+## Rev4 source scope
+- `src/main/p3-export-bridge.js` — new;
+- `src/main/preload.js`;
+- `src/renderer/js/pipeline1-run-config.js` — one Rev4 import;
+- `src/renderer/js/pipeline3/editor-store.js`;
+- `src/renderer/js/pipeline3/runtime-fix-rev4.js` — new;
+- `src/renderer/js/pipelines/pipeline3-finalize.js`.
+
+No backend Python, P2, TTS, dependency or P1 execution change.
+
+## Required exact-checkout verification
 ```text
-node --check src/renderer/js/pipeline3/subtitle-style-engine.js
+node --check src/main/p3-export-bridge.js
+node --check src/main/preload.js
+node --check src/renderer/js/pipeline3/runtime-fix-rev4.js
 node --check src/renderer/js/pipeline3/editor-store.js
-node --check src/renderer/js/pipeline3/subtitle-ass.js
+node --check src/renderer/js/pipelines/pipeline3-finalize.js
 node --check src/renderer/js/pipeline1-run-config.js
-git diff --check e2b8af05a4ea0baefa164534598cc25668110feb..HEAD
+git diff --check 92deaf8fa72094fbad3f84c75c716967acbc509d..HEAD
 ```
 
+PM sandbox could not perform raw-download syntax verification because outbound DNS is unavailable; this is environment evidence only and automated verification remains WAITING.
+
 ## Owner acceptance focus
-- 8 category filters and at least one preset from each;
-- Job-isolated style state;
-- underline / spacing / opacity / glow preview;
-- final burn parity for one glow style;
-- karaoke timing preserved on one karaoke preset if available;
-- width resize + drag + cover band + cue editing still work.
+1. same screenshot-sized window: no clipped inspector data;
+2. output folder + filename selection;
+3. quality preset reflected in render log and output;
+4. Remove Vocal ON + background > 0: Demucs success materially removes original vocal, otherwise render blocks explicitly;
+5. subtitle timing/style remains correct in final output;
+6. second render still restarts from P2 clean video.
 
 ## Local safety
-Reuse only the existing test directory. `git status --short` must be empty before switching. Dirty => STOP. No reset/restore/clean and no new clone/worktree.
+Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. `git status --short` must be empty before switching. Dirty => STOP. No reset/restore/clean and no new clone/worktree.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING exact checkout.
 - Code review: PASS logic/scope.
-- Owner runtime: WAITING.
+- Owner runtime: FAIL pre-Rev4 / WAITING Rev4.
 - Documentation synchronization: PASS pre-runtime after ACTIVE/PR sync.
 - Merge: BLOCKED.
 
 ## Next permitted action
-Synchronize ACTIVE/PR to current Rev3 head, verify checks/comments, then Owner tests exact head. No merge.
+Synchronize ACTIVE/PR to Rev4, verify live PR head/checks/comments, then Owner tests exact head. No merge.
