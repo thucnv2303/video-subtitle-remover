@@ -4,51 +4,51 @@
 STANDALONE-SUBTITLE-REMOVER-010
 
 ## Status
-SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_BLOCKED
+REV2_SOURCE_PUBLISHED_OWNER_RUNTIME_READY_MERGE_BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Branch / Draft PR: `review/STANDALONE-SUBTITLE-REMOVER-010` / #59.
-- Corrected runtime base: `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE@92deaf8fa72094fbad3f84c75c716967acbc509d`.
-- Reviewed application-source HEAD: `08729502dbbcea334caf6151b0289cd57cf39e16`.
-- Active task spec: `.ai/task_specs/STANDALONE-SUBTITLE-REMOVER-010.md`.
+- Runtime base: `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE@92deaf8fa72094fbad3f84c75c716967acbc509d`.
+- Rev2 application-source HEAD: `c64a209cb7fd556a95f3716b496472c92862a66c`.
 
 ## User outcome
-Standalone `Xóa Sub` directly below Voice Render, reusing the active Pipeline 2 workspace/controller/backend without requiring P1/P3.
+`Xóa Sub` is a standalone P2 tool below Voice Render: direct one/many-video input, independent queue, existing P2 engine, no P1/P3 requirement.
 
-## Published implementation
-- New `src/renderer/js/standalone-subtitle-remover.js`.
-- One import-only bootstrap line in `src/renderer/js/pipeline1-run-config.js`.
-- No duplicate P2 state, DOM or backend.
-- Manual region-specific Box/Tight/Soft mask selection.
-- Manual request bridge uses region mask for the active manual pass while Auto stays job-level.
-- Continuous multi-region drawing is restored after successful region creation.
-- Crosshair is limited to active Manual Draw state.
-- Existing coordinate mapping is preserved.
+## Rev2 implementation
+- Independent `+ Thêm Video` using existing Electron multi-selection dialog.
+- Multiple-file drag/drop.
+- Standalone job marker `standaloneSubtitleRemoval` with direct P2 ready state.
+- Existing P2 output contract and `_no_sub.mp4` path preserved.
+- `Chạy tất cả` queues all standalone-ready/error jobs through existing `processNextJob`.
+- Normal Home P1→P2 gate remains separate.
+- Standalone jobs remain P3 locked and are filtered out of P1/P3 UI.
+- Existing manual region geometry and per-region Box/Tight/Soft remain reused.
 
 ## Verification
-- GitHub source/diff review: PASS.
+- PM exact GitHub source/diff review: PASS for Rev2 logic/scope.
 - PR #59: Draft/open/unmerged.
-- No unresolved review threads/comments observed.
-- CI/check status: none reported by GitHub.
-- Exact static command evidence: WAITING; PM environment could not perform network checkout.
+- New Rev2 executable static evidence: WAITING because PM runtime cannot resolve GitHub raw host and branch has no Actions run.
+- Owner runtime is permitted to provide the missing real-app evidence; no merge permission is implied.
 
-## Required static evidence before Owner runtime
-```text
-git status --short
-node --check src/renderer/js/app.js
-node --check src/renderer/js/standalone-subtitle-remover.js
-node --check src/renderer/js/pipeline1-run-config.js
-git diff --check 92deaf8fa72094fbad3f84c75c716967acbc509d..HEAD
-```
+## Owner QA
+1. Fetch exact review branch and start app.
+2. Open `Xóa Sub`; verify no P1 completion is required.
+3. `+ Thêm Video`: select 2+ videos in one dialog; all appear as standalone jobs.
+4. Drag/drop 2+ videos; valid videos are added and duplicates are not duplicated.
+5. Select one job and run; verify existing P2 processing/output `_no_sub.mp4`.
+6. Add multiple jobs and use `Chạy tất cả`; verify sequential queue processing.
+7. Manual mode: draw multiple regions continuously, geometry aligned, assign different Box/Tight/Soft masks.
+8. Return Home; standalone jobs must not appear as P1/P3-ready pipeline jobs.
+9. Smoke Voice Render and normal pipeline navigation.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING.
-- Code review: PASS.
-- Owner manual verification: NOT STARTED / BLOCKED until static PASS.
-- Documentation synchronization: PASS after dynamic docs commit completes.
+- Automated/static: WAITING Rev2 evidence.
+- PM code review: PASS.
+- Owner manual verification: READY / NOT STARTED.
+- Documentation synchronization: PASS after docs sequence.
 - Merge permission: BLOCKED.
 
 ## Next action
-Run the required static commands on a clean exact checkout of current PR HEAD. If PASS, Owner may execute manual QA. No merge.
+Owner runs exact Rev2 checkout and reports observed PASS/FAIL. Do not merge.
