@@ -62,6 +62,7 @@ export const P3_SUBTITLE_STYLES = [
 let installed = false;
 let activeCategory = 'all';
 let observer = null;
+let applyingStyle = false;
 
 function el(id) { return document.getElementById(id); }
 function clamp(value, min, max) { return Math.max(min, Math.min(max, Number(value) || 0)); }
@@ -75,6 +76,7 @@ const CONTROL_MAP = {
   effect:'p3e-effect', effectMs:'p3e-effect-ms', coverEnabled:'p3e-cover-enabled', coverColor:'p3e-cover-color',
   coverOpacity:'p3e-cover-opacity', coverWidth:'p3e-cover-width', coverHeightPx:'p3e-cover-height', preserveKaraoke:'p3e-preserve-karaoke',
 };
+const MANUAL_STYLE_CONTROL_IDS = new Set(Object.values(CONTROL_MAP));
 
 function installStyle() {
   if (document.getElementById(STYLE_ID)) return;
@@ -129,24 +131,23 @@ function setControl(id, value) {
   else node.value = String(value);
 }
 
-function syncExistingControls(config) {
-  Object.entries(CONTROL_MAP).forEach(([key,id]) => setControl(id, config[key]));
-}
-
-function refreshThroughEditor() {
-  const node = el('p3e-font') || el('p3e-size');
-  if (node) dispatchInput(node);
-}
+function syncExistingControls(config) { Object.entries(CONTROL_MAP).forEach(([key,id]) => setControl(id, config[key])); }
+function refreshThroughEditor() { const node = el('p3e-font') || el('p3e-size'); if (node) dispatchInput(node); }
 
 function applyStyle(id) {
   const item = P3_SUBTITLE_STYLES.find(style => style.id === id);
   const job = selectedP3Job();
   if (!item || !job) return;
   const config = ensureP3Config(job);
-  Object.assign(config, item.config, { stylePresetId: item.id });
-  syncExistingControls(config);
-  syncAdvancedControls(config);
-  refreshThroughEditor();
+  applyingStyle = true;
+  try {
+    Object.assign(config, item.config, { stylePresetId: item.id });
+    syncExistingControls(config);
+    syncAdvancedControls(config);
+    refreshThroughEditor();
+  } finally {
+    applyingStyle = false;
+  }
   requestAnimationFrame(() => { syncPreviewDecorations(); renderCards(); });
 }
 
@@ -177,13 +178,16 @@ function saveAdvancedControls() {
 function syncPreviewDecorations() {
   const job = selectedP3Job();
   const sub = el('p3e-sub');
+  const canvas = el('p3e-canvas');
   if (!job || !sub) return;
   const config = ensureP3Config(job);
+  let fitScale = 1;
+  try { fitScale = Number(JSON.parse(canvas?.dataset.fit || '{}').scale) || 1; } catch {}
   sub.style.textDecoration = config.underline ? 'underline' : 'none';
-  sub.style.letterSpacing = `${Number(config.letterSpacing)||0}px`;
+  sub.style.letterSpacing = `${(Number(config.letterSpacing)||0) * fitScale}px`;
   sub.style.color = hexToRgba(config.textColor, config.textOpacity);
   const drop = `0 ${Math.max(0,Number(config.shadow)||0)}px ${Math.max(1,(Number(config.shadow)||0)*2)}px rgba(0,0,0,.85)`;
-  sub.style.textShadow = config.glowEnabled ? `${drop},0 0 ${Math.max(1,Number(config.glowBlur)||0)*2}px ${config.glowColor}` : drop;
+  sub.style.textShadow = config.glowEnabled ? `${drop},0 0 ${Math.max(1,Number(config.glowBlur)||0)*2*fitScale}px ${config.glowColor}` : drop;
   syncAdvancedControls(config);
 }
 
@@ -234,16 +238,25 @@ function installUi() {
   return true;
 }
 
+function markCustomFromManualInput(target) {
+  if (applyingStyle || !MANUAL_STYLE_CONTROL_IDS.has(target?.id)) return;
+  const job = selectedP3Job();
+  if (job) ensureP3Config(job).stylePresetId = 'custom';
+}
+
 function bindSync() {
   if (observer || !el('p3e-sub')) return;
   observer = new MutationObserver(() => requestAnimationFrame(syncPreviewDecorations));
   observer.observe(el('p3e-sub'), { childList:true, characterData:true, subtree:true, attributes:true, attributeFilter:['class'] });
   document.addEventListener('input', event => {
-    if (event.target?.closest?.('#step-3-content') && !event.target?.closest?.('#p3e-advanced-style')) requestAnimationFrame(() => { syncPreviewDecorations(); renderCards(); });
+    if (!event.target?.closest?.('#step-3-content')) return;
+    if (!event.target?.closest?.('#p3e-advanced-style')) markCustomFromManualInput(event.target);
+    requestAnimationFrame(() => { syncPreviewDecorations(); renderCards(); });
   }, true);
   document.addEventListener('click', event => {
     if (event.target?.closest?.('[data-job],.p3e-preset,[data-p3-typo]')) requestAnimationFrame(() => { syncPreviewDecorations(); renderCards(); });
   }, true);
+  window.addEventListener('resize', () => requestAnimationFrame(syncPreviewDecorations));
 }
 
 function installWhenReady(attempt=0) {
