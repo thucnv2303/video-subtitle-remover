@@ -1,11 +1,18 @@
 import { planP3Fit } from '../pipeline3/fit-planner.js';
 
 /** Pipeline 3 — focused final composition. P1/P2 source artifacts remain immutable. */
+const EXPORT_QUALITY={balanced:{crf:20,preset:'medium'},high:{crf:18,preset:'slow'},very_high:{crf:16,preset:'slow'},max:{crf:14,preset:'slower'}};
 function _durationSec(valueMs){return `${(Number(valueMs||0)/1000).toFixed(2)}s`;}
 function _p3ArtifactDir(job){const p1Dir=String(job?.p1ArtifactDir||'').trim().replace(/[\\/]+$/,'');if(!p1Dir)return'';const parent=p1Dir.replace(/[\\/]+p1$/i,''),sep=p1Dir.includes('\\')?'\\':'/';return `${parent}${sep}p3`;}
 function _srtTimeToMs(value){const m=String(value||'').match(/^(\d{2}):(\d{2}):(\d{2})[,.](\d{3})$/);if(!m)return null;return Number(m[1])*3600000+Number(m[2])*60000+Number(m[3])*1000+Number(m[4]);}
 function _msToSrtTime(ms){const safe=Math.max(0,Math.round(Number(ms)||0)),h=Math.floor(safe/3600000),m=Math.floor((safe%3600000)/60000),s=Math.floor((safe%60000)/1000),mil=safe%1000;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(mil).padStart(3,'0')}`;}
 function _scaleTimedSrt(srtText,scale){const safe=Number(scale);if(!String(srtText||'').trim()||!Number.isFinite(safe)||safe<=0)return String(srtText||'');return String(srtText).replace(/(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})/g,(full,start,end)=>{const a=_srtTimeToMs(start.replace('.',',')),b=_srtTimeToMs(end.replace('.',','));return a==null||b==null?full:`${_msToSrtTime(a*safe)} --> ${_msToSrtTime(b*safe)}`;});}
+function _exportQuality(config={}){return EXPORT_QUALITY[config.exportQuality]||EXPORT_QUALITY.high;}
+function _baseName(pathValue){const raw=String(pathValue||'').replace(/\\/g,'/');return raw.split('/').pop()||'video.mp4';}
+function _dirName(pathValue){const raw=String(pathValue||''),slash=Math.max(raw.lastIndexOf('/'),raw.lastIndexOf('\\'));return slash>=0?raw.slice(0,slash):'';}
+function _joinPath(dir,file){const d=String(dir||'').replace(/[\\/]+$/,'');if(!d)return file;return `${d}${d.includes('\\')?'\\':'/'}${file}`;}
+function _safeOutputName(value,fallback){const raw=String(value||'').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g,'_').replace(/[. ]+$/g,'');const stem=(raw||fallback).replace(/\.mp4$/i,'');return `${stem||'video_final'}.mp4`;}
+function _getFinalOutputPath(job){const config=job?.p3Config||{},source=job?.filePath||job?.p3CleanVideoPath||job?.outputPath||'video.mp4',fallback=`${_baseName(source).replace(/\.[^.]+$/,'')}_final.mp4`,file=_safeOutputName(config.outputFileName,fallback),dir=String(config.outputDirectory||'').trim()||_dirName(source);return _joinPath(dir,file);}
 
 function _resolveFitPlan(config,videoMs,voiceMs){
   let plan=planP3Fit(videoMs,voiceMs,config.fitMode||'auto');
@@ -39,19 +46,23 @@ async function _prepareP3Video(job,baseVideo,videoInfo,plan,bgVolume,removeVocal
   if(Math.abs(requestedSpeed-1)<.02)return{ok:true,videoPath:baseVideo,durationMs:Number(videoInfo?.duration||0)*1000,tempo:1,adjusted:false};
   if(Number(bgVolume)>0&&!removeVocal)return{ok:false,error:'Video retime + audio gốc > 0 cần bật Xóa giọng gốc hoặc đặt âm nền = 0 để tránh mất/lệch audio nền.'};
   const sourceMs=Number(videoInfo?.duration||0)*1000;if(!(sourceMs>0))return{ok:false,error:'Không đọc được duration clean video.'};
-  const outputPath=String(baseVideo).replace(/\.[^.]+$/,'')+'_p3_tempo.mp4',targetMs=sourceMs/requestedSpeed;
-  const res=await window.api.adjustVideoTempo(baseVideo,outputPath,targetMs,requestedSpeed,requestedSpeed);
-  if(!res||res.status!=='ok'||!res.output_path)return{ok:false,error:res?.error||'Không retime được video P3.'};
+  if(!window.electronAPI?.retimeP3Video)return{ok:false,error:'P3 export bridge chưa sẵn sàng để retime video theo chất lượng đã chọn.'};
+  const outputPath=String(baseVideo).replace(/\.[^.]+$/,'')+'_p3_tempo.mp4',quality=_exportQuality(job?.p3Config);
+  const res=await window.electronAPI.retimeP3Video({videoPath:baseVideo,outputPath,speed:requestedSpeed,crf:quality.crf,preset:quality.preset});
+  if(!res?.ok||!res.output_path)return{ok:false,error:res?.error||'Không retime được video P3.'};
   job.p3VideoTempoPath=res.output_path;job.p3VideoTempo=Number(res.speed_ratio)||requestedSpeed;const durationMs=sourceMs/job.p3VideoTempo;
-  _addLog(`[Finalize] ✅ Video tempo ${job.p3VideoTempo.toFixed(4)}x: ${_durationSec(sourceMs)} → ~${_durationSec(durationMs)}.`,'success');
+  _addLog(`[Finalize] ✅ Video tempo ${job.p3VideoTempo.toFixed(4)}x · CRF ${quality.crf}/${quality.preset}: ${_durationSec(sourceMs)} → ~${_durationSec(durationMs)}.`,'success');
   return{ok:true,videoPath:res.output_path,durationMs,tempo:job.p3VideoTempo,adjusted:Boolean(res.adjusted)};
 }
 
 async function _prepareBackground(job,baseVideo,videoFit,bgVol,removeVocal){
   if(!removeVocal||!(bgVol>0))return{ok:true,audioPath:null};
-  _addLog('[Finalize] 🎵 Tách giọng gốc để giữ nền...','info');
+  _addLog('[Finalize] 🎵 Tách giọng gốc bằng Demucs để giữ nhạc nền...','info');
   const vocalRes=await window.api.removeVocal(baseVideo);
-  if(!(vocalRes?.status==='ok'||vocalRes?.status==='warning')||!vocalRes.audio_path)return{ok:false,error:vocalRes?.error||'Không tách được audio nền.'};
+  if(vocalRes?.status!=='ok'||!vocalRes.audio_path)return{ok:false,error:vocalRes?.error||vocalRes?.message||'Demucs không tách được audio nền.'};
+  const method=String(vocalRes.method_used||'unknown');
+  if(method!=='demucs')return{ok:false,error:`Xóa giọng gốc yêu cầu Demucs. Backend chỉ trả về ${method}; P3 đã chặn để không trộn giọng gốc trở lại.`};
+  _addLog('[Finalize] ✅ Vocal separation method=demucs; dùng no-vocals stem.','success');
   let audioPath=vocalRes.audio_path;
   if(videoFit.adjusted&&Math.abs(Number(videoFit.tempo||1)-1)>=.02){
     if(!window.electronAPI?.applyVoiceTempo)return{ok:false,error:'Bridge audio tempo chưa sẵn sàng để đồng bộ nền với video retime.'};
@@ -67,26 +78,35 @@ export async function finalizeVideo(job){
   const baseVideo=job.p3CleanVideoPath||job.outputPath;let ttsAudio=job.ttsAudioPath,timedSrt=job.p3BaseTimedSrt||job.ttsTimedSrt||job.p3TimedSrt;
   if(!baseVideo){_addLog('[Finalize] ❌ Chưa có clean video từ Pipeline 2.','error');return false;}
   if(!ttsAudio){_addLog('[Finalize] ⚠️ Không có TTS; chỉ burn subtitle nếu được bật.','warning');if(job.voiceSub&&timedSrt)return _burnSubOnly(job,baseVideo,timedSrt);return false;}
-  const config=job.p3Config||{},bgVol=Math.max(0,Math.min(100,Number(config.bgVolume??localStorage.getItem('tts_bg_volume')??10))),removeVocal=Boolean(config.removeVocal??(localStorage.getItem('tts_remove_vocal')==='true'));
+  const config=job.p3Config||{},bgVol=Math.max(0,Math.min(100,Number(config.bgVolume??localStorage.getItem('tts_bg_volume')??10))),removeVocal=Boolean(config.removeVocal??(localStorage.getItem('tts_remove_vocal')==='true')),quality=_exportQuality(config),finalOutput=_getFinalOutputPath(job);
   const info=await window.api.videoInfo(baseVideo),videoMs=Number(info?.duration||0)*1000,voiceMs=Number(job.ttsAudioDurMs)||0,plan=_resolveFitPlan({...config,bgVolume:bgVol,removeVocal},videoMs,voiceMs);job.p3FitPlan=plan;
   if(!plan.ok){_addLog('[Finalize] ❌ Fit bị chặn: '+plan.reason,'error');return false;}
-  _addLog(`[Finalize] 🚀 P3 final: strategy=${plan.selectedStrategy||plan.mode}; voice=${plan.voiceSpeed.toFixed(3)}x; video=${plan.videoSpeed.toFixed(3)}x.`,'info');
+  _addLog(`[Finalize] 🚀 P3 final: strategy=${plan.selectedStrategy||plan.mode}; voice=${plan.voiceSpeed.toFixed(3)}x; video=${plan.videoSpeed.toFixed(3)}x; H.264 CRF=${quality.crf}/${quality.preset}; output=${finalOutput}`,'info');
 
   let videoFit;try{videoFit=await _prepareP3Video(job,baseVideo,info,plan,bgVol,removeVocal);if(!videoFit.ok)throw new Error(videoFit.error);}catch(e){_addLog('[Finalize] ❌ Video-fit: '+e.message,'error');return false;}
   let voiceFit;try{voiceFit=await _prepareP3Voice(job,ttsAudio,timedSrt,plan);if(!voiceFit.ok)throw new Error(voiceFit.error);ttsAudio=voiceFit.audioPath;timedSrt=voiceFit.timedSrt||timedSrt;}catch(e){_addLog('[Finalize] ❌ Voice-fit: '+e.message,'error');return false;}
   let background;try{background=await _prepareBackground(job,baseVideo,videoFit,bgVol,removeVocal);if(!background.ok)throw new Error(background.error);}catch(e){_addLog('[Finalize] ❌ Audio nền: '+e.message,'error');return false;}
 
-  const videoForMix=videoFit.videoPath,videoWithVoice=job.filePath.replace(/\.[^.]+$/,'')+'_with_voice.mp4';let mergeRes;
+  const hasSubtitle=Boolean(job.voiceSub&&timedSrt),videoForMix=videoFit.videoPath,videoWithVoice=hasSubtitle?job.filePath.replace(/\.[^.]+$/,'')+'_with_voice.mp4':finalOutput;let mergeRes;
   try{if(background.audioPath){mergeRes=await fetch(`${window.api.base}/api/mix-audio-tracks`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({video_path:videoForMix,tts_path:ttsAudio,bg_audio_path:background.audioPath,output_path:videoWithVoice,bg_volume:bgVol})}).then(r=>r.json());}else mergeRes=await window.api.replaceAudio(videoForMix,ttsAudio,videoWithVoice,bgVol);}catch(e){_addLog('[Finalize] ❌ Ghép audio lỗi: '+e.message,'error');return false;}
   if(!mergeRes||mergeRes.status!=='ok'){_addLog('[Finalize] ❌ Ghép audio thất bại: '+(mergeRes?.error||'Unknown'),'error');return false;}
 
-  if(job.voiceSub&&timedSrt){const finalOutput=_getFinalOutputPath(job),success=await _burnSubtitle(job,videoWithVoice,finalOutput,timedSrt);job.finalOutputPath=success?finalOutput:videoWithVoice;if(!success)_addLog('[Finalize] ⚠️ Dùng video có voice nhưng subtitle burn thất bại.','warning');}else job.finalOutputPath=videoWithVoice;
+  if(hasSubtitle){const success=await _burnSubtitle(job,videoWithVoice,finalOutput,timedSrt);job.finalOutputPath=success?finalOutput:videoWithVoice;if(!success)_addLog('[Finalize] ⚠️ Dùng video có voice nhưng subtitle burn thất bại.','warning');}else job.finalOutputPath=finalOutput;
   job.outputPath=job.finalOutputPath;_addLog('[Finalize] 🎉 Hoàn tất! Video: '+job.finalOutputPath,'success');_showFinalOutputButton(job.finalOutputPath);window.renderJobList?.();window.updateStartButton?.();return true;
 }
 
 async function _burnSubOnly(job,videoPath,timedSrt){const finalOutput=_getFinalOutputPath(job),success=await _burnSubtitle(job,videoPath,finalOutput,timedSrt);if(!success)return false;job.finalOutputPath=finalOutput;job.outputPath=finalOutput;_showFinalOutputButton(finalOutput);window.renderJobList?.();return true;}
-async function _burnSubtitle(job,videoPath,outputPath,srtContent){_addLog('[Finalize] 📝 Burn subtitle final...','info');const config=job.p3Config||{},color=config.textColor||'#ffffff',rc=color.slice(1,3),gc=color.slice(3,5),bc=color.slice(5,7);let info=job.p3VideoInfo||{};if(!(Number(info.width)>0&&Number(info.height)>0)){try{info=await window.api.videoInfo(videoPath);}catch{info={};}}try{const res=await window.api.burnSubtitlePositioned(videoPath,srtContent,outputPath,[],{font_name:config.fontFamily||'Arial',font_size:Math.round(Number(config.fontSize)||46),primary_color:`&H00${bc}${gc}${rc}`.toUpperCase(),video_height:Number(info?.height)||0,video_width:Number(info?.width)||0},job.karaokeAss||null);if(res?.status==='ok'){_addLog('[Finalize] ✅ Burn subtitle thành công.','success');return true;}_addLog('[Finalize] ❌ Burn subtitle thất bại: '+(res?.error||'Unknown'),'error');return false;}catch(e){_addLog('[Finalize] ❌ Burn subtitle lỗi: '+e.message,'error');return false;}}
-function _getFinalOutputPath(job){return job.filePath.replace(/\.[^.]+$/,'')+'_final.mp4';}
-function _showFinalOutputButton(filePath){if(!window.electronAPI?.openPath)return;document.getElementById('btn-open-final-output')?.remove();const btn=document.createElement('button');btn.id='btn-open-final-output';btn.className='btn btn-accent btn-block';btn.style.marginTop='8px';btn.textContent='📂 Mở video hoàn chỉnh (_final.mp4)';btn.onclick=()=>window.electronAPI.openPath(filePath);document.getElementById('progress-section')?.appendChild(btn);}
+async function _burnSubtitle(job,videoPath,outputPath,srtContent){
+  _addLog('[Finalize] 📝 Burn subtitle final...','info');
+  const config=job.p3Config||{},quality=_exportQuality(config),assContent=String(job.karaokeAss||job.p3DerivedAss||'').trim();
+  if(!assContent){_addLog('[Finalize] ❌ Không có derived ASS P3; chặn burn để tránh preview/final lệch.','error');return false;}
+  if(!window.electronAPI?.burnP3SubtitleHq){_addLog('[Finalize] ❌ P3 high-quality export bridge chưa sẵn sàng.','error');return false;}
+  try{
+    const res=await window.electronAPI.burnP3SubtitleHq({videoPath,assContent,outputPath,crf:quality.crf,preset:quality.preset});
+    if(res?.ok){_addLog(`[Finalize] ✅ Burn subtitle H.264 CRF ${quality.crf}/${quality.preset} thành công.`,'success');return true;}
+    _addLog('[Finalize] ❌ Burn subtitle thất bại: '+(res?.error||'Unknown'),'error');return false;
+  }catch(e){_addLog('[Finalize] ❌ Burn subtitle lỗi: '+e.message,'error');return false;}
+}
+function _showFinalOutputButton(filePath){if(!window.electronAPI?.openPath)return;document.getElementById('btn-open-final-output')?.remove();const btn=document.createElement('button');btn.id='btn-open-final-output';btn.className='btn btn-accent btn-block';btn.style.marginTop='8px';btn.textContent='📂 Mở video hoàn chỉnh';btn.onclick=()=>window.electronAPI.openPath(filePath);document.getElementById('progress-section')?.appendChild(btn);}
 function _addLog(msg,type){if(typeof window.addLog==='function')window.addLog(msg,type);else console.log(`[${type}] ${msg}`);}
-export{_scaleTimedSrt,_prepareP3Voice,_prepareP3Video,_resolveFitPlan};
+export{_scaleTimedSrt,_prepareP3Voice,_prepareP3Video,_prepareBackground,_resolveFitPlan,_getFinalOutputPath};
