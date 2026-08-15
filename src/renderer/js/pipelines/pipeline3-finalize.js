@@ -13,6 +13,7 @@ function _dirName(pathValue){const raw=String(pathValue||''),slash=Math.max(raw.
 function _joinPath(dir,file){const d=String(dir||'').replace(/[\\/]+$/,'');if(!d)return file;return `${d}${d.includes('\\')?'\\':'/'}${file}`;}
 function _safeOutputName(value,fallback){const raw=String(value||'').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g,'_').replace(/[. ]+$/g,'');const stem=(raw||fallback).replace(/\.mp4$/i,'');return `${stem||'video_final'}.mp4`;}
 function _getFinalOutputPath(job){const config=job?.p3Config||{},source=job?.filePath||job?.p3CleanVideoPath||job?.outputPath||'video.mp4',fallback=`${_baseName(source).replace(/\.[^.]+$/,'')}_final.mp4`,file=_safeOutputName(config.outputFileName,fallback),dir=String(config.outputDirectory||'').trim()||_dirName(source);return _joinPath(dir,file);}
+function _samePath(a,b){const norm=value=>String(value||'').trim().replace(/\\/g,'/').replace(/\/+$/,'').toLowerCase();return Boolean(norm(a)&&norm(a)===norm(b));}
 
 function _resolveFitPlan(config,videoMs,voiceMs){
   let plan=planP3Fit(videoMs,voiceMs,config.fitMode||'auto');
@@ -79,6 +80,7 @@ export async function finalizeVideo(job){
   if(!baseVideo){_addLog('[Finalize] ❌ Chưa có clean video từ Pipeline 2.','error');return false;}
   if(!ttsAudio){_addLog('[Finalize] ⚠️ Không có TTS; chỉ burn subtitle nếu được bật.','warning');if(job.voiceSub&&timedSrt)return _burnSubOnly(job,baseVideo,timedSrt);return false;}
   const config=job.p3Config||{},bgVol=Math.max(0,Math.min(100,Number(config.bgVolume??localStorage.getItem('tts_bg_volume')??10))),removeVocal=Boolean(config.removeVocal??(localStorage.getItem('tts_remove_vocal')==='true')),quality=_exportQuality(config),finalOutput=_getFinalOutputPath(job);
+  if(_samePath(finalOutput,baseVideo)||_samePath(finalOutput,job.filePath)){_addLog('[Finalize] ❌ Đường dẫn đầu ra không được ghi đè video nguồn/P2 clean video. Hãy đổi tên file hoặc thư mục xuất.','error');return false;}
   const info=await window.api.videoInfo(baseVideo),videoMs=Number(info?.duration||0)*1000,voiceMs=Number(job.ttsAudioDurMs)||0,plan=_resolveFitPlan({...config,bgVolume:bgVol,removeVocal},videoMs,voiceMs);job.p3FitPlan=plan;
   if(!plan.ok){_addLog('[Finalize] ❌ Fit bị chặn: '+plan.reason,'error');return false;}
   _addLog(`[Finalize] 🚀 P3 final: strategy=${plan.selectedStrategy||plan.mode}; voice=${plan.voiceSpeed.toFixed(3)}x; video=${plan.videoSpeed.toFixed(3)}x; H.264 CRF=${quality.crf}/${quality.preset}; output=${finalOutput}`,'info');
@@ -91,11 +93,11 @@ export async function finalizeVideo(job){
   try{if(background.audioPath){mergeRes=await fetch(`${window.api.base}/api/mix-audio-tracks`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({video_path:videoForMix,tts_path:ttsAudio,bg_audio_path:background.audioPath,output_path:videoWithVoice,bg_volume:bgVol})}).then(r=>r.json());}else mergeRes=await window.api.replaceAudio(videoForMix,ttsAudio,videoWithVoice,bgVol);}catch(e){_addLog('[Finalize] ❌ Ghép audio lỗi: '+e.message,'error');return false;}
   if(!mergeRes||mergeRes.status!=='ok'){_addLog('[Finalize] ❌ Ghép audio thất bại: '+(mergeRes?.error||'Unknown'),'error');return false;}
 
-  if(hasSubtitle){const success=await _burnSubtitle(job,videoWithVoice,finalOutput,timedSrt);job.finalOutputPath=success?finalOutput:videoWithVoice;if(!success)_addLog('[Finalize] ⚠️ Dùng video có voice nhưng subtitle burn thất bại.','warning');}else job.finalOutputPath=finalOutput;
+  if(hasSubtitle){const success=await _burnSubtitle(job,videoWithVoice,finalOutput,timedSrt);if(!success){_addLog('[Finalize] ❌ Final render bị chặn vì subtitle burn thất bại.','error');return false;}job.finalOutputPath=finalOutput;}else job.finalOutputPath=finalOutput;
   job.outputPath=job.finalOutputPath;_addLog('[Finalize] 🎉 Hoàn tất! Video: '+job.finalOutputPath,'success');_showFinalOutputButton(job.finalOutputPath);window.renderJobList?.();window.updateStartButton?.();return true;
 }
 
-async function _burnSubOnly(job,videoPath,timedSrt){const finalOutput=_getFinalOutputPath(job),success=await _burnSubtitle(job,videoPath,finalOutput,timedSrt);if(!success)return false;job.finalOutputPath=finalOutput;job.outputPath=finalOutput;_showFinalOutputButton(finalOutput);window.renderJobList?.();return true;}
+async function _burnSubOnly(job,videoPath,timedSrt){const finalOutput=_getFinalOutputPath(job);if(_samePath(finalOutput,videoPath)||_samePath(finalOutput,job.filePath)){_addLog('[Finalize] ❌ Đường dẫn đầu ra không được ghi đè video nguồn/P2 clean video.','error');return false;}const success=await _burnSubtitle(job,videoPath,finalOutput,timedSrt);if(!success)return false;job.finalOutputPath=finalOutput;job.outputPath=finalOutput;_showFinalOutputButton(finalOutput);window.renderJobList?.();return true;}
 async function _burnSubtitle(job,videoPath,outputPath,srtContent){
   _addLog('[Finalize] 📝 Burn subtitle final...','info');
   const config=job.p3Config||{},quality=_exportQuality(config),assContent=String(job.karaokeAss||job.p3DerivedAss||'').trim();
