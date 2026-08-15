@@ -9,7 +9,6 @@ const QUALITY = {
 };
 
 let installed = false;
-let observer = null;
 
 function el(id) { return document.getElementById(id); }
 function baseName(pathValue) {
@@ -68,6 +67,7 @@ function installStyle() {
 #step-3-content .p3e-input,#step-3-content input,#step-3-content select,#step-3-content textarea,#step-3-content button{max-width:100%}
 #step-3-content .p3e-style-cats{max-width:100%;display:flex;flex-wrap:wrap;overflow:visible;padding-bottom:2px}
 #step-3-content .p3e-style-grid{grid-template-columns:repeat(2,minmax(0,1fr));overflow-x:hidden}
+#step-3-content #p3e-export-summary{display:none}
 #step-3-content .p3e-export-rev4{display:grid;gap:9px}
 #step-3-content .p3e-export-path-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:end}
 #step-3-content .p3e-export-path{overflow-wrap:anywhere;word-break:break-word}
@@ -98,6 +98,7 @@ function exportMarkup() {
     <label>Thư mục đầu ra<div class="p3e-export-path-row"><input id="p3e-output-dir" class="p3e-input" type="text" readonly><button id="p3e-choose-output-dir" class="p3e-btn" type="button">Chọn…</button></div></label>
     <label>Tên file<input id="p3e-output-name" class="p3e-input" type="text" placeholder="video_final.mp4"></label>
     <div><label>Chất lượng H.264</label><div class="p3e-export-quality">${Object.entries(QUALITY).map(([key,item])=>`<button type="button" data-p3-quality="${key}"><b>${item.label}</b><small>${item.detail}</small></button>`).join('')}</div></div>
+    <div id="p3e-export-contract" class="p3e-note"></div>
     <div id="p3e-output-path" class="p3e-note p3e-export-path"></div>
   </div>`;
 }
@@ -124,10 +125,10 @@ function syncExportUi() {
   const nameInput = el('p3e-output-name');
   if (dirInput && document.activeElement !== dirInput) dirInput.value = actualDir;
   if (nameInput && document.activeElement !== nameInput) nameInput.value = name;
+  const contract = el('p3e-export-contract');
+  if (contract) contract.textContent = `MP4 · H.264/libx264 · CRF ${quality.crf} · ${quality.preset} · giữ resolution/FPS nguồn · không resize`;
   const pathBox = el('p3e-output-path');
   if (pathBox) pathBox.textContent = `Đầu ra: ${getP3OutputPath(job)}`;
-  const legacySummary = el('p3e-export-summary');
-  if (legacySummary) legacySummary.textContent = `MP4 · H.264/libx264 · CRF ${quality.crf} · ${quality.preset} · giữ resolution/FPS nguồn · không resize`;
   document.querySelectorAll('[data-p3-quality]').forEach(button => button.classList.toggle('active', button.dataset.p3Quality === (config.exportQuality || 'high')));
 }
 
@@ -178,18 +179,7 @@ function installWhenReady(attempt = 0) {
   ensureAudioWarning();
   const ready = ensureExportUi();
   bindGlobalSync();
-  if (ready) {
-    observer?.disconnect();
-    const host = document.getElementById('step-3-content');
-    if (host) {
-      observer = new MutationObserver(() => {
-        ensureAudioWarning();
-        ensureExportUi();
-      });
-      observer.observe(host, { childList: true, subtree: true });
-    }
-    return;
-  }
+  if (ready) return;
   if (attempt < 80) setTimeout(() => installWhenReady(attempt + 1), 100);
 }
 
