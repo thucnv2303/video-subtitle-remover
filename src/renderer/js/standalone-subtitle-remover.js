@@ -57,12 +57,14 @@
   function ensureStandaloneControls() {
     const step2 = document.getElementById('step-2-content');
     if (!step2 || document.getElementById('standalone-subtitle-actions')) return;
-    const host = document.getElementById('job-list')?.parentElement || step2;
+    const actionGrid = step2.querySelector('.p2-action-grid');
+    const queueCard = step2.querySelector('.p2-queue-card');
+    const host = actionGrid || queueCard || document.getElementById('job-list')?.parentElement || step2;
     const bar = document.createElement('div');
     bar.id = 'standalone-subtitle-actions';
-    bar.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px';
-    bar.innerHTML = '<button id="standalone-add-videos" class="btn btn-primary" type="button">＋ Thêm Video</button><button id="standalone-run-all" class="btn btn-secondary" type="button">▶ Chạy tất cả</button><span id="standalone-queue-summary" style="font-size:12px;opacity:.75"></span>';
-    host.insertBefore(bar, host.firstChild);
+    bar.style.cssText = actionGrid ? 'display:contents' : 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px';
+    bar.innerHTML = '<button id="standalone-add-videos" class="p2-btn p2-sync-btn" type="button">＋ Thêm Video</button><button id="standalone-run-all" class="p2-btn p2-sync-btn" type="button">▶ Chạy tất cả</button><span id="standalone-queue-summary" class="p2-muted"></span>';
+    if (actionGrid) actionGrid.insertBefore(bar, actionGrid.firstChild); else host.insertBefore(bar, host.firstChild);
     document.getElementById('standalone-add-videos').addEventListener('click', openStandaloneFiles);
     document.getElementById('standalone-run-all').addEventListener('click', () => {
       const count = window.pipelineStateGate?.startAllStandalone?.() || 0;
@@ -71,12 +73,32 @@
   }
 
   function syncStandaloneChrome() {
+    const pane = document.getElementById('step-2-content');
     const controls = document.getElementById('standalone-subtitle-actions');
-    if (controls) controls.style.display = standaloneActive ? 'flex' : 'none';
+    if (controls) controls.style.display = standaloneActive ? (controls.parentElement?.classList.contains('p2-action-grid') ? 'contents' : 'flex') : 'none';
     const jobs = getState()?.jobs?.filter(job => job.standaloneSubtitleRemoval) || [];
     const summary = document.getElementById('standalone-queue-summary');
     if (summary) summary.textContent = `${jobs.length} video • ${jobs.filter(job => ['ready','error'].includes(job.p2Status)).length} sẵn sàng • ${jobs.filter(job => job.p2Status === 'finished').length} hoàn tất`;
-    document.querySelectorAll('[data-p1-provenance], .p2-provenance, .pipeline-provenance, .p2-unlock-note').forEach(node => { node.style.display = standaloneActive ? 'none' : ''; });
+
+    const p1Summary = pane?.querySelector('.p2-p1-summary');
+    const sourceBadge = pane?.querySelector('.p2-source-badge');
+    if (p1Summary) p1Summary.style.display = standaloneActive ? 'none' : '';
+    if (sourceBadge) sourceBadge.style.display = standaloneActive ? 'none' : '';
+
+    const headerTitle = pane?.querySelector('.p2-page-title-row h1');
+    const headerCopy = pane?.querySelector('.p2-page-title-row p');
+    const queueHint = pane?.querySelector('.p2-queue-hint');
+    const queueVideoHeader = pane?.querySelector('.p2-queue-head span:nth-child(2)');
+    if (headerTitle) headerTitle.textContent = standaloneActive ? 'Xóa Sub · Xóa phụ đề độc lập' : 'Pipeline 2 · Xóa phụ đề';
+    if (headerCopy) headerCopy.textContent = standaloneActive ? 'Thêm một hoặc nhiều video và xóa burned-in subtitle trực tiếp, không cần Pipeline 1 hoặc Pipeline 3.' : 'Loại bỏ phụ đề cháy khỏi video gốc. Chỉ xử lý các Job đã hoàn tất và được mở khóa từ Pipeline 1.';
+    if (queueHint) queueHint.textContent = standaloneActive ? 'Thêm nhiều video trực tiếp. Mỗi video là một Job độc lập và được xử lý tuần tự qua engine Xóa Sub hiện có.' : 'Chỉ hiển thị Job đủ điều kiện từ Pipeline 1. Danh sách tự cuộn khi có nhiều Job.';
+    if (queueVideoHeader) queueVideoHeader.textContent = standaloneActive ? 'Video' : 'Video (từ Pipeline 1)';
+
+    const syncButton = document.getElementById('p2-sync-jobs');
+    if (syncButton) syncButton.style.display = standaloneActive ? 'none' : '';
+    const deleteButton = document.getElementById('p2-delete-selected');
+    if (deleteButton) deleteButton.style.display = standaloneActive ? 'none' : '';
+    pane?.classList.toggle('standalone-subtitle-active', standaloneActive);
   }
 
   function enterStandaloneMode() {
@@ -90,6 +112,7 @@
     ['1','2','3'].forEach(step => { const pane = document.getElementById(`step-${step}-content`); if (!pane) return; const active = step === '2'; pane.classList.toggle('active', active); pane.style.display = active ? '' : 'none'; });
     ensureStandaloneControls(); installRegionObserver(); decorateRegionMasks(); syncStandaloneChrome();
     window.renderJobList?.(); window.pipelineStateGate?.selectP2Job?.(); window.pipelineStateGate?.scheduleSync?.();
+    window.dispatchEvent(new Event('resize'));
   }
 
   function exitStandaloneMode() {
