@@ -217,6 +217,15 @@ function installStandaloneSubtitleInteractionsScript() {
   document.head.appendChild(script);
 }
 
+function installStandaloneOutputFolderScript() {
+  if (document.querySelector('script[data-standalone-output-folder]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/standalone-output-folder.js';
+  script.defer = true;
+  script.dataset.standaloneOutputFolder = 'true';
+  document.head.appendChild(script);
+}
+
 function installVoiceRenderScript() {
   if (document.querySelector('script[data-voice-render]')) return;
   const script = document.createElement('script');
@@ -243,6 +252,7 @@ window.addEventListener('DOMContentLoaded', () => {
   installStandaloneSubtitleRemoverStyles();
   installStandaloneSubtitleRemoverScript();
   installStandaloneSubtitleInteractionsScript();
+  installStandaloneOutputFolderScript();
   installVoiceRenderScript();
   installVoiceRenderQualityFixScript();
   let attempts = 0;
