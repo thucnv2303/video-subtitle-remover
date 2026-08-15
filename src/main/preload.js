@@ -190,6 +190,15 @@ function installP2RuntimeScript() {
   document.head.appendChild(script);
 }
 
+function installStandaloneSubtitleRemoverStyles() {
+  if (document.querySelector('link[data-standalone-subtitle-remover-styles]')) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'styles/standalone-subtitle-remover.css';
+  link.dataset.standaloneSubtitleRemoverStyles = 'true';
+  document.head.appendChild(link);
+}
+
 function installStandaloneSubtitleRemoverScript() {
   if (document.querySelector('script[data-standalone-subtitle-remover]')) return;
   const script = document.createElement('script');
@@ -222,6 +231,7 @@ window.addEventListener('DOMContentLoaded', () => {
   installP1SpinnerPhaseScript();
   installP1RunUxScript();
   installP2RuntimeScript();
+  installStandaloneSubtitleRemoverStyles();
   installStandaloneSubtitleRemoverScript();
   installVoiceRenderScript();
   installVoiceRenderQualityFixScript();
