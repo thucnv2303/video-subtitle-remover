@@ -181,12 +181,30 @@ function installP1RunUxScript() {
   document.head.appendChild(script);
 }
 
+function installPipelineStateScript() {
+  if (document.querySelector('script[data-pipeline-state]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/pipeline-state.js';
+  script.defer = true;
+  script.dataset.pipelineState = 'true';
+  document.head.appendChild(script);
+}
+
 function installP2RuntimeScript() {
   if (document.querySelector('script[data-pipeline2-runtime]')) return;
   const script = document.createElement('script');
   script.src = 'js/pipeline2-runtime.js';
   script.defer = true;
   script.dataset.pipeline2Runtime = 'true';
+  document.head.appendChild(script);
+}
+
+function installStandaloneSubtitleRemoverScript() {
+  if (document.querySelector('script[data-standalone-subtitle-remover]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/standalone-subtitle-remover.js';
+  script.defer = true;
+  script.dataset.standaloneSubtitleRemover = 'true';
   document.head.appendChild(script);
 }
 
@@ -212,7 +230,9 @@ window.addEventListener('DOMContentLoaded', () => {
   installFilePathCompatScript();
   installP1SpinnerPhaseScript();
   installP1RunUxScript();
+  installPipelineStateScript();
   installP2RuntimeScript();
+  installStandaloneSubtitleRemoverScript();
   installVoiceRenderScript();
   installVoiceRenderQualityFixScript();
   let attempts = 0;
