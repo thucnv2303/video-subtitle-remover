@@ -37,6 +37,9 @@ function defaultFileName(job) {
   const source = baseName(job?.filePath || job?.p3CleanVideoPath || job?.outputPath || 'video.mp4');
   return `${source.replace(/\.[^.]+$/, '')}_final.mp4`;
 }
+function defaultDirectory(job) {
+  return dirName(job?.filePath || job?.p3CleanVideoPath || job?.outputPath || '');
+}
 
 export function getP3ExportQuality(config = {}) {
   return QUALITY[config.exportQuality] || QUALITY.high;
@@ -46,7 +49,7 @@ export function getP3OutputPath(job) {
   if (!job) return '';
   const config = ensureP3Config(job);
   const fileName = sanitizeFileName(config.outputFileName, defaultFileName(job));
-  const directory = String(config.outputDirectory || '').trim() || dirName(job.filePath || job.p3CleanVideoPath || job.outputPath);
+  const directory = String(config.outputDirectory || '').trim() || defaultDirectory(job);
   return joinPath(directory, fileName);
 }
 
@@ -63,7 +66,7 @@ function installStyle() {
 #step-3-content .p3e-grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
 #step-3-content .p3e-grid2>*,#step-3-content .p3e-advanced-style-grid>*{min-width:0}
 #step-3-content .p3e-input,#step-3-content input,#step-3-content select,#step-3-content textarea,#step-3-content button{max-width:100%}
-#step-3-content .p3e-style-cats{max-width:100%;overflow-x:auto;overflow-y:hidden}
+#step-3-content .p3e-style-cats{max-width:100%;display:flex;flex-wrap:wrap;overflow:visible;padding-bottom:2px}
 #step-3-content .p3e-style-grid{grid-template-columns:repeat(2,minmax(0,1fr));overflow-x:hidden}
 #step-3-content .p3e-export-rev4{display:grid;gap:9px}
 #step-3-content .p3e-export-path-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:end}
@@ -75,7 +78,7 @@ function installStyle() {
 #step-3-content .p3e-export-quality small{margin-top:3px;color:#8398ad;font-size:8px}
 #step-3-content .p3e-vocal-strict-note{border-color:rgba(245,158,11,.42);background:rgba(120,53,15,.12);color:#f6d69a}
 @media(max-width:1380px){#step-3-content .p3e-shell{grid-template-columns:205px minmax(440px,1fr) 330px;gap:8px;padding:8px}#step-3-content .p3e-grid2,#step-3-content .p3e-advanced-style-grid{grid-template-columns:1fr}}
-@media(max-width:1160px){#step-3-content .p3e-shell{grid-template-columns:190px minmax(410px,1fr) 310px}#step-3-content .p3e-style-grid{grid-template-columns:1fr}}
+@media(max-width:1160px){#step-3-content .p3e-shell{grid-template-columns:190px minmax(410px,1fr) 310px}#step-3-content .p3e-style-grid,#step-3-content .p3e-export-quality{grid-template-columns:1fr}}
 `;
   document.head.appendChild(style);
 }
@@ -92,7 +95,7 @@ function ensureAudioWarning() {
 
 function exportMarkup() {
   return `<div id="p3e-export-rev4" class="p3e-export-rev4">
-    <label>Thư mục đầu ra<div class="p3e-export-path-row"><input id="p3e-output-dir" class="p3e-input" type="text" readonly placeholder="Mặc định: cùng thư mục video nguồn"><button id="p3e-choose-output-dir" class="p3e-btn" type="button">Chọn…</button></div></label>
+    <label>Thư mục đầu ra<div class="p3e-export-path-row"><input id="p3e-output-dir" class="p3e-input" type="text" readonly><button id="p3e-choose-output-dir" class="p3e-btn" type="button">Chọn…</button></div></label>
     <label>Tên file<input id="p3e-output-name" class="p3e-input" type="text" placeholder="video_final.mp4"></label>
     <div><label>Chất lượng H.264</label><div class="p3e-export-quality">${Object.entries(QUALITY).map(([key,item])=>`<button type="button" data-p3-quality="${key}"><b>${item.label}</b><small>${item.detail}</small></button>`).join('')}</div></div>
     <div id="p3e-output-path" class="p3e-note p3e-export-path"></div>
@@ -114,13 +117,17 @@ function syncExportUi() {
   const config = ensureP3Config(job);
   const fallbackName = defaultFileName(job);
   const name = sanitizeFileName(config.outputFileName, fallbackName);
-  const dir = String(config.outputDirectory || '').trim();
+  const configuredDir = String(config.outputDirectory || '').trim();
+  const actualDir = configuredDir || defaultDirectory(job);
+  const quality = getP3ExportQuality(config);
   const dirInput = el('p3e-output-dir');
   const nameInput = el('p3e-output-name');
-  if (dirInput && document.activeElement !== dirInput) dirInput.value = dir;
+  if (dirInput && document.activeElement !== dirInput) dirInput.value = actualDir;
   if (nameInput && document.activeElement !== nameInput) nameInput.value = name;
   const pathBox = el('p3e-output-path');
   if (pathBox) pathBox.textContent = `Đầu ra: ${getP3OutputPath(job)}`;
+  const legacySummary = el('p3e-export-summary');
+  if (legacySummary) legacySummary.textContent = `MP4 · H.264/libx264 · CRF ${quality.crf} · ${quality.preset} · giữ resolution/FPS nguồn · không resize`;
   document.querySelectorAll('[data-p3-quality]').forEach(button => button.classList.toggle('active', button.dataset.p3Quality === (config.exportQuality || 'high')));
 }
 
