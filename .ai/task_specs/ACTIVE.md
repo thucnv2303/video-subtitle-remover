@@ -1,56 +1,86 @@
 # Active PM Execution Spec
 
-Status: PIPELINE3_FINAL_COMPOSITION_017_SUBTITLE_STYLE_ENGINE_REV3_CODE_REVIEW_PASS_STATIC_OWNER_VERIFY_WAITING
+Status: PIPELINE3_FINAL_COMPOSITION_017_RUNTIME_FIX_REV4_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_REVERIFY_WAITING
 
 Task: `PIPELINE3-FINAL-COMPOSITION-017`
 Repository: `thucnv2303/video-subtitle-remover`
 Branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58
-Rev3 starting HEAD: `e2b8af05a4ea0baefa164534598cc25668110feb`
-Reviewed Rev3 application-source head: `1d3544372e0323473b3de1771464aca9cc9d9b04`
-Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-STYLE-ENGINE-REV3.md`
+Rev4 starting HEAD: `92deaf8fa72094fbad3f84c75c716967acbc509d`
+Reviewed Rev4 application-source HEAD: `d5aae15c5471f0e23f35ac3ae7cc205fc47b0fe3`
+Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-RUNTIME-FIX-REV4.md`
 
 ## Purpose
-Verify the CapCut-inspired P3 Subtitle Style Engine V1:
-- 32 data-driven style presets across 8 categories;
-- one-click style application plus existing detailed controls;
-- underline / spacing / text opacity / glow;
-- real ASS rendering for new properties;
-- no broad NLE expansion.
+Re-verify the three Owner runtime blockers after Rev4:
+- right inspector clipping;
+- Remove Vocal semantic failure;
+- missing destination/real export-quality controls.
 
-## Source scope from Rev3 start
-- new `src/renderer/js/pipeline3/subtitle-style-engine.js`
+## Owner result for previous build
+`NEEDS_REVISION` / runtime FAIL.
+
+## Rev4 source contract
+### Inspector
+- no hidden horizontal inspector overflow;
+- nested controls are width-contained;
+- style categories wrap;
+- responsive grids collapse before clipping.
+
+### Remove Vocal
+- background > 0 + Remove Vocal ON requires `method_used=demucs`;
+- all weaker fallback methods block render;
+- no silent original-vocal fallback is permitted.
+
+### Export
+Per Job:
+- choose output directory;
+- edit MP4 filename;
+- exact path preview;
+- quality choices: CRF20/medium, CRF18/slow, CRF16/slow, CRF14/slower;
+- source resolution/FPS preserved; no resize;
+- source/P2 clean video overwrite is blocked.
+
+### Render engine
+P3 uses `src/main/p3-export-bridge.js` through preload for actual FFmpeg H.264 retime/final ASS burn. Python backend routes remain unchanged.
+
+Final ASS is rebuilt from final timed SRT immediately before burn, preserving timing after voice tempo changes. Subtitle burn failure fails the render.
+
+## Rev4 application source
+- `src/main/p3-export-bridge.js`
+- `src/main/preload.js`
+- `src/renderer/js/pipeline1-run-config.js`
 - `src/renderer/js/pipeline3/editor-store.js`
-- `src/renderer/js/pipeline3/subtitle-ass.js`
-- `src/renderer/js/pipeline1-run-config.js` — one import-only bootstrap line.
+- `src/renderer/js/pipeline3/runtime-fix-rev4.js`
+- `src/renderer/js/pipelines/pipeline3-finalize.js`
 
-No backend/P2/TTS/finalizer/dependency change.
+No backend/P1 execution/P2/TTS/dependency source change.
 
 ## Required exact-checkout verification
 ```text
-node --check src/renderer/js/pipeline3/subtitle-style-engine.js
+node --check src/main/p3-export-bridge.js
+node --check src/main/preload.js
+node --check src/renderer/js/pipeline3/runtime-fix-rev4.js
 node --check src/renderer/js/pipeline3/editor-store.js
-node --check src/renderer/js/pipeline3/subtitle-ass.js
+node --check src/renderer/js/pipelines/pipeline3-finalize.js
 node --check src/renderer/js/pipeline1-run-config.js
-git diff --check e2b8af05a4ea0baefa164534598cc25668110feb..HEAD
+git diff --check 92deaf8fa72094fbad3f84c75c716967acbc509d..HEAD
 ```
 
 ## Owner runtime acceptance
-1. Reuse existing local test directory only.
-2. Exact HEAD must match current PR #58 head.
-3. Browse Basic/Social/Tutorial/Karaoke/Highlight/Glow/Box/Cover and apply at least one style from each.
-4. Two Jobs retain different style presets/configs.
-5. Test underline, letter spacing, text opacity and glow controls.
-6. Test Neon Blue and Neon Pink preview, then render one short non-karaoke glow sample.
-7. If karaoke ASS is available, apply one Karaoke preset and verify timing/highlight remains intact.
-8. Recheck subtitle width handles, position drag, cover band and cue editing after style changes.
+1. Reuse existing local test directory only; exact HEAD must match PR #58.
+2. Open P3 at the same window size as the failing screenshot; no right-panel setting/card may be clipped.
+3. Choose a custom output folder and filename; final file must be written there.
+4. Test `Cao` or `Rất cao`; render log must show the matching CRF/preset.
+5. With Remove Vocal ON + background > 0: accepted run must log `method=demucs` and materially remove original vocal. Non-Demucs fallback must block.
+6. Final subtitle timing/style must remain correct.
+7. Re-render must still start from P2 clean video.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING exact checkout.
 - Code review: PASS logic/scope.
-- Owner runtime: WAITING.
+- Owner runtime: FAIL previous build / WAITING Rev4.
 - Documentation synchronization: PASS pre-runtime after PR body update.
 - Merge: BLOCKED.
 
 ## Next permitted action
-Reverify live PR #58 exact final head/checks/comments, then Owner tests exact head. No merge.
+Verify live PR #58 exact final head/checks/comments, then Owner performs exact-checkout static + focused Rev4 runtime test. No merge.
