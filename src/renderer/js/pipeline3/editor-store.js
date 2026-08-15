@@ -42,7 +42,7 @@ export function ensureP3Config(job) {
   if (!job) return null;
   const defaults = {
     preset: 'youtube',
-    stylePresetId: 'social-youtube-bold',
+    stylePresetId: 'custom',
     subtitleEnabled: Boolean(job.ttsTimedSrt || job.voiceSubContent || job.karaokeAss),
     fontFamily: 'Arial', fontSize: 46, bold: true, italic: false, underline: false,
     textColor: '#ffffff', textOpacity: 100, outlineColor: '#000000', outlineWidth: 3, shadow: 2,
