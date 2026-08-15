@@ -1,54 +1,52 @@
 # Current State
 
 ## Status
-STANDALONE-SUBTITLE-REMOVER-010 — READY FOR PM DIRECT IMPLEMENTATION / SOURCE NOT YET IMPLEMENTED / MERGE BLOCKED
+STANDALONE-SUBTITLE-REMOVER-010 — SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RUNTIME BLOCKED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Review branch: `review/STANDALONE-SUBTITLE-REMOVER-010`.
-- Draft PR: #59.
-- Parent/base branch: `review/PIPELINE1-STANDARD-CJK-GUARD-008`.
-- Exact task base SHA: `330d756fcce1b71ca8745b3292d7ac655bc32d13`.
-- Last verified pre-sync task branch HEAD: `6ad17f5ba3ec8c8654eb6086045408f821e7b777`; exact live HEAD must always be re-read from GitHub before editing.
-- Active authority: `.ai/task_specs/ACTIVE.md` + `.ai/task_specs/STANDALONE-SUBTITLE-REMOVER-010.md` on the current task ref.
+- Review branch / Draft PR: `review/STANDALONE-SUBTITLE-REMOVER-010` / #59.
+- Corrected runtime base branch: `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE`.
+- Corrected runtime base SHA: `92deaf8fa72094fbad3f84c75c716967acbc509d`.
+- Reviewed source HEAD before this docs commit: `08729502dbbcea334caf6151b0289cd57cf39e16`.
+- Active task: `.ai/task_specs/ACTIVE.md` + `.ai/task_specs/STANDALONE-SUBTITLE-REMOVER-010.md`.
 
-## Verified repository state — 2026-08-15
-- PR #59 is open, Draft, unmerged, based on `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756f...`.
-- Comparing task base `330d756f...` to verified task HEAD `6ad17f5b...` shows only:
-  - `.ai/task_specs/ACTIVE.md`
-  - `.ai/task_specs/STANDALONE-SUBTITLE-REMOVER-010.md`
-- Therefore no application source implementation is published yet.
-- The previously attempted `src/renderer/js/standalone-subtitle-remover.js` is absent on the verified task HEAD.
+## Runtime-base correction
+The original task base `330d756fcce1b71ca8745b3292d7ac655bc32d13` predates the active Voice Render runtime lineage. Owner reported the real app running at `92deaf8fa72094fbad3f84c75c716967acbc509d`; GitHub verification confirmed that ref contains the active Voice Render bootstrap/runtime. PR #59 was therefore retargeted to the pinned runtime-base branch at exactly `92deaf8...`.
 
-## Verified source findings for implementation
-- `src/renderer/js/app.js` is the active P2 controller and exposes shared state via `window._appState`; do not create a second P2 store.
-- Existing Step 2 DOM lives in `src/renderer/index.html`; reuse it rather than cloning P2 markup/IDs.
-- Voice Render dynamically inserts `#nav-voice-render` immediately before Settings; standalone `Xoa Sub` must be inserted directly after Voice Render without changing Voice Render processing.
-- Manual `runNextPass()` currently sends `mask_mode: job.maskMode || 'box'`; task 010 must change only the manual pass to `region.maskMode || job.maskMode || 'box'`. Auto remains job-level.
-- Manual region list currently has no per-region mask selector.
-- Drawing cursor is already toggled to crosshair on the original canvas, but successful region creation currently sets `state.isDrawing = false`; task 010 must keep drawing active for continuous multi-region drawing.
-- Current drawing maps `canvas-inner-orig` viewport coordinates back to source video coordinates; do not rewrite this mapping without new failure evidence.
+## Published source
+Source implementation is intentionally narrow:
+- new `src/renderer/js/standalone-subtitle-remover.js`;
+- `src/renderer/js/pipeline1-run-config.js` adds one import-only bootstrap line.
 
-## Product outcome
-Add a standalone sidebar entry `Xoa Sub` directly below Voice Render. It opens the existing P2 workspace as an independent removal tool, without requiring P1/P3 and without duplicating backend/state/DOM.
+`src/renderer/js/app.js`, `src/renderer/index.html`, backend/inpaint, Voice Render processing, P1 processing, TTS and P3 processing are unchanged by task 010 source publication.
 
-## Scope
-Primary source scope:
-- `src/renderer/index.html`
-- `src/renderer/js/app.js`
-- `src/renderer/styles/main.css`
+## Reviewed behavior
+- `Xóa Sub` mounts directly after dynamic `#nav-voice-render`.
+- Standalone mode reuses `page-home` and existing Step 2 DOM; no duplicate P2 DOM/state/backend.
+- Existing shared `window._appState` remains the only P2 state authority.
+- Manual region rows receive Box/Tight/Soft selectors; default is `region.maskMode || job.maskMode || 'box'`.
+- The request bridge only overrides `mask_mode` for the currently processing manual P2 pass using `processingJobId + processingPassIndex`; Auto remains job-level.
+- Draw state is restored after successful region creation so Region 2/3 can be drawn without re-enabling Draw.
+- Auto/Draw-off clears crosshair.
+- Existing preview-to-source coordinate mapping is not rewritten.
 
-A small renderer helper is allowed only when clearly safer than direct active-controller changes and it must have an explicit bootstrap/load path.
-
-Forbidden: P1 AI/Semantic, Voice Render processing, TTS, P3, backend/inpaint duplication, dependency churn, BUG-039/BUG-040, broad refactor.
+## Verification evidence
+- GitHub PR #59 exact source HEAD verified: `08729502dbbcea334caf6151b0289cd57cf39e16`.
+- PR is open, Draft, unmerged.
+- PR base is corrected runtime base `92deaf8...`.
+- No unresolved review threads or PR comments were present at review time.
+- GitHub returned no CI/check statuses for the source HEAD.
+- PM reviewed the full source diff and relevant baseline source; logic/scope review PASS.
+- Exact-checkout static verification could not be executed in the PM environment because outbound DNS/network access to GitHub failed. Do not infer static PASS from source inspection.
 
 ## Gates
-- Execution: NOT STARTED / source not published.
-- Automated/static verification: WAITING.
-- Code review: WAITING.
-- Owner manual app verification: NOT STARTED.
-- Documentation synchronization: PASS for pre-implementation task handoff after this docs sync.
+- Execution: PASS — source published.
+- Automated/static verification: WAITING — exact checkout `node --check` and `git diff --check` evidence still required.
+- Code review: PASS — logic and scope reviewed against GitHub source/diff.
+- Owner manual app verification: NOT STARTED / BLOCKED until static evidence passes.
+- Documentation synchronization: PASS after this docs-state commit is published.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-In the next chat, first re-read PR #59 exact current HEAD and canonical task files. If PR still contains no application source, implement task 010 directly on the existing review branch according to the remote task spec, publish a separate source commit, then review GitHub diff/full files before Owner runtime. Do not merge.
+On a clean local checkout of exact current PR HEAD, run required static commands. If all PASS, Owner may run the task-010 manual QA checklist. No merge.
