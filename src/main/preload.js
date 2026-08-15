@@ -181,15 +181,6 @@ function installP1RunUxScript() {
   document.head.appendChild(script);
 }
 
-function installPipelineStateScript() {
-  if (document.querySelector('script[data-pipeline-state]')) return;
-  const script = document.createElement('script');
-  script.src = 'js/pipeline-state.js';
-  script.defer = true;
-  script.dataset.pipelineState = 'true';
-  document.head.appendChild(script);
-}
-
 function installP2RuntimeScript() {
   if (document.querySelector('script[data-pipeline2-runtime]')) return;
   const script = document.createElement('script');
@@ -230,7 +221,6 @@ window.addEventListener('DOMContentLoaded', () => {
   installFilePathCompatScript();
   installP1SpinnerPhaseScript();
   installP1RunUxScript();
-  installPipelineStateScript();
   installP2RuntimeScript();
   installStandaloneSubtitleRemoverScript();
   installVoiceRenderScript();
