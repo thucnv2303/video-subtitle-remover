@@ -17,8 +17,42 @@
   function isCompleted(job) {
     if (!job) return false;
     if (job.status === 'finished' || job.p2Status === 'finished') return true;
-    const progress = Number(job.p2Progress ?? job.progress ?? 0);
-    return progress >= 100 && Boolean(job.finalOutputPath || job.outputPath);
+    return Number(job.p2Progress ?? job.progress ?? 0) >= 100;
+  }
+
+  function findJobForCard(card, standaloneJobs, index) {
+    const jobId = card.dataset.jobId || card.dataset.pipelineJobId;
+    if (jobId) {
+      const exact = state()?.jobs?.find(item => item.id === jobId);
+      if (exact) return exact;
+    }
+    return standaloneJobs[index] || null;
+  }
+
+  function installFolderAction(card, job) {
+    if (!card || !job || !isStandaloneJob(job) || !isCompleted(job)) return;
+    const dir = outputDirectory(job);
+    if (!dir) return;
+
+    const detail = card.querySelector('.job-detail') || card;
+    let button = card.querySelector('.open-fp');
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn btn-xs btn-ghost open-fp';
+      detail.appendChild(button);
+    }
+
+    button.dataset.openOutputFolder = 'true';
+    button.textContent = '📁';
+    button.title = 'Mở thư mục lưu trữ';
+    button.setAttribute('aria-label', `Mở thư mục lưu trữ của ${job.fileName || 'video'}`);
+    button.style.cssText = 'margin-left:8px;padding:2px 6px;line-height:1;cursor:pointer;flex:0 0 auto';
+    button.onclick = event => {
+      event.preventDefault();
+      event.stopPropagation();
+      window.electronAPI?.openPath?.(dir);
+    };
   }
 
   function renderFolderActions() {
@@ -27,48 +61,14 @@
     if (!s || !list || s.standaloneSubtitleMode !== true) return;
 
     const standaloneJobs = (s.jobs || []).filter(isStandaloneJob);
-    const visibleCards = [...list.querySelectorAll('.job-card')].filter(card => card.style.display !== 'none');
-
-    visibleCards.forEach((card, index) => {
-      const jobId = card.dataset.jobId || card.dataset.pipelineJobId;
-      const job = (jobId && s.jobs.find(item => item.id === jobId)) || standaloneJobs[index] || null;
-      if (!job || !isStandaloneJob(job) || !isCompleted(job)) return;
-
-      const dir = outputDirectory(job);
-      if (!dir) return;
-
-      const detail = card.querySelector('.job-detail') || card;
-      const legacy = card.querySelector('.open-fp');
-      let button = card.querySelector('[data-open-output-folder="true"]');
-
-      if (!button && legacy) {
-        button = legacy.cloneNode(false);
-        legacy.replaceWith(button);
-      }
-      if (!button) {
-        button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'btn btn-xs btn-ghost open-fp';
-        detail.appendChild(button);
-      }
-
-      button.dataset.openOutputFolder = 'true';
-      button.textContent = '📁';
-      button.title = 'Mở thư mục lưu trữ';
-      button.setAttribute('aria-label', `Mở thư mục lưu trữ của ${job.fileName || 'video'}`);
-      button.style.cssText = 'margin-left:8px;padding:2px 6px;line-height:1;cursor:pointer;flex:0 0 auto';
-      button.onclick = event => {
-        event.preventDefault();
-        event.stopPropagation();
-        window.electronAPI?.openPath?.(dir);
-      };
-    });
+    const cards = [...list.querySelectorAll('.job-card')].filter(card => card.style.display !== 'none');
+    cards.forEach((card, index) => installFolderAction(card, findJobForCard(card, standaloneJobs, index)));
   }
 
   function patchRenderer() {
     if (patched || typeof window.renderJobList !== 'function') return false;
     const original = window.renderJobList;
-    window.renderJobList = function outputFolderAwareRenderJobList(...args) {
+    window.renderJobList = function standaloneFolderAwareRenderJobList(...args) {
       const result = original.apply(this, args);
       renderFolderActions();
       return result;
