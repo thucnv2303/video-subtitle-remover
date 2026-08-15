@@ -1,4 +1,5 @@
 import { planP3Fit } from '../pipeline3/fit-planner.js';
+import { updateJobDerivedAss } from '../pipeline3/subtitle-ass.js';
 
 /** Pipeline 3 — focused final composition. P1/P2 source artifacts remain immutable. */
 const EXPORT_QUALITY={balanced:{crf:20,preset:'medium'},high:{crf:18,preset:'slow'},very_high:{crf:16,preset:'slow'},max:{crf:14,preset:'slower'}};
@@ -100,7 +101,14 @@ export async function finalizeVideo(job){
 async function _burnSubOnly(job,videoPath,timedSrt){const finalOutput=_getFinalOutputPath(job);if(_samePath(finalOutput,videoPath)||_samePath(finalOutput,job.filePath)){_addLog('[Finalize] ❌ Đường dẫn đầu ra không được ghi đè video nguồn/P2 clean video.','error');return false;}const success=await _burnSubtitle(job,videoPath,finalOutput,timedSrt);if(!success)return false;job.finalOutputPath=finalOutput;job.outputPath=finalOutput;_showFinalOutputButton(finalOutput);window.renderJobList?.();return true;}
 async function _burnSubtitle(job,videoPath,outputPath,srtContent){
   _addLog('[Finalize] 📝 Burn subtitle final...','info');
-  const config=job.p3Config||{},quality=_exportQuality(config),assContent=String(job.karaokeAss||job.p3DerivedAss||'').trim();
+  const config=job.p3Config||{},quality=_exportQuality(config);let info=job.p3VideoInfo||{};
+  if(!(Number(info.width)>0&&Number(info.height)>0)){try{info=await window.api.videoInfo(videoPath);}catch{info={};}}
+  const sourceSrt=job.p3BaseTimedSrt||job.ttsTimedSrt||'',timingChanged=String(srtContent||'').trim()!==String(sourceSrt||'').trim(),renderConfig=timingChanged?{...config,preserveKaraoke:false}:config;
+  if(String(srtContent||'').trim()&&Number(info.width)>0&&Number(info.height)>0)job.p3AssTimedSrt=srtContent;
+  let assContent='';
+  try{assContent=updateJobDerivedAss(job,renderConfig,Number(info.width)||1920,Number(info.height)||1080);}finally{delete job.p3AssTimedSrt;}
+  if(timingChanged&&config.preserveKaraoke&&job.p3OriginalKaraokeAss)_addLog('[P3] Timing final đã đổi: rebuild ASS từ SRT final để tránh lệch karaoke timing P1.','info');
+  assContent=String(assContent||job.karaokeAss||job.p3DerivedAss||'').trim();
   if(!assContent){_addLog('[Finalize] ❌ Không có derived ASS P3; chặn burn để tránh preview/final lệch.','error');return false;}
   if(!window.electronAPI?.burnP3SubtitleHq){_addLog('[Finalize] ❌ P3 high-quality export bridge chưa sẵn sàng.','error');return false;}
   try{
