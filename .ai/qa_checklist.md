@@ -1,53 +1,61 @@
 # QA Checklist
 
 ## Active task
-`PIPELINE1-LOG-OBSERVABILITY-009 — P1 Log Observability`
+`STANDALONE-SUBTITLE-REMOVER-010 — Standalone Xoa Sub using existing Pipeline 2`
 
-## Review basis
-- [x] Draft PR #52.
-- [x] Base `review/PIPELINE1-STANDARD-CJK-GUARD-008@330d756fcce1b71ca8745b3292d7ac655bc32d13`.
-- [x] PM source commit `ba24b24011669c24565ad8b3a685b45fb046996f`.
-- [x] Final application source scope is only `src/renderer/js/pipeline1-run-ux.js`.
-- [x] `app.js` has no net final diff after rejected CRLF-churn attempt was neutralized without force push.
+## Authority
+- [x] Branch `review/STANDALONE-SUBTITLE-REMOVER-010`.
+- [x] Draft PR #59.
+- [x] PR base `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE@92deaf8fa72094fbad3f84c75c716967acbc509d`.
+- [x] Owner-tested application-source HEAD `8a29624349d297d3f5299b98bd7a0ac51912e7a2`.
 
-## BUG-039 source behavior
-- [x] P1 log retention target is bounded at 2000 entries.
-- [x] Legacy 100-entry removal is guarded only for the P1 log container.
-- [x] P1-only observer removes routine successful Python/Uvicorn GET access lines for exact `/api/health`, `/api/tts/status`, `/api/gpu-info`.
-- [x] Match requires `200 OK`.
-- [x] Non-200 for same endpoint is retained by deterministic test.
-- [x] Unrelated backend log is retained by deterministic test.
-- [x] Normal P1 log is retained by deterministic test.
-- [x] Global logger and background polling source are unchanged.
-- [x] Copy/Clear code is unchanged.
+## Architecture/scope checks
+- [x] Existing Step 2 DOM reused; no duplicated P2 backend/workspace implementation.
+- [x] Existing `window._appState` reused; no second P2 job store.
+- [x] Existing P2/backend inpaint path reused; no backend duplication.
+- [x] Xoa Sub appears directly below Voice Render.
+- [x] Main P1/P3 processing remains separate from standalone Xoa Sub.
+- [x] No dependency churn/broad renderer refactor required by final task scope.
 
-## Static / review
-- [x] GitHub source-commit compare: `pipeline1-run-ux.js` only, +40/-1.
-- [x] Parent-to-head application scope contains no `app.js` change.
-- [x] Deterministic filter + retention-value test: PASS.
-- [x] PM logic/scope review: PASS.
-- [ ] `node --check src/renderer/js/pipeline1-run-ux.js` on exact PR #52 HEAD.
-- [ ] `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD` on exact PR #52 HEAD.
+## Manual region behavior
+- [x] Region list supports `box`, `tight`, `soft` per region.
+- [x] Continuous drawing supports multiple regions without re-enabling Draw after each successful region.
+- [x] Drawing crosshair is visible on drawable preview in Manual mode.
+- [x] Region overlay coordinate behavior accepted by Owner.
+- [x] Each region supports independent frame start/end range.
+- [x] Existing regions can be moved/repositioned.
 
-## Owner manual verification — WAITING STATIC PASS
-- [ ] Exact checkout HEAD equals current PR #52 head.
-- [ ] Full app restart.
-- [ ] Idle >=30s: no routine 200 health/TTS/GPU access lines accumulate in P1 console.
-- [ ] Global Backend/TTS/GPU status continues refreshing.
-- [ ] Standard P1 Job completes with normal behavior unchanged.
-- [ ] Meaningful P1 history remains visible beyond the old 100-line cap.
-- [ ] Copy Log contains retained P1 history.
-- [ ] Clear Log clears the P1 console.
-- [ ] Non-routine errors remain diagnosable.
+## Standalone workspace
+- [x] Click Xoa Sub opens standalone workspace without requiring P1.
+- [x] Multi-video upload/queue works independently of P1/P3.
+- [x] Job selection is explicit with per-job checkboxes.
+- [x] `Chọn tất cả` and `Chạy đã chọn` operate on queue selection.
+- [x] Preview/result are scoped to the selected job.
+- [x] Mục 4 provides a single `Mở thư mục lưu trữ` action using configured shared output directory.
 
-## Inherited Standard state
-- [x] Task 008 Standard functional runtime PASS for corrected configured prompt.
-- [ ] `BUG-040` product default prompt sync remains a separate follow-up after BUG-039.
+## Static verification — exact source HEAD
+Owner ran these commands on `8a29624349d297d3f5299b98bd7a0ac51912e7a2`:
+- [x] `node --check src/main/preload.js` PASS.
+- [x] `node --check src/renderer/js/pipeline-state.js` PASS.
+- [x] `node --check src/renderer/js/standalone-subtitle-remover.js` PASS.
+- [x] `node --check src/renderer/js/standalone-subtitle-interactions.js` PASS.
+- [x] `node --check src/renderer/js/standalone-output-folder.js` PASS.
+- [x] `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD` PASS.
+- [x] GitHub full diff/relevant files reviewed by PM during task iterations.
+- [x] GitHub workflow status checked: no workflow runs exist for exact source HEAD; local exact-head static evidence is used for this gate.
+
+## Owner runtime QA
+- [x] Owner reports final latest standalone implementation PASS.
+- [x] Standalone Xoa Sub works independently of P1.
+- [x] Manual drawing/crosshair/multiple-region workflow accepted.
+- [x] Per-region mask, frame range and movement controls accepted.
+- [x] Queue selection/run-selected workflow accepted.
+- [x] Output-folder workflow accepted.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: PARTIAL — deterministic PASS; exact Node/diff commands WAITING.
+- Automated/static: PASS.
 - Code review: PASS.
-- Owner runtime: WAITING.
-- Documentation synchronization: PASS after dynamic-doc sync.
-- Merge permission: BLOCKED.
+- Owner manual verification: PASS.
+- Documentation synchronization: PASS after final docs sequence.
+- Merge permission: APPROVED after verifying final docs-only HEAD.

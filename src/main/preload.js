@@ -190,6 +190,42 @@ function installP2RuntimeScript() {
   document.head.appendChild(script);
 }
 
+function installStandaloneSubtitleRemoverStyles() {
+  if (document.querySelector('link[data-standalone-subtitle-remover-styles]')) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'styles/standalone-subtitle-remover.css';
+  link.dataset.standaloneSubtitleRemoverStyles = 'true';
+  document.head.appendChild(link);
+}
+
+function installStandaloneSubtitleRemoverScript() {
+  if (document.querySelector('script[data-standalone-subtitle-remover]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/standalone-subtitle-remover.js';
+  script.defer = true;
+  script.dataset.standaloneSubtitleRemover = 'true';
+  document.head.appendChild(script);
+}
+
+function installStandaloneSubtitleInteractionsScript() {
+  if (document.querySelector('script[data-standalone-subtitle-interactions]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/standalone-subtitle-interactions.js';
+  script.defer = true;
+  script.dataset.standaloneSubtitleInteractions = 'true';
+  document.head.appendChild(script);
+}
+
+function installStandaloneOutputFolderScript() {
+  if (document.querySelector('script[data-standalone-output-folder]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/standalone-output-folder.js';
+  script.defer = true;
+  script.dataset.standaloneOutputFolder = 'true';
+  document.head.appendChild(script);
+}
+
 function installVoiceRenderScript() {
   if (document.querySelector('script[data-voice-render]')) return;
   const script = document.createElement('script');
@@ -213,6 +249,10 @@ window.addEventListener('DOMContentLoaded', () => {
   installP1SpinnerPhaseScript();
   installP1RunUxScript();
   installP2RuntimeScript();
+  installStandaloneSubtitleRemoverStyles();
+  installStandaloneSubtitleRemoverScript();
+  installStandaloneSubtitleInteractionsScript();
+  installStandaloneOutputFolderScript();
   installVoiceRenderScript();
   installVoiceRenderQualityFixScript();
   let attempts = 0;

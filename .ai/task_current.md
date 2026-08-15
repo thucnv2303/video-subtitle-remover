@@ -1,92 +1,37 @@
 # Current Task
 
 ## Task ID
-PIPELINE3-FINAL-COMPOSITION-017
+STANDALONE-SUBTITLE-REMOVER-010
 
 ## Status
-SUBTITLE_STYLE_ENGINE_REV3_SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_WAITING
+OWNER_PASS_STATIC_PASS_CODE_REVIEW_PASS_READY_TO_MERGE
 
-## Exact basis
-- Branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58.
-- Rev3 starting HEAD: `e2b8af05a4ea0baefa164534598cc25668110feb`.
-- Rev3 reviewed application-source head: `1d3544372e0323473b3de1771464aca9cc9d9b04`.
-- Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-STYLE-ENGINE-REV3.md`.
+## Authority
+- Branch / Draft PR: `review/STANDALONE-SUBTITLE-REMOVER-010` / #59.
+- PR base: `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE@92deaf8fa72094fbad3f84c75c716967acbc509d`.
+- Owner-tested application-source HEAD: `8a29624349d297d3f5299b98bd7a0ac51912e7a2`.
 
-## User outcome
-Make P3 subtitle authoring feel like a mature caption tool:
-- large style catalog instead of a few hand-written presets;
-- deep but render-backed typography controls;
-- fast one-click application plus manual fine tuning;
-- preview/final ASS parity;
-- preserve focused final-composition scope.
+## Delivered scope
+Standalone Xóa Sub reuses approved Pipeline 2 while remaining independent of the main P1/P3 workflow. The final reviewed scope includes multi-video queueing, Auto/Manual removal, continuous manual drawing, per-region mask modes, per-region frame ranges, movable regions, job-scoped preview/result behavior, selectable queue execution, and opening the shared configured output folder.
 
-## Rev3 implementation
-### Catalog
-32 presets / 8 categories:
-- Basic
-- Social
-- Tutorial
-- Karaoke
-- Highlight
-- Glow
-- Box
-- Cover
+## Final verification
+Owner runtime: PASS on `8a29624349d297d3f5299b98bd7a0ac51912e7a2`.
 
-Preset definitions are data objects. New styles should normally be added as data instead of new renderer branches.
-
-### New controls
-- underline;
-- letter spacing;
-- text opacity;
-- glow on/off;
-- glow color;
-- glow blur;
-- glow outline.
-
-Existing font library/custom font, frame-width resize, position drag, effects, cover band, cue edit and voice/video fit remain available.
-
-### Render contract
-- Underline + Spacing use ASS style fields.
-- Text opacity uses ASS alpha.
-- Glow is rendered as a separate lower ASS text layer.
-- Main text stays above glow; cover band remains below both.
-- Karaoke presets preserve original karaoke timing only when glow is disabled and timing remains valid.
-
-## Rev3 source scope
-- `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-STYLE-ENGINE-REV3.md`
-- new `src/renderer/js/pipeline3/subtitle-style-engine.js`
-- `src/renderer/js/pipeline3/editor-store.js`
-- `src/renderer/js/pipeline3/subtitle-ass.js`
-- `src/renderer/js/pipeline1-run-config.js` — one import-only line.
-
-No backend/P2/TTS/finalizer/dependency changes.
-
-## Required exact-checkout verification
-```text
-node --check src/renderer/js/pipeline3/subtitle-style-engine.js
-node --check src/renderer/js/pipeline3/editor-store.js
-node --check src/renderer/js/pipeline3/subtitle-ass.js
-node --check src/renderer/js/pipeline1-run-config.js
-git diff --check e2b8af05a4ea0baefa164534598cc25668110feb..HEAD
-```
-
-## Owner runtime acceptance
-1. Reuse existing clean test directory and verify exact current PR head.
-2. Browse all 8 categories; apply at least one style from each.
-3. Verify two Jobs can retain different styles.
-4. Test underline, spacing, opacity, Neon Blue and Neon Pink glow.
-5. Resize subtitle width and drag position after style changes.
-6. Render one short non-karaoke glow style and compare preview vs final output.
-7. If karaoke artifact exists, test one karaoke preset and confirm karaoke timing remains intact.
-8. Recheck cover-band and cue-edit behavior.
+Exact-head static checks supplied by Owner:
+1. `node --check src/main/preload.js` — PASS.
+2. `node --check src/renderer/js/pipeline-state.js` — PASS.
+3. `node --check src/renderer/js/standalone-subtitle-remover.js` — PASS.
+4. `node --check src/renderer/js/standalone-subtitle-interactions.js` — PASS.
+5. `node --check src/renderer/js/standalone-output-folder.js` — PASS.
+6. `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD` — PASS.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING exact checkout.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PASS pre-runtime after final ACTIVE/PR sync.
-- Merge: BLOCKED.
+- Automated/static: PASS.
+- PM source review: PASS.
+- Owner manual verification: PASS.
+- Documentation synchronization: PASS after final docs sequence.
+- Merge: APPROVED after verifying docs-only final HEAD.
 
 ## Next action
-Finish handoff/ACTIVE/PR synchronization and verify live PR exact head/checks/comments. Then Owner tests the exact head. No merge.
+Merge PR #59 with exact final docs HEAD, verify merged state, then resume the canonical Pipeline 3 task. No further task-010 application-source changes are permitted.
