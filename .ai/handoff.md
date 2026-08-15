@@ -4,67 +4,43 @@
 `STANDALONE-SUBTITLE-REMOVER-010`
 
 ## Status
-SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RUNTIME BLOCKED / MERGE BLOCKED
+REV2 SOURCE PUBLISHED / PM REVIEW PASS / OWNER RUNTIME READY / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
 - Review branch / Draft PR: `review/STANDALONE-SUBTITLE-REMOVER-010` / #59
-- Corrected runtime base: `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE@92deaf8fa72094fbad3f84c75c716967acbc509d`
-- Reviewed application-source HEAD: `08729502dbbcea334caf6151b0289cd57cf39e16`
-- Task authority: `.ai/task_specs/ACTIVE.md` + `.ai/task_specs/STANDALONE-SUBTITLE-REMOVER-010.md`
+- Runtime base: `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE@92deaf8fa72094fbad3f84c75c716967acbc509d`
+- Rev2 application-source HEAD: `c64a209cb7fd556a95f3716b496472c92862a66c`
 
-## Published source
-- `src/renderer/js/standalone-subtitle-remover.js` added.
-- `src/renderer/js/pipeline1-run-config.js` imports the helper.
-- No task-010 changes to backend/inpaint, `app.js`, `index.html`, Voice Render processing, P1 processing, TTS or P3 processing.
+## Owner FAIL addressed
+Rev1 incorrectly retained the P1-gated P2 input model. Rev2 makes the sidebar `Xóa Sub` tool independently accept one or many videos while continuing to reuse the existing P2 controller/backend.
 
-## Reviewed behavior
-- Sidebar order target is Home -> Voice Render -> Xóa Sub -> Settings.
-- Standalone mode reuses existing Home/Step 2 P2 workspace and shared `window._appState`.
-- No duplicate P2 DOM IDs, store or backend engine.
-- Manual region list gets Box/Tight/Soft per-region selectors.
-- Manual request mask is overridden only for the active manual pass via `processingJobId + processingPassIndex`.
-- Auto remains job-level mask.
-- Drawing remains active across consecutive region creation.
-- Crosshair is cleared outside active Manual Draw.
-- Existing coordinate mapping remains untouched.
+## Rev2 behavior
+- `+ Thêm Video` supports Electron multi-selection.
+- Drag/drop accepts multiple supported video files.
+- Standalone jobs are P2-ready without P1 artifacts.
+- `Chạy tất cả` queues standalone jobs through existing P2 `processNextJob`.
+- Existing `outputPath` contract creates `<source>_no_sub.mp4` in selected output dir or source dir.
+- Standalone jobs stay P3 locked and are filtered from normal P1/P3 views.
+- Normal Home pipeline retains P1→P2 gating.
+- Manual per-region mask and coordinate behavior continue to use P2 runtime implementation.
 
-## Review evidence
-- PR #59 exact source HEAD `08729502...` was directly reviewed from GitHub.
-- PR is Draft/open/unmerged and targets corrected runtime base `92deaf8...`.
-- No unresolved review threads/comments observed.
-- GitHub reported no CI/check status for source HEAD.
-- PM code review: PASS logic/scope.
-- Static execution is not yet evidenced: PM checkout attempt was blocked by outbound DNS/network failure. This is not a static PASS.
+## Evidence
+- Rev2 exact GitHub source and PR patches reviewed by PM.
+- PR #59 is Draft/open/unmerged.
+- Branch Actions runs: none.
+- New Rev2 executable static evidence remains WAITING because PM container DNS could not reach GitHub raw host. Do not reinterpret the older Rev1 static run as Rev2 evidence.
 
-## Required static evidence
-```text
-git status --short
-node --check src/renderer/js/app.js
-node --check src/renderer/js/standalone-subtitle-remover.js
-node --check src/renderer/js/pipeline1-run-config.js
-git diff --check 92deaf8fa72094fbad3f84c75c716967acbc509d..HEAD
-```
-
-## Owner manual QA after static PASS
-- sidebar order Home -> Voice Render -> Xóa Sub -> Settings;
-- Xóa Sub opens existing P2 without P1 execution;
-- Auto removal smoke test;
-- Manual crosshair only on drawable preview;
-- draw Region 1 then Region 2 without re-enabling Draw;
-- region geometry remains aligned;
-- assign different region masks and process;
-- progress/result preview/output `_no_sub.mp4` work;
-- Auto removes crosshair;
-- Voice Render and normal pipeline have no obvious regression.
+## Owner QA now permitted
+Run the exact review branch. Verify multi-select upload, multi-file drop, selected-job P2 run, `Chạy tất cả`, `_no_sub.mp4`, manual multi-region masks/geometry, and Home/Voice Render regression smoke.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING.
-- Code review: PASS.
-- Owner manual verification: NOT STARTED / BLOCKED until static PASS.
-- Documentation synchronization: PASS after this dynamic-doc sequence.
+- Automated/static: WAITING Rev2 evidence.
+- PM code review: PASS.
+- Owner manual verification: READY / NOT STARTED.
+- Documentation synchronization: PASS after docs sequence.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Run static verification on a clean exact checkout of the current PR HEAD. If PASS, Owner runtime QA is permitted. Do not merge.
+Owner runs app from exact review branch and reports observed PASS/FAIL. Do not merge.
