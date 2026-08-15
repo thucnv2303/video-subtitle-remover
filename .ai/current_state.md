@@ -1,68 +1,82 @@
 # Current State
 
 ## Status
-PIPELINE3-FINAL-COMPOSITION-017 — SUBTITLE STYLE ENGINE REV3 SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
+PIPELINE3-FINAL-COMPOSITION-017 — RUNTIME FIX REV4 SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RE-VERIFY WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Review branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58.
-- Rev3 starting HEAD: `e2b8af05a4ea0baefa164534598cc25668110feb`.
-- Rev3 reviewed application-source head: `1d3544372e0323473b3de1771464aca9cc9d9b04`.
-- Main spec: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017.md`.
-- Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-STYLE-ENGINE-REV3.md`.
+- Rev4 starting HEAD: `92deaf8fa72094fbad3f84c75c716967acbc509d`.
+- Reviewed Rev4 application-source HEAD: `d5aae15c5471f0e23f35ac3ae7cc205fc47b0fe3`.
+- Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-RUNTIME-FIX-REV4.md`.
 
-## Owner direction
-Adopt the useful CapCut subtitle pattern: a strong style engine plus a large data-driven preset library and deeper render-backed typography controls, without cloning proprietary assets or broadening P3 into a general NLE.
+## Owner runtime result — pre-Rev4 build, 2026-08-15
+Owner supplied screenshots and reported three blocking defects:
+1. right P3 inspector clips/hides settings data;
+2. Remove Vocal was checked but original vocal remained audible in the result;
+3. export had no selectable destination and no real output-quality selection.
 
-## Reviewed Subtitle Style Engine Rev3
-### Style library
-- 32 data-driven presets in 8 categories: Basic, Social, Tutorial, Karaoke, Highlight, Glow, Box, Cover.
-- Visual 2-column cards with category chips and active-style state.
-- Legacy five preset buttons are hidden from primary UX but remain in source compatibility path.
-- Applying a style updates the existing per-Job controls rather than creating a parallel hidden style authority.
-- Manual style edits switch `stylePresetId` back to `custom` so the selected card never lies after user customization.
+Decision for the tested build: `NEEDS_REVISION` / Owner runtime FAIL.
 
-### Advanced render-backed typography
-Per-Job config now includes:
-- underline;
-- ASS letter spacing;
-- text opacity;
-- glow enable/color/blur/outline.
+## Verified root causes
+- inspector lacked a reliable nested min-width/box-sizing containment contract;
+- `/api/remove-vocal` is best-effort and may return weak fallbacks, while the old finalizer accepted them as successful background separation;
+- final path was hardcoded and explicit CRF/preset was not exposed by the existing Python subtitle-burn route.
 
-Preview applies the same logical properties. Letter spacing is scaled by current canvas fit instead of using raw logical pixels in the viewport.
+## Rev4 source now published and reviewed
+### Inspector
+- P3-scoped border-box/min-width containment;
+- wider right inspector on large desktop widths;
+- nested grids collapse at narrower widths;
+- style category chips wrap instead of exposing the clipped horizontal-scroll presentation;
+- inspector/folds do not allow hidden horizontal overflow.
 
-### Final ASS
-- `Underline` and `Spacing` style fields are populated.
-- text opacity is encoded in ASS primary-color alpha.
-- Glow is a real lower text layer with configured color/outline/blur; main text remains above it.
-- Cover band remains the lowest layer.
-- Karaoke presets preserve original karaoke timing and disable glow; glow presets disable karaoke preservation and use deterministic P3 timed-SRT rendering.
+### Strict original-vocal removal
+- Remove Vocal + background > 0 now accepts only backend `method_used=demucs`;
+- librosa/ffmpeg-pan/original/unknown fallbacks block final render;
+- accepted no-vocals stem logs `method=demucs`;
+- background=0 still replaces original audio entirely with TTS and does not require separation.
 
-## Source scope from Rev3 start
-- new `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-STYLE-ENGINE-REV3.md`
-- new `src/renderer/js/pipeline3/subtitle-style-engine.js`
-- `src/renderer/js/pipeline3/editor-store.js`
-- `src/renderer/js/pipeline3/subtitle-ass.js`
-- `src/renderer/js/pipeline1-run-config.js` — one import-only bootstrap line.
+### Real output destination / quality
+Per Job:
+- output folder picker;
+- editable sanitized MP4 filename;
+- exact output path display;
+- H.264 quality presets: CRF20/medium, CRF18/slow, CRF16/slow, CRF14/slower;
+- output cannot overwrite source or P2 clean video.
 
-No backend, P2, TTS, dependency, finalizer or render-controller change in Rev3.
+A narrow Electron FFmpeg bridge (`src/main/p3-export-bridge.js`) owns P3 final video retime and ASS burn so the selected CRF/preset is real without broadening `api/server.py`.
 
-## PM review corrections before Owner test
-- default style state is `custom` instead of falsely claiming the old YouTube preset matches a Rev3 catalog item;
-- manual edits clear preset selection;
-- letter-spacing preview respects fitted logical-canvas scale;
-- glow is not injected into unknown original karaoke ASS timing structures.
+### Review correction
+Because Rev4 bypasses the older Python burn route, PM review caught a timing-parity risk. Finalizer now rebuilds derived ASS from the exact final SRT after voice retime before HQ burn; changed timing disables original karaoke preservation for that render.
+
+## Rev4 application-source scope
+- new `src/main/p3-export-bridge.js`;
+- `src/main/preload.js`;
+- `src/renderer/js/pipeline1-run-config.js` — one import-only Rev4 bootstrap line;
+- `src/renderer/js/pipeline3/editor-store.js`;
+- new `src/renderer/js/pipeline3/runtime-fix-rev4.js`;
+- `src/renderer/js/pipelines/pipeline3-finalize.js`.
+
+No backend Python, P1 execution, P2, TTS or dependency source change.
+
+## Verification
+- PM source/code review: PASS logic/scope.
+- GitHub compare from Rev4 start: only authorized Rev4 source + task spec.
+- Exact checkout `node --check` + `git diff --check`: WAITING.
+- PM sandbox raw-download attempt could not run because outbound DNS is unavailable; not counted as test evidence.
+- Owner Rev4 runtime: WAITING.
 
 ## Gates
 - Execution: PASS.
-- Automated verification: WAITING exact-checkout `node --check` + `git diff --check`.
-- Code review: PASS logic/scope.
-- Owner runtime: WAITING Rev3.
-- Documentation synchronization: PASS pre-runtime after PR/ACTIVE sync.
-- Merge: BLOCKED.
+- Automated verification: WAITING exact-checkout evidence.
+- Code review: PASS.
+- Owner manual app verification: FAIL for pre-Rev4 build / WAITING for Rev4.
+- Documentation synchronization: PASS pre-runtime after dynamic docs/PR sync.
+- Merge permission: BLOCKED.
 
 ## Local safety
-Reuse only the existing clean test directory. Dirty => STOP; no reset/restore/clean and no new clone/worktree.
+Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. Before switching, `git status --short` must be empty. Dirty => STOP. No reset/restore/clean and no new clone/worktree.
 
 ## Next permitted action
-Finish Rev3 dynamic-doc/PR synchronization, verify current PR exact head/checks/comments, then Owner may test the exact head. No merge.
+Verify live PR #58 exact docs-synchronized head/checks/comments. Then Owner tests Rev4 exact head: inspector visibility, Demucs strict removal, destination/filename, real quality preset, and one short final render. No merge.
