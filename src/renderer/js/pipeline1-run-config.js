@@ -2,6 +2,7 @@ import './pipeline1-run-ux.js';
 import './pipeline1-log-router.js';
 import './pipeline3/editor.js';
 import './pipeline3/subtitle-resize-effects.js';
+import './pipeline3/subtitle-style-engine.js';
 import { installPerJobSemanticRemixControls } from './pipeline1-semantic-remix-per-job.js';
 
 /**
