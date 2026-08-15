@@ -1,8 +1,7 @@
 (function standaloneOutputFolderAction() {
   'use strict';
 
-  let observer = null;
-  let scheduled = false;
+  let patched = false;
 
   const state = () => window._appState || null;
   const isStandaloneJob = job => job?.standaloneSubtitleRemoval === true;
@@ -22,17 +21,7 @@
     return progress >= 100 && Boolean(job.finalOutputPath || job.outputPath);
   }
 
-  function resolveCardJob(card, standaloneJobs, index) {
-    const jobId = card.dataset.jobId || card.dataset.pipelineJobId;
-    if (jobId) {
-      const exact = state()?.jobs?.find(item => item.id === jobId);
-      if (exact) return exact;
-    }
-    return standaloneJobs[index] || null;
-  }
-
-  function decorateCompletedJobs() {
-    scheduled = false;
+  function renderFolderActions() {
     const s = state();
     const list = document.getElementById('job-list');
     if (!s || !list || s.standaloneSubtitleMode !== true) return;
@@ -41,67 +30,64 @@
     const visibleCards = [...list.querySelectorAll('.job-card')].filter(card => card.style.display !== 'none');
 
     visibleCards.forEach((card, index) => {
-      const job = resolveCardJob(card, standaloneJobs, index);
+      const jobId = card.dataset.jobId || card.dataset.pipelineJobId;
+      const job = (jobId && s.jobs.find(item => item.id === jobId)) || standaloneJobs[index] || null;
       if (!job || !isStandaloneJob(job) || !isCompleted(job)) return;
 
       const dir = outputDirectory(job);
       if (!dir) return;
 
+      const detail = card.querySelector('.job-detail') || card;
+      const legacy = card.querySelector('.open-fp');
       let button = card.querySelector('[data-open-output-folder="true"]');
+
+      if (!button && legacy) {
+        button = legacy.cloneNode(false);
+        legacy.replaceWith(button);
+      }
       if (!button) {
-        const legacy = card.querySelector('.open-fp');
-        if (legacy) {
-          button = legacy.cloneNode(false);
-          legacy.replaceWith(button);
-        } else {
-          button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'btn btn-xs btn-ghost open-fp';
-          button.style.cssText = 'margin-left:8px;padding:2px 6px;line-height:1;cursor:pointer';
-          (card.querySelector('.job-detail') || card).appendChild(button);
-        }
+        button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-xs btn-ghost open-fp';
+        detail.appendChild(button);
       }
 
-      if (button.dataset.openOutputFolder === 'true') return;
       button.dataset.openOutputFolder = 'true';
       button.textContent = '📁';
       button.title = 'Mở thư mục lưu trữ';
       button.setAttribute('aria-label', `Mở thư mục lưu trữ của ${job.fileName || 'video'}`);
-      button.addEventListener('click', event => {
+      button.style.cssText = 'margin-left:8px;padding:2px 6px;line-height:1;cursor:pointer;flex:0 0 auto';
+      button.onclick = event => {
         event.preventDefault();
         event.stopPropagation();
         window.electronAPI?.openPath?.(dir);
-      });
+      };
     });
   }
 
-  function scheduleDecorate() {
-    if (scheduled) return;
-    scheduled = true;
-    queueMicrotask(decorateCompletedJobs);
-  }
-
-  function init() {
-    const list = document.getElementById('job-list');
-    if (!list || observer) return false;
-    observer = new MutationObserver(scheduleDecorate);
-    observer.observe(list, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class', 'style', 'data-job-id', 'data-pipeline-job-id']
-    });
-    document.addEventListener('click', event => {
-      if (event.target.closest?.('#nav-subtitle-remover, #p2-refresh-jobs')) scheduleDecorate();
-    }, true);
-    scheduleDecorate();
+  function patchRenderer() {
+    if (patched || typeof window.renderJobList !== 'function') return false;
+    const original = window.renderJobList;
+    window.renderJobList = function outputFolderAwareRenderJobList(...args) {
+      const result = original.apply(this, args);
+      renderFolderActions();
+      return result;
+    };
+    patched = true;
+    renderFolderActions();
     return true;
   }
 
-  if (!init()) {
+  if (!patchRenderer()) {
     const timer = setInterval(() => {
-      if (init()) clearInterval(timer);
+      if (patchRenderer()) clearInterval(timer);
     }, 50);
-    setTimeout(() => clearInterval(timer), 10000);
+    setTimeout(() => clearInterval(timer), 5000);
   }
+
+  document.addEventListener('click', event => {
+    if (event.target.closest?.('#nav-subtitle-remover, #p2-refresh-jobs')) {
+      queueMicrotask(renderFolderActions);
+    }
+  }, true);
 })();
