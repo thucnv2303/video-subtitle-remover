@@ -1,58 +1,68 @@
 # Current State
 
 ## Status
-PIPELINE3-FINAL-COMPOSITION-017 — SUBTITLE TYPOGRAPHY REV2 SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
+PIPELINE3-FINAL-COMPOSITION-017 — SUBTITLE STYLE ENGINE REV3 SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Review branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58.
-- Subtitle UX Rev1 docs head before Rev2: `e906c5dcef863b6dc0183a1ce9c4a70845b3f46e`.
-- Subtitle Typography Rev2 reviewed application-source head: `112fd48b29fe6c16a2e4b85488fd154fd3724e1a`.
+- Rev3 starting HEAD: `e2b8af05a4ea0baefa164534598cc25668110feb`.
+- Rev3 reviewed application-source head: `1d3544372e0323473b3de1771464aca9cc9d9b04`.
 - Main spec: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017.md`.
-- Rev1 amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-UX-REV1.md`.
-- Rev2 amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-TYPOGRAPHY-REV2.md`.
+- Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-STYLE-ENGINE-REV3.md`.
 
-## Owner direction — 2026-08-14
-Continue deepening subtitle authoring, especially font/typography controls, while keeping P3 focused on final composition rather than becoming a general NLE.
+## Owner direction
+Adopt the useful CapCut subtitle pattern: a strong style engine plus a large data-driven preset library and deeper render-backed typography controls, without cloning proprietary assets or broadening P3 into a general NLE.
 
-## Subtitle UX already present
-- direct horizontal subtitle-frame resize with left/right handles;
-- width-aware non-karaoke ASS wrapping;
-- subtitle position drag;
-- cover band for residual old-subtitle blemishes;
-- cue edit;
-- expanded effects: slide, zoom, pulse, blur-in, fade+slide plus fade/pop;
-- voice/video fit and final render remain unchanged.
+## Reviewed Subtitle Style Engine Rev3
+### Style library
+- 32 data-driven presets in 8 categories: Basic, Social, Tutorial, Karaoke, Highlight, Glow, Box, Cover.
+- Visual 2-column cards with category chips and active-style state.
+- Legacy five preset buttons are hidden from primary UX but remain in source compatibility path.
+- Applying a style updates the existing per-Job controls rather than creating a parallel hidden style authority.
+- Manual style edits switch `stylePresetId` back to `custom` so the selected card never lies after user customization.
 
-## Reviewed Typography Rev2 source
-Rev2 application delta is intentionally limited to:
-- `src/renderer/js/pipeline3/subtitle-resize-effects.js`.
+### Advanced render-backed typography
+Per-Job config now includes:
+- underline;
+- ASS letter spacing;
+- text opacity;
+- glow enable/color/blur/outline.
 
-The accompanying spec is `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-TYPOGRAPHY-REV2.md`.
+Preview applies the same logical properties. Letter spacing is scaled by current canvas fit instead of using raw logical pixels in the viewport.
 
-No backend, P1/P2, TTS, dependency or P3 finalizer source is changed by Rev2.
+### Final ASS
+- `Underline` and `Spacing` style fields are populated.
+- text opacity is encoded in ASS primary-color alpha.
+- Glow is a real lower text layer with configured color/outline/blur; main text remains above it.
+- Cover band remains the lowest layer.
+- Karaoke presets preserve original karaoke timing and disable glow; glow presets disable karaoke preservation and use deterministic P3 timed-SRT rendering.
 
-## Verified Typography Rev2 behavior from source
-- font selector is expanded into practical groups: Vietnamese/system-safe, display, serif, mono and common optional installed fonts;
-- no font files are bundled or downloaded;
-- custom installed font-family name can be entered and applied to the same per-Job `fontFamily` property used by final ASS;
-- quick typography styles are available: Clean UI, Heavy Caption, Impact, Serif Guide, Mono Tech, Soft Tutorial;
-- quick styles only modify existing renderable properties such as family, size, bold/italic, outline, shadow, text/background color;
-- compact sample `Aa ĂÂĐ ÊÔƠƯ 0123` shows current family in the inspector;
-- typography sample/current-family state re-syncs after Job selection, normal P3 presets and typography control changes;
-- existing resize/effect/position logic remains in the same enhancer and no new polling loop is introduced.
+## Source scope from Rev3 start
+- new `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-STYLE-ENGINE-REV3.md`
+- new `src/renderer/js/pipeline3/subtitle-style-engine.js`
+- `src/renderer/js/pipeline3/editor-store.js`
+- `src/renderer/js/pipeline3/subtitle-ass.js`
+- `src/renderer/js/pipeline1-run-config.js` — one import-only bootstrap line.
 
-## Known limitation
-The font selector can reference fonts installed on the Owner machine, but preview availability does not prove FFmpeg/libass will resolve the same family. Final font acceptance therefore requires one short real render. No numeric font-weight control is exposed because no verified render contract exists for it yet.
+No backend, P2, TTS, dependency, finalizer or render-controller change in Rev3.
 
-## Verification status
+## PM review corrections before Owner test
+- default style state is `custom` instead of falsely claiming the old YouTube preset matches a Rev3 catalog item;
+- manual edits clear preset selection;
+- letter-spacing preview respects fitted logical-canvas scale;
+- glow is not injected into unknown original karaoke ASS timing structures.
+
+## Gates
 - Execution: PASS.
-- PM source/code review: PASS logic/scope.
-- Exact checkout Node syntax + `git diff --check`: WAITING.
-- GitHub CI/status: WAITING; absence of checks is not PASS.
-- Owner runtime verification for Typography Rev2: WAITING.
-- Documentation synchronization: PASS pre-runtime after dynamic docs/PR sync.
-- Merge permission: BLOCKED.
+- Automated verification: WAITING exact-checkout `node --check` + `git diff --check`.
+- Code review: PASS logic/scope.
+- Owner runtime: WAITING Rev3.
+- Documentation synchronization: PASS pre-runtime after PR/ACTIVE sync.
+- Merge: BLOCKED.
+
+## Local safety
+Reuse only the existing clean test directory. Dirty => STOP; no reset/restore/clean and no new clone/worktree.
 
 ## Next permitted action
-Reverify live PR #58 exact final head/status/checks/comments. Then Owner may reuse the existing clean test directory and test font groups, custom installed font, quick typography styles, width resize and one final short render. No merge.
+Finish Rev3 dynamic-doc/PR synchronization, verify current PR exact head/checks/comments, then Owner may test the exact head. No merge.
