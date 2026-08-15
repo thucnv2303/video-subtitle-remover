@@ -1,56 +1,78 @@
 # AgentOS Handoff Status
 
 ## Active task
-`PIPELINE1-INTEGRATION-013`
+`PIPELINE3-FINAL-COMPOSITION-017`
 
 ## Status
-SOURCE PUBLISHED / PM REVIEW PASS / STATIC WAITING / OWNER RUNTIME WAITING / MERGE BLOCKED
+RUNTIME FIX REV4 SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RE-VERIFY WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
-- Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56
-- Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`
-- Long-video Revision-3 source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`
-- Integration renderer source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`
-- Spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`
+- Branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58
+- Rev4 starting HEAD: `92deaf8fa72094fbad3f84c75c716967acbc509d`
+- Reviewed Rev4 application-source HEAD: `d5aae15c5471f0e23f35ac3ae7cc205fc47b0fe3`
+- Amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-RUNTIME-FIX-REV4.md`
 
-## Integration result
-One GitHub review branch now combines the Owner-visible features that previously lived on isolated sibling branches:
-- long Standard scripts are composed as bounded sequential timeline sections and then joined into one validated narration;
-- TTS remains downstream of the joined global guard and receives one continuous narration;
-- Semantic Remix is per Job, defaults OFF, locks on queued/processing, and no longer has global localStorage/UI authority;
-- existing P1 log-router import is preserved so the log fix is not intentionally regressed.
+## Owner runtime evidence that invalidated the previous build
+- P3 right inspector clipped/hid settings data.
+- Remove Vocal was checked but original vocal remained audible.
+- Export had no output destination picker or real quality selection.
 
-## Source review evidence
-Compare `4ff0712... -> e6d43ced...` changes only:
-- `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`
-- `src/renderer/js/pipeline1-run-config.js`
-- `src/renderer/js/pipeline1-semantic-remix-per-job.js`
-- `src/renderer/styles/pipeline1-semantic-remix-per-job.css`
+Decision: pre-Rev4 Owner runtime FAIL / `NEEDS_REVISION`.
 
-The inherited long-video wrapper is not modified by the integration delta. PM logic/scope review PASS. Automated/static and real-app runtime remain WAITING.
+## Rev4 reviewed source behavior
+- inspector containment/wrapping is added without changing P1/P2 layout logic;
+- style category chips wrap instead of showing the clipped horizontal-scroll treatment;
+- output folder + filename are saved per Job;
+- final output cannot overwrite source/P2 clean video;
+- quality presets map to actual H.264 libx264 CRF/preset values;
+- new Electron P3 FFmpeg bridge handles video retime and final ASS burn with the selected quality;
+- Remove Vocal + background > 0 accepts only Demucs no-vocals output;
+- weak fallback methods block the render instead of being mixed as if removal succeeded;
+- final ASS is rebuilt from exact final SRT after voice timing adjustment before HQ burn;
+- subtitle burn failure now fails the P3 render instead of reporting final success with an intermediate video.
 
-## Owner local safety
-Do not create another clone/worktree/test directory. Reuse only:
-`E:\Project AI\Video-sub-remove-owner-test-LONG012`
+## Rev4 source scope
+- `src/main/p3-export-bridge.js` — new;
+- `src/main/preload.js`;
+- `src/renderer/js/pipeline1-run-config.js` — one Rev4 import;
+- `src/renderer/js/pipeline3/editor-store.js`;
+- `src/renderer/js/pipeline3/runtime-fix-rev4.js` — new;
+- `src/renderer/js/pipelines/pipeline3-finalize.js`.
 
-Before switching that existing directory, require `git status --short` to be empty. If it is dirty, STOP and inspect; do not reset, restore, clean or overwrite.
+No backend Python, P2, TTS, dependency or P1 execution change.
 
-## Owner acceptance
-- no global Semantic Remix block;
-- each Job card has independent Remix OFF/Standard state;
-- mixed Standard/Remix queue respects each Job's own setting and locks during execution;
-- ~497s Standard case enters chunked long-narration sections, joins to one narration, passes global guard, then one TTS flow begins;
-- listening check confirms transition coherence/no repeated intro/CTA/filler/CJK;
-- P1/Ollama progress does not regress into P2 console.
+## Required exact-checkout verification
+```text
+node --check src/main/p3-export-bridge.js
+node --check src/main/preload.js
+node --check src/renderer/js/pipeline3/runtime-fix-rev4.js
+node --check src/renderer/js/pipeline3/editor-store.js
+node --check src/renderer/js/pipelines/pipeline3-finalize.js
+node --check src/renderer/js/pipeline1-run-config.js
+git diff --check 92deaf8fa72094fbad3f84c75c716967acbc509d..HEAD
+```
+
+PM sandbox could not perform raw-download syntax verification because outbound DNS is unavailable; this is environment evidence only and automated verification remains WAITING.
+
+## Owner acceptance focus
+1. same screenshot-sized window: no clipped inspector data;
+2. output folder + filename selection;
+3. quality preset reflected in render log and output;
+4. Remove Vocal ON + background > 0: Demucs success materially removes original vocal, otherwise render blocks explicitly;
+5. subtitle timing/style remains correct in final output;
+6. second render still restarts from P2 clean video.
+
+## Local safety
+Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. `git status --short` must be empty before switching. Dirty => STOP. No reset/restore/clean and no new clone/worktree.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING.
+- Automated/static: WAITING exact checkout.
 - Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending final-head/static/runtime/QA closeout.
+- Owner runtime: FAIL pre-Rev4 / WAITING Rev4.
+- Documentation synchronization: PASS pre-runtime after ACTIVE/PR sync.
 - Merge: BLOCKED.
 
 ## Next permitted action
-Synchronize ACTIVE, reverify live PR #56 exact head/files/checks/comments, then Owner may switch the existing LONG012 directory to the exact integration head and test. No merge.
+Synchronize ACTIVE/PR to Rev4, verify live PR head/checks/comments, then Owner tests exact head. No merge.

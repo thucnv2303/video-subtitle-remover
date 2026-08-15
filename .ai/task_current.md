@@ -1,72 +1,101 @@
 # Current Task
 
 ## Task ID
-PIPELINE1-INTEGRATION-013
+PIPELINE3-FINAL-COMPOSITION-017
 
 ## Status
-SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_WAITING
+RUNTIME_FIX_REV4_SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_REVERIFY_WAITING
 
-## Basis
-- Integration branch / Draft PR: `review/PIPELINE1-INTEGRATION-013` / #56.
-- Integration starting SHA: `4ff0712a909f12929373e6f457aa96329e9c3610`.
-- Long-video Revision-3 source inherited unchanged: `f00b5e8711ec737ad5c474987647171161226cb5`.
-- Per-Job Remix authority: PR #54 application source `c3662ea84f32c25bf5bf633888affe39fd2cb6fa`.
-- Integration source head before docs: `e6d43cedca4890cb5d3d340a69f454cb3af0edad`.
-- Spec: `.ai/task_specs/PIPELINE1-INTEGRATION-013.md`.
+## Exact basis
+- Branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58.
+- Rev4 starting HEAD: `92deaf8fa72094fbad3f84c75c716967acbc509d`.
+- Reviewed Rev4 application-source HEAD: `d5aae15c5471f0e23f35ac3ae7cc205fc47b0fe3`.
+- Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-RUNTIME-FIX-REV4.md`.
 
-## User outcome
-One Owner-testable Pipeline 1 build must contain both the long-video Standard fix and the already-implemented per-Job Semantic Remix behavior. Owner must not be asked to create another local clone/worktree directory.
+## Owner runtime feedback driving Rev4
+The pre-Rev4 build is not accepted:
+- inspector settings are horizontally clipped;
+- checked Remove Vocal did not reliably remove original vocal;
+- export cannot choose destination or actual video quality.
 
-## Integrated application behavior
-### Long Standard narration
-- Targets >3200 chars with >=2 Vision chunks use sequential chronological sections.
-- Each section receives local SRT + local Vision evidence and a bounded continuity handoff.
-- Opening only occurs in section 1; only final section may conclude/CTA.
-- Sections join into one continuous narration.
-- Original global hard-length, ZERO-CJK and repetition gates remain fail-closed.
-- TTS receives one joined narration only after `Standard duration guard PASS`.
+Owner decision: `NEEDS_REVISION`.
 
-### Per-Job Semantic Remix
-- No global Semantic Remix checkbox/localStorage authority.
-- Each Job card owns `job.semanticRemixEnabled`, default OFF/Standard.
-- queued/processing locks that Job's switch; idle/error remains editable.
-- run snapshot copies each Job's own value to `job.p1Config.semanticRemixEnabled`.
-- changing one Job does not modify another Job or future Jobs.
+## Rev4 outcome
+### Inspector containment
+- nested P3 controls use border-box/min-width containment;
+- right inspector gets more usable width;
+- category chips wrap;
+- nested grids collapse at narrower desktop widths;
+- no inspector-level horizontal clipping is intended.
 
-### Log routing
-`pipeline1-run-config.js` preserves `import './pipeline1-log-router.js';`; integration must not regress P1/Ollama isolation from the P2 console.
+### Strict vocal removal
+When `removeVocal=true` and background level > 0:
+- only `method_used=demucs` is accepted;
+- weak fallback methods are rejected visibly;
+- final render cannot silently succeed with original vocal mixed back in.
 
-## Review evidence
-Compare `4ff0712... -> e6d43ced...` changes exactly the integration spec and 3 authorized renderer files. The inherited `src/main/p1-standard-vision-wrapper.js` is unchanged by integration. PM logic/scope review PASS; static/runtime evidence is still required.
+### Export controls
+Per Job:
+- `outputDirectory`;
+- `outputFileName`;
+- `exportQuality`.
 
-## Owner local policy
-Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. Do not create any additional clone/worktree/test directory. If that existing directory is dirty, STOP rather than reset/restore/clean it.
+Quality presets are real libx264 settings:
+- balanced = CRF20 / medium;
+- high = CRF18 / slow;
+- very_high = CRF16 / slow;
+- max = CRF14 / slower.
 
-## Required verification
+The final path cannot overwrite source/P2 clean video.
+
+### P3 export engine
+A narrow Electron FFmpeg bridge handles:
+- video retime using the selected quality;
+- final ASS burn using the selected quality;
+- source resolution/FPS preserved; no resize.
+
+No backend Python/API route change was needed.
+
+### Subtitle timing safety
+Before final HQ burn, ASS is rebuilt from the exact final timed SRT. If voice retime changed cue timing, original karaoke preservation is disabled for that render so subtitles do not drift.
+
+## Rev4 source scope
+- new `src/main/p3-export-bridge.js`;
+- `src/main/preload.js`;
+- `src/renderer/js/pipeline1-run-config.js` — one import-only line;
+- `src/renderer/js/pipeline3/editor-store.js`;
+- new `src/renderer/js/pipeline3/runtime-fix-rev4.js`;
+- `src/renderer/js/pipelines/pipeline3-finalize.js`.
+
+No P1 execution/P2/TTS/backend/dependency change.
+
+## Required exact-checkout verification
 ```text
-git rev-parse HEAD
-node --check src/main/p1-standard-vision-wrapper.js
+node --check src/main/p3-export-bridge.js
+node --check src/main/preload.js
+node --check src/renderer/js/pipeline3/runtime-fix-rev4.js
+node --check src/renderer/js/pipeline3/editor-store.js
+node --check src/renderer/js/pipelines/pipeline3-finalize.js
 node --check src/renderer/js/pipeline1-run-config.js
-node --check src/renderer/js/pipeline1-semantic-remix-per-job.js
-git diff --check 4ff0712a909f12929373e6f457aa96329e9c3610..HEAD
+git diff --check 92deaf8fa72094fbad3f84c75c716967acbc509d..HEAD
 ```
 
-Then Owner runtime acceptance:
-1. no global Semantic Remix block;
-2. 2+ Job cards each show independent Remix OFF/Standard;
-3. Job A ON does not change Job B;
-4. queued/processing switch locks and run uses per-Job mode;
-5. ~497s Standard uses chunked long narration and joined global PASS before TTS;
-6. one continuous TTS flow starts only after the final joined narration passes;
-7. P1/Ollama logs remain out of P2 console.
+## Owner runtime acceptance
+1. Reuse the existing clean test directory only.
+2. Re-test the inspector at the same window size as the screenshot; settings/cards must not be clipped.
+3. Choose a different output folder and filename.
+4. Select `Cao` or `Rất cao`; final log/path must reflect the chosen CRF/preset.
+5. With Remove Vocal ON + background > 0: either Demucs succeeds and original vocal is materially removed, or P3 visibly blocks with a Demucs-required error.
+6. Confirm one final subtitle render still matches timing/style.
+7. Re-render and confirm clean P2 is still the input authority.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING.
+- Automated/static: WAITING exact checkout.
 - Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PARTIAL pending exact final-head/static/runtime/QA closeout.
+- Owner runtime: FAIL for pre-Rev4 build / WAITING for Rev4.
+- Documentation synchronization: PASS pre-runtime after PR synchronization.
 - Merge: BLOCKED.
 
 ## Next action
-Finish canonical integration-doc synchronization, verify live PR #56 exact head/files/checks, then authorize Owner to update the existing LONG012 directory to that exact head. No new local directory and no merge.
+Verify PR #58 exact current head/checks/comments, then Owner runs exact-checkout static + focused runtime Rev4 test. No merge.
