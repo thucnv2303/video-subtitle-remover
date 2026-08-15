@@ -3,6 +3,7 @@ import './pipeline1-log-router.js';
 import './pipeline3/editor.js';
 import './pipeline3/subtitle-resize-effects.js';
 import './pipeline3/subtitle-style-engine.js';
+import './pipeline3/runtime-fix-rev4.js';
 import { installPerJobSemanticRemixControls } from './pipeline1-semantic-remix-per-job.js';
 
 /**
