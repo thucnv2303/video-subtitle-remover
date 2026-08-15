@@ -4,34 +4,34 @@
 STANDALONE-SUBTITLE-REMOVER-010
 
 ## Status
-REV2B_BOOTSTRAP_FIX_PUBLISHED_OWNER_RETEST_READY_MERGE_BLOCKED
+OWNER_PASS_STATIC_PASS_CODE_REVIEW_PASS_READY_TO_MERGE
 
 ## Authority
 - Branch / Draft PR: `review/STANDALONE-SUBTITLE-REMOVER-010` / #59.
-- Runtime base: `92deaf8fa72094fbad3f84c75c716967acbc509d`.
-- Rev2B application-source HEAD: `df103a059cd4385e8fa031e656b41fd7dec483a3`.
+- PR base: `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE@92deaf8fa72094fbad3f84c75c716967acbc509d`.
+- Owner-tested application-source HEAD: `8a29624349d297d3f5299b98bd7a0ac51912e7a2`.
 
-## Root cause corrected
-Previous Rev2 source existed but was not on the active renderer bootstrap path. Active approved P2 UI is mounted by `pipeline.js`; preload did not load the standalone helper/state gate. Rev2B adds the missing active bootstrap and adapts the actual approved P2 shell while standalone mode is active.
+## Delivered scope
+Standalone Xóa Sub reuses approved Pipeline 2 while remaining independent of the main P1/P3 workflow. The final reviewed scope includes multi-video queueing, Auto/Manual removal, continuous manual drawing, per-region mask modes, per-region frame ranges, movable regions, job-scoped preview/result behavior, selectable queue execution, and opening the shared configured output folder.
 
-## Owner retest acceptance
-1. Sidebar `Xóa Sub` opens standalone P2 workspace.
-2. Header says standalone `Xóa Sub`, not P1-gated Pipeline 2.
-3. P1 unlock badge and `Kết quả từ Pipeline 1` card are hidden.
-4. `+ Thêm Video` and `Chạy tất cả` are visible.
-5. Multi-select 2+ videos creates independent standalone jobs.
-6. Drag/drop multiple videos works without duplicate job creation.
-7. Selected job and run-all reuse existing P2 runner and output `_no_sub.mp4`.
-8. Manual continuous drawing and per-region Box/Tight/Soft work.
-9. Home and Voice Render remain unaffected.
+## Final verification
+Owner runtime: PASS on `8a29624349d297d3f5299b98bd7a0ac51912e7a2`.
+
+Exact-head static checks supplied by Owner:
+1. `node --check src/main/preload.js` — PASS.
+2. `node --check src/renderer/js/pipeline-state.js` — PASS.
+3. `node --check src/renderer/js/standalone-subtitle-remover.js` — PASS.
+4. `node --check src/renderer/js/standalone-subtitle-interactions.js` — PASS.
+5. `node --check src/renderer/js/standalone-output-folder.js` — PASS.
+6. `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD` — PASS.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING Rev2B workflow evidence.
+- Automated/static: PASS.
 - PM source review: PASS.
-- Owner manual verification: READY FOR RETEST.
-- Documentation synchronization: PASS after docs sequence.
-- Merge: BLOCKED.
+- Owner manual verification: PASS.
+- Documentation synchronization: PASS after final docs sequence.
+- Merge: APPROVED after verifying docs-only final HEAD.
 
 ## Next action
-Owner fetches latest review branch and runs app. Do not merge.
+Merge PR #59 with exact final docs HEAD, verify merged state, then resume the canonical Pipeline 3 task. No further task-010 application-source changes are permitted.
