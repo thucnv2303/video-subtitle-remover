@@ -4,89 +4,98 @@
 PIPELINE3-FINAL-COMPOSITION-017
 
 ## Status
-SUBTITLE_STYLE_ENGINE_REV3_SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_RUNTIME_WAITING
+RUNTIME_FIX_REV4_SOURCE_PUBLISHED_CODE_REVIEW_PASS_STATIC_WAITING_OWNER_REVERIFY_WAITING
 
 ## Exact basis
 - Branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58.
-- Rev3 starting HEAD: `e2b8af05a4ea0baefa164534598cc25668110feb`.
-- Rev3 reviewed application-source head: `1d3544372e0323473b3de1771464aca9cc9d9b04`.
-- Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-STYLE-ENGINE-REV3.md`.
+- Rev4 starting HEAD: `92deaf8fa72094fbad3f84c75c716967acbc509d`.
+- Reviewed Rev4 application-source HEAD: `d5aae15c5471f0e23f35ac3ae7cc205fc47b0fe3`.
+- Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-RUNTIME-FIX-REV4.md`.
 
-## User outcome
-Make P3 subtitle authoring feel like a mature caption tool:
-- large style catalog instead of a few hand-written presets;
-- deep but render-backed typography controls;
-- fast one-click application plus manual fine tuning;
-- preview/final ASS parity;
-- preserve focused final-composition scope.
+## Owner runtime feedback driving Rev4
+The pre-Rev4 build is not accepted:
+- inspector settings are horizontally clipped;
+- checked Remove Vocal did not reliably remove original vocal;
+- export cannot choose destination or actual video quality.
 
-## Rev3 implementation
-### Catalog
-32 presets / 8 categories:
-- Basic
-- Social
-- Tutorial
-- Karaoke
-- Highlight
-- Glow
-- Box
-- Cover
+Owner decision: `NEEDS_REVISION`.
 
-Preset definitions are data objects. New styles should normally be added as data instead of new renderer branches.
+## Rev4 outcome
+### Inspector containment
+- nested P3 controls use border-box/min-width containment;
+- right inspector gets more usable width;
+- category chips wrap;
+- nested grids collapse at narrower desktop widths;
+- no inspector-level horizontal clipping is intended.
 
-### New controls
-- underline;
-- letter spacing;
-- text opacity;
-- glow on/off;
-- glow color;
-- glow blur;
-- glow outline.
+### Strict vocal removal
+When `removeVocal=true` and background level > 0:
+- only `method_used=demucs` is accepted;
+- weak fallback methods are rejected visibly;
+- final render cannot silently succeed with original vocal mixed back in.
 
-Existing font library/custom font, frame-width resize, position drag, effects, cover band, cue edit and voice/video fit remain available.
+### Export controls
+Per Job:
+- `outputDirectory`;
+- `outputFileName`;
+- `exportQuality`.
 
-### Render contract
-- Underline + Spacing use ASS style fields.
-- Text opacity uses ASS alpha.
-- Glow is rendered as a separate lower ASS text layer.
-- Main text stays above glow; cover band remains below both.
-- Karaoke presets preserve original karaoke timing only when glow is disabled and timing remains valid.
+Quality presets are real libx264 settings:
+- balanced = CRF20 / medium;
+- high = CRF18 / slow;
+- very_high = CRF16 / slow;
+- max = CRF14 / slower.
 
-## Rev3 source scope
-- `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-SUBTITLE-STYLE-ENGINE-REV3.md`
-- new `src/renderer/js/pipeline3/subtitle-style-engine.js`
-- `src/renderer/js/pipeline3/editor-store.js`
-- `src/renderer/js/pipeline3/subtitle-ass.js`
-- `src/renderer/js/pipeline1-run-config.js` — one import-only line.
+The final path cannot overwrite source/P2 clean video.
 
-No backend/P2/TTS/finalizer/dependency changes.
+### P3 export engine
+A narrow Electron FFmpeg bridge handles:
+- video retime using the selected quality;
+- final ASS burn using the selected quality;
+- source resolution/FPS preserved; no resize.
+
+No backend Python/API route change was needed.
+
+### Subtitle timing safety
+Before final HQ burn, ASS is rebuilt from the exact final timed SRT. If voice retime changed cue timing, original karaoke preservation is disabled for that render so subtitles do not drift.
+
+## Rev4 source scope
+- new `src/main/p3-export-bridge.js`;
+- `src/main/preload.js`;
+- `src/renderer/js/pipeline1-run-config.js` — one import-only line;
+- `src/renderer/js/pipeline3/editor-store.js`;
+- new `src/renderer/js/pipeline3/runtime-fix-rev4.js`;
+- `src/renderer/js/pipelines/pipeline3-finalize.js`.
+
+No P1 execution/P2/TTS/backend/dependency change.
 
 ## Required exact-checkout verification
 ```text
-node --check src/renderer/js/pipeline3/subtitle-style-engine.js
+node --check src/main/p3-export-bridge.js
+node --check src/main/preload.js
+node --check src/renderer/js/pipeline3/runtime-fix-rev4.js
 node --check src/renderer/js/pipeline3/editor-store.js
-node --check src/renderer/js/pipeline3/subtitle-ass.js
+node --check src/renderer/js/pipelines/pipeline3-finalize.js
 node --check src/renderer/js/pipeline1-run-config.js
-git diff --check e2b8af05a4ea0baefa164534598cc25668110feb..HEAD
+git diff --check 92deaf8fa72094fbad3f84c75c716967acbc509d..HEAD
 ```
 
 ## Owner runtime acceptance
-1. Reuse existing clean test directory and verify exact current PR head.
-2. Browse all 8 categories; apply at least one style from each.
-3. Verify two Jobs can retain different styles.
-4. Test underline, spacing, opacity, Neon Blue and Neon Pink glow.
-5. Resize subtitle width and drag position after style changes.
-6. Render one short non-karaoke glow style and compare preview vs final output.
-7. If karaoke artifact exists, test one karaoke preset and confirm karaoke timing remains intact.
-8. Recheck cover-band and cue-edit behavior.
+1. Reuse the existing clean test directory only.
+2. Re-test the inspector at the same window size as the screenshot; settings/cards must not be clipped.
+3. Choose a different output folder and filename.
+4. Select `Cao` or `Rất cao`; final log/path must reflect the chosen CRF/preset.
+5. With Remove Vocal ON + background > 0: either Demucs succeeds and original vocal is materially removed, or P3 visibly blocks with a Demucs-required error.
+6. Confirm one final subtitle render still matches timing/style.
+7. Re-render and confirm clean P2 is still the input authority.
 
 ## Gates
 - Execution: PASS.
 - Automated/static: WAITING exact checkout.
 - Code review: PASS logic/scope.
-- Owner runtime: WAITING.
-- Documentation synchronization: PASS pre-runtime after final ACTIVE/PR sync.
+- Owner runtime: FAIL for pre-Rev4 build / WAITING for Rev4.
+- Documentation synchronization: PASS pre-runtime after PR synchronization.
 - Merge: BLOCKED.
 
 ## Next action
-Finish handoff/ACTIVE/PR synchronization and verify live PR exact head/checks/comments. Then Owner tests the exact head. No merge.
+Verify PR #58 exact current head/checks/comments, then Owner runs exact-checkout static + focused runtime Rev4 test. No merge.
