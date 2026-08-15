@@ -1,0 +1,24 @@
+name: task010-rev2-static
+on:
+  push:
+    branches:
+      - verify/STANDALONE-SUBTITLE-REMOVER-010-static
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify Rev2 runtime bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e df103a059cd4385e8fa031e656b41fd7dec483a3^{commit}
+          node --check src/main/preload.js
+          node --check src/renderer/js/pipeline-state.js
+          node --check src/renderer/js/standalone-subtitle-remover.js
+          node --check src/renderer/js/pipeline1-run-config.js
+          git diff --check 92deaf8fa72094fbad3f84c75c716967acbc509d..df103a059cd4385e8fa031e656b41fd7dec483a3
+          grep -q "installPipelineStateScript" src/main/preload.js
+          grep -q "installStandaloneSubtitleRemoverScript" src/main/preload.js
