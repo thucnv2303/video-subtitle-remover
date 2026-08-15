@@ -1,49 +1,36 @@
 # Current State
 
 ## Status
-STANDALONE-SUBTITLE-REMOVER-010 — SOURCE PUBLISHED / STATIC PASS / PM CODE REVIEW PASS / OWNER RUNTIME READY / MERGE BLOCKED
+STANDALONE-SUBTITLE-REMOVER-010 REV2 — SOURCE PUBLISHED / PM SOURCE REVIEW PASS / OWNER RUNTIME READY / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Review branch / Draft PR: `review/STANDALONE-SUBTITLE-REMOVER-010` / #59.
 - Corrected runtime base: `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE@92deaf8fa72094fbad3f84c75c716967acbc509d`.
-- Application-source verification head: `524f7724754e190fca19d8b21d50ff10296b49aa` (docs after source do not change application files).
-- Active task: `.ai/task_specs/ACTIVE.md` + `.ai/task_specs/STANDALONE-SUBTITLE-REMOVER-010.md`.
+- Rev1 owner runtime result: FAIL because Xóa Sub still required P1 provenance/input flow.
+- Rev2 application-source HEAD before this docs commit: `c64a209cb7fd556a95f3716b496472c92862a66c`.
 
-## Published source
-- New `src/renderer/js/standalone-subtitle-remover.js`.
-- `src/renderer/js/pipeline1-run-config.js` adds one import-only bootstrap line.
-- No task-010 change to `app.js`, `index.html`, backend/inpaint, Voice Render processing, P1 processing, TTS, or P3 processing.
-
-## Reviewed behavior
-- `Xóa Sub` mounts directly after dynamic `#nav-voice-render`.
-- Standalone mode reuses existing `page-home` + Step 2 DOM and shared `window._appState`.
-- No duplicate P2 DOM/state/backend.
-- Region rows receive Box/Tight/Soft selector with job-level fallback.
-- Manual request bridge selects `region.maskMode || processingJob.maskMode || 'box'` for the active manual pass; Auto remains job-level.
-- Draw remains active across consecutive successful region creation and crosshair is cleared outside active Manual Draw.
-- Existing preview-to-source coordinate mapping is untouched.
+## Rev2 source behavior
+- `src/renderer/js/pipeline-state.js` is mode-aware: normal Home keeps P1→P2→P3 gating; standalone jobs may enter P2 directly and never unlock P3.
+- `src/renderer/js/standalone-subtitle-remover.js` provides independent `+ Thêm Video`, Electron multi-selection, multi-file drag/drop, standalone job creation, queue summary and `Chạy tất cả`.
+- Standalone jobs preserve the existing P2 job contract including `filePath`, `fileName`, `outputPath`, algorithm/mask/subtitle mode and output `_no_sub.mp4` naming.
+- Existing P2 runner/backend is reused; no inpaint/backend duplication.
+- Region-specific Box/Tight/Soft and existing P2 coordinate mapping remain reused.
 
 ## Verification evidence
-- PM GitHub source/diff review: PASS logic/scope.
-- Verification branch: `verify/STANDALONE-SUBTITLE-REMOVER-010-static`.
-- Verification commit: `d9bde2fd036191763e043863b77676f6c8ec2e8d`.
-- GitHub Actions run: `31862007860`, job `94956922811`, conclusion SUCCESS.
-- Step `Verify pinned PR head` conclusion SUCCESS.
-- The successful step executed:
-  - `git cat-file -e 524f7724754e190fca19d8b21d50ff10296b49aa^{commit}`;
-  - `git cat-file -e 92deaf8fa72094fbad3f84c75c716967acbc509d^{commit}`;
-  - `node --check src/renderer/js/standalone-subtitle-remover.js`;
-  - `node --check src/renderer/js/pipeline1-run-config.js`;
-  - `git diff --check 92deaf8fa72094fbad3f84c75c716967acbc509d..524f7724754e190fca19d8b21d50ff10296b49aa`.
+- GitHub exact source and PR patches reviewed after Rev2 publication.
+- PR #59 remains Draft/open/unmerged.
+- GitHub Actions currently reports no workflow run for this review branch.
+- PM container could not fetch GitHub raw files because outbound DNS was unavailable, so a new executable Rev2 `node --check` result is not claimed.
+- Previous static PASS belongs to Rev1 and is not reused as Rev2 proof.
 
 ## Gates
 - Execution: PASS.
-- Automated/static verification: PASS.
-- Code review: PASS.
-- Owner manual app verification: READY / NOT STARTED.
-- Documentation synchronization: PASS after this gate-sync sequence.
-- Merge permission: BLOCKED until Owner runtime PASS is recorded in canonical `.ai/` and PM explicitly approves merge.
+- Automated/static verification: WAITING new Rev2 executable evidence.
+- PM source/diff review: PASS for intended Rev2 logic/scope.
+- Owner manual app verification: READY; Owner may run exact Rev2 checkout to supply runtime evidence.
+- Documentation synchronization: PASS after dynamic docs sequence.
+- Merge permission: BLOCKED until Owner runtime PASS is recorded and required final gates are satisfied.
 
 ## Next permitted action
-Owner may now test the exact current PR #59 checkout. Run the task-010 Owner QA checklist. Do not merge.
+Owner may fetch exact review branch and run the app for Rev2 manual QA. Do not merge.
