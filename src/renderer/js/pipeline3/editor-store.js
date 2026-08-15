@@ -42,9 +42,12 @@ export function ensureP3Config(job) {
   if (!job) return null;
   const defaults = {
     preset: 'youtube',
+    stylePresetId: 'social-youtube-bold',
     subtitleEnabled: Boolean(job.ttsTimedSrt || job.voiceSubContent || job.karaokeAss),
-    fontFamily: 'Arial', fontSize: 46, bold: true, italic: false,
-    textColor: '#ffffff', outlineColor: '#000000', outlineWidth: 3, shadow: 2,
+    fontFamily: 'Arial', fontSize: 46, bold: true, italic: false, underline: false,
+    textColor: '#ffffff', textOpacity: 100, outlineColor: '#000000', outlineWidth: 3, shadow: 2,
+    letterSpacing: 0,
+    glowEnabled: false, glowColor: '#3b82f6', glowBlur: 4, glowOutline: 3,
     bgEnabled: true, bgColor: '#000000', bgOpacity: 62, padding: 10,
     lineHeight: 1.18, maxWidth: 80, align: 'center', x: 50, y: 82,
     safeZone: true, snap: true, effect: 'none', effectMs: 180,
