@@ -56,6 +56,9 @@ export function ensureP3Config(job) {
     removeVocal: localStorage.getItem('tts_remove_vocal') === 'true',
     bgVolume: Number(localStorage.getItem('tts_bg_volume') || 10),
     preserveKaraoke: true,
+    outputDirectory: '',
+    outputFileName: '',
+    exportQuality: 'high',
   };
   job.p3Config = { ...defaults, ...(job.p3Config || {}) };
   if (job.karaokeAss && !job.p3OriginalKaraokeAss && !job.p3DerivedAss) job.p3OriginalKaraokeAss = job.karaokeAss;
