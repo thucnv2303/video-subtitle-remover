@@ -4,29 +4,34 @@
 `STANDALONE-SUBTITLE-REMOVER-010`
 
 ## Status
-REV2B RUNTIME BOOTSTRAP FIX PUBLISHED / OWNER RETEST READY / MERGE BLOCKED
+FINAL PASS / MERGE APPROVED / RESUME PIPELINE 3 AFTER VERIFIED MERGE
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`
 - Review branch / Draft PR: `review/STANDALONE-SUBTITLE-REMOVER-010` / #59
-- Runtime base: `92deaf8fa72094fbad3f84c75c716967acbc509d`
-- Rev2B application-source HEAD: `df103a059cd4385e8fa031e656b41fd7dec483a3`
+- PR base: `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE@92deaf8fa72094fbad3f84c75c716967acbc509d`
+- Owner-tested application-source HEAD: `8a29624349d297d3f5299b98bd7a0ac51912e7a2`
 
-## Verified incident
-Owner screenshot showed previous Rev2 had no visible standalone change. GitHub inspection confirmed the helper/state source was not bootstrapped by the active runtime. Approved P2 shell is mounted by `pipeline.js` and retained P1-only copy/cards.
+## Final task result
+Standalone Xóa Sub is accepted by Owner. It reuses the existing Pipeline 2 implementation and remains independent of P1/P3. Final scope includes multi-video queueing, Auto/Manual processing, continuous manual drawing, per-region mask/frame-range/movement controls, job-scoped previews/results, selectable queue execution, and opening the configured shared output folder.
 
-## Rev2B correction
-- Active preload now bootstraps `pipeline-state.js` and `standalone-subtitle-remover.js`.
-- Standalone mode adapts the real approved P2 shell, hiding P1 provenance and exposing independent multi-file actions.
-- Shared P2 state/runner/backend remains authoritative; no duplicate engine/state/DOM IDs.
+## Verification evidence
+- PM source review: PASS.
+- Owner runtime: PASS on exact source HEAD `8a29624349d297d3f5299b98bd7a0ac51912e7a2`.
+- Five changed/runtime JS entry/helper files passed `node --check` on that exact HEAD.
+- `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD` passed.
+- GitHub workflow checks are absent; exact local static verification is recorded as the static gate evidence.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING Rev2B workflow evidence.
+- Automated/static: PASS.
 - PM source review: PASS.
-- Owner manual verification: READY FOR RETEST.
-- Documentation synchronization: PASS.
-- Merge: BLOCKED.
+- Owner manual verification: PASS.
+- Documentation synchronization: PASS after final docs sequence.
+- Merge: APPROVED after verifying final docs-only HEAD.
 
 ## Next permitted action
-Fetch latest PR #59 branch in `E:\Project AI\Video-sub-remove-owner-test-LONG012`, confirm exact HEAD, run `npm start`, and capture the first Xóa Sub screen before processing. Do not merge.
+1. Verify commits after `8a29624349d297d3f5299b98bd7a0ac51912e7a2` are docs-only.
+2. Merge PR #59 with exact final HEAD.
+3. Verify merge state/commit.
+4. Re-discover the canonical Pipeline 3 branch/PR and read its `.ai/current_state.md`, `.ai/task_current.md`, and `.ai/handoff.md` before any new implementation.
