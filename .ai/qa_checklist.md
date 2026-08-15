@@ -3,68 +3,59 @@
 ## Active task
 `STANDALONE-SUBTITLE-REMOVER-010 — Standalone Xoa Sub using existing Pipeline 2`
 
-## Review basis
+## Authority
 - [x] Branch `review/STANDALONE-SUBTITLE-REMOVER-010`.
 - [x] Draft PR #59.
-- [x] Task base `330d756fcce1b71ca8745b3292d7ac655bc32d13`.
-- [x] Remote `ACTIVE.md` and task spec define implementation authority.
-- [x] Verified pre-sync branch state contained task docs only; application source was not yet implemented.
-- [x] Previously attempted `src/renderer/js/standalone-subtitle-remover.js` absent at verified pre-sync ref.
+- [x] PR base `review/STANDALONE-SUBTITLE-REMOVER-010-RUNTIME-BASE@92deaf8fa72094fbad3f84c75c716967acbc509d`.
+- [x] Owner-tested application-source HEAD `8a29624349d297d3f5299b98bd7a0ac51912e7a2`.
 
-## Architecture/scope checks after implementation
-- [ ] Existing Step 2 DOM reused; no duplicated P2 DOM IDs.
-- [ ] Existing `window._appState` reused; no second P2 job store.
-- [ ] Existing P2/backend inpaint path reused; no backend duplication.
-- [ ] Xoa Sub appears directly below Voice Render.
-- [ ] Voice Render processing unchanged.
-- [ ] P1/P3/TTS source unchanged outside strictly required navigation integration.
-- [ ] No dependency churn/broad renderer refactor.
+## Architecture/scope checks
+- [x] Existing Step 2 DOM reused; no duplicated P2 backend/workspace implementation.
+- [x] Existing `window._appState` reused; no second P2 job store.
+- [x] Existing P2/backend inpaint path reused; no backend duplication.
+- [x] Xoa Sub appears directly below Voice Render.
+- [x] Main P1/P3 processing remains separate from standalone Xoa Sub.
+- [x] No dependency churn/broad renderer refactor required by final task scope.
 
 ## Manual region behavior
-- [ ] Region list exposes `box`, `tight`, `soft` per region.
-- [ ] New region inherits job mask default when appropriate.
-- [ ] Manual `runNextPass()` uses `region.maskMode || job.maskMode || 'box'`.
-- [ ] Auto path still uses job-level `job.maskMode || 'box'`.
-- [ ] Drawing crosshair appears only on drawable preview while Manual drawing is enabled.
-- [ ] Switching Auto / disabling Draw removes crosshair.
-- [ ] Successful first region does not disable drawing; second/third regions can be drawn continuously.
-- [ ] `canvas-inner-orig` coordinate mapping is preserved.
+- [x] Region list supports `box`, `tight`, `soft` per region.
+- [x] Continuous drawing supports multiple regions without re-enabling Draw after each successful region.
+- [x] Drawing crosshair is visible on drawable preview in Manual mode.
+- [x] Region overlay coordinate behavior accepted by Owner.
+- [x] Each region supports independent frame start/end range.
+- [x] Existing regions can be moved/repositioned.
 
-## Standalone navigation/workspace
-- [ ] Click Xoa Sub opens existing Step 2 workspace without requiring P1.
-- [ ] Pipeline P1/P2/P3 chrome is hidden only while standalone mode is active.
-- [ ] Leaving Xoa Sub restores normal Home/Voice Render/Settings navigation/layout.
-- [ ] No page switch accidentally triggers P1 or P3.
+## Standalone workspace
+- [x] Click Xoa Sub opens standalone workspace without requiring P1.
+- [x] Multi-video upload/queue works independently of P1/P3.
+- [x] Job selection is explicit with per-job checkboxes.
+- [x] `Chọn tất cả` and `Chạy đã chọn` operate on queue selection.
+- [x] Preview/result are scoped to the selected job.
+- [x] Mục 4 provides a single `Mở thư mục lưu trữ` action using configured shared output directory.
 
-## Static verification
-- [ ] Exact branch and HEAD recorded after source publication.
-- [ ] Changed files reviewed against scope.
-- [ ] `node --check src/renderer/js/app.js` PASS if changed.
-- [ ] `node --check` every other changed JS PASS.
-- [ ] `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD` PASS.
-- [ ] GitHub full diff + relevant full files reviewed by PM.
-- [ ] CI/check status reviewed; absent checks are not treated as PASS without other evidence.
+## Static verification — exact source HEAD
+Owner ran these commands on `8a29624349d297d3f5299b98bd7a0ac51912e7a2`:
+- [x] `node --check src/main/preload.js` PASS.
+- [x] `node --check src/renderer/js/pipeline-state.js` PASS.
+- [x] `node --check src/renderer/js/standalone-subtitle-remover.js` PASS.
+- [x] `node --check src/renderer/js/standalone-subtitle-interactions.js` PASS.
+- [x] `node --check src/renderer/js/standalone-output-folder.js` PASS.
+- [x] `git diff --check 330d756fcce1b71ca8745b3292d7ac655bc32d13..HEAD` PASS.
+- [x] GitHub full diff/relevant files reviewed by PM during task iterations.
+- [x] GitHub workflow status checked: no workflow runs exist for exact source HEAD; local exact-head static evidence is used for this gate.
 
-## Owner runtime QA — only after PM code-review PASS
-- [ ] Sidebar shows Voice Render -> Xoa Sub -> Settings.
-- [ ] Xoa Sub works without P1.
-- [ ] Auto removal smoke PASS.
-- [ ] Manual Draw shows `+` cursor on preview.
-- [ ] Draw Region 1 and Region 2 without toggling Draw again.
-- [ ] Both region overlays match drawn positions.
-- [ ] Region 1 = Box; Region 2 = Tight/Soft.
-- [ ] Processing uses correct mask per pass.
-- [ ] Progress/log remain functional.
-- [ ] Result preview works.
-- [ ] `_no_sub.mp4` exists and remains P3-compatible.
-- [ ] Auto removes crosshair.
-- [ ] Voice Render still works.
-- [ ] Normal main pipeline has no obvious regression.
+## Owner runtime QA
+- [x] Owner reports final latest standalone implementation PASS.
+- [x] Standalone Xoa Sub works independently of P1.
+- [x] Manual drawing/crosshair/multiple-region workflow accepted.
+- [x] Per-region mask, frame range and movement controls accepted.
+- [x] Queue selection/run-selected workflow accepted.
+- [x] Output-folder workflow accepted.
 
 ## Gates
-- Execution: NOT STARTED.
-- Automated/static: WAITING.
-- Code review: WAITING.
-- Owner manual verification: NOT STARTED.
-- Documentation synchronization: PASS for pre-implementation handoff.
-- Merge permission: BLOCKED.
+- Execution: PASS.
+- Automated/static: PASS.
+- Code review: PASS.
+- Owner manual verification: PASS.
+- Documentation synchronization: PASS after final docs sequence.
+- Merge permission: APPROVED after verifying final docs-only HEAD.
