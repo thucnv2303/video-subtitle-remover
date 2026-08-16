@@ -2,6 +2,7 @@ import { selectedP3Job, ensureP3Config } from './editor-store.js';
 import { cuesForJob } from './subtitle-ass.js';
 
 const STYLE_ID = 'p3e-subtitle-motion-style';
+const KARAOKE_TAG_RE = /\\k(?:f|o)?\d+/i;
 const MOTIONS = [
   ['none', 'Không', 'Đứng yên'],
   ['fade', 'Fade', 'Mờ dần vào'],
@@ -29,8 +30,12 @@ function escapeHtml(value) {
   node.textContent = String(value ?? '');
   return node.innerHTML;
 }
+function originalKaraokeAss(job) {
+  const source = String(job?.p3OriginalKaraokeAss || '');
+  return KARAOKE_TAG_RE.test(source) ? source : '';
+}
 function hasRealKaraoke(job) {
-  return Boolean(job?.p3OriginalKaraokeAss || job?.karaokeAss);
+  return Boolean(originalKaraokeAss(job) && !job?.p3CueEdited);
 }
 function activeMode(config) {
   if (config?.motionMode === 'typewriter') return 'typewriter';
@@ -85,6 +90,15 @@ function revealText(text, ratio, speed) {
   return chars.slice(0, count).join('');
 }
 
+function restoreFullCuePreview() {
+  const job = selectedP3Job();
+  const video = el('p3e-video');
+  const sub = el('p3e-sub');
+  if (!job || !video || !sub || sub.classList.contains('placeholder')) return;
+  const cue = currentCue(job, Number(video.currentTime) || 0);
+  if (cue) sub.textContent = cue.text;
+}
+
 function syncTypewriterPreview() {
   cancelAnimationFrame(raf);
   raf = requestAnimationFrame(() => {
@@ -111,6 +125,7 @@ function selectMotion(mode) {
   const job = selectedP3Job();
   if (!job) return;
   const config = ensureP3Config(job);
+  const previousMode = config.motionMode;
   const select = el('p3e-effect');
   if (mode === 'karaoke') {
     if (!hasRealKaraoke(job)) return;
@@ -130,6 +145,7 @@ function selectMotion(mode) {
     if (select) select.value = mode;
     replayExistingEffect();
   }
+  if (previousMode === 'typewriter' && config.motionMode !== 'typewriter') restoreFullCuePreview();
   syncMotionUi();
   syncTypewriterPreview();
 }
@@ -140,9 +156,10 @@ function syncMotionUi() {
   if (!root || !job) return;
   const config = ensureP3Config(job);
   const mode = activeMode(config);
+  const karaokeAvailable = hasRealKaraoke(job);
   root.querySelectorAll('[data-p3-motion]').forEach(button => {
     button.classList.toggle('active', button.dataset.p3Motion === mode);
-    if (button.dataset.p3Motion === 'karaoke') button.disabled = !hasRealKaraoke(job);
+    if (button.dataset.p3Motion === 'karaoke') button.disabled = !karaokeAvailable;
   });
   const speedWrap = el('p3e-motion-speed');
   speedWrap?.classList.toggle('show', mode === 'typewriter');
@@ -152,12 +169,14 @@ function syncMotionUi() {
   if (out) out.textContent = `${clamp(config.typewriterSpeed || 120, 40, 260)}%`;
   const note = el('p3e-motion-note');
   if (note) {
-    if (!hasRealKaraoke(job)) {
+    if (!karaokeAvailable) {
       note.className = 'p3e-motion-note warn';
-      note.textContent = 'Word Follow cần karaoke timing thật từ Pipeline 1. Job này chưa có artifact đó nên chế độ được khóa.';
+      note.textContent = job.p3CueEdited
+        ? 'Word Follow đã khóa vì cue P3 đã được chỉnh; karaoke timing P1 không còn an toàn để giữ nguyên.'
+        : 'Word Follow cần ASS karaoke gốc có timing \\k/\\kf/\\ko thật từ Pipeline 1. Job này chưa có artifact tương thích.';
     } else if (mode === 'karaoke') {
       note.className = 'p3e-motion-note';
-      note.textContent = 'Word Follow dùng timing karaoke thật. Glow và effect chuyển động khác được tắt để giữ timing chính xác.';
+      note.textContent = 'Word Follow dùng timing karaoke gốc thật. Glow và effect chuyển động khác được tắt để giữ timing chính xác.';
     } else if (mode === 'typewriter') {
       note.className = 'p3e-motion-note';
       note.textContent = 'Typewriter reveal theo thời gian cue và sẽ được chuyển thành event ASS thật khi render.';
@@ -286,7 +305,7 @@ export function installP3SubtitleMotion() {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => installWhenReady(), { once: true });
   else installWhenReady();
   document.addEventListener('click', event => {
-    if (event.target.closest?.('[data-job]')) requestAnimationFrame(() => { syncMotionUi(); syncTypewriterPreview(); });
+    if (event.target.closest?.('[data-job]')) requestAnimationFrame(() => { restoreFullCuePreview(); syncMotionUi(); syncTypewriterPreview(); });
   }, true);
 }
 
