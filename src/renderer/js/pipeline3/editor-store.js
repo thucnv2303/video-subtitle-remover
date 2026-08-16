@@ -51,6 +51,7 @@ export function ensureP3Config(job) {
     bgEnabled: true, bgColor: '#000000', bgOpacity: 62, padding: 10,
     lineHeight: 1.18, maxWidth: 80, align: 'center', x: 50, y: 82,
     safeZone: true, snap: true, effect: 'none', effectMs: 180,
+    motionMode: 'effect', typewriterSpeed: 120,
     coverEnabled: false, coverColor: '#0a0a0a', coverOpacity: 76, coverWidth: 92, coverHeightPx: 112,
     fitMode: 'auto',
     removeVocal: localStorage.getItem('tts_remove_vocal') === 'true',

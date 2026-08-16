@@ -1,5 +1,6 @@
 import { ensureP3Config } from './editor-store.js';
 import { updateJobDerivedAss } from './subtitle-ass.js';
+import { applyTypewriterToAss, motionRenderConfig } from './subtitle-motion.js';
 
 let activeRenderJobId = null;
 
@@ -14,10 +15,15 @@ function installBurnTimingBridge(job, config) {
       job.p3RenderTimedSrt = srtContent;
       const sourceSrt = job.p3BaseTimedSrt || job.ttsTimedSrt || '';
       const timingChanged = String(srtContent).trim() !== String(sourceSrt).trim();
-      const renderConfig = timingChanged ? { ...config, preserveKaraoke: false } : config;
+      const renderConfig = motionRenderConfig(job, timingChanged ? { ...config, preserveKaraoke: false } : config, timingChanged);
       if (timingChanged) job.p3AssTimedSrt = srtContent;
       else delete job.p3AssTimedSrt;
-      const derived = updateJobDerivedAss(job, renderConfig, info.width, info.height);
+      let derived = updateJobDerivedAss(job, renderConfig, info.width, info.height);
+      derived = applyTypewriterToAss(derived, renderConfig);
+      if (derived) {
+        job.p3DerivedAss = derived;
+        job.karaokeAss = derived;
+      }
       delete job.p3AssTimedSrt;
       if (timingChanged && config.preserveKaraoke && job.p3OriginalKaraokeAss) {
         window.addLog?.('[P3] Timing final đã đổi: dùng ASS từ SRT final thay cho karaoke timing P1 để tránh lệch subtitle.', 'info');
