@@ -58,7 +58,7 @@ function installStyle() {
   style.id = STYLE_ID;
   style.textContent = `
 #step-3-content,#step-3-content *{box-sizing:border-box}
-#step-3-content .p3e-shell{grid-template-columns:minmax(210px,250px) minmax(480px,1fr) minmax(340px,390px)}
+#step-3-content .p3e-shell{grid-template-columns:minmax(200px,230px) minmax(460px,1fr) clamp(500px,34vw,600px)}
 #step-3-content .p3e-inspector,#step-3-content .p3e-accordion,#step-3-content .p3e-fold,#step-3-content .p3e-fold-body,#step-3-content .p3e-grid2,#step-3-content .p3e-style-engine,#step-3-content .p3e-style-grid,#step-3-content .p3e-style-card,#step-3-content .p3e-typography-tools,#step-3-content .p3e-advanced-style{min-width:0;max-width:100%}
 #step-3-content .p3e-inspector,#step-3-content .p3e-accordion,#step-3-content .p3e-fold-body{overflow-x:hidden}
 #step-3-content .p3e-fold-body>*{min-width:0;max-width:100%}
@@ -77,8 +77,9 @@ function installStyle() {
 #step-3-content .p3e-export-quality b,#step-3-content .p3e-export-quality small{display:block;white-space:normal}
 #step-3-content .p3e-export-quality small{margin-top:3px;color:#8398ad;font-size:8px}
 #step-3-content .p3e-vocal-strict-note{border-color:rgba(245,158,11,.42);background:rgba(120,53,15,.12);color:#f6d69a}
-@media(max-width:1380px){#step-3-content .p3e-shell{grid-template-columns:205px minmax(440px,1fr) 330px;gap:8px;padding:8px}#step-3-content .p3e-grid2,#step-3-content .p3e-advanced-style-grid{grid-template-columns:1fr}}
-@media(max-width:1160px){#step-3-content .p3e-shell{grid-template-columns:190px minmax(410px,1fr) 310px}#step-3-content .p3e-style-grid,#step-3-content .p3e-export-quality{grid-template-columns:1fr}}
+@media(max-width:1500px){#step-3-content .p3e-shell{grid-template-columns:195px minmax(430px,1fr) clamp(430px,33vw,500px);gap:8px;padding:8px}}
+@media(max-width:1280px){#step-3-content .p3e-shell{grid-template-columns:185px minmax(400px,1fr) minmax(360px,410px)}#step-3-content .p3e-grid2,#step-3-content .p3e-advanced-style-grid{grid-template-columns:1fr}}
+@media(max-width:1080px){#step-3-content .p3e-shell{grid-template-columns:175px minmax(360px,1fr) 330px}#step-3-content .p3e-style-grid,#step-3-content .p3e-export-quality{grid-template-columns:1fr}}
 `;
   document.head.appendChild(style);
 }
