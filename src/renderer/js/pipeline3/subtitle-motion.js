@@ -42,6 +42,10 @@ function activeMode(config) {
   if (config?.motionMode === 'karaoke') return 'karaoke';
   return String(config?.effect || 'none');
 }
+function typewriterRevealFraction(speed) {
+  const normalized = (clamp(speed || 120, 40, 260) - 40) / 220;
+  return 1 - (normalized * 0.75);
+}
 
 function installStyle() {
   if (el(STYLE_ID)) return;
@@ -84,8 +88,8 @@ function currentCue(job, timeSec) {
 function revealText(text, ratio, speed) {
   const chars = Array.from(String(text || ''));
   if (!chars.length) return '';
-  const speedFactor = clamp(speed || 120, 40, 260) / 120;
-  const adjusted = clamp(ratio * speedFactor, 0, 1);
+  const revealFraction = typewriterRevealFraction(speed);
+  const adjusted = clamp(ratio / revealFraction, 0, 1);
   const count = Math.max(1, Math.min(chars.length, Math.ceil(chars.length * adjusted)));
   return chars.slice(0, count).join('');
 }
@@ -166,7 +170,7 @@ function syncMotionUi() {
   const speed = el('p3e-typewriter-speed');
   const out = el('p3e-typewriter-speed-out');
   if (speed && document.activeElement !== speed) speed.value = String(clamp(config.typewriterSpeed || 120, 40, 260));
-  if (out) out.textContent = `${clamp(config.typewriterSpeed || 120, 40, 260)}%`;
+  if (out) out.textContent = String(clamp(config.typewriterSpeed || 120, 40, 260));
   const note = el('p3e-motion-note');
   if (note) {
     if (!karaokeAvailable) {
@@ -260,7 +264,6 @@ function textTokens(value) {
 
 export function applyTypewriterToAss(sourceAss, config = {}) {
   if (config.motionMode !== 'typewriter') return String(sourceAss || '');
-  const speed = clamp(config.typewriterSpeed || 120, 40, 260) / 100;
   const lines = String(sourceAss || '').split(/\r?\n/);
   const output = [];
   for (const line of lines) {
@@ -278,7 +281,7 @@ export function applyTypewriterToAss(sourceAss, config = {}) {
     const maxSteps = Math.min(tokens.length, 72);
     const stepSize = Math.max(1, Math.ceil(tokens.length / maxSteps));
     const steps = Math.ceil(tokens.length / stepSize);
-    const revealDuration = Math.min(end - start, (end - start) / speed);
+    const revealDuration = (end - start) * typewriterRevealFraction(config.typewriterSpeed || 120);
     for (let index = 1; index <= steps; index += 1) {
       const tokenCount = Math.min(tokens.length, index * stepSize);
       const stepStart = start + ((index - 1) / steps) * revealDuration;
