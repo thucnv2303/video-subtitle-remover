@@ -683,21 +683,28 @@ async function repairNarrationQuality(net, endpoint, model, narration, budget, e
   const hardRangeRule = requireFullBudget
     ? `Kết quả phải nằm trong ${budget.min_chars}-${budget.max_chars} ký tự để còn đủ thời lượng; nếu không thể đạt min mà vẫn tự nhiên và không lặp, hãy trả bản tự nhiên ngắn hơn và hệ thống sẽ fail thay vì chấp nhận filler.`
     : `Mục tiêu mềm là ${budget.min_chars}-${budget.max_chars} ký tự, ưu tiên khoảng ${targetChars}; không cần chạm min và tuyệt đối không vượt ${maxChars} ký tự.`;
+  const cjkRepairRule = initial.cjk_count > 0
+    ? `LỖI BẮT BUỘC PHẢI SỬA: candidate hiện có ${initial.cjk_count} ký tự CJK bị cấm. Phải rà TOÀN BỘ narration_script và loại, bỏ hoặc diễn giải lại tất cả bằng tiếng Việt/Latin; không được giữ lại dù chỉ 1 ký tự.`
+    : '';
   const prompt = [
     'Bạn chỉ làm nhiệm vụ làm sạch chất lượng MỘT narration tiếng Việt đã có.',
     hardRangeRule,
+    cjkRepairRule,
     'Xóa hoàn toàn câu/ý/CTA/kết luận bị lặp; không thay lặp nguyên văn bằng một câu gần giống để né kiểm tra.',
     'CTA hoặc lời kết chỉ xuất hiện một lần ở cuối nếu thật sự cần.',
-    'Loại bỏ ký tự Hán/Nhật/Hàn hoặc token lạc ngôn ngữ; diễn đạt lại bằng tiếng Việt tự nhiên, nếu không chắc nghĩa thì bỏ chi tiết đó.',
+    'QUY TẮC NGÔN NGỮ TUYỆT ĐỐI: narration_script phải có ZERO ký tự CJK/Hán/Hiragana/Katakana/Hangul; chỉ dùng tiếng Việt tự nhiên, ký tự Latin, số và dấu câu cần thiết.',
+    'Nếu candidate có chữ CJK: chỉ diễn giải khi hiểu chắc nghĩa bằng tiếng Việt/Latin; nếu không chắc thì bỏ chi tiết đó, không đoán và không copy nguyên glyph.',
+    'TRƯỚC KHI TRẢ JSON: tự quét narration_script từ đầu đến cuối. Nếu còn bất kỳ ký tự CJK nào, phải sửa/xóa/diễn giải lại rồi quét lại; chỉ trả kết quả khi CJK=0.',
     'Giữ nhất quán tên chủ thể, sản phẩm, nguyên liệu và đối tượng; không tự đổi tên giữa các câu.',
     'Không thêm claim, số liệu, nguyên liệu, công dụng hay CTA mới không có trong narration hiện tại.',
     'Không dùng filler chỉ để tăng số ký tự. Chất lượng và mạch kể tự nhiên ưu tiên hơn việc chạm target mềm.',
     'Output là một đoạn narration liên tục: không SRT, không numbering, không bullet, không chia scene.',
+    'Code sẽ kiểm cứng CJK, repeated sentence, near-duplicate sentence và repeated 10-word phrase sau lần sửa này.',
     'Không giải thích. Chỉ trả JSON đúng schema.',
-  ].join('\n');
+  ].filter(Boolean).join('\n');
   const result = await chatStream(net, endpoint, model, [
     { role: 'system', content: prompt },
-    { role: 'user', content: compactNarration(narration) },
+    { role: 'user', content: `NARRATION CANDIDATE CẦN LÀM SẠCH:\n${compactNarration(narration)}` },
   ], {
     event,
     phase,
