@@ -1,5 +1,11 @@
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
-const { burnP3SubtitleHq, retimeP3Video } = require('./p3-export-bridge');
+
+let p3ExportBridge = null;
+try {
+  p3ExportBridge = require('./p3-export-bridge');
+} catch (error) {
+  console.error('[Preload] P3 export bridge unavailable; core electronAPI remains active:', error?.message || error);
+}
 
 async function cancelAnyP1Vision(payload) {
   const results = await Promise.allSettled([
@@ -15,6 +21,10 @@ async function cancelAnyP1Vision(payload) {
   const failure = results.find(result => result.status === 'rejected');
   if (failure) throw failure.reason;
   return { ok: true, cancelled: false };
+}
+
+function unavailableP3Bridge() {
+  return Promise.resolve({ ok: false, error: 'P3 export bridge chưa khả dụng trong preload hiện tại.' });
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -38,8 +48,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSystemInfo: () => ipcRenderer.invoke('app:systemInfo'),
   mergeWavFiles: (inputPaths, outputPath) => ipcRenderer.invoke('voice-render:mergeWavFiles', inputPaths, outputPath),
   applyVoiceTempo: (inputPath, speedFactor) => ipcRenderer.invoke('voice-render:applyTempo', inputPath, speedFactor),
-  burnP3SubtitleHq: (payload) => burnP3SubtitleHq(payload),
-  retimeP3Video: (payload) => retimeP3Video(payload),
+  burnP3SubtitleHq: (payload) => p3ExportBridge?.burnP3SubtitleHq ? p3ExportBridge.burnP3SubtitleHq(payload) : unavailableP3Bridge(),
+  retimeP3Video: (payload) => p3ExportBridge?.retimeP3Video ? p3ExportBridge.retimeP3Video(payload) : unavailableP3Bridge(),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   onP1VisionProgress: (callback) => {
