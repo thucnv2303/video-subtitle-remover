@@ -1,22 +1,26 @@
 # Active PM Execution Spec
 
-Status: SOURCE_PUBLISHED_REVIEW_PENDING
+Status: READY_FOR_IMPLEMENTATION
 
-Task: `PIPELINE1-ABSOLUTE-FILE-PATH-018`
+Task: `PIPELINE1-STANDARD-SHORT-DURATION-GUARD-019`
 Repository: `thucnv2303/video-subtitle-remover`
-Active review branch: `review/PIPELINE1-ABSOLUTE-FILE-PATH-018`
-Exact starting SHA: `c731b71c1e4fb4ba5294cc5f9a20486bcfbf96f9`
-Spec: `.ai/task_specs/PIPELINE1-ABSOLUTE-FILE-PATH-018.md`
+Active review branch: `review/PIPELINE1-STANDARD-SHORT-DURATION-GUARD-019`
+Exact starting SHA: `4af664327155cc646e3a1a96f64d69b951c453b6`
+Parent task: `PIPELINE1-ABSOLUTE-FILE-PATH-018`
+Spec: `.ai/task_specs/PIPELINE1-STANDARD-SHORT-DURATION-GUARD-019.md`
 
 ## Goal
-Restore stable absolute native video paths for shared Jobs so preview and Pipeline 1 ASR never receive a basename-only path.
+Fix short-video Standard duration recompose non-convergence without involving Semantic Remix or weakening deterministic narration gates.
+
+## Verified runtime trigger
+Owner 17.6s Standard Job with Remix OFF: draft 260 chars vs hard target 276-290; recompose 547; retained-candidate retry 481; both rejected by the correct hard length gate before TTS. Absolute path/preview/ASR/Vision succeeded.
 
 ## Scope
-Only the existing Electron file-path compatibility layer may be changed unless later evidence proves another source defect. Do not refactor P1/P2/P3/TTS/backend.
+Prefer a narrow change in `src/main/p1-standard-vision-wrapper.js`: short Standard recompose output budget must be target-aware instead of inheriting the 520-token minimum intended for larger generations. Preserve long-video scaling, hard min/max, ZERO-CJK and repetition gates. No P2/P3/TTS/Voice Render/Semantic Remix changes.
 
 ## Gates
-- Execution: PASS source published.
-- Automated/static verification: PARTIAL.
+- Execution: AUTHORIZED / NOT YET VERIFIED.
+- Automated/static verification: WAITING.
 - Code review: WAITING.
 - Owner manual app verification: NOT STARTED.
 - Documentation synchronization: IN PROGRESS.

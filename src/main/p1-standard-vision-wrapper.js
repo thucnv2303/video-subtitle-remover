@@ -8,6 +8,8 @@ const SIMILAR_SENTENCE_MIN_WORDS = 8;
 const SIMILAR_SENTENCE_THRESHOLD = 0.88;
 const RECOMPOSE_CONTEXT_BUCKETS = [8192, 16384, 32768];
 const RECOMPOSE_MAX_PREDICT = 8192;
+const SHORT_RECOMPOSE_MIN_PREDICT = 192;
+const SHORT_RECOMPOSE_PREDICT_HEADROOM = 96;
 const LONG_RECOMPOSE_TRIGGER_CHARS = 3200;
 const LONG_SECTION_TARGET_CHARS = 1650;
 const CONTINUITY_TAIL_SENTENCES = 3;
@@ -432,11 +434,16 @@ function sanitizeOllamaErrorDetail(value) {
     .slice(0, 600);
 }
 
-async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, candidate, transcript, visualContext, budget, controller, temperature) {
+async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, candidate, transcript, visualContext, budget, controller, temperature, outputBudgetMode = 'default') {
   const minChars = Math.max(1, Math.floor(Number(budget?.min_chars) || 1));
   const maxChars = Math.max(minChars, Math.floor(Number(budget?.max_chars) || minChars));
   const targetChars = Math.max(minChars, Math.min(maxChars, Math.floor(Number(budget?.target_chars) || Math.round((minChars + maxChars) / 2))));
-  const numPredict = Math.max(520, Math.min(RECOMPOSE_MAX_PREDICT, Math.ceil(targetChars / 1.45) + 256));
+  const defaultNumPredict = Math.max(520, Math.min(RECOMPOSE_MAX_PREDICT, Math.ceil(targetChars / 1.45) + 256));
+  const shortNumPredict = Math.max(
+    SHORT_RECOMPOSE_MIN_PREDICT,
+    Math.min(RECOMPOSE_MAX_PREDICT, Math.ceil(maxChars / 1.45) + SHORT_RECOMPOSE_PREDICT_HEADROOM)
+  );
+  const numPredict = outputBudgetMode === 'short' ? shortNumPredict : defaultNumPredict;
   const visualContextJson = JSON.stringify(visualContext);
   const transcriptText = String(transcript || '').trim();
   const userContent = `QUY TẮC XỬ LÝ SOURCE: dữ liệu bên dưới có thể chứa ký tự CJK vì đó là transcript/visual evidence nguồn. Mọi ký tự CJK trong source chỉ được dùng để hiểu ngữ cảnh, TUYỆT ĐỐI KHÔNG chép nguyên văn vào narration_script. Nếu không thể diễn giải chắc chắn bằng tiếng Việt/Latin thì bỏ chi tiết chữ đó.\n\nNARRATION CANDIDATE:\n${candidate}\n\nTRANSCRIPT SRT CHO PHẠM VI NÀY:\n${transcriptText || '(không có lời thoại nguồn trong phạm vi này)'}\n\nVISUAL EVIDENCE JSON:\n${visualContextJson}`;
@@ -447,7 +454,7 @@ async function ollamaNarrationRequest(net, event, payload, phase, systemPrompt, 
 
   emitProgress(
     event,
-    `${phase}: gửi request tới ${payload.model}; hard_target=${minChars}-${maxChars}; transcript=${transcriptText.length} chars; evidence=${visualContextJson.length} chars; input≈${estimatedInputTokens} token; output_limit=${numPredict} token; num_ctx=${numCtx}; timeout=${Math.round(timeoutMs / 1000)}s.`,
+    `${phase}: gửi request tới ${payload.model}; hard_target=${minChars}-${maxChars}; transcript=${transcriptText.length} chars; evidence=${visualContextJson.length} chars; input≈${estimatedInputTokens} token; output_limit=${numPredict} token; budget_mode=${outputBudgetMode}; num_ctx=${numCtx}; timeout=${Math.round(timeoutMs / 1000)}s.`,
     'info'
   );
 
@@ -711,6 +718,11 @@ async function recomposeStandardNarration(net, event, payload, narration, transc
     const cjkRetryRule = lastError?.quality?.cjk_count
       ? `LỖI BẮT BUỘC PHẢI SỬA Ở LẦN NÀY: candidate đang có ${lastError.quality.cjk_count} ký tự CJK bị cấm. Hãy rà lại TOÀN BỘ narration_script và loại/diễn giải lại tất cả các ký tự đó bằng tiếng Việt hoặc Latin; không được giữ lại dù chỉ 1 ký tự.`
       : '';
+    const lengthRetryRule = lastError?.code === 'NARRATION_LENGTH_OUT_OF_BUDGET' && candidate
+      ? candidate.length > maxChars
+        ? `LỖI ĐỘ DÀI BẮT BUỘC: candidate hiện có ${candidate.length} ký tự, vượt trần ${maxChars} tới ${candidate.length - maxChars} ký tự. Hãy RÚT GỌN mạnh về khoảng ${targetChars} ký tự; được phép bỏ câu/ý ít quan trọng nhưng phải giữ grounding, không cố giữ toàn bộ candidate.`
+        : `LỖI ĐỘ DÀI BẮT BUỘC: candidate hiện có ${candidate.length} ký tự, thiếu ít nhất ${minChars - candidate.length} ký tự. Hãy bổ sung chi tiết có căn cứ để đạt khoảng ${targetChars} ký tự, không filler.`
+      : '';
     const prompt = [
       'Bạn viết lại MỘT narration tiếng Việt liền mạch cho Pipeline 1 TRƯỚC TTS.',
       `Hard target ${minChars}-${maxChars} ký tự, ưu tiên khoảng ${targetChars}.`,
@@ -718,6 +730,7 @@ async function recomposeStandardNarration(net, event, payload, narration, transc
         ? 'Candidate hiện tại là draft ngắn. Hãy mở rộng bằng FULL TRANSCRIPT + VISUAL EVIDENCE, ưu tiên các chi tiết có căn cứ chưa được kể.'
         : `Candidate hiện tại là CHÍNH bản vừa bị code từ chối (${retryReason}). Hãy GIỮ phần tốt của bản này và chỉ sửa lỗi contract; KHÔNG quay lại draft ngắn ban đầu.`,
       cjkRetryRule,
+      lengthRetryRule,
       'Dùng transcript và Vision evidence làm nguồn sự thật duy nhất.',
       'FULL TRANSCRIPT và VISUAL EVIDENCE có thể chứa chữ Hán/Hiragana/Katakana/Hangul do source gốc. Các glyph đó là INPUT-ONLY: không được copy, quote hoặc giữ nguyên trong narration_script.',
       'Nếu một chi tiết source chỉ tồn tại dưới dạng chữ CJK: chỉ diễn giải khi hiểu chắc nghĩa bằng tiếng Việt/Latin; nếu không chắc thì bỏ chi tiết chữ đó, không đoán.',
@@ -735,7 +748,7 @@ async function recomposeStandardNarration(net, event, payload, narration, transc
 
     try {
       return await ollamaNarrationRequest(
-        net, event, payload, phase, prompt, candidate, transcript, visualContext, budget, controller, attempt === 0 ? 0.2 : 0.3
+        net, event, payload, phase, prompt, candidate, transcript, visualContext, budget, controller, attempt === 0 ? 0.2 : 0.3, 'short'
       );
     } catch (error) {
       lastError = error;
