@@ -1,6 +1,52 @@
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 const { burnP3SubtitleHq, retimeP3Video } = require('./p3-export-bridge');
 
+const NATIVE_FILE_PATH_DATASET = 'vsrNativeFilePaths';
+
+function nativeFileKey(file) {
+  if (!file) return '';
+  return [
+    String(file.name || ''),
+    Number(file.size || 0),
+    Number(file.lastModified || 0),
+    String(file.type || ''),
+  ].join('::');
+}
+
+function isAbsoluteNativePath(value) {
+  const text = String(value || '').trim();
+  return /^[A-Za-z]:[\\/]/.test(text) || /^\\\\[^\\]+\\[^\\]+/.test(text) || text.startsWith('/');
+}
+
+function publishNativeFilePaths(files) {
+  const entries = [];
+  for (const file of Array.from(files || [])) {
+    try {
+      const nativePath = String(webUtils.getPathForFile(file) || '').trim();
+      if (isAbsoluteNativePath(nativePath)) entries.push({ key: nativeFileKey(file), path: nativePath });
+    } catch {
+      // Main-world guard will block unresolved Files instead of falling back to basename.
+    }
+  }
+  try {
+    document.documentElement.dataset[NATIVE_FILE_PATH_DATASET] = encodeURIComponent(JSON.stringify({
+      at: Date.now(),
+      entries,
+    }));
+  } catch {
+    // Ignore publish errors; unresolved events are blocked by the renderer guard.
+  }
+}
+
+// Resolve native File paths in preload's isolated world, before renderer handlers consume the event.
+document.addEventListener('change', (event) => {
+  publishNativeFilePaths(event?.target?.files);
+}, true);
+
+document.addEventListener('drop', (event) => {
+  publishNativeFilePaths(event?.dataTransfer?.files);
+}, true);
+
 async function cancelAnyP1Vision(payload) {
   const results = await Promise.allSettled([
     ipcRenderer.invoke('ollama:p1CancelVision', payload),
