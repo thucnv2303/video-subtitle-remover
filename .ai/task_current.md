@@ -4,54 +4,56 @@
 P1-P2-PER-JOB-EXPORT-NOVOCAL-034
 
 ## Status
-SOURCE_PUBLISHED_CODE_REVIEW_PASS_OWNER_RUNTIME_WAITING_MERGE_BLOCKED
+KEYFRAME_FAIL_SOFT_SOURCE_PUBLISHED_OWNER_RUNTIME_WAITING_MERGE_BLOCKED
 
 ## Exact basis
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Branch: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034`.
 - Draft PR: #74.
-- Application-source HEAD before docs sync: `0799ec2faedcb4d025b559f3ac604ceed052adda`.
+- Keyframe fail-soft source commit: `eab41008133fab56f2551417b3b7e7e5d23c0487`.
 - Base: `fbaa060bc9f604fc93e3e195e264ea27e78921fd`.
 
 ## User outcome
-Results belong to individual Jobs. The Owner can Save As P1 artifacts and P2 clean video from the correct Job card, and may create a separate Demucs-strict P2 derivative without original vocals.
+P1 must not abort because one sampled MP4/VFR frame reported by metadata cannot be decoded. When enough usable keyframes remain, P1 continues to Vision/global reasoning. Task-034 per-Job exports and P2 no-vocal behavior remain unchanged.
 
-## Product invariants
-- Job actions resolve by exact Job ID, never visual list index.
-- P1 export exposes only real filesystem artifact paths.
-- P2 export copies `job.outputPath`; it does not mutate it.
-- P2 no-vocal derivative is stored separately as `job.p2NoVocalOutputPath`.
-- P3 continues to use canonical P2 output authority.
-- Vocal removal must return `method_used=demucs`; otherwise derivative creation fails closed.
+## Repair contract
+- Keep `sampleFrameIndexes()` architecture unchanged.
+- On requested keyframe failure, retry up to 3 earlier frame indexes.
+- Never duplicate a frame already accepted for the current visual context.
+- Log requested-frame failure, successful fallback, or skipped sample.
+- Keep the existing safety threshold unchanged: fewer than `Math.min(3, indexes.length)` usable frames fails P1.
+- Do not change ASR, AI narration/remix, path compatibility, task-034 export behavior, P2, Demucs, P3, Voice Render, or standalone Xóa Sub.
 
 ## Required Owner verification
-Preflight on exact branch:
+Preflight in `E:\Project AI\Video-sub-remove-owner-test-LONG012`:
 ```text
 git fetch origin
 git switch review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034
 git pull --ff-only
+node --check src/renderer/js/pipeline1-analysis.js
 node --check src/main/main-entry.js
 node --check src/main/preload.js
 node --check src/renderer/js/job-export-controls.js
 git diff --check fbaa060bc9f604fc93e3e195e264ea27e78921fd..HEAD
 ```
 
-Runtime:
-1. Complete or load at least two P1 Jobs; verify each `Kết quả` menu saves artifacts from that exact Job.
-2. Verify voice export keeps the actual audio file type.
-3. Complete or load at least two P2 Jobs; verify each `↓ P2` saves its own clean video.
-4. On one P2 Job click `♬ Xóa giọng`; require successful Demucs path and separate output.
-5. Download the derivative through `↓ Không giọng`.
-6. Verify canonical clean video is still present/usable and P3 input behavior is unchanged.
-7. Sanity-check P1→P2 hydration, standalone Xóa Sub, Voice Render, and P3 availability.
+Runtime with the same source video:
+`E:\Tải về\TikVideo.App_7595712770348827761.mp4`
+
+Acceptance order:
+1. P1 ASR still completes.
+2. If requested frame 1386 fails, log shows the failure plus either a previous-frame fallback or sample skip.
+3. With enough usable frames, P1 continues into Vision/global reasoning and completes rather than aborting on HTTP 400.
+4. Only after P1 completes, continue task-034 checks: P1 `↓ Kết quả`, P2 `↓ P2`, P2 `♬ Xóa giọng`, then `↓ Không giọng`.
+5. Canonical P2 output/P3 authority remains unchanged.
 
 ## Gates
-- Execution: PASS.
-- Automated/static: PARTIAL PASS; no GitHub CI/status exists for source HEAD, exact Owner checkout preflight remains required.
-- Code review: PASS.
-- Owner runtime: WAITING.
-- Documentation synchronization: PASS after docs publication.
+- Execution: PASS for fail-soft source publication.
+- Automated/static: WAITING exact Owner checkout preflight; no GitHub CI run is available.
+- Code review: PASS for narrow GitHub diff/full-file review.
+- Owner runtime: WAITING same-video rerun.
+- Documentation synchronization: IN PROGRESS until handoff/ACTIVE sync completes.
 - Merge: BLOCKED.
 
 ## Next action
-Owner runtime verification only. On PASS, record observed result in canonical `.ai/`, re-check exact PR HEAD/gates, then merge may be considered.
+Synchronize remaining canonical docs, then Owner runs the exact preflight and same-video runtime scenario. Do not merge.
