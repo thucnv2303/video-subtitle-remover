@@ -1,0 +1,79 @@
+/* Standalone subtitle remover page geometry. Reuses the single P2 DOM tree. */
+#page-subtitle-remover {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #091521;
+}
+
+#page-subtitle-remover .standalone-p2-host {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+#page-subtitle-remover #step-2-content {
+  position: relative !important;
+  inset: auto !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+}
+
+#page-subtitle-remover #step-2-content .p2-approved-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+#page-subtitle-remover #step-2-content .p2-workspace-grid,
+#page-subtitle-remover #step-2-content .p2-control-column,
+#page-subtitle-remover #step-2-content .p2-center-column,
+#page-subtitle-remover #step-2-content .p2-detail-column {
+  min-width: 0;
+}
+
+#page-subtitle-remover #step-2-content .p2-source-badge,
+#page-subtitle-remover #step-2-content .p2-p1-summary,
+#page-subtitle-remover #step-2-content #p2-sync-jobs,
+#page-subtitle-remover #step-2-content #btn-open-file {
+  display: none !important;
+}
+
+#page-subtitle-remover #step-2-content #job-list .job-name::after {
+  display: none !important;
+  content: none !important;
+}
+
+#page-subtitle-remover #standalone-subtitle-actions {
+  min-width: 0;
+}
+
+@media (max-width: 1320px) {
+  #page-subtitle-remover #step-2-content .p2-workspace-grid {
+    grid-template-columns: minmax(220px,.72fr) minmax(330px,1.18fr) minmax(420px,1.45fr);
+  }
+}

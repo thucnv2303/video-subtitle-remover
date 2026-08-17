@@ -5,6 +5,7 @@ import './pipeline3/subtitle-resize-effects.js';
 import './pipeline3/subtitle-style-engine.js';
 import './pipeline3/runtime-fix-rev4.js';
 import './pipeline3/subtitle-motion.js';
+import './standalone-subtitle-bootstrap.js';
 import { installPerJobSemanticRemixControls } from './pipeline1-semantic-remix-per-job.js';
 
 /**
@@ -48,7 +49,7 @@ function snapshotPipeline1RunConfig(event) {
   const state = window._appState;
   if (!state?.jobs) return;
 
-  const idleJobs = state.jobs.filter(job => job.status === 'idle');
+  const idleJobs = state.jobs.filter(job => job.status === 'idle' && job.standaloneSubtitleRemoval !== true);
   if (idleJobs.length === 0) return;
 
   const providerEl = document.getElementById('step1-ai-provider');
