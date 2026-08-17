@@ -1,52 +1,56 @@
 # AgentOS Handoff Status
 
 ## Active task
-`P3-PREVIEW-ASS-PARITY-031`
+`P1-P2-PER-JOB-EXPORT-NOVOCAL-034`
 
 ## Status
-SOURCE PUBLISHED / OWNER VISUAL PARITY WAITING / MERGE BLOCKED
+SOURCE PUBLISHED / CODE REVIEW PASS / OWNER RUNTIME WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Branch: `review/P3-PREVIEW-ASS-PARITY-031`.
-- Draft PR: #71.
-- Application-source HEAD: `236b05261ecf1a40ad223324b759f84a499f062c`.
-- Clean base: `review/P3-OUTPUT-ROOT-030-CLEAN@2f326af98d4344fc2ff460346e1a46cc96d136d5`.
+- Branch: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034`.
+- Draft PR: #74.
+- Application-source HEAD before docs sync: `0799ec2faedcb4d025b559f3ac604ceed052adda`.
+- Base: `review/P1-P2-HANDOFF-HYDRATION-032@fbaa060bc9f604fc93e3e195e264ea27e78921fd`.
 
-## Why task 031 exists
-Owner showed that P3 Preview subtitle geometry did not match the final rendered MP4. The Preview was visually too large and wrapped differently. The final ASS uses source-video logical pixels, while Preview needed to project those values through the fitted video scale.
+## Implemented behavior
+- P1 Job cards gain `↓ Kết quả` for available artifact files.
+- P2 completed Job cards gain `↓ P2` for Save As of canonical clean video.
+- P2 completed Job cards gain `♬ Xóa giọng`; successful Demucs separation + audio replacement creates a separate derivative and changes the action to `↓ Không giọng`.
+- Canonical `job.outputPath` is never replaced by the derivative.
+- Export controls bind to exact Job IDs, not array positions.
 
-## Current implementation
-`src/renderer/js/pipeline3/preview-ass-parity.js` projects subtitle styling from logical video resolution to the Preview canvas and mirrors ASS-like wrap calculation.
+## Corrective review included
+The PM reviewed the first implementation and corrected three risks before Owner testing:
+1. array-index binding could export the wrong Job after list filtering/reordering;
+2. `ttsTimedSrt` could be SRT content rather than a file path and therefore must not be passed to Save As;
+3. voice export must retain the source audio extension.
 
-`src/main/main-entry.js` bootstraps this parity layer without changing P3 export/audio logic.
+## Static/code-review evidence
+- `src/main/main-entry.js`: syntax PASS.
+- `src/renderer/js/job-export-controls.js`: syntax PASS.
+- Full GitHub source for changed files reviewed after publication.
+- GitHub commit status list for source HEAD is empty; no CI result can be claimed.
 
-## Owner test focus
-Compare Preview and final MP4 for the same Job:
-- relative font size;
-- line wrapping;
-- X/Y placement;
-- outline/shadow;
-- cover/background geometry.
-
-Also sanity-check that P3 Demucs/export and the standalone `Xóa Sub` tab remain available.
-
-## Queued task 032
-Owner approved a follow-up after 031 PASS:
-- P1: download results per Job;
-- P2: download clean video per Job;
-- P2: optional Demucs-strict no-vocal derivative `clean_video_no_vocal.mp4`;
-- derivative must not mutate/replace canonical `clean_video.mp4` used by P3.
-
-Do not start 032 before 031 Owner visual result is recorded.
+## Owner test sequence
+```text
+git fetch origin
+git switch review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034
+git pull --ff-only
+node --check src/main/main-entry.js
+node --check src/main/preload.js
+node --check src/renderer/js/job-export-controls.js
+git diff --check fbaa060bc9f604fc93e3e195e264ea27e78921fd..HEAD
+```
+Then run the app and verify per-Job P1 export, per-Job P2 export, Demucs-only derivative, derivative download, and canonical P2/P3 continuity.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING exact checkout.
-- Code review: WAITING exact-head final review.
+- Automated/static: PARTIAL PASS; Owner exact-checkout preflight WAITING.
+- Code review: PASS.
 - Owner verification: WAITING.
-- Documentation sync: PASS after docs publication.
+- Documentation sync: PASS after docs series.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Owner runs task-031 visual parity test. If PASS, record evidence and activate task 032 on a new dedicated review branch. No merge.
+Owner runtime test only. If Owner reports PASS, PM records that evidence into canonical `.ai/`, verifies the final exact HEAD and then decides merge permission.
