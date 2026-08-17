@@ -1,72 +1,57 @@
 # Current State
 
 ## Status
-P3-PREVIEW-ASS-PARITY-031 — SOURCE PUBLISHED / PR #71 DRAFT / CODE REVIEW IN PROGRESS / OWNER VISUAL PARITY WAITING / MERGE BLOCKED
+P1-P2-PER-JOB-EXPORT-NOVOCAL-034 — SOURCE PUBLISHED / STATIC SOURCE REVIEW PASS / OWNER RUNTIME WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Active review branch: `review/P3-PREVIEW-ASS-PARITY-031`.
-- Active Draft PR: #71.
-- Exact application-source HEAD before this docs sync: `236b05261ecf1a40ad223324b759f84a499f062c`.
-- Clean base: `review/P3-OUTPUT-ROOT-030-CLEAN@2f326af98d4344fc2ff460346e1a46cc96d136d5`.
+- Active review branch: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034`.
+- Active Draft PR: #74.
+- Application-source HEAD before docs sync: `0799ec2faedcb4d025b559f3ac604ceed052adda`.
+- Base: `review/P1-P2-HANDOFF-HYDRATION-032@fbaa060bc9f604fc93e3e195e264ea27e78921fd`.
 
-## Verified runtime state before task 031
-Owner runtime has already established:
-- absolute video path / preview / ASR path flow: working;
-- Demucs vocal separation: working;
-- P3 export IPC bridge: working after main-process IPC migration;
-- P3 output to drive-root path: working after root-directory guard;
-- P3 final render reaches subtitle burn and produces output;
-- standalone `Xóa Sub` integration must remain present in the test stack.
+## Owner-approved product scope
+1. Pipeline 1: every Job can Save As its generated artifacts.
+2. Pipeline 2: every completed Job can Save As its clean/no-sub video.
+3. Pipeline 2: every completed Job can optionally create a no-original-vocal derivative using Demucs strict.
+4. The no-vocal derivative must not overwrite canonical P2 `outputPath` or change P3 input authority.
+5. No librosa/weak fallback is accepted for the derivative.
 
-## Active defect
-P3 subtitle Preview and final ASS render did not visually match. Final output used logical video pixels through ASS `PlayResX/PlayResY`, while Preview treated the same values too directly as CSS pixels and wrapped text differently.
+## Implementation
+- `src/main/main-entry.js`: main-process `app:saveCopy` IPC with native Save As dialog and file copy; loads job export controls.
+- `src/main/preload.js`: exposes `electronAPI.saveCopy` only as a narrow IPC bridge.
+- `src/renderer/js/job-export-controls.js`: binds P1/P2 actions to exact Job IDs, exports available P1 artifacts, exports P2 output, and creates P2 no-vocal derivative through existing `removeVocal` + `replaceAudio` APIs.
 
-## Task 031 source contract
-Subtitle geometry is defined in logical video space (`videoWidth` / `videoHeight`). Preview is only a projection of that space using the fitted video canvas scale.
+## Review corrections already applied
+- Removed array-index Job binding; controls resolve exact Job via card Job ID.
+- Removed fallback treating `ttsTimedSrt` content as a filesystem path.
+- Preserved the real TTS audio extension instead of forcing `.wav`.
+- No-vocal action transitions to a download action after successful derivative creation.
 
-The Preview parity layer now derives from the same logical values used by final ASS for:
-- font size;
-- outline/stroke;
-- shadow;
-- letter spacing;
-- padding;
-- max width / wrap calculation;
-- cover width/height;
-- cue text wrapping.
+## Static evidence
+- Main entry source syntax checked with `node --check`: PASS.
+- New job-export-controls source syntax checked with `node --check`: PASS.
+- Preload change is a single IPC exposure added to the already-running preload file; exact local checkout syntax verification remains part of Owner preflight.
+- GitHub Actions / commit statuses for source HEAD: none published.
+- PR has no unresolved review threads at latest review.
 
-Final ASS/export/audio/Demucs behavior is not intentionally changed by task 031.
-
-## Owner acceptance still required
-Use the same source video and compare Preview against the rendered MP4 for:
-1. subtitle relative size versus video resolution;
-2. X/Y placement;
-3. line count / wrapping;
-4. outline/shadow visual scale;
-5. cover/background geometry when enabled.
-
-Small rasterization differences between browser text and libass may be acceptable; large geometry or wrapping differences are not.
-
-## Queued task 032 — not active yet
-Owner approved the next product task after 031 passes:
-- P1: per-Job artifact download actions;
-- P2: per-Job `clean_video.mp4` download action;
-- P2: optional Demucs-strict derivative `clean_video_no_vocal.mp4`;
-- P2 no-vocal derivative must not overwrite canonical `clean_video.mp4` or change P3 input authority;
-- no librosa fallback for the no-vocal derivative.
-
-Task 032 must use a dedicated branch after task 031 Owner visual verification and state synchronization.
+## Owner runtime acceptance
+Required before merge:
+1. P1 completed Job shows `Kết quả` and can Save As SRT/JSON/voice artifacts that actually exist.
+2. Two P1 Jobs export artifacts from the correct Job, not by list index.
+3. P2 completed Job can Save As its own clean/no-sub MP4.
+4. `Xóa giọng` uses Demucs and creates a separate no-vocal MP4.
+5. Canonical P2 `outputPath` remains unchanged after derivative creation.
+6. A second P2 Job remains independent.
+7. No regression to P1→P2 hydration, standalone Xóa Sub, Voice Render, or P3.
 
 ## Gates
-- Execution: PASS for task 031 source publication.
-- Automated/static verification: WAITING exact local checkout evidence.
-- Code review: WAITING final review on current exact HEAD.
-- Owner manual visual verification: WAITING.
-- Documentation synchronization: PASS after this docs commit completes.
+- Execution: PASS.
+- Automated/static verification: PARTIAL PASS; exact Owner checkout commands still required because no CI is configured for this HEAD.
+- Code review: PASS for current application-source scope after corrective review.
+- Owner manual verification: NOT STARTED.
+- Documentation synchronization: PASS after this docs series completes.
 - Merge permission: BLOCKED.
 
-## Local safety
-Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. Before switching, `git status --short` must be empty. Dirty => STOP. Do not reset/restore/clean over uncommitted Owner work.
-
 ## Next permitted action
-Owner tests exact task-031 head for Preview ↔ final visual parity. If PASS, record Owner result, complete static/code-review gates, then activate task 032 on a dedicated review branch. No merge yet.
+Owner checks out the exact review branch, runs syntax/diff preflight, starts the app, and performs the runtime acceptance above. Do not merge until Owner PASS is recorded.
