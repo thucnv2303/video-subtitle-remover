@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFile: (filters) => ipcRenderer.invoke('dialog:openFile', filters),
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
   saveFile: (defaultPath) => ipcRenderer.invoke('dialog:saveFile', defaultPath),
+  saveCopy: (payload) => ipcRenderer.invoke('app:saveCopy', payload),
   startPython: () => ipcRenderer.invoke('python:start'),
   stopPython: () => ipcRenderer.invoke('python:stop'),
   getPythonStatus: () => ipcRenderer.invoke('python:status'),
