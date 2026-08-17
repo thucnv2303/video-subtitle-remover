@@ -251,10 +251,14 @@
     if (!s) return;
     const standalone = standaloneMode();
     const current = s.jobs.find(job => job.id === s.activeJobId);
-    if (current && p2Eligible(current, standalone)) return;
-    const first = s.jobs.find(job => p2Eligible(job, standalone));
-    if (first && typeof window.selectJob === 'function') window.selectJob(first.id);
-    else clearP2View();
+    const target = current && p2Eligible(current, standalone)
+      ? current
+      : s.jobs.find(job => p2Eligible(job, standalone));
+    if (target && typeof window.selectJob === 'function') {
+      window.selectJob(target.id);
+      return;
+    }
+    clearP2View();
   }
 
   function startP2(job) {
