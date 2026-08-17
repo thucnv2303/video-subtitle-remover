@@ -1,12 +1,5 @@
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
-let p3ExportBridge = null;
-try {
-  p3ExportBridge = require('./p3-export-bridge');
-} catch (error) {
-  console.error('[Preload] P3 export bridge unavailable; core electronAPI remains active:', error?.message || error);
-}
-
 async function cancelAnyP1Vision(payload) {
   const results = await Promise.allSettled([
     ipcRenderer.invoke('ollama:p1CancelVision', payload),
@@ -21,10 +14,6 @@ async function cancelAnyP1Vision(payload) {
   const failure = results.find(result => result.status === 'rejected');
   if (failure) throw failure.reason;
   return { ok: true, cancelled: false };
-}
-
-function unavailableP3Bridge() {
-  return Promise.resolve({ ok: false, error: 'P3 export bridge chưa khả dụng trong preload hiện tại.' });
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -48,8 +37,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSystemInfo: () => ipcRenderer.invoke('app:systemInfo'),
   mergeWavFiles: (inputPaths, outputPath) => ipcRenderer.invoke('voice-render:mergeWavFiles', inputPaths, outputPath),
   applyVoiceTempo: (inputPath, speedFactor) => ipcRenderer.invoke('voice-render:applyTempo', inputPath, speedFactor),
-  burnP3SubtitleHq: (payload) => p3ExportBridge?.burnP3SubtitleHq ? p3ExportBridge.burnP3SubtitleHq(payload) : unavailableP3Bridge(),
-  retimeP3Video: (payload) => p3ExportBridge?.retimeP3Video ? p3ExportBridge.retimeP3Video(payload) : unavailableP3Bridge(),
+  burnP3SubtitleHq: (payload) => ipcRenderer.invoke('p3:burnSubtitleHq', payload),
+  retimeP3Video: (payload) => ipcRenderer.invoke('p3:retimeVideo', payload),
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   onP1VisionProgress: (callback) => {
@@ -71,24 +60,20 @@ function installOllamaModelScanner() {
   const row = document.createElement('div');
   row.id = 'ollama-model-scan-row';
   row.style.cssText = 'display:none;grid-template-columns:auto minmax(0,1fr);gap:8px;margin-top:8px;align-items:center;';
-
   const scan = document.createElement('button');
   scan.id = 'btn-scan-ollama-models';
   scan.type = 'button';
   scan.className = 'approved-secondary-btn compact';
   scan.textContent = '↻ Quét model Ollama';
-
   const select = document.createElement('select');
   select.id = 'ollama-model-select';
   select.className = 'approved-input';
   select.disabled = true;
   select.innerHTML = '<option value="">Chưa quét model</option>';
-
   const status = document.createElement('p');
   status.id = 'ollama-model-scan-status';
   status.className = 'field-help';
   status.style.marginTop = '6px';
-
   row.append(scan, select);
   group.append(row, status);
 
@@ -97,7 +82,6 @@ function installOllamaModelScanner() {
     row.style.display = active ? 'grid' : 'none';
     status.style.display = active ? 'block' : 'none';
   };
-
   const renderModels = (models) => {
     const current = model.value;
     select.innerHTML = '';
@@ -118,7 +102,6 @@ function installOllamaModelScanner() {
     });
     select.disabled = false;
     if (models.includes(current)) select.value = current;
-
     const suggestions = document.getElementById('ai-model-suggestions');
     if (suggestions) {
       suggestions.querySelectorAll('option[data-ollama-scanned="true"]').forEach((option) => option.remove());
@@ -130,7 +113,6 @@ function installOllamaModelScanner() {
       });
     }
   };
-
   scan.addEventListener('click', async () => {
     scan.disabled = true;
     select.disabled = true;
@@ -143,9 +125,7 @@ function installOllamaModelScanner() {
         return;
       }
       renderModels(result.models || []);
-      status.textContent = result.models?.length
-        ? `Đã tìm thấy ${result.models.length} model local.`
-        : 'Ollama đang chạy nhưng chưa có model nào được cài.';
+      status.textContent = result.models?.length ? `Đã tìm thấy ${result.models.length} model local.` : 'Ollama đang chạy nhưng chưa có model nào được cài.';
     } catch (err) {
       renderModels([]);
       status.textContent = err?.message || 'Không thể quét model Ollama.';
@@ -153,13 +133,11 @@ function installOllamaModelScanner() {
       scan.disabled = false;
     }
   });
-
   select.addEventListener('change', () => {
     if (!select.value) return;
     model.value = select.value;
     model.dispatchEvent(new Event('input', { bubbles: true }));
   });
-
   document.querySelectorAll('.provider-btn[data-provider]').forEach((button) => {
     button.addEventListener('click', () => setTimeout(syncVisibility, 0));
   });
@@ -167,67 +145,22 @@ function installOllamaModelScanner() {
   return true;
 }
 
-function installFilePathCompatScript() {
-  if (document.querySelector('script[data-file-path-compat]')) return;
+function installScript(selector, src, datasetKey) {
+  if (document.querySelector(selector)) return;
   const script = document.createElement('script');
-  script.src = 'js/file-path-compat.js';
-  script.defer = false;
-  script.dataset.filePathCompat = 'true';
-  document.head.appendChild(script);
-}
-
-function installP1SpinnerPhaseScript() {
-  if (document.querySelector('script[data-pipeline1-spinner-phase]')) return;
-  const script = document.createElement('script');
-  script.src = 'js/pipeline1-spinner-phase.js';
-  script.defer = true;
-  script.dataset.pipeline1SpinnerPhase = 'true';
-  document.head.appendChild(script);
-}
-
-function installP1RunUxScript() {
-  if (document.querySelector('script[data-pipeline1-run-ux]')) return;
-  const script = document.createElement('script');
-  script.src = 'js/pipeline1-run-ux.js';
-  script.defer = true;
-  script.dataset.pipeline1RunUx = 'true';
-  document.head.appendChild(script);
-}
-
-function installP2RuntimeScript() {
-  if (document.querySelector('script[data-pipeline2-runtime]')) return;
-  const script = document.createElement('script');
-  script.src = 'js/pipeline2-runtime.js';
-  script.defer = true;
-  script.dataset.pipeline2Runtime = 'true';
-  document.head.appendChild(script);
-}
-
-function installVoiceRenderScript() {
-  if (document.querySelector('script[data-voice-render]')) return;
-  const script = document.createElement('script');
-  script.src = 'js/voice-render.js';
-  script.defer = true;
-  script.dataset.voiceRender = 'true';
-  document.head.appendChild(script);
-}
-
-function installVoiceRenderQualityFixScript() {
-  if (document.querySelector('script[data-voice-render-quality-fix]')) return;
-  const script = document.createElement('script');
-  script.src = 'js/voice-render-quality-fix.js';
-  script.defer = true;
-  script.dataset.voiceRenderQualityFix = 'true';
+  script.src = src;
+  script.defer = src !== 'js/file-path-compat.js';
+  script.dataset[datasetKey] = 'true';
   document.head.appendChild(script);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  installFilePathCompatScript();
-  installP1SpinnerPhaseScript();
-  installP1RunUxScript();
-  installP2RuntimeScript();
-  installVoiceRenderScript();
-  installVoiceRenderQualityFixScript();
+  installScript('script[data-file-path-compat]', 'js/file-path-compat.js', 'filePathCompat');
+  installScript('script[data-pipeline1-spinner-phase]', 'js/pipeline1-spinner-phase.js', 'pipeline1SpinnerPhase');
+  installScript('script[data-pipeline1-run-ux]', 'js/pipeline1-run-ux.js', 'pipeline1RunUx');
+  installScript('script[data-pipeline2-runtime]', 'js/pipeline2-runtime.js', 'pipeline2Runtime');
+  installScript('script[data-voice-render]', 'js/voice-render.js', 'voiceRender');
+  installScript('script[data-voice-render-quality-fix]', 'js/voice-render-quality-fix.js', 'voiceRenderQualityFix');
   let attempts = 0;
   const timer = setInterval(() => {
     attempts += 1;
