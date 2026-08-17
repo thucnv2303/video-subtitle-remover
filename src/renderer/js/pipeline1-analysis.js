@@ -7,6 +7,7 @@ const MAX_FRAMES_PER_VISION_CHUNK = 8;
 const MAX_TOTAL_SAMPLE_COUNT = 80;
 const MAX_VISION_EDGE = 960;
 const VISION_JPEG_QUALITY = 0.72;
+const FRAME_FALLBACK_BACKTRACK = 3;
 
 function log(message, type = 'info') {
   if (typeof window.addLog === 'function') window.addLog(message, type);
@@ -145,6 +146,45 @@ export function buildVisionChunks(frames, sourceBlocks, durationSec) {
   return chunks;
 }
 
+function frameFallbackCandidates(requestedFrame) {
+  const requested = Math.max(0, Math.floor(Number(requestedFrame) || 0));
+  const candidates = [requested];
+  for (let offset = 1; offset <= FRAME_FALLBACK_BACKTRACK; offset += 1) {
+    const candidate = requested - offset;
+    if (candidate < 0) break;
+    candidates.push(candidate);
+  }
+  return candidates;
+}
+
+async function getFrameFailSoft(requestedFrame, filePath, usedFrameIndexes) {
+  const candidates = frameFallbackCandidates(requestedFrame);
+  let requestedError = null;
+
+  for (const candidate of candidates) {
+    if (usedFrameIndexes.has(candidate)) continue;
+    try {
+      const blob = await window.api.getFrame(candidate, filePath);
+      if (!blob || !blob.size) throw new Error('empty frame payload');
+      if (candidate !== requestedFrame) {
+        log(`[P1] ↩ Keyframe ${requestedFrame} không đọc được; dùng fallback frame ${candidate}.`, 'warning');
+      }
+      return { blob, frameIndex: candidate };
+    } catch (error) {
+      if (candidate === requestedFrame) {
+        requestedError = error;
+        log(`[P1] ⚠ Requested keyframe ${requestedFrame} decode fail: ${error?.message || error || 'unknown error'}.`, 'warning');
+      }
+    }
+  }
+
+  log(
+    `[P1] ⚠ Skip sample ${requestedFrame}: không có usable fallback trong ${FRAME_FALLBACK_BACKTRACK} frame phía trước${requestedError ? '' : ' hoặc candidate đã được dùng'}.`,
+    'warning'
+  );
+  return null;
+}
+
 async function collectVisualContext(job, sourceBlocks) {
   const info = await window.api.videoInfo(job.filePath);
   if (!info?.total_frames || !info?.fps) throw new Error('Không đọc được metadata video để phân tích hình ảnh.');
@@ -152,6 +192,7 @@ async function collectVisualContext(job, sourceBlocks) {
   const sampleCount = adaptiveSampleCount(duration, info.total_frames);
   const indexes = sampleFrameIndexes(info.total_frames, sampleCount);
   const frames = [];
+  const usedFrameIndexes = new Set();
   let originalBytes = 0;
   let encodedChars = 0;
 
@@ -160,14 +201,16 @@ async function collectVisualContext(job, sourceBlocks) {
   }
 
   for (const frameIndex of indexes) {
-    const blob = await window.api.getFrame(frameIndex, job.filePath);
-    if (!blob || !blob.size) continue;
+    const resolved = await getFrameFailSoft(frameIndex, job.filePath, usedFrameIndexes);
+    if (!resolved) continue;
+    const { blob, frameIndex: usableFrameIndex } = resolved;
+    usedFrameIndexes.add(usableFrameIndex);
     originalBytes += blob.size;
     const imageBase64 = await compressFrameBlob(blob);
     encodedChars += imageBase64.length;
     frames.push({
-      frame: frameIndex,
-      time_sec: Number((frameIndex / info.fps).toFixed(3)),
+      frame: usableFrameIndex,
+      time_sec: Number((usableFrameIndex / info.fps).toFixed(3)),
       image_base64: imageBase64,
     });
   }
