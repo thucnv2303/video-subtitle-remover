@@ -97,12 +97,7 @@ function makeButton(text, title) {
 }
 
 function p1JobForCard(card) {
-  const id = card.dataset.pipelineJobId || card.querySelector('[data-id]')?.dataset?.id;
-  return id ? jobById(id) : null;
-}
-
-function p2JobForCard(card) {
-  const id = card.dataset.pipelineJobId;
+  const id = card.querySelector('[data-id]')?.dataset?.id;
   return id ? jobById(id) : null;
 }
 
@@ -124,8 +119,9 @@ function attachP1Buttons() {
 function attachP2Buttons() {
   const list = document.getElementById('job-list');
   if (!list || !state?.jobs) return;
-  [...list.querySelectorAll('.job-card')].forEach(card => {
-    const job = p2JobForCard(card);
+  [...list.querySelectorAll('.job-card')].forEach((card, index) => {
+    // app.js renders #job-list directly from state.jobs in the same order.
+    const job = state.jobs[index];
     const detail = card.querySelector('.job-detail');
     if (!job || !detail || detail.querySelector('[data-job-export-p2]')) return;
     if (job.status !== 'finished' || !job.outputPath) return;
