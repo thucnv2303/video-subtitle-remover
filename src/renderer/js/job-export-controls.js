@@ -4,6 +4,12 @@ const busyNoVocal = new Set();
 function log(message, type = 'info') { window.addLog?.(message, type); }
 function toast(message, type = 'info') { window.showToast?.(message, type, 4000); }
 function stem(fileName) { return String(fileName || 'video').replace(/\.[^.]+$/, ''); }
+function looksLikePath(value) { return typeof value === 'string' && (/^[A-Za-z]:[\\/]/.test(value) || value.startsWith('/') || value.startsWith('\\\\')); }
+function extensionOf(filePath, fallback = '') {
+  const match = String(filePath || '').match(/(\.[A-Za-z0-9]{1,8})$/);
+  return match ? match[1].toLowerCase() : fallback;
+}
+function jobById(id) { return state?.jobs?.find(job => job.id === id) || null; }
 
 async function saveCopy(sourcePath, suggestedName) {
   if (!sourcePath) return toast('Job chưa có artifact này.', 'warning');
@@ -18,13 +24,13 @@ async function saveCopy(sourcePath, suggestedName) {
 function p1Artifacts(job) {
   const paths = job?.p1ArtifactPaths || {};
   const result = [];
-  const add = (label, sourcePath, name) => { if (sourcePath) result.push({ label, sourcePath, name }); };
-  add('Kịch bản SRT', paths['remix_script.srt'] || job.ttsTimedSrt, `${stem(job.fileName)}_script.srt`);
+  const add = (label, sourcePath, name) => { if (looksLikePath(sourcePath)) result.push({ label, sourcePath, name }); };
+  add('Kịch bản SRT', paths['remix_script.srt'], `${stem(job.fileName)}_script.srt`);
   add('Remix script JSON', paths['remix_script.json'], `${stem(job.fileName)}_remix_script.json`);
   add('Timeline JSON', paths['multimodal_timeline.json'], `${stem(job.fileName)}_timeline.json`);
   add('Edit plan JSON', paths['edit_plan.json'], `${stem(job.fileName)}_edit_plan.json`);
   add('Scenes JSON', paths['scenes.json'], `${stem(job.fileName)}_scenes.json`);
-  add('Voice', job.ttsAudioPath, `${stem(job.fileName)}_voice.wav`);
+  add('Voice', job.ttsAudioPath, `${stem(job.fileName)}_voice${extensionOf(job.ttsAudioPath, '.wav')}`);
   return result;
 }
 
@@ -54,11 +60,11 @@ async function createP2NoVocal(job, button) {
   if (!input || job.status !== 'finished') return toast('P2 phải hoàn tất trước khi tạo bản không giọng.', 'warning');
   if (busyNoVocal.has(job.id)) return;
   busyNoVocal.add(job.id);
-  const originalText = button.textContent;
   button.disabled = true;
   button.textContent = 'Đang tách giọng...';
   const out = input.replace(/\.mp4$/i, '_no_vocal.mp4');
   const bg = input.replace(/\.mp4$/i, '_no_vocal_bg.wav');
+  let created = false;
   try {
     log(`[P2] 🎵 Tách giọng gốc bằng Demucs cho ${job.fileName}...`, 'info');
     const separated = await window.api.removeVocal(input, bg);
@@ -68,16 +74,16 @@ async function createP2NoVocal(job, button) {
     const muxed = await window.api.replaceAudio(input, separated.audio_path, out, 0);
     if (muxed?.status !== 'ok') throw new Error(muxed?.error || 'Không mux được no-vocals stem vào video P2.');
     job.p2NoVocalOutputPath = muxed.output_path || out;
+    created = true;
     log(`[P2] ✅ Bản không giọng gốc: ${job.p2NoVocalOutputPath}`, 'success');
     toast('Đã tạo bản P2 không giọng gốc.', 'success');
-    sync();
   } catch (error) {
     log(`[P2] ❌ Tạo bản không giọng thất bại: ${error.message}`, 'error');
     toast(error.message, 'error');
   } finally {
     busyNoVocal.delete(job.id);
     button.disabled = false;
-    button.textContent = originalText;
+    button.textContent = created || job.p2NoVocalOutputPath ? '↓ Không giọng' : '♬ Xóa giọng';
   }
 }
 
@@ -90,16 +96,26 @@ function makeButton(text, title) {
   return button;
 }
 
+function p1JobForCard(card) {
+  const id = card.dataset.pipelineJobId || card.querySelector('[data-id]')?.dataset?.id;
+  return id ? jobById(id) : null;
+}
+
+function p2JobForCard(card) {
+  const id = card.dataset.pipelineJobId;
+  return id ? jobById(id) : null;
+}
+
 function attachP1Buttons() {
   const list = document.getElementById('step1-job-list');
   if (!list || !state?.jobs) return;
-  [...list.querySelectorAll('.tk-job-card')].forEach((card, index) => {
-    const job = state.jobs[index];
+  [...list.querySelectorAll('.tk-job-card')].forEach(card => {
+    const job = p1JobForCard(card);
     const actions = card.querySelector('.tk-job-card-header > div');
     if (!job || !actions || actions.querySelector('[data-job-export-p1]')) return;
     const button = makeButton('↓ Kết quả', 'Tải artifact của Job Pipeline 1');
     button.dataset.jobExportP1 = job.id;
-    button.disabled = !(job.p1ArtifactsReady || job.p1ArtifactDir || job.ttsAudioPath);
+    button.disabled = p1Artifacts(job).length === 0;
     button.addEventListener('click', event => { event.stopPropagation(); showArtifactMenu(button, p1Artifacts(job)); });
     actions.insertBefore(button, actions.firstChild);
   });
@@ -108,8 +124,8 @@ function attachP1Buttons() {
 function attachP2Buttons() {
   const list = document.getElementById('job-list');
   if (!list || !state?.jobs) return;
-  [...list.querySelectorAll('.job-card')].forEach((card, index) => {
-    const job = state.jobs[index];
+  [...list.querySelectorAll('.job-card')].forEach(card => {
+    const job = p2JobForCard(card);
     const detail = card.querySelector('.job-detail');
     if (!job || !detail || detail.querySelector('[data-job-export-p2]')) return;
     if (job.status !== 'finished' || !job.outputPath) return;
@@ -133,5 +149,7 @@ function attachP2Buttons() {
 function sync() { attachP1Buttons(); attachP2Buttons(); }
 const observer = new MutationObserver(sync);
 observer.observe(document.body, { childList: true, subtree: true });
+const timer = setInterval(sync, 250);
+window.addEventListener('beforeunload', () => clearInterval(timer), { once: true });
 sync();
 window.jobExportControls = { sync, saveCopy, createP2NoVocal };
