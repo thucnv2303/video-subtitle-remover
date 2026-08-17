@@ -1,72 +1,57 @@
 # Current State
 
 ## Status
-P3-PREVIEW-ASS-PARITY-031 — SOURCE PUBLISHED / PR #71 DRAFT / CODE REVIEW IN PROGRESS / OWNER VISUAL PARITY WAITING / MERGE BLOCKED
+P1-P2-PER-JOB-EXPORT-NOVOCAL-034 — KEYFRAME FAIL-SOFT SOURCE PUBLISHED / OWNER RUNTIME WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Active review branch: `review/P3-PREVIEW-ASS-PARITY-031`.
-- Active Draft PR: #71.
-- Exact application-source HEAD before this docs sync: `236b05261ecf1a40ad223324b759f84a499f062c`.
-- Clean base: `review/P3-OUTPUT-ROOT-030-CLEAN@2f326af98d4344fc2ff460346e1a46cc96d136d5`.
+- Active review branch: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034`.
+- Active Draft PR: #74.
+- Keyframe fail-soft source commit: `eab41008133fab56f2551417b3b7e7e5d23c0487`.
+- Base: `review/P1-P2-HANDOFF-HYDRATION-032@fbaa060bc9f604fc93e3e195e264ea27e78921fd`.
 
-## Verified runtime state before task 031
-Owner runtime has already established:
-- absolute video path / preview / ASR path flow: working;
-- Demucs vocal separation: working;
-- P3 export IPC bridge: working after main-process IPC migration;
-- P3 output to drive-root path: working after root-directory guard;
-- P3 final render reaches subtitle burn and produces output;
-- standalone `Xóa Sub` integration must remain present in the test stack.
+## Task 034 scope already implemented
+1. P1 per-Job Save As for generated artifact files.
+2. P2 per-Job Save As for canonical clean/no-sub video.
+3. P2 optional Demucs-strict no-original-vocal derivative.
+4. Derivative does not replace canonical P2 `outputPath` and does not change P3 input authority.
+5. No librosa/weak fallback for the derivative.
 
-## Active defect
-P3 subtitle Preview and final ASS render did not visually match. Final output used logical video pixels through ASS `PlayResX/PlayResY`, while Preview treated the same values too directly as CSS pixels and wrapped text differently.
+## Owner runtime blocker observed on 2026-08-17
+Test video: `E:\Tải về\TikVideo.App_7595712770348827761.mp4`.
+- Absolute Unicode path: PASS.
+- `/api/video-info`: PASS.
+- preview: PASS.
+- P1 ASR: PASS, 15 subtitle segments.
+- Frames 0 through 1260 in the adaptive sample set decoded successfully.
+- Requested final sampled frame 1386 returned HTTP 400 and previously aborted P1.
 
-## Task 031 source contract
-Subtitle geometry is defined in logical video space (`videoWidth` / `videoHeight`). Preview is only a projection of that space using the fitted video canvas scale.
+## Narrow repair published
+`src/renderer/js/pipeline1-analysis.js` now treats sampled-frame retrieval as fail-soft:
+- requested frame decode failure is logged;
+- it retries up to 3 earlier frame indexes;
+- a successful fallback is logged and used with its actual frame/time;
+- already-used frame indexes are not duplicated;
+- if all candidates fail, the sample is logged and skipped;
+- the existing usable-keyframe threshold remains unchanged: fail only when `frames.length < Math.min(3, indexes.length)`.
 
-The Preview parity layer now derives from the same logical values used by final ASS for:
-- font size;
-- outline/stroke;
-- shadow;
-- letter spacing;
-- padding;
-- max width / wrap calculation;
-- cover width/height;
-- cue text wrapping.
+No sampler architecture, ASR, AI narration/remix, task-034 export behavior, P2, Demucs, P3, Voice Render, standalone Xóa Sub, or file-path compatibility was intentionally changed.
 
-Final ASS/export/audio/Demucs behavior is not intentionally changed by task 031.
-
-## Owner acceptance still required
-Use the same source video and compare Preview against the rendered MP4 for:
-1. subtitle relative size versus video resolution;
-2. X/Y placement;
-3. line count / wrapping;
-4. outline/shadow visual scale;
-5. cover/background geometry when enabled.
-
-Small rasterization differences between browser text and libass may be acceptable; large geometry or wrapping differences are not.
-
-## Queued task 032 — not active yet
-Owner approved the next product task after 031 passes:
-- P1: per-Job artifact download actions;
-- P2: per-Job `clean_video.mp4` download action;
-- P2: optional Demucs-strict derivative `clean_video_no_vocal.mp4`;
-- P2 no-vocal derivative must not overwrite canonical `clean_video.mp4` or change P3 input authority;
-- no librosa fallback for the no-vocal derivative.
-
-Task 032 must use a dedicated branch after task 031 Owner visual verification and state synchronization.
+## Verification status
+- GitHub source diff reviewed: only `src/renderer/js/pipeline1-analysis.js` changed in the repair commit.
+- Full source file re-read from GitHub after publication.
+- PR has no unresolved review threads at preflight.
+- GitHub Actions workflow runs on the pre-repair HEAD: none.
+- Exact local `node --check src/renderer/js/pipeline1-analysis.js` and `git diff --check fbaa060bc9f604fc93e3e195e264ea27e78921fd..HEAD`: WAITING Owner checkout because PM environment cannot clone the private repository for local execution.
+- Deterministic runtime simulation was not added in this narrow repair; Owner real-video verification remains required.
 
 ## Gates
-- Execution: PASS for task 031 source publication.
-- Automated/static verification: WAITING exact local checkout evidence.
-- Code review: WAITING final review on current exact HEAD.
-- Owner manual visual verification: WAITING.
-- Documentation synchronization: PASS after this docs commit completes.
+- Execution: PASS for keyframe fail-soft source publication.
+- Automated/static verification: WAITING exact Owner checkout commands.
+- Code review: PASS for the narrow source diff/full-file review; runtime behavior still requires Owner verification.
+- Owner runtime: WAITING rerun of the same video.
+- Documentation synchronization: IN PROGRESS until task_current/handoff/ACTIVE docs commit series completes.
 - Merge permission: BLOCKED.
 
-## Local safety
-Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. Before switching, `git status --short` must be empty. Dirty => STOP. Do not reset/restore/clean over uncommitted Owner work.
-
 ## Next permitted action
-Owner tests exact task-031 head for Preview ↔ final visual parity. If PASS, record Owner result, complete static/code-review gates, then activate task 032 on a dedicated review branch. No merge yet.
+After docs synchronization, Owner checks out the exact PR head in `E:\Project AI\Video-sub-remove-owner-test-LONG012`, runs the required static commands, and reruns `E:\Tải về\TikVideo.App_7595712770348827761.mp4`. P1 must continue to Vision/global reasoning when frame 1386 fails but enough usable frames remain. Only after P1 completes should Owner continue task-034 export/no-vocal verification. No merge.

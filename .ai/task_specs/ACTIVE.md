@@ -1,47 +1,40 @@
 # Active PM Execution Spec
 
-Status: P3_PREVIEW_ASS_PARITY_031_OWNER_VISUAL_VERIFY_WAITING
+Status: P1_KEYFRAME_FAIL_SOFT_OWNER_RUNTIME_WAITING
 
-Task: `P3-PREVIEW-ASS-PARITY-031`
+Task: `P1-P2-PER-JOB-EXPORT-NOVOCAL-034`
 Repository: `thucnv2303/video-subtitle-remover`
-Branch: `review/P3-PREVIEW-ASS-PARITY-031`
-Draft PR: #71
-Application-source HEAD: `236b05261ecf1a40ad223324b759f84a499f062c`
-Clean base: `2f326af98d4344fc2ff460346e1a46cc96d136d5`
+Branch: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034`
+Draft PR: #74
+Keyframe fail-soft source commit: `eab41008133fab56f2551417b3b7e7e5d23c0487`
+Base: `fbaa060bc9f604fc93e3e195e264ea27e78921fd`
 
-## Purpose
-Make P3 subtitle Preview and final ASS render use one geometry contract based on the real source-video resolution.
+## Active purpose
+Verify the narrow P1 sampled-keyframe fail-soft repair before resuming task-034 export/no-vocal runtime acceptance.
 
-## Product contract
-Subtitle settings are logical-video values. The browser Preview is only a scaled projection into the fitted video canvas. Final ASS remains the export authority using source-video `PlayResX/PlayResY`.
+## Source repair contract
+- `sampleFrameIndexes()` remains unchanged.
+- A sampled frame decode failure is isolated to that sample.
+- Retry up to 3 previous frame indexes.
+- Do not duplicate an already accepted frame.
+- Log requested failure, fallback success, or sample skip.
+- Continue when the existing usable-keyframe threshold is satisfied.
+- Fail when fewer than `Math.min(3, indexes.length)` usable keyframes remain.
 
-## Scope
-- Preview typography scale.
-- Preview stroke/shadow/spacing/padding scale.
-- Preview max-width and ASS-like line wrapping.
-- Preview cover geometry scale.
-- No intended P3 audio/Demucs/export behavior change.
-- No P1/P2 behavior change.
+## Unchanged product invariants
+- Task-034 P1/P2 Save As behavior remains per Job.
+- P2 no-vocal derivative remains Demucs strict and separate from canonical `job.outputPath`.
+- P3 input authority remains canonical P2 output.
+- ASR, AI narration/remix, file-path compatibility, P2, Demucs implementation, P3, Voice Render, and standalone Xóa Sub are outside this repair scope.
 
-## Acceptance
-Owner compares the same Job in Preview and final MP4. Large differences in size, wrap, placement or cover geometry are FAIL. Small browser/libass rasterization differences are acceptable.
+## Owner acceptance
+Use `.ai/task_current.md` exact checkout preflight in `E:\Project AI\Video-sub-remove-owner-test-LONG012`, then rerun:
+`E:\Tải về\TikVideo.App_7595712770348827761.mp4`
 
-## Static verification
-```text
-node --check src/renderer/js/pipeline3/preview-ass-parity.js
-node --check src/main/main-entry.js
-git diff --check 2f326af98d4344fc2ff460346e1a46cc96d136d5..HEAD
-```
-
-## Follow-up queued, not active
-`P1-P2-PER-JOB-EXPORT-NOVOCAL-032` after Owner PASS:
-- per-Job P1 artifact download;
-- per-Job P2 clean-video download;
-- optional Demucs-only P2 no-vocal derivative;
-- canonical P2 clean video remains untouched and remains P3 authority.
+P1 acceptance: frame 1386 failure must not abort P1 immediately; fallback/skip must be visible in logs; P1 must proceed to Vision/global reasoning when enough usable keyframes remain. After P1 completes, continue task-034 P1/P2 export and P2 no-vocal checks.
 
 ## Gates
-Execution PASS; static WAITING; code review WAITING final exact-head review; Owner WAITING; docs sync PASS after publication; merge BLOCKED.
+Execution PASS; automated/static WAITING exact Owner checkout; code review PASS for narrow source diff/full-file review; Owner WAITING; docs sync PASS after this publication; merge BLOCKED.
 
 ## Next action
-Owner visual parity test only. Do not start task 032 or merge until the task-031 Owner result is recorded.
+Owner runtime verification only. Do not merge before Owner PASS is recorded in canonical project state.
