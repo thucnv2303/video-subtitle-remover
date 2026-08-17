@@ -21,11 +21,17 @@ function resolveExistingFile(value, label) {
   return resolved;
 }
 
+function ensureOutputDirectory(output) {
+  const outputDir = path.dirname(output);
+  if (fs.existsSync(outputDir)) return;
+  fs.mkdirSync(outputDir, { recursive: true });
+}
+
 function resolveOutputPath(value) {
   const output = path.resolve(String(value || ''));
   if (!output) throw new Error('Thiếu đường dẫn video đầu ra.');
   if (path.extname(output).toLowerCase() !== '.mp4') throw new Error('P3 Rev4 chỉ xuất MP4.');
-  fs.mkdirSync(path.dirname(output), { recursive: true });
+  ensureOutputDirectory(output);
   return output;
 }
 
