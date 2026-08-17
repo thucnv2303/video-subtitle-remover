@@ -1,82 +1,72 @@
 # Current State
 
 ## Status
-PIPELINE3-FINAL-COMPOSITION-017 — RUNTIME FIX REV4 SOURCE PUBLISHED / PM CODE REVIEW PASS / EXACT STATIC WAITING / OWNER RE-VERIFY WAITING / MERGE BLOCKED
+P3-PREVIEW-ASS-PARITY-031 — SOURCE PUBLISHED / PR #71 DRAFT / CODE REVIEW IN PROGRESS / OWNER VISUAL PARITY WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Review branch / Draft PR: `review/PIPELINE3-EDITOR-REBUILD-016` / #58.
-- Rev4 starting HEAD: `92deaf8fa72094fbad3f84c75c716967acbc509d`.
-- Reviewed Rev4 application-source HEAD: `d5aae15c5471f0e23f35ac3ae7cc205fc47b0fe3`.
-- Active amendment: `.ai/task_specs/PIPELINE3-FINAL-COMPOSITION-017-RUNTIME-FIX-REV4.md`.
+- Active review branch: `review/P3-PREVIEW-ASS-PARITY-031`.
+- Active Draft PR: #71.
+- Exact application-source HEAD before this docs sync: `236b05261ecf1a40ad223324b759f84a499f062c`.
+- Clean base: `review/P3-OUTPUT-ROOT-030-CLEAN@2f326af98d4344fc2ff460346e1a46cc96d136d5`.
 
-## Owner runtime result — pre-Rev4 build, 2026-08-15
-Owner supplied screenshots and reported three blocking defects:
-1. right P3 inspector clips/hides settings data;
-2. Remove Vocal was checked but original vocal remained audible in the result;
-3. export had no selectable destination and no real output-quality selection.
+## Verified runtime state before task 031
+Owner runtime has already established:
+- absolute video path / preview / ASR path flow: working;
+- Demucs vocal separation: working;
+- P3 export IPC bridge: working after main-process IPC migration;
+- P3 output to drive-root path: working after root-directory guard;
+- P3 final render reaches subtitle burn and produces output;
+- standalone `Xóa Sub` integration must remain present in the test stack.
 
-Decision for the tested build: `NEEDS_REVISION` / Owner runtime FAIL.
+## Active defect
+P3 subtitle Preview and final ASS render did not visually match. Final output used logical video pixels through ASS `PlayResX/PlayResY`, while Preview treated the same values too directly as CSS pixels and wrapped text differently.
 
-## Verified root causes
-- inspector lacked a reliable nested min-width/box-sizing containment contract;
-- `/api/remove-vocal` is best-effort and may return weak fallbacks, while the old finalizer accepted them as successful background separation;
-- final path was hardcoded and explicit CRF/preset was not exposed by the existing Python subtitle-burn route.
+## Task 031 source contract
+Subtitle geometry is defined in logical video space (`videoWidth` / `videoHeight`). Preview is only a projection of that space using the fitted video canvas scale.
 
-## Rev4 source now published and reviewed
-### Inspector
-- P3-scoped border-box/min-width containment;
-- wider right inspector on large desktop widths;
-- nested grids collapse at narrower widths;
-- style category chips wrap instead of exposing the clipped horizontal-scroll presentation;
-- inspector/folds do not allow hidden horizontal overflow.
+The Preview parity layer now derives from the same logical values used by final ASS for:
+- font size;
+- outline/stroke;
+- shadow;
+- letter spacing;
+- padding;
+- max width / wrap calculation;
+- cover width/height;
+- cue text wrapping.
 
-### Strict original-vocal removal
-- Remove Vocal + background > 0 now accepts only backend `method_used=demucs`;
-- librosa/ffmpeg-pan/original/unknown fallbacks block final render;
-- accepted no-vocals stem logs `method=demucs`;
-- background=0 still replaces original audio entirely with TTS and does not require separation.
+Final ASS/export/audio/Demucs behavior is not intentionally changed by task 031.
 
-### Real output destination / quality
-Per Job:
-- output folder picker;
-- editable sanitized MP4 filename;
-- exact output path display;
-- H.264 quality presets: CRF20/medium, CRF18/slow, CRF16/slow, CRF14/slower;
-- output cannot overwrite source or P2 clean video.
+## Owner acceptance still required
+Use the same source video and compare Preview against the rendered MP4 for:
+1. subtitle relative size versus video resolution;
+2. X/Y placement;
+3. line count / wrapping;
+4. outline/shadow visual scale;
+5. cover/background geometry when enabled.
 
-A narrow Electron FFmpeg bridge (`src/main/p3-export-bridge.js`) owns P3 final video retime and ASS burn so the selected CRF/preset is real without broadening `api/server.py`.
+Small rasterization differences between browser text and libass may be acceptable; large geometry or wrapping differences are not.
 
-### Review correction
-Because Rev4 bypasses the older Python burn route, PM review caught a timing-parity risk. Finalizer now rebuilds derived ASS from the exact final SRT after voice retime before HQ burn; changed timing disables original karaoke preservation for that render.
+## Queued task 032 — not active yet
+Owner approved the next product task after 031 passes:
+- P1: per-Job artifact download actions;
+- P2: per-Job `clean_video.mp4` download action;
+- P2: optional Demucs-strict derivative `clean_video_no_vocal.mp4`;
+- P2 no-vocal derivative must not overwrite canonical `clean_video.mp4` or change P3 input authority;
+- no librosa fallback for the no-vocal derivative.
 
-## Rev4 application-source scope
-- new `src/main/p3-export-bridge.js`;
-- `src/main/preload.js`;
-- `src/renderer/js/pipeline1-run-config.js` — one import-only Rev4 bootstrap line;
-- `src/renderer/js/pipeline3/editor-store.js`;
-- new `src/renderer/js/pipeline3/runtime-fix-rev4.js`;
-- `src/renderer/js/pipelines/pipeline3-finalize.js`.
-
-No backend Python, P1 execution, P2, TTS or dependency source change.
-
-## Verification
-- PM source/code review: PASS logic/scope.
-- GitHub compare from Rev4 start: only authorized Rev4 source + task spec.
-- Exact checkout `node --check` + `git diff --check`: WAITING.
-- PM sandbox raw-download attempt could not run because outbound DNS is unavailable; not counted as test evidence.
-- Owner Rev4 runtime: WAITING.
+Task 032 must use a dedicated branch after task 031 Owner visual verification and state synchronization.
 
 ## Gates
-- Execution: PASS.
-- Automated verification: WAITING exact-checkout evidence.
-- Code review: PASS.
-- Owner manual app verification: FAIL for pre-Rev4 build / WAITING for Rev4.
-- Documentation synchronization: PASS pre-runtime after dynamic docs/PR sync.
+- Execution: PASS for task 031 source publication.
+- Automated/static verification: WAITING exact local checkout evidence.
+- Code review: WAITING final review on current exact HEAD.
+- Owner manual visual verification: WAITING.
+- Documentation synchronization: PASS after this docs commit completes.
 - Merge permission: BLOCKED.
 
 ## Local safety
-Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. Before switching, `git status --short` must be empty. Dirty => STOP. No reset/restore/clean and no new clone/worktree.
+Reuse only `E:\Project AI\Video-sub-remove-owner-test-LONG012`. Before switching, `git status --short` must be empty. Dirty => STOP. Do not reset/restore/clean over uncommitted Owner work.
 
 ## Next permitted action
-Verify live PR #58 exact docs-synchronized head/checks/comments. Then Owner tests Rev4 exact head: inspector visibility, Demucs strict removal, destination/filename, real quality preset, and one short final render. No merge.
+Owner tests exact task-031 head for Preview ↔ final visual parity. If PASS, record Owner result, complete static/code-review gates, then activate task 032 on a dedicated review branch. No merge yet.
