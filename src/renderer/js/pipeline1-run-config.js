@@ -49,7 +49,7 @@ function snapshotPipeline1RunConfig(event) {
   const state = window._appState;
   if (!state?.jobs) return;
 
-  const idleJobs = state.jobs.filter(job => job.status === 'idle');
+  const idleJobs = state.jobs.filter(job => job.status === 'idle' && job.standaloneSubtitleRemoval !== true);
   if (idleJobs.length === 0) return;
 
   const providerEl = document.getElementById('step1-ai-provider');
