@@ -1,68 +1,57 @@
 # Current Task
 
 ## Task ID
-P3-PREVIEW-ASS-PARITY-031
+P1-P2-PER-JOB-EXPORT-NOVOCAL-034
 
 ## Status
-SOURCE_PUBLISHED_OWNER_VISUAL_VERIFY_WAITING_MERGE_BLOCKED
+SOURCE_PUBLISHED_CODE_REVIEW_PASS_OWNER_RUNTIME_WAITING_MERGE_BLOCKED
 
 ## Exact basis
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Branch: `review/P3-PREVIEW-ASS-PARITY-031`.
-- Draft PR: #71.
-- Application-source HEAD: `236b05261ecf1a40ad223324b759f84a499f062c`.
-- Clean task base: `2f326af98d4344fc2ff460346e1a46cc96d136d5`.
+- Branch: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034`.
+- Draft PR: #74.
+- Application-source HEAD before docs sync: `0799ec2faedcb4d025b559f3ac604ceed052adda`.
+- Base: `fbaa060bc9f604fc93e3e195e264ea27e78921fd`.
 
 ## User outcome
-What the user sees in the P3 subtitle editor must correspond to the final rendered subtitle relative to the source video resolution. Preview must not treat logical-video subtitle pixels as unscaled screen CSS pixels.
+Results belong to individual Jobs. The Owner can Save As P1 artifacts and P2 clean video from the correct Job card, and may create a separate Demucs-strict P2 derivative without original vocals.
 
-## Implementation contract
-Logical video resolution is the single coordinate space for subtitle geometry. Preview projects that geometry into the fitted video canvas.
+## Product invariants
+- Job actions resolve by exact Job ID, never visual list index.
+- P1 export exposes only real filesystem artifact paths.
+- P2 export copies `job.outputPath`; it does not mutate it.
+- P2 no-vocal derivative is stored separately as `job.p2NoVocalOutputPath`.
+- P3 continues to use canonical P2 output authority.
+- Vocal removal must return `method_used=demucs`; otherwise derivative creation fails closed.
 
-Required parity dimensions:
-- font size;
-- outline/stroke;
-- shadow;
-- letter spacing;
-- padding;
-- max-width and line wrapping;
-- cover/background dimensions;
-- subtitle position relative to the video canvas.
-
-Final ASS remains authoritative for export and continues to use source-video `PlayResX/PlayResY`.
-
-## Acceptance criteria
-1. Use the same source Job for Preview and final render.
-2. Preview subtitle size is proportional to source video resolution.
-3. Final render and Preview have materially matching line count/wrapping.
-4. Position is materially matching relative to the video frame.
-5. Outline/shadow/background scale is materially matching.
-6. P3 audio, Demucs, output path and export IPC behavior remain working.
-7. Standalone `Xóa Sub` remains present.
-
-## Required static verification
-On the exact checkout:
+## Required Owner verification
+Preflight on exact branch:
 ```text
-node --check src/renderer/js/pipeline3/preview-ass-parity.js
+git fetch origin
+git switch review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034
+git pull --ff-only
 node --check src/main/main-entry.js
-git diff --check 2f326af98d4344fc2ff460346e1a46cc96d136d5..HEAD
+node --check src/main/preload.js
+node --check src/renderer/js/job-export-controls.js
+git diff --check fbaa060bc9f604fc93e3e195e264ea27e78921fd..HEAD
 ```
 
-## Queued task after PASS
-`P1-P2-PER-JOB-EXPORT-NOVOCAL-032`:
-- P1 per-Job artifact download;
-- P2 per-Job clean-video download;
-- P2 optional Demucs-strict no-vocal derivative;
-- never overwrite canonical P2 clean video;
-- no weak vocal-removal fallback.
+Runtime:
+1. Complete or load at least two P1 Jobs; verify each `Kết quả` menu saves artifacts from that exact Job.
+2. Verify voice export keeps the actual audio file type.
+3. Complete or load at least two P2 Jobs; verify each `↓ P2` saves its own clean video.
+4. On one P2 Job click `♬ Xóa giọng`; require successful Demucs path and separate output.
+5. Download the derivative through `↓ Không giọng`.
+6. Verify canonical clean video is still present/usable and P3 input behavior is unchanged.
+7. Sanity-check P1→P2 hydration, standalone Xóa Sub, Voice Render, and P3 availability.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING.
-- Code review: WAITING final exact-head review.
+- Automated/static: PARTIAL PASS; no GitHub CI/status exists for source HEAD, exact Owner checkout preflight remains required.
+- Code review: PASS.
 - Owner runtime: WAITING.
 - Documentation synchronization: PASS after docs publication.
 - Merge: BLOCKED.
 
 ## Next action
-Owner visual parity test on task 031. Only after Owner PASS may task 032 become active on its own branch. No merge.
+Owner runtime verification only. On PASS, record observed result in canonical `.ai/`, re-check exact PR HEAD/gates, then merge may be considered.
