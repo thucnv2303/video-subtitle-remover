@@ -1,13 +1,13 @@
 # Current State
 
 ## Status
-P1-P2-PER-JOB-EXPORT-NOVOCAL-034 — SOURCE PUBLISHED / OWNER RUNTIME BLOCKED BY P1 KEYFRAME DECODE ROBUSTNESS / MERGE BLOCKED
+P1-P2-PER-JOB-EXPORT-NOVOCAL-034 — KEYFRAME FAIL-SOFT SOURCE PUBLISHED / OWNER RUNTIME WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Active review branch: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034`.
 - Active Draft PR: #74.
-- Application-source HEAD before this incident docs sync: `eb6301c65132cb3cab77dbdd4564c541fa58bb60`.
+- Keyframe fail-soft source commit: `eab41008133fab56f2551417b3b7e7e5d23c0487`.
 - Base: `review/P1-P2-HANDOFF-HYDRATION-032@fbaa060bc9f604fc93e3e195e264ea27e78921fd`.
 
 ## Task 034 scope already implemented
@@ -17,40 +17,41 @@ P1-P2-PER-JOB-EXPORT-NOVOCAL-034 — SOURCE PUBLISHED / OWNER RUNTIME BLOCKED BY
 4. Derivative does not replace canonical P2 `outputPath` and does not change P3 input authority.
 5. No librosa/weak fallback for the derivative.
 
-## Runtime evidence from Owner on 2026-08-17
+## Owner runtime blocker observed on 2026-08-17
 Test video: `E:\Tải về\TikVideo.App_7595712770348827761.mp4`.
 - Absolute Unicode path: PASS.
 - `/api/video-info`: PASS.
-- preview frame 0: PASS.
+- preview: PASS.
 - P1 ASR: PASS, 15 subtitle segments.
-- Adaptive vision successfully fetched frames 0, 126, 252, 378, 504, 630, 756, 882, 1008, 1134, 1260.
-- Request for frame 1386 returned HTTP 400: backend/OpenCV could not decode that final sampled frame.
-- P1 aborted the entire analysis on this one failed frame.
+- Frames 0 through 1260 in the adaptive sample set decoded successfully.
+- Requested final sampled frame 1386 returned HTTP 400 and previously aborted P1.
 
-## Verified root cause direction
-`src/renderer/js/pipeline1-analysis.js::sampleFrameIndexes()` already clamps indexes to `totalFrames - 1`; this is not a frontend off-by-one bug.
+## Narrow repair published
+`src/renderer/js/pipeline1-analysis.js` now treats sampled-frame retrieval as fail-soft:
+- requested frame decode failure is logged;
+- it retries up to 3 earlier frame indexes;
+- a successful fallback is logged and used with its actual frame/time;
+- already-used frame indexes are not duplicated;
+- if all candidates fail, the sample is logged and skipped;
+- the existing usable-keyframe threshold remains unchanged: fail only when `frames.length < Math.min(3, indexes.length)`.
 
-The backend-reported frame count and actually decodable final frame can differ for some MP4/VFR sources. The real robustness defect is `collectVisualContext()`: a single `window.api.getFrame()` rejection aborts all of P1 even when enough earlier keyframes have already been collected.
+No sampler architecture, ASR, AI narration/remix, task-034 export behavior, P2, Demucs, P3, Voice Render, standalone Xóa Sub, or file-path compatibility was intentionally changed.
 
-## Required narrow repair before continuing Owner test
-In `collectVisualContext()`:
-- handle a failed sampled keyframe independently;
-- prefer retrying one or more nearby earlier frame indexes for an undecodable end-frame sample;
-- if nearby retry still fails, log a warning and skip that sample;
-- continue analysis when the remaining valid keyframe count is above the existing safety threshold;
-- fail only when too few usable keyframes remain;
-- do not change ASR, narration, export 034, P2, Demucs, P3, or file-path architecture.
-
-## Process incident note
-A temporary `noop.tmp` file was accidentally created during GitHub tooling and deleted in the immediately following commit. It is not present in the final tree and no application source was modified by that incident.
+## Verification status
+- GitHub source diff reviewed: only `src/renderer/js/pipeline1-analysis.js` changed in the repair commit.
+- Full source file re-read from GitHub after publication.
+- PR has no unresolved review threads at preflight.
+- GitHub Actions workflow runs on the pre-repair HEAD: none.
+- Exact local `node --check src/renderer/js/pipeline1-analysis.js` and `git diff --check fbaa060bc9f604fc93e3e195e264ea27e78921fd..HEAD`: WAITING Owner checkout because PM environment cannot clone the private repository for local execution.
+- Deterministic runtime simulation was not added in this narrow repair; Owner real-video verification remains required.
 
 ## Gates
-- Task 034 implementation: PASS for published source scope.
-- Code review of 034 application source: PASS before latest runtime incident.
-- Owner runtime for 034: BLOCKED because P1 cannot complete on the current test video.
-- P1 keyframe robustness repair: NOT IMPLEMENTED.
-- Documentation synchronization: PASS after this commit.
+- Execution: PASS for keyframe fail-soft source publication.
+- Automated/static verification: WAITING exact Owner checkout commands.
+- Code review: PASS for the narrow source diff/full-file review; runtime behavior still requires Owner verification.
+- Owner runtime: WAITING rerun of the same video.
+- Documentation synchronization: IN PROGRESS until task_current/handoff/ACTIVE docs commit series completes.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Create/publish a narrow P1 keyframe fail-soft repair from the current PR #74 branch/ref, static-review it, then Owner reruns the same `TikVideo.App_7595712770348827761.mp4`. Only after P1 completes may Owner continue testing the task-034 P1/P2 export and P2 no-vocal features. No merge.
+After docs synchronization, Owner checks out the exact PR head in `E:\Project AI\Video-sub-remove-owner-test-LONG012`, runs the required static commands, and reruns `E:\Tải về\TikVideo.App_7595712770348827761.mp4`. P1 must continue to Vision/global reasoning when frame 1386 fails but enough usable frames remain. Only after P1 completes should Owner continue task-034 export/no-vocal verification. No merge.
