@@ -5,6 +5,11 @@ const { spawn } = require('child_process');
 
 const CONFIG_FILE = 'talking-portrait.json';
 const SAFE_RUNTIME_ROOT = 'C:\\VSR-JoyVASA';
+const RATIO_PROFILES = {
+  '9:16': { width: 720, height: 1280, suffix: '9x16' },
+  '1:1': { width: 1080, height: 1080, suffix: '1x1' },
+  '16:9': { width: 1280, height: 720, suffix: '16x9' },
+};
 let activeChild = null;
 
 function configPath() { return path.join(app.getPath('userData'), CONFIG_FILE); }
@@ -82,7 +87,46 @@ function presetToArgs(payload = {}) {
   return { cfgScale: Number(Math.max(1.6, Math.min(4.0, baseCfg + ((expression - 65) / 100) * 1.2)).toFixed(2)), drivingMultiplier: Number(Math.max(0.85, Math.min(1.35, 1.0 + ((head - 50) / 100) * 0.35)).toFixed(2)), useHalf: String(payload.quality || 'quality') === 'preview' };
 }
 
+function normalizeRatio(value) { return Object.prototype.hasOwnProperty.call(RATIO_PROFILES, value) ? value : 'source'; }
 function predictedOutput(outputDir, imagePath, audioPath) { return path.join(outputDir, `${path.parse(imagePath).name}_${path.parse(audioPath).name}.mp4`); }
+
+function resolveFfmpegPath(python) {
+  return new Promise((resolve, reject) => {
+    let stdout = ''; let stderr = '';
+    const child = spawn(python.command, [...python.prefixArgs, '-c', 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())'], { windowsHide: true });
+    child.stdout.on('data', chunk => { stdout += chunk.toString(); });
+    child.stderr.on('data', chunk => { stderr += chunk.toString(); });
+    child.on('error', reject);
+    child.on('close', code => {
+      const candidate = stdout.trim().split(/\r?\n/).pop();
+      if (code === 0 && candidate && fs.existsSync(candidate)) resolve(candidate);
+      else reject(new Error(stderr.trim() || 'Không tìm thấy FFmpeg của JoyVASA runtime.'));
+    });
+  });
+}
+
+async function postProcessRatio(sourcePath, outputDir, ratio, python, emit) {
+  const profile = RATIO_PROFILES[ratio];
+  if (!profile) return sourcePath;
+  const ffmpeg = await resolveFfmpegPath(python);
+  const targetPath = path.join(outputDir, `${path.parse(sourcePath).name}_${profile.suffix}.mp4`);
+  const filter = `scale=${profile.width}:${profile.height}:force_original_aspect_ratio=increase,crop=${profile.width}:${profile.height}`;
+  emit('info', `Định dạng khung hình ${ratio} (${profile.width}x${profile.height})...`);
+  await new Promise((resolve, reject) => {
+    let stderr = '';
+    const child = spawn(ffmpeg, ['-y', '-i', sourcePath, '-vf', filter, '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', targetPath], { windowsHide: true });
+    activeChild = child;
+    child.stderr.on('data', chunk => { stderr += chunk.toString(); });
+    child.on('error', reject);
+    child.on('close', code => {
+      if (activeChild === child) activeChild = null;
+      if (code === 0 && fs.existsSync(targetPath)) resolve();
+      else reject(new Error(stderr.trim().split(/\r?\n/).slice(-8).join('\n') || `FFmpeg kết thúc với mã ${code}.`));
+    });
+  });
+  emit('success', `Đã tạo bản ${ratio}: ${targetPath}`);
+  return targetPath;
+}
 
 function spawnJoyVasa(event, payload = {}) {
   if (activeChild) return Promise.resolve({ ok: false, error: 'Đang có một AI Avatar job chạy.' });
@@ -101,20 +145,49 @@ function spawnJoyVasa(event, payload = {}) {
     return Promise.resolve({ ok: false, runId, error: error.message });
   }
 
-  const mapped = presetToArgs(payload); const python = resolvePython(status.engineRoot);
+  const mapped = presetToArgs(payload); const python = resolvePython(status.engineRoot); const ratio = normalizeRatio(String(payload.ratio || 'source'));
   const scriptArgs = [path.join(status.engineRoot, 'inference.py'), '-r', imagePath, '-a', audioPath, '-o', outputDir, '--animation-mode', 'human', '--cfg-scale', String(mapped.cfgScale), '--driving-multiplier', String(mapped.drivingMultiplier), '--animation-region', 'all'];
   if (mapped.useHalf) scriptArgs.push('--flag-use-half-precision');
   const expectedOutput = predictedOutput(outputDir, imagePath, audioPath);
   return new Promise((resolve) => {
     let stdout = ''; let stderr = ''; let settled = false;
-    const child = spawn(python.command, [...python.prefixArgs, ...scriptArgs], { cwd: status.engineRoot, windowsHide: true, env: { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8' } }); activeChild = child;
+    const child = spawn(python.command, [...python.prefixArgs, ...scriptArgs], {
+      cwd: status.engineRoot,
+      windowsHide: true,
+      env: {
+        ...process.env,
+        PYTHONUTF8: '1',
+        PYTHONIOENCODING: 'utf-8',
+        TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD: '1',
+      },
+    });
+    activeChild = child;
     const emit = (type, text) => { const message = String(text || '').trim(); if (message && !event.sender.isDestroyed()) event.sender.send('talking-portrait:progress', { runId, type, message }); };
     emit('info', `Input staged: ${imagePath}`);
     emit('info', `Voice staged: ${audioPath}`);
+    emit('info', 'Checkpoint compatibility: trusted JoyVASA weights loading enabled for PyTorch 2.8.');
     child.stdout.on('data', (chunk) => { const text = chunk.toString(); stdout += text; emit('info', text); });
     child.stderr.on('data', (chunk) => { const text = chunk.toString(); stderr += text; emit('info', text); });
     child.on('error', (error) => { if (activeChild === child) activeChild = null; if (settled) return; settled = true; resolve({ ok: false, runId, error: `Không khởi động được JoyVASA: ${error.message}`, command: python.mode }); });
-    child.on('close', (code) => { if (activeChild === child) activeChild = null; if (settled) return; settled = true; if (code === 0 && fs.existsSync(expectedOutput)) { emit('success', `Hoàn tất: ${expectedOutput}`); resolve({ ok: true, runId, outputPath: expectedOutput, outputDir, cfg: mapped }); return; } const tail = (stderr || stdout).trim().split(/\r?\n/).slice(-12).join('\n'); resolve({ ok: false, runId, error: tail || `JoyVASA kết thúc với mã ${code}.`, code, expectedOutput }); });
+    child.on('close', async (code) => {
+      if (activeChild === child) activeChild = null;
+      if (settled) return;
+      if (code !== 0 || !fs.existsSync(expectedOutput)) {
+        settled = true;
+        const tail = (stderr || stdout).trim().split(/\r?\n/).slice(-12).join('\n');
+        resolve({ ok: false, runId, error: tail || `JoyVASA kết thúc với mã ${code}.`, code, expectedOutput });
+        return;
+      }
+      try {
+        const outputPath = await postProcessRatio(expectedOutput, outputDir, ratio, python, emit);
+        settled = true;
+        emit('success', `Hoàn tất: ${outputPath}`);
+        resolve({ ok: true, runId, outputPath, outputDir, cfg: mapped, ratio });
+      } catch (error) {
+        settled = true;
+        resolve({ ok: false, runId, error: `JoyVASA đã render nhưng xử lý tỷ lệ thất bại: ${error.message}`, expectedOutput });
+      }
+    });
   });
 }
 
@@ -123,4 +196,4 @@ function cancel() {
   try { const accepted = activeChild.kill(); return { ok: accepted, cancelled: accepted, stopping: accepted }; } catch (error) { return { ok: false, error: error.message }; }
 }
 
-module.exports = { engineStatus, chooseEngineRoot, spawnJoyVasa, cancel, presetToArgs };
+module.exports = { engineStatus, chooseEngineRoot, spawnJoyVasa, cancel, presetToArgs, normalizeRatio };
