@@ -4,6 +4,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 
 const CONFIG_FILE = 'talking-portrait.json';
+const SAFE_RUNTIME_ROOT = 'C:\\VSR-JoyVASA';
 let activeChild = null;
 
 function configPath() { return path.join(app.getPath('userData'), CONFIG_FILE); }
@@ -22,7 +23,7 @@ function resolvePython(engineRoot) {
   const candidates = [
     cfg.pythonPath,
     process.env.JOYVASA_PYTHON,
-    'C:\\VSR-JoyVASA\\venv\\Scripts\\python.exe',
+    path.join(SAFE_RUNTIME_ROOT, 'venv', 'Scripts', 'python.exe'),
     path.join(appRoot, 'tools', 'miniconda3', 'envs', 'joyvasa', 'python.exe'),
     engineRoot && path.join(engineRoot, '.venv', 'Scripts', 'python.exe'),
     engineRoot && path.join(engineRoot, 'venv', 'Scripts', 'python.exe'),
@@ -67,6 +68,14 @@ function sanitizeInputPath(value, allowedExts, label) {
   return full;
 }
 
+function stageInput(sourcePath, runDir, stem) {
+  const ext = path.extname(sourcePath).toLowerCase();
+  const stagedPath = path.join(runDir, `${stem}${ext}`);
+  fs.copyFileSync(sourcePath, stagedPath);
+  if (!fs.existsSync(stagedPath) || fs.statSync(stagedPath).size === 0) throw new Error(`Không thể staging ${stem} cho JoyVASA.`);
+  return stagedPath;
+}
+
 function presetToArgs(payload = {}) {
   const mode = String(payload.mode || 'natural'); const expression = Math.max(20, Math.min(100, Number(payload.expression) || 65)); const head = Math.max(20, Math.min(100, Number(payload.head) || 60));
   const baseCfg = mode === 'expressive' ? 3.2 : mode === 'calm' ? 2.2 : 2.8;
@@ -80,7 +89,18 @@ function spawnJoyVasa(event, payload = {}) {
   const status = engineStatus(); if (!status.ok) return Promise.resolve({ ok: false, error: `JoyVASA chưa sẵn sàng: ${status.missing.join(', ') || 'chưa cấu hình engine'}`, status });
   let imagePath; let audioPath;
   try { imagePath = sanitizeInputPath(payload.imagePath, ['.jpg', '.jpeg', '.png', '.webp', '.bmp'], 'ảnh nhân vật'); audioPath = sanitizeInputPath(payload.audioPath, ['.wav', '.mp3', '.m4a', '.flac', '.ogg', '.aac'], 'voice'); } catch (error) { return Promise.resolve({ ok: false, error: error.message }); }
-  const runId = `avatar-${Date.now()}`; const outputDir = path.join(app.getPath('userData'), 'talking-portrait', 'outputs', runId); fs.mkdirSync(outputDir, { recursive: true });
+
+  const runId = `avatar-${Date.now()}`;
+  const runDir = path.join(SAFE_RUNTIME_ROOT, 'runs', runId);
+  const outputDir = path.join(runDir, 'output');
+  fs.mkdirSync(outputDir, { recursive: true });
+  try {
+    imagePath = stageInput(imagePath, runDir, 'portrait');
+    audioPath = stageInput(audioPath, runDir, 'voice');
+  } catch (error) {
+    return Promise.resolve({ ok: false, runId, error: error.message });
+  }
+
   const mapped = presetToArgs(payload); const python = resolvePython(status.engineRoot);
   const scriptArgs = [path.join(status.engineRoot, 'inference.py'), '-r', imagePath, '-a', audioPath, '-o', outputDir, '--animation-mode', 'human', '--cfg-scale', String(mapped.cfgScale), '--driving-multiplier', String(mapped.drivingMultiplier), '--animation-region', 'all'];
   if (mapped.useHalf) scriptArgs.push('--flag-use-half-precision');
@@ -89,10 +109,12 @@ function spawnJoyVasa(event, payload = {}) {
     let stdout = ''; let stderr = ''; let settled = false;
     const child = spawn(python.command, [...python.prefixArgs, ...scriptArgs], { cwd: status.engineRoot, windowsHide: true, env: { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8' } }); activeChild = child;
     const emit = (type, text) => { const message = String(text || '').trim(); if (message && !event.sender.isDestroyed()) event.sender.send('talking-portrait:progress', { runId, type, message }); };
+    emit('info', `Input staged: ${imagePath}`);
+    emit('info', `Voice staged: ${audioPath}`);
     child.stdout.on('data', (chunk) => { const text = chunk.toString(); stdout += text; emit('info', text); });
     child.stderr.on('data', (chunk) => { const text = chunk.toString(); stderr += text; emit('info', text); });
     child.on('error', (error) => { if (activeChild === child) activeChild = null; if (settled) return; settled = true; resolve({ ok: false, runId, error: `Không khởi động được JoyVASA: ${error.message}`, command: python.mode }); });
-    child.on('close', (code) => { if (activeChild === child) activeChild = null; if (settled) return; settled = true; if (code === 0 && fs.existsSync(expectedOutput)) { emit('success', `Hoàn tất: ${expectedOutput}`); resolve({ ok: true, runId, outputPath: expectedOutput, outputDir, cfg: mapped }); return; } const tail = (stderr || stdout).trim().split(/\r?\n/).slice(-8).join('\n'); resolve({ ok: false, runId, error: tail || `JoyVASA kết thúc với mã ${code}.`, code, expectedOutput }); });
+    child.on('close', (code) => { if (activeChild === child) activeChild = null; if (settled) return; settled = true; if (code === 0 && fs.existsSync(expectedOutput)) { emit('success', `Hoàn tất: ${expectedOutput}`); resolve({ ok: true, runId, outputPath: expectedOutput, outputDir, cfg: mapped }); return; } const tail = (stderr || stdout).trim().split(/\r?\n/).slice(-12).join('\n'); resolve({ ok: false, runId, error: tail || `JoyVASA kết thúc với mã ${code}.`, code, expectedOutput }); });
   });
 }
 
