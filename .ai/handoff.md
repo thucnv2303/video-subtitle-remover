@@ -4,29 +4,26 @@
 `TALKING-PORTRAIT-JOYVASA-035`
 
 ## Status
-SOURCE PUBLISHED / FINAL GITHUB REVIEW NEXT / OWNER STATIC+RUNTIME WAITING / MERGE BLOCKED
+SOURCE + PINNED BOOTSTRAP PUBLISHED / OWNER STATIC+GPU RUNTIME WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Branch: `review/TALKING-PORTRAIT-JOYVASA-035`.
 - Draft PR: #75.
 - Base: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034@0ee0ed2760622aab603a2088d6064ee747cad9ed`.
-- PR #74 remains a separate unfinished gate chain; do not infer task 034 PASS from this branch.
+- JoyVASA upstream pin: `916a90f8de490e8648fee460c1200bd5d9a795af`.
 
-## Implemented feature
-- New standalone `AI Avatar` page.
-- Portrait + voice input and local preview.
-- Real Electron IPC boundary to local JoyVASA.
-- JoyVASA root discovery/configuration and weight-directory readiness check.
-- Separate child process using explicit argv; no shell command construction.
-- Human talking-portrait inference only.
-- Natural/Expressive/Calm presets and bounded expression/head mapping to upstream cfg/motion controls.
-- Upstream WIP eye/lip retargeting is not enabled.
-- Isolated output directory under Electron userData.
-- Live process messages, cancellation, final video preview/open/Save Copy.
-- No intended P1/P2/P3/Voice Render/Xóa Sub changes.
+## Delivered
+- Standalone AI Avatar UI and navigation.
+- Portrait/audio local input preview.
+- Electron IPC + isolated JoyVASA child-process adapter.
+- Truthful engine/weight readiness.
+- Bounded supported parameter mapping; no fake WIP eye/lip controls.
+- Live progress, single-job guard, Cancel, MP4 preview/Open/Save Copy.
+- Windows bootstrap `scripts/setup-joyvasa.ps1` into `tools/JoyVASA` and separate Conda env `joyvasa`.
+- Deterministic non-GPU adapter assertions in `scripts/verify-talking-portrait.js`.
 
-## Owner checkout and static gate
+## Owner gate commands
 ```text
 git fetch origin
 git switch review/TALKING-PORTRAIT-JOYVASA-035
@@ -35,25 +32,20 @@ node --check src/main/talking-portrait-engine.js
 node --check src/main/main-entry.js
 node --check src/main/preload.js
 node --check src/renderer/js/talking-portrait.js
+node scripts/verify-talking-portrait.js
+powershell -ExecutionPolicy Bypass -File scripts/setup-joyvasa.ps1
 git diff --check 0ee0ed2760622aab603a2088d6064ee747cad9ed..HEAD
 ```
 
-## JoyVASA runtime prerequisite
-Use an upstream-compatible JoyVASA installation with model weights and FFmpeg. The app can use a configured Python/venv or fallback `conda run -n joyvasa python`. Select the JoyVASA repository root in the UI if it is not auto-detected.
-
-## Runtime gate
-Use one short frontal portrait + short Vietnamese audio first. Generate Natural/Quality, confirm real MP4/audio/motion and Save Copy. Then test Expressive and Cancel. Finally smoke-check navigation to existing features.
+Then launch the app and test one frontal portrait + short Vietnamese voice. Required runtime evidence: Ready status, successful MP4 with supplied audio and visible talking motion, Preview/Open/Save Copy, Cancel on a second run, existing-page navigation smoke check.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING Owner commands.
-- Code review: IN PROGRESS until final PR #75 exact-HEAD diff/full-file inspection.
+- Automated/static: WAITING Owner.
+- Code review: PASS for source architecture; exact final HEAD metadata/review-thread check still required.
 - Owner verification: NOT STARTED.
-- Documentation synchronization: PASS after this commit if exact HEAD contains all three canonical files consistently.
+- Documentation synchronization: PASS after this commit if canonical files re-read consistently.
 - Merge permission: BLOCKED.
 
 ## Forbidden
-- Do not merge PR #75 before Owner runtime PASS.
-- Do not vendor JoyVASA weights into this repository.
-- Do not install JoyVASA dependencies into the existing P1/P2 Python environment as part of this task.
-- Do not claim eye/lip independent strength support unless upstream implementation is changed and separately verified.
+Do not merge before Owner runtime PASS is recorded in canonical `.ai/`. Do not vendor weights. Do not install JoyVASA packages into the existing pipeline Python environment.
