@@ -40,6 +40,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   applyVoiceTempo: (inputPath, speedFactor) => ipcRenderer.invoke('voice-render:applyTempo', inputPath, speedFactor),
   burnP3SubtitleHq: (payload) => ipcRenderer.invoke('p3:burnSubtitleHq', payload),
   retimeP3Video: (payload) => ipcRenderer.invoke('p3:retimeVideo', payload),
+  getTalkingPortraitStatus: () => ipcRenderer.invoke('talking-portrait:status'),
+  chooseTalkingPortraitEngine: () => ipcRenderer.invoke('talking-portrait:chooseEngine'),
+  generateTalkingPortrait: (payload) => ipcRenderer.invoke('talking-portrait:generate', payload),
+  cancelTalkingPortrait: () => ipcRenderer.invoke('talking-portrait:cancel'),
+  onTalkingPortraitProgress: (callback) => {
+    const listener = (e, payload) => callback(payload);
+    ipcRenderer.on('talking-portrait:progress', listener);
+    return () => ipcRenderer.removeListener('talking-portrait:progress', listener);
+  },
   onPythonLog: (callback) => ipcRenderer.on('python:log', (e, msg) => callback(msg)),
   onPythonError: (callback) => ipcRenderer.on('python:error', (e, msg) => callback(msg)),
   onP1VisionProgress: (callback) => {
