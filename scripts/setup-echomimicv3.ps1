@@ -7,10 +7,13 @@ $Python = Join-Path $VenvRoot 'Scripts\python.exe'
 $UpstreamCommit = '7e89489ca51c0d008fc1963ec6c03fc5bd0b9397'
 $BootstrapPython = 'C:\VSR-JoyVASA\venv\Scripts\python.exe'
 
-function Run-Step([string]$File, [string[]]$Args) {
-  Write-Host "[EchoMimicV3] $File $($Args -join ' ')"
-  & $File @Args
-  if ($LASTEXITCODE -ne 0) { throw "Command failed ($LASTEXITCODE): $File $($Args -join ' ')" }
+function Run-Step([string]$File, [string[]]$Arguments) {
+  if (-not $Arguments -or $Arguments.Count -eq 0) {
+    throw "Refusing to launch command without arguments: $File"
+  }
+  Write-Host "[EchoMimicV3] $File $($Arguments -join ' ')"
+  & $File @Arguments
+  if ($LASTEXITCODE -ne 0) { throw "Command failed ($LASTEXITCODE): $File $($Arguments -join ' ')" }
 }
 
 New-Item -ItemType Directory -Force -Path $RuntimeRoot | Out-Null
@@ -54,7 +57,19 @@ if (-not (Test-Path (Join-Path $AudioRoot 'config.json'))) {
   Run-Step $Python @('-c',$code)
 }
 
-Run-Step $Python @('-c','import torch; print("torch",torch.__version__,"cuda",torch.version.cuda,"available",torch.cuda.is_available()); assert torch.cuda.is_available(); print("gpu",torch.cuda.get_device_name(0)); print("vram_gb",round(torch.cuda.get_device_properties(0).total_memory/1024**3,1))')
+$smokePath = Join-Path $RuntimeRoot 'cuda-smoke.py'
+@'
+import torch
+print('torch', torch.__version__)
+print('cuda', torch.version.cuda)
+print('available', torch.cuda.is_available())
+assert torch.cuda.is_available(), 'CUDA is not available'
+print('gpu', torch.cuda.get_device_name(0))
+print('vram_gb', round(torch.cuda.get_device_properties(0).total_memory / 1024**3, 1))
+x = torch.ones(1, device='cuda')
+print('cuda-smoke', x.item())
+'@ | Set-Content -Encoding ASCII $smokePath
+Run-Step $Python @($smokePath)
 
 $missing = @()
 @(
