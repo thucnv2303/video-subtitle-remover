@@ -1,63 +1,59 @@
 # AgentOS Handoff Status
 
 ## Active task
-`P1-P2-PER-JOB-EXPORT-NOVOCAL-034`
+`TALKING-PORTRAIT-JOYVASA-035`
 
 ## Status
-KEYFRAME FAIL-SOFT SOURCE PUBLISHED / CODE REVIEW PASS / OWNER RUNTIME WAITING / MERGE BLOCKED
+SOURCE PUBLISHED / FINAL GITHUB REVIEW NEXT / OWNER STATIC+RUNTIME WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Branch: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034`.
-- Draft PR: #74.
-- Keyframe fail-soft source commit: `eab41008133fab56f2551417b3b7e7e5d23c0487`.
-- Base: `review/P1-P2-HANDOFF-HYDRATION-032@fbaa060bc9f604fc93e3e195e264ea27e78921fd`.
+- Branch: `review/TALKING-PORTRAIT-JOYVASA-035`.
+- Draft PR: #75.
+- Base: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034@0ee0ed2760622aab603a2088d6064ee747cad9ed`.
+- PR #74 remains a separate unfinished gate chain; do not infer task 034 PASS from this branch.
 
-## Task 034 behavior retained
-- P1 Job cards: `↓ Kết quả` Save As artifacts.
-- P2 Job cards: `↓ P2` Save As canonical clean video.
-- P2 optional `♬ Xóa giọng` uses Demucs strict and stores a separate derivative exposed as `↓ Không giọng`.
-- Canonical `job.outputPath` and P3 input authority remain unchanged.
+## Implemented feature
+- New standalone `AI Avatar` page.
+- Portrait + voice input and local preview.
+- Real Electron IPC boundary to local JoyVASA.
+- JoyVASA root discovery/configuration and weight-directory readiness check.
+- Separate child process using explicit argv; no shell command construction.
+- Human talking-portrait inference only.
+- Natural/Expressive/Calm presets and bounded expression/head mapping to upstream cfg/motion controls.
+- Upstream WIP eye/lip retargeting is not enabled.
+- Isolated output directory under Electron userData.
+- Live process messages, cancellation, final video preview/open/Save Copy.
+- No intended P1/P2/P3/Voice Render/Xóa Sub changes.
 
-## New P1 runtime repair
-Owner's same-video run showed frame 1386 could not be decoded although earlier adaptive keyframes succeeded. `pipeline1-analysis.js` now:
-- logs the requested-frame decode failure;
-- retries frameIndex-1/-2/-3 without using an already-accepted frame;
-- logs the fallback frame when successful;
-- logs and skips the sample if all candidates fail;
-- preserves the existing minimum usable-keyframe threshold.
-
-## Review evidence
-- Source repair commit changes only `src/renderer/js/pipeline1-analysis.js`.
-- Full file re-read from GitHub after publication.
-- No unresolved PR review threads were present at preflight.
-- No GitHub Actions workflow run was present on the pre-repair HEAD.
-- PM environment cannot clone the private repository, so exact local syntax/diff commands remain Owner preflight requirements.
-
-## Owner test sequence
-Use `E:\Project AI\Video-sub-remove-owner-test-LONG012`:
+## Owner checkout and static gate
 ```text
 git fetch origin
-git switch review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034
+git switch review/TALKING-PORTRAIT-JOYVASA-035
 git pull --ff-only
-node --check src/renderer/js/pipeline1-analysis.js
+node --check src/main/talking-portrait-engine.js
 node --check src/main/main-entry.js
 node --check src/main/preload.js
-node --check src/renderer/js/job-export-controls.js
-git diff --check fbaa060bc9f604fc93e3e195e264ea27e78921fd..HEAD
+node --check src/renderer/js/talking-portrait.js
+git diff --check 0ee0ed2760622aab603a2088d6064ee747cad9ed..HEAD
 ```
-Then rerun exactly:
-`E:\Tải về\TikVideo.App_7595712770348827761.mp4`
 
-Expected: frame 1386 failure no longer kills P1 immediately; fallback or skip is logged; if at least the existing threshold of usable keyframes remains, P1 continues through Vision/global reasoning. After P1 completes, continue task-034 export/no-vocal tests.
+## JoyVASA runtime prerequisite
+Use an upstream-compatible JoyVASA installation with model weights and FFmpeg. The app can use a configured Python/venv or fallback `conda run -n joyvasa python`. Select the JoyVASA repository root in the UI if it is not auto-detected.
+
+## Runtime gate
+Use one short frontal portrait + short Vietnamese audio first. Generate Natural/Quality, confirm real MP4/audio/motion and Save Copy. Then test Expressive and Cancel. Finally smoke-check navigation to existing features.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING Owner exact-checkout preflight.
-- Code review: PASS for narrow source diff/full-file review.
-- Owner verification: WAITING.
-- Documentation sync: IN PROGRESS until ACTIVE sync completes.
+- Automated/static: WAITING Owner commands.
+- Code review: IN PROGRESS until final PR #75 exact-HEAD diff/full-file inspection.
+- Owner verification: NOT STARTED.
+- Documentation synchronization: PASS after this commit if exact HEAD contains all three canonical files consistently.
 - Merge permission: BLOCKED.
 
-## Next permitted action
-Synchronize ACTIVE.md, re-read exact PR HEAD, then Owner runs the commands and same-video scenario above. No merge.
+## Forbidden
+- Do not merge PR #75 before Owner runtime PASS.
+- Do not vendor JoyVASA weights into this repository.
+- Do not install JoyVASA dependencies into the existing P1/P2 Python environment as part of this task.
+- Do not claim eye/lip independent strength support unless upstream implementation is changed and separately verified.
