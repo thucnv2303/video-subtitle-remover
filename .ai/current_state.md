@@ -1,39 +1,42 @@
 # Current State
 
 ## Status
-TALKING-PORTRAIT-JOYVASA-035 — SOURCE PUBLISHED / STATIC OWNER CHECK WAITING / RUNTIME WAITING / MERGE BLOCKED
+TALKING-PORTRAIT-JOYVASA-035 — SOURCE + BOOTSTRAP PUBLISHED / OWNER STATIC + GPU RUNTIME WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Active feature branch: `review/TALKING-PORTRAIT-JOYVASA-035`.
 - Draft PR: #75.
 - Base: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034@0ee0ed2760622aab603a2088d6064ee747cad9ed`.
-- Task 034 / PR #74 remains independently blocked on its Owner runtime gate; task 035 must not change that behavior.
+- JoyVASA upstream pinned for bootstrap: `jdh-algo/JoyVASA@916a90f8de490e8648fee460c1200bd5d9a795af`.
+- Task 034 / PR #74 remains independently blocked on its Owner runtime gate.
 
-## Task 035 implemented scope
-1. Adds isolated `AI Avatar` navigation/page; no P1/P2/P3/Voice Render/Xoa Sub workflow ownership is changed.
-2. Inputs: one portrait image plus one audio file.
-3. Engine boundary: Electron main process spawns upstream JoyVASA `inference.py` in `human` mode; renderer never executes shell commands.
-4. Engine discovery supports configured JoyVASA folder, `JOYVASA_HOME`, app-local candidates, explicit Python/venv, or fallback `conda run -n joyvasa python`.
-5. Engine readiness requires upstream `inference.py` and core JoyVASA/LivePortrait weight directories.
-6. Output is isolated under Electron userData `talking-portrait/outputs/<runId>` and does not become P1/P2/P3 authority.
-7. Natural/Expressive/Calm plus expression/head controls map conservatively to upstream `cfg_scale` and `driving_multiplier`.
-8. Eye/lip independent sliders are disabled because upstream marks retargeting controls WIP; lip motion remains audio-driven.
-9. Successful output is previewable, openable, and exportable through existing Save Copy.
-10. Cancel requests terminate the active child process; only one Avatar job may run at a time.
-
-## Upstream contract verified from JoyVASA source
-- Windows is documented by upstream.
-- Human CLI uses `inference.py -r <image> -a <audio> --animation_mode human` with configurable output directory, cfg scale, driving multiplier and animation region.
-- Human pipeline writes `<reference_basename>_<audio_basename>.mp4` and adds the driving audio to the final video.
+## Implemented
+1. Isolated AI Avatar tab: portrait + audio -> JoyVASA human inference -> MP4 preview/export.
+2. Electron main owns engine discovery, validation, child process, output isolation and cancellation.
+3. Natural/Expressive/Calm and bounded expression/head values map to upstream cfg_scale/driving_multiplier. Eye/lip independent controls remain disabled because upstream retargeting is WIP.
+4. `scripts/setup-joyvasa.ps1` provides a pinned Windows bootstrap into `tools/JoyVASA`, using separate Conda env `joyvasa`; it does not mutate the existing P1/P2 Python environment.
+5. `scripts/verify-talking-portrait.js` adds deterministic assertions for preset bounds/defaults without requiring Electron runtime/GPU.
 
 ## Gates
-- Execution: PASS for source publication.
-- Automated/static verification: WAITING exact Owner checkout (`node --check` + `git diff --check`); no claim of local execution from PM environment.
-- Code review: IN PROGRESS until final PR diff/full-file review after docs sync.
-- Owner runtime: NOT STARTED. Requires real JoyVASA install + weights + GPU run.
-- Documentation synchronization: IN PROGRESS until task_current/handoff are committed.
+- Execution: PASS for source/bootstrap publication.
+- Automated/static verification: WAITING Owner exact checkout. Required: Node syntax checks, deterministic adapter script, PowerShell parse/run, git diff check.
+- Code review: PASS for current source structure and engine boundary; final exact-HEAD re-read still required after docs sync.
+- Owner runtime: NOT STARTED. Requires bootstrap success plus one real GPU image/audio generation.
+- Documentation synchronization: IN PROGRESS until task_current/handoff reflect latest HEAD.
 - Merge permission: BLOCKED.
 
-## Next permitted action
-Finish canonical docs sync, review exact PR #75 diff/full files, then Owner checks out exact HEAD and runs static checks plus one real image/audio generation. Do not merge before Owner PASS.
+## Owner verification sequence
+From exact PR #75 checkout:
+1. `node --check src/main/talking-portrait-engine.js`
+2. `node --check src/main/main-entry.js`
+3. `node --check src/main/preload.js`
+4. `node --check src/renderer/js/talking-portrait.js`
+5. `node scripts/verify-talking-portrait.js`
+6. `powershell -ExecutionPolicy Bypass -File scripts/setup-joyvasa.ps1`
+7. Start app, open AI Avatar, confirm engine Ready, select a clear frontal portrait + short Vietnamese voice, Generate.
+8. Confirm MP4 preview contains source audio, Open works, Save Copy works, Cancel works on a second run.
+9. `git diff --check 0ee0ed2760622aab603a2088d6064ee747cad9ed..HEAD`
+
+## Merge
+BLOCKED until Owner runtime PASS is recorded into canonical `.ai/` and all gates are re-reviewed.
