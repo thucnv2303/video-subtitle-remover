@@ -34,6 +34,8 @@ app.on('browser-window-created', (event, window) => {
       .catch(error => console.error('[P3] Preview parity module load failed:', error));
     window.webContents.executeJavaScript("import(new URL('./js/job-export-controls.js', location.href).href)")
       .catch(error => console.error('[Job Export] module load failed:', error));
+    window.webContents.executeJavaScript("import(new URL('./js/talking-portrait.js', location.href).href)")
+      .catch(error => console.error('[AI Avatar] module load failed:', error));
   });
 });
 
