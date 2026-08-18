@@ -5,81 +5,30 @@
   const NAV_ID = 'nav-talking-portrait';
   const state = { imagePath: '', audioPath: '', imageUrl: '', audioUrl: '', running: false, engineReady: false, outputPath: '', mode: 'natural', unlisten: null };
 
-  function ensureStyle() {
-    if (document.querySelector('link[data-talking-portrait-style]')) return;
-    const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = 'styles/talking-portrait.css'; link.dataset.talkingPortraitStyle = 'true'; document.head.appendChild(link);
-  }
-
-  function mountNav() {
-    const menu = document.querySelector('.nav-menu'); if (!menu || document.getElementById(NAV_ID)) return;
-    const settings = menu.querySelector('[data-page="settings"]'); const item = document.createElement('a');
-    item.href = '#'; item.id = NAV_ID; item.className = 'nav-item'; item.dataset.page = 'talking-portrait';
-    item.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M18 5l3-2v6l-3-2z"/></svg><span>AI Avatar</span><b class="tp-new">NEW</b>';
-    if (settings) menu.insertBefore(item, settings); else menu.appendChild(item);
-  }
+  function ensureStyle() { if (document.querySelector('link[data-talking-portrait-style]')) return; const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = 'styles/talking-portrait.css'; link.dataset.talkingPortraitStyle = 'true'; document.head.appendChild(link); }
+  function mountNav() { const menu = document.querySelector('.nav-menu'); if (!menu || document.getElementById(NAV_ID)) return; const settings = menu.querySelector('[data-page="settings"]'); const item = document.createElement('a'); item.href = '#'; item.id = NAV_ID; item.className = 'nav-item'; item.dataset.page = 'talking-portrait'; item.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M18 5l3-2v6l-3-2z"/></svg><span>AI Avatar</span><b class="tp-new">NEW</b>'; if (settings) menu.insertBefore(item, settings); else menu.appendChild(item); }
 
   function mountPage() {
     const main = document.querySelector('.main-area'); if (!main || document.getElementById(PAGE_ID)) return;
     const page = document.createElement('section'); page.id = PAGE_ID; page.className = 'page tp-page';
-    page.innerHTML = `
-      <div class="tp-shell">
-        <header class="tp-header"><div><h1>AI Avatar</h1><p>Tạo video nhân vật nói tự nhiên từ một ảnh chân dung và voice.</p></div><div><span id="tp-engine" class="tp-chip warn">Đang kiểm tra JoyVASA…</span><button id="tp-engine-config" class="tp-secondary" type="button">Chọn engine</button></div></header>
-        <div class="tp-grid">
-          <section class="tp-panel tp-inputs"><div class="tp-panel-head"><div><span class="tp-kicker">ĐẦU VÀO</span><h2>Ảnh & voice</h2></div></div>
-            <label>Hình ảnh nhân vật <small>JPG, PNG, WEBP · chính diện, đủ sáng</small></label>
-            <div class="tp-image-row"><div id="tp-image-preview" class="tp-image-preview"><span>Chưa chọn ảnh</span></div><label class="tp-drop"><input id="tp-image" type="file" accept="image/png,image/jpeg,image/webp"><strong>＋ Chọn ảnh</strong><small>Chọn file từ máy</small></label></div>
-            <label>Giọng nói <small>WAV, MP3, M4A</small></label><label class="tp-file"><input id="tp-audio" type="file" accept="audio/*"><strong id="tp-audio-name">＋ Chọn voice</strong><small>Hỗ trợ voice tiếng Việt</small></label><audio id="tp-audio-player" controls></audio>
-            <div class="tp-note"><strong>JoyVASA + LivePortrait</strong><span>Audio-driven, không cần transcript. Input sẽ được staging an toàn trước khi render.</span></div>
-          </section>
-          <section class="tp-panel tp-preview"><div class="tp-panel-head"><div><span class="tp-kicker">KẾT QUẢ</span><h2>Preview</h2></div></div><div id="tp-stage" class="tp-stage"><div><strong>Preview Avatar</strong><span>Chọn ảnh và voice để chuẩn bị job</span></div></div><video id="tp-result" controls style="display:none;width:100%;max-height:420px"></video><div id="tp-status" class="tp-status">Đang kiểm tra engine…</div><div class="tp-result-actions"><button id="tp-open-output" type="button" disabled>Mở video</button><button id="tp-save-output" type="button" disabled>Lưu bản sao</button></div></section>
-          <section class="tp-panel tp-settings"><div class="tp-panel-head"><div><span class="tp-kicker">CHUYỂN ĐỘNG</span><h2>Tùy chỉnh</h2></div></div>
-            <label>Phong cách</label><div class="tp-modes"><button data-mode="natural" class="active">Tự nhiên<small>Cân bằng</small></button><button data-mode="expressive">Sinh động<small>Mạnh hơn</small></button><button data-mode="calm">Điềm tĩnh<small>Nhẹ hơn</small></button></div>
-            <label>Biểu cảm <output id="tp-exp-out">65%</output></label><input id="tp-expression" type="range" min="20" max="100" value="65">
-            <label>Chuyển động đầu <output id="tp-head-out">60%</output></label><input id="tp-head" type="range" min="20" max="100" value="60">
-            <label>Chất lượng</label><select id="tp-quality"><option value="preview">Preview nhanh (FP16)</option><option value="quality" selected>Chất lượng cao</option></select>
-            <div class="tp-vietnamese"><div><strong>Voice tiếng Việt</strong><small>Motion lấy trực tiếp từ audio.</small></div><span>ON</span></div>
-          </section>
-          <section class="tp-panel tp-log-panel"><div class="tp-panel-head"><div><span class="tp-kicker">TIẾN TRÌNH</span><h2>Render log</h2></div><button id="tp-clear-log" class="tp-ghost" type="button">Xóa log</button></div><div id="tp-log" class="tp-log"><div class="tp-log-empty">Log JoyVASA sẽ hiển thị tại đây.</div></div></section>
-        </div>
-        <footer class="tp-footer"><div><strong>Trạng thái</strong><span id="tp-ready">Đang kiểm tra engine.</span></div><div><button id="tp-cancel" class="tp-danger" type="button" style="display:none">Dừng</button><button id="tp-generate" class="tp-primary" disabled>Tạo video</button></div></footer>
-      </div>`;
+    page.innerHTML = `<div class="tp-shell">
+      <header class="tp-header"><div><h1>AI Avatar</h1><p>Tạo video nhân vật nói tự nhiên từ một ảnh chân dung và voice.</p></div><div><span id="tp-engine" class="tp-chip warn">Đang kiểm tra JoyVASA…</span><button id="tp-engine-config" class="tp-secondary" type="button">Chọn engine</button></div></header>
+      <div class="tp-grid">
+        <section class="tp-panel tp-inputs"><div class="tp-panel-head"><div><span class="tp-kicker">ĐẦU VÀO</span><h2>Ảnh & voice</h2></div></div><label>Hình ảnh nhân vật <small>JPG, PNG, WEBP · chính diện, đủ sáng</small></label><div class="tp-image-row"><div id="tp-image-preview" class="tp-image-preview"><span>Chưa chọn ảnh</span></div><label class="tp-drop"><input id="tp-image" type="file" accept="image/png,image/jpeg,image/webp"><strong>＋ Chọn ảnh</strong><small>Chọn file từ máy</small></label></div><label>Giọng nói <small>WAV, MP3, M4A</small></label><label class="tp-file"><input id="tp-audio" type="file" accept="audio/*"><strong id="tp-audio-name">＋ Chọn voice</strong><small>Hỗ trợ voice tiếng Việt</small></label><audio id="tp-audio-player" controls></audio><div class="tp-note"><strong>JoyVASA + LivePortrait</strong><span>Audio-driven · không cần transcript · input được staging an toàn.</span></div></section>
+        <section class="tp-panel tp-preview"><div class="tp-panel-head"><div><span class="tp-kicker">PREVIEW</span><h2>Khung hình</h2></div></div><div id="tp-stage" class="tp-stage"><div><strong>Preview Avatar</strong><span>Chọn ảnh để xem trước</span></div></div><video id="tp-result" controls style="display:none;width:100%;max-height:420px"></video></section>
+        <section class="tp-panel tp-settings"><div class="tp-panel-head"><div><span class="tp-kicker">CHUYỂN ĐỘNG</span><h2>Tùy chỉnh</h2></div></div><label>Phong cách</label><div class="tp-modes"><button data-mode="natural" class="active">Tự nhiên<small>Cân bằng</small></button><button data-mode="expressive">Sinh động<small>Mạnh hơn</small></button><button data-mode="calm">Điềm tĩnh<small>Nhẹ hơn</small></button></div><label>Biểu cảm <output id="tp-exp-out">65%</output></label><input id="tp-expression" type="range" min="20" max="100" value="65"><label>Chuyển động đầu <output id="tp-head-out">60%</output></label><input id="tp-head" type="range" min="20" max="100" value="60"><label>Chất lượng</label><select id="tp-quality"><option value="preview">Preview nhanh (FP16)</option><option value="quality" selected>Chất lượng cao</option></select><div class="tp-vietnamese"><div><strong>Voice tiếng Việt</strong><small>Motion lấy trực tiếp từ audio.</small></div><span>ON</span></div></section>
+        <section class="tp-panel tp-log-panel"><div class="tp-panel-head"><div><span class="tp-kicker">TIẾN TRÌNH</span><h2>Render log</h2></div><button id="tp-clear-log" class="tp-ghost" type="button">Xóa log</button></div><div id="tp-progress-summary" class="tp-progress-summary">Đang kiểm tra engine…</div><div id="tp-log" class="tp-log"><div class="tp-log-empty">Log JoyVASA sẽ hiển thị tại đây.</div></div></section>
+        <section class="tp-panel tp-export-panel"><div><span class="tp-kicker">XUẤT VIDEO</span><h2>Kết quả</h2><p id="tp-ready">Đang kiểm tra engine.</p></div><div class="tp-export-actions"><button id="tp-open-output" class="tp-secondary" type="button" disabled>Mở video</button><button id="tp-save-output" class="tp-secondary" type="button" disabled>Lưu bản sao</button><button id="tp-cancel" class="tp-danger" type="button" style="display:none">Dừng</button><button id="tp-generate" class="tp-primary" disabled>Tạo video</button></div></section>
+      </div></div>`;
     main.appendChild(page);
   }
 
   function filePath(file) { try { return window.electronAPI?.getPathForFile?.(file) || ''; } catch { return ''; } }
-  function setStatus(text, warning = false) { const el = document.getElementById('tp-status'); if (!el) return; el.textContent = text; el.classList.toggle('warning', warning); }
-  function appendLog(message, type = 'info') {
-    const logEl = document.getElementById('tp-log'); if (!logEl || !message) return;
-    logEl.querySelector('.tp-log-empty')?.remove();
-    const row = document.createElement('div'); row.className = `tp-log-row ${type}`;
-    const time = new Date().toLocaleTimeString('vi-VN', { hour12: false });
-    row.innerHTML = `<time>${time}</time><pre></pre>`; row.querySelector('pre').textContent = String(message).trim(); logEl.appendChild(row); logEl.scrollTop = logEl.scrollHeight;
-    while (logEl.children.length > 300) logEl.firstElementChild?.remove();
-  }
-
-  function updateReady() {
-    const inputsReady = Boolean(state.imagePath && state.audioPath); const ready = inputsReady && state.engineReady;
-    const btn = document.getElementById('tp-generate'); const text = document.getElementById('tp-ready');
-    if (btn) btn.disabled = !ready || state.running;
-    if (text) text.textContent = !state.engineReady ? 'Cần JoyVASA runtime + model weights.' : inputsReady ? 'Sẵn sàng tạo video.' : 'Engine sẵn sàng; cần chọn ảnh và voice.';
-  }
-
-  async function refreshEngine() {
-    const chip = document.getElementById('tp-engine');
-    try {
-      const status = await window.electronAPI?.getTalkingPortraitStatus?.(); state.engineReady = Boolean(status?.ok);
-      if (chip) { chip.textContent = status?.ok ? 'JoyVASA · sẵn sàng' : `JoyVASA · thiếu ${status?.missing?.join(', ') || 'engine'}`; chip.classList.toggle('warn', !status?.ok); }
-      setStatus(status?.ok ? 'JoyVASA đã sẵn sàng.' : 'Cấu hình JoyVASA để kích hoạt.', !status?.ok);
-    } catch (error) { state.engineReady = false; if (chip) chip.textContent = 'JoyVASA · lỗi kiểm tra'; setStatus(error?.message || 'Không kiểm tra được JoyVASA.', true); }
-    updateReady();
-  }
-
-  function showOutput(outputPath) {
-    state.outputPath = outputPath || ''; const video = document.getElementById('tp-result'); const stage = document.getElementById('tp-stage');
-    if (!state.outputPath || !video) return;
-    video.src = `file://${state.outputPath.replace(/\\/g, '/')}`; video.style.display = 'block'; if (stage) stage.style.display = 'none';
-    document.getElementById('tp-open-output').disabled = false; document.getElementById('tp-save-output').disabled = false;
-  }
+  function setStatus(text, warning = false) { const el = document.getElementById('tp-progress-summary'); if (!el) return; el.textContent = text; el.classList.toggle('warning', warning); }
+  function appendLog(message, type = 'info') { const logEl = document.getElementById('tp-log'); if (!logEl || !message) return; logEl.querySelector('.tp-log-empty')?.remove(); const row = document.createElement('div'); row.className = `tp-log-row ${type}`; const time = new Date().toLocaleTimeString('vi-VN', { hour12: false }); row.innerHTML = `<time>${time}</time><pre></pre>`; row.querySelector('pre').textContent = String(message).trim(); logEl.appendChild(row); logEl.scrollTop = logEl.scrollHeight; while (logEl.children.length > 300) logEl.firstElementChild?.remove(); }
+  function updateReady() { const inputsReady = Boolean(state.imagePath && state.audioPath); const ready = inputsReady && state.engineReady; const btn = document.getElementById('tp-generate'); const text = document.getElementById('tp-ready'); if (btn) btn.disabled = !ready || state.running; if (text) text.textContent = !state.engineReady ? 'Cần JoyVASA runtime + model weights.' : inputsReady ? 'Sẵn sàng tạo video.' : 'Engine sẵn sàng; cần chọn ảnh và voice.'; }
+  async function refreshEngine() { const chip = document.getElementById('tp-engine'); try { const status = await window.electronAPI?.getTalkingPortraitStatus?.(); state.engineReady = Boolean(status?.ok); if (chip) { chip.textContent = status?.ok ? 'JoyVASA · sẵn sàng' : `JoyVASA · thiếu ${status?.missing?.join(', ') || 'engine'}`; chip.classList.toggle('warn', !status?.ok); } setStatus(status?.ok ? 'JoyVASA đã sẵn sàng.' : 'Cấu hình JoyVASA để kích hoạt.', !status?.ok); } catch (error) { state.engineReady = false; if (chip) chip.textContent = 'JoyVASA · lỗi kiểm tra'; setStatus(error?.message || 'Không kiểm tra được JoyVASA.', true); } updateReady(); }
+  function showOutput(outputPath) { state.outputPath = outputPath || ''; const video = document.getElementById('tp-result'); const stage = document.getElementById('tp-stage'); if (!state.outputPath || !video) return; video.src = `file://${state.outputPath.replace(/\\/g, '/')}`; video.style.display = 'block'; if (stage) stage.style.display = 'none'; document.getElementById('tp-open-output').disabled = false; document.getElementById('tp-save-output').disabled = false; }
 
   function bind() {
     document.getElementById(NAV_ID)?.addEventListener('click', (event) => { event.preventDefault(); document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active')); document.getElementById(NAV_ID)?.classList.add('active'); document.querySelectorAll('.page').forEach(x => x.classList.remove('active')); document.getElementById(PAGE_ID)?.classList.add('active'); });
@@ -89,21 +38,11 @@
     document.getElementById('tp-audio')?.addEventListener('change', (event) => { const file = event.target.files?.[0]; if (!file) return; state.audioPath = filePath(file); if (state.audioUrl) URL.revokeObjectURL(state.audioUrl); state.audioUrl = URL.createObjectURL(file); document.getElementById('tp-audio-name').textContent = file.name; const player = document.getElementById('tp-audio-player'); player.src = state.audioUrl; player.style.display = 'block'; appendLog(`Đã chọn voice: ${file.name}`); updateReady(); });
     document.querySelectorAll('.tp-modes button').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.tp-modes button').forEach(x => x.classList.remove('active')); btn.classList.add('active'); state.mode = btn.dataset.mode || 'natural'; }));
     [['tp-expression','tp-exp-out'],['tp-head','tp-head-out']].forEach(([id,out]) => document.getElementById(id)?.addEventListener('input', e => document.getElementById(out).textContent = `${e.target.value}%`));
-    document.getElementById('tp-open-output')?.addEventListener('click', () => state.outputPath && window.electronAPI?.openPath?.(state.outputPath));
-    document.getElementById('tp-save-output')?.addEventListener('click', () => state.outputPath && window.electronAPI?.saveCopy?.({ sourcePath: state.outputPath, suggestedName: 'ai-avatar.mp4' }));
+    document.getElementById('tp-open-output')?.addEventListener('click', () => state.outputPath && window.electronAPI?.openPath?.(state.outputPath)); document.getElementById('tp-save-output')?.addEventListener('click', () => state.outputPath && window.electronAPI?.saveCopy?.({ sourcePath: state.outputPath, suggestedName: 'ai-avatar.mp4' }));
     document.getElementById('tp-cancel')?.addEventListener('click', async () => { await window.electronAPI?.cancelTalkingPortrait?.(); appendLog('Đã gửi yêu cầu dừng JoyVASA.', 'warning'); setStatus('Đang dừng JoyVASA…', true); });
-    document.getElementById('tp-generate')?.addEventListener('click', async () => {
-      if (state.running) return; state.running = true; updateReady(); document.getElementById('tp-cancel').style.display = ''; setStatus('Đang khởi động JoyVASA…'); appendLog('Bắt đầu render AI Avatar.', 'info');
-      try {
-        const result = await window.electronAPI?.generateTalkingPortrait?.({ imagePath: state.imagePath, audioPath: state.audioPath, mode: state.mode, expression: Number(document.getElementById('tp-expression').value), head: Number(document.getElementById('tp-head').value), quality: document.getElementById('tp-quality').value });
-        if (!result?.ok) { appendLog(result?.error || 'JoyVASA không tạo được video.', 'error'); setStatus(result?.error || 'JoyVASA không tạo được video.', true); return; }
-        showOutput(result.outputPath); appendLog(`Hoàn tất: ${result.outputPath}`, 'success'); setStatus(`Hoàn tất · cfg ${result.cfg?.cfgScale} · motion ${result.cfg?.drivingMultiplier}`);
-      } catch (error) { appendLog(error?.message || 'Lỗi khi chạy JoyVASA.', 'error'); setStatus(error?.message || 'Lỗi khi chạy JoyVASA.', true); }
-      finally { state.running = false; document.getElementById('tp-cancel').style.display = 'none'; updateReady(); }
-    });
+    document.getElementById('tp-generate')?.addEventListener('click', async () => { if (state.running) return; state.running = true; updateReady(); document.getElementById('tp-cancel').style.display = ''; setStatus('Đang khởi động JoyVASA…'); appendLog('Bắt đầu render AI Avatar.'); try { const result = await window.electronAPI?.generateTalkingPortrait?.({ imagePath: state.imagePath, audioPath: state.audioPath, mode: state.mode, expression: Number(document.getElementById('tp-expression').value), head: Number(document.getElementById('tp-head').value), quality: document.getElementById('tp-quality').value }); if (!result?.ok) { appendLog(result?.error || 'JoyVASA không tạo được video.', 'error'); setStatus(result?.error || 'JoyVASA không tạo được video.', true); return; } showOutput(result.outputPath); appendLog(`Hoàn tất: ${result.outputPath}`, 'success'); setStatus(`Hoàn tất · cfg ${result.cfg?.cfgScale} · motion ${result.cfg?.drivingMultiplier}`); } catch (error) { appendLog(error?.message || 'Lỗi khi chạy JoyVASA.', 'error'); setStatus(error?.message || 'Lỗi khi chạy JoyVASA.', true); } finally { state.running = false; document.getElementById('tp-cancel').style.display = 'none'; updateReady(); } });
     state.unlisten = window.electronAPI?.onTalkingPortraitProgress?.((payload) => { if (payload?.message) { appendLog(payload.message, payload.type || 'info'); setStatus(payload.message.slice(-320), payload.type === 'error'); } });
   }
-
   function init() { ensureStyle(); mountNav(); mountPage(); bind(); refreshEngine(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(init, 120)); else setTimeout(init, 120);
 })();
