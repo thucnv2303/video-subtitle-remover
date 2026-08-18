@@ -42,6 +42,13 @@ New-Item -ItemType Directory -Force -Path $FlashRoot,$TransformerRoot | Out-Null
 @'
 import os
 import shutil
+import time
+
+# hf-xet can fail while reconstructing very large files on Windows with
+# "Background writer channel closed". Force the regular HTTP downloader.
+os.environ["HF_HUB_DISABLE_XET"] = "1"
+os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "0"
+
 from huggingface_hub import snapshot_download, hf_hub_download
 from modelscope import snapshot_download as ms_snapshot_download
 
@@ -52,19 +59,46 @@ audio_root = os.path.join(flash_root, "chinese-wav2vec2-base")
 transformer_root = os.path.join(flash_root, "transformer")
 os.makedirs(transformer_root, exist_ok=True)
 
+
+def retry(label, fn, attempts=3):
+    last = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return fn()
+        except Exception as exc:
+            last = exc
+            if attempt == attempts:
+                raise
+            wait_s = attempt * 5
+            print(f"[EchoMimicV3] {label} failed ({attempt}/{attempts}): {exc}")
+            print(f"[EchoMimicV3] Retry in {wait_s}s; existing downloaded files are kept.")
+            time.sleep(wait_s)
+    raise last
+
+
 wan_marker = os.path.join(wan_root, "model_index.json")
 if not os.path.exists(wan_marker):
-    print("[EchoMimicV3] Downloading Wan 1.3B base model...")
-    snapshot_download(repo_id="alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP", local_dir=wan_root)
+    print("[EchoMimicV3] Downloading/resuming Wan 1.3B base model (HTTP, single worker)...")
+    retry(
+        "Wan model download",
+        lambda: snapshot_download(
+            repo_id="alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP",
+            local_dir=wan_root,
+            max_workers=1,
+        ),
+    )
 else:
     print("[EchoMimicV3] Wan base model already present; skip download.")
 
 flash_target = os.path.join(transformer_root, "diffusion_pytorch_model.safetensors")
 if not os.path.exists(flash_target):
-    print("[EchoMimicV3] Downloading EchoMimicV3 Flash transformer...")
-    downloaded = hf_hub_download(
-        repo_id="BadToBest/EchoMimicV3",
-        filename="echomimicv3-flash-pro/diffusion_pytorch_model.safetensors",
+    print("[EchoMimicV3] Downloading/resuming EchoMimicV3 Flash transformer...")
+    downloaded = retry(
+        "Flash transformer download",
+        lambda: hf_hub_download(
+            repo_id="BadToBest/EchoMimicV3",
+            filename="echomimicv3-flash-pro/diffusion_pytorch_model.safetensors",
+        ),
     )
     shutil.copy2(downloaded, flash_target)
 else:
@@ -72,7 +106,10 @@ else:
 
 if not os.path.exists(os.path.join(audio_root, "config.json")):
     print("[EchoMimicV3] Downloading Chinese wav2vec2 audio encoder...")
-    ms_snapshot_download("TencentGameMate/chinese-wav2vec2-base", local_dir=audio_root)
+    retry(
+        "Audio encoder download",
+        lambda: ms_snapshot_download("TencentGameMate/chinese-wav2vec2-base", local_dir=audio_root),
+    )
 else:
     print("[EchoMimicV3] Audio encoder already present; skip download.")
 '@ | Set-Content -Encoding ASCII $DownloadScript
