@@ -18,7 +18,9 @@ function resolveEngineRoot() {
 
 function resolvePython(engineRoot) {
   const cfg = readConfig();
-  const candidates = [cfg.pythonPath, process.env.JOYVASA_PYTHON, engineRoot && path.join(engineRoot, '.venv', 'Scripts', 'python.exe'), engineRoot && path.join(engineRoot, 'venv', 'Scripts', 'python.exe')].filter(Boolean);
+  const appRoot = app.getAppPath();
+  const projectLocalPython = path.join(appRoot, 'tools', 'miniconda3', 'envs', 'joyvasa', 'python.exe');
+  const candidates = [cfg.pythonPath, process.env.JOYVASA_PYTHON, projectLocalPython, engineRoot && path.join(engineRoot, '.venv', 'Scripts', 'python.exe'), engineRoot && path.join(engineRoot, 'venv', 'Scripts', 'python.exe')].filter(Boolean);
   const explicit = candidates.find((candidate) => fs.existsSync(candidate));
   if (explicit) return { command: explicit, prefixArgs: [], mode: 'python' };
   return { command: 'conda', prefixArgs: ['run', '-n', 'joyvasa', 'python'], mode: 'conda' };
@@ -26,14 +28,20 @@ function resolvePython(engineRoot) {
 
 function requiredAssets(engineRoot) {
   if (!engineRoot) return [];
-  return [path.join(engineRoot, 'pretrained_weights', 'JoyVASA', 'motion_generator'), path.join(engineRoot, 'pretrained_weights', 'liveportrait', 'base_models')];
+  return [
+    path.join(engineRoot, 'pretrained_weights', 'JoyVASA', 'motion_generator'),
+    path.join(engineRoot, 'pretrained_weights', 'JoyVASA', 'motion_template'),
+    path.join(engineRoot, 'pretrained_weights', 'chinese-hubert-base', 'config.json'),
+    path.join(engineRoot, 'pretrained_weights', 'liveportrait', 'base_models'),
+    path.join(engineRoot, 'pretrained_weights', 'liveportrait', 'retargeting_models'),
+  ];
 }
 
 function engineStatus() {
   const engineRoot = resolveEngineRoot(); const python = resolvePython(engineRoot); const missing = [];
   if (!engineRoot) missing.push('JoyVASA/inference.py');
   for (const required of requiredAssets(engineRoot)) if (!fs.existsSync(required)) missing.push(path.relative(engineRoot, required));
-  return { ok: Boolean(engineRoot) && missing.length === 0, engineRoot, pythonMode: python.mode, pythonCommand: python.mode === 'python' ? python.command : 'conda run -n joyvasa python', missing, configured: readConfig(), running: Boolean(activeChild) };
+  return { ok: Boolean(engineRoot) && missing.length === 0 && python.mode === 'python', engineRoot, pythonMode: python.mode, pythonCommand: python.mode === 'python' ? python.command : 'conda run -n joyvasa python', missing: python.mode === 'python' ? missing : [...missing, 'JoyVASA Python runtime'], configured: readConfig(), running: Boolean(activeChild) };
 }
 
 async function chooseEngineRoot(event) {
