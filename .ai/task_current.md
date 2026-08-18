@@ -1,59 +1,66 @@
 # Current Task
 
 ## Task ID
-P1-P2-PER-JOB-EXPORT-NOVOCAL-034
+TALKING-PORTRAIT-JOYVASA-035
 
 ## Status
-KEYFRAME_FAIL_SOFT_SOURCE_PUBLISHED_OWNER_RUNTIME_WAITING_MERGE_BLOCKED
+SOURCE_PUBLISHED_OWNER_STATIC_AND_RUNTIME_WAITING_MERGE_BLOCKED
 
 ## Exact basis
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Branch: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034`.
-- Draft PR: #74.
-- Keyframe fail-soft source commit: `eab41008133fab56f2551417b3b7e7e5d23c0487`.
-- Base: `fbaa060bc9f604fc93e3e195e264ea27e78921fd`.
+- Branch: `review/TALKING-PORTRAIT-JOYVASA-035`.
+- Draft PR: #75.
+- Base: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034@0ee0ed2760622aab603a2088d6064ee747cad9ed`.
 
 ## User outcome
-P1 must not abort because one sampled MP4/VFR frame reported by metadata cannot be decoded. When enough usable keyframes remain, P1 continues to Vision/global reasoning. Task-034 per-Job exports and P2 no-vocal behavior remain unchanged.
+A standalone AI Avatar tab creates a talking-portrait MP4 from one portrait image and one voice file using a real local JoyVASA + LivePortrait runtime. It must not alter P1/P2/P3, Voice Render, or standalone subtitle removal authority.
 
-## Repair contract
-- Keep `sampleFrameIndexes()` architecture unchanged.
-- On requested keyframe failure, retry up to 3 earlier frame indexes.
-- Never duplicate a frame already accepted for the current visual context.
-- Log requested-frame failure, successful fallback, or skipped sample.
-- Keep the existing safety threshold unchanged: fewer than `Math.min(3, indexes.length)` usable frames fails P1.
-- Do not change ASR, AI narration/remix, path compatibility, task-034 export behavior, P2, Demucs, P3, Voice Render, or standalone Xóa Sub.
+## Acceptance contract
+1. AI Avatar page mounts independently and existing pages still navigate normally.
+2. Generate is disabled until image + audio + JoyVASA engine readiness are present.
+3. User may select an existing JoyVASA root; app persists only that local path in Electron userData config.
+4. Runtime uses argv-based child process spawning; input paths are validated and never interpolated into a shell string.
+5. Human mode is always used for this feature.
+6. Natural/Expressive/Calm and expression/head controls stay within bounded cfg/motion ranges.
+7. Eye/lip WIP upstream controls are not falsely exposed as functioning independent strengths.
+8. Output path is isolated and deterministic for the job; successful MP4 is previewed and can be opened or Save-As copied.
+9. Failure returns useful stderr/stdout tail; no fake-success output.
+10. Only one Avatar process may run; Cancel is available while running.
 
-## Required Owner verification
-Preflight in `E:\Project AI\Video-sub-remove-owner-test-LONG012`:
+## Required Owner static verification
 ```text
 git fetch origin
-git switch review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034
+git switch review/TALKING-PORTRAIT-JOYVASA-035
 git pull --ff-only
-node --check src/renderer/js/pipeline1-analysis.js
+node --check src/main/talking-portrait-engine.js
 node --check src/main/main-entry.js
 node --check src/main/preload.js
-node --check src/renderer/js/job-export-controls.js
-git diff --check fbaa060bc9f604fc93e3e195e264ea27e78921fd..HEAD
+node --check src/renderer/js/talking-portrait.js
+git diff --check 0ee0ed2760622aab603a2088d6064ee747cad9ed..HEAD
 ```
 
-Runtime with the same source video:
-`E:\Tải về\TikVideo.App_7595712770348827761.mp4`
+## Required Owner runtime verification
+Prerequisite: upstream JoyVASA installed with required weights, FFmpeg, CUDA-compatible PyTorch and either a configured Python executable or conda env named `joyvasa`.
 
-Acceptance order:
-1. P1 ASR still completes.
-2. If requested frame 1386 fails, log shows the failure plus either a previous-frame fallback or sample skip.
-3. With enough usable frames, P1 continues into Vision/global reasoning and completes rather than aborting on HTTP 400.
-4. Only after P1 completes, continue task-034 checks: P1 `↓ Kết quả`, P2 `↓ P2`, P2 `♬ Xóa giọng`, then `↓ Không giọng`.
-5. Canonical P2 output/P3 authority remains unchanged.
+Scenario:
+1. Open AI Avatar; engine status is truthful.
+2. If not auto-detected, click `Chọn engine` and select the JoyVASA repository root containing `inference.py`.
+3. Select a clear frontal human portrait and a short Vietnamese voice file.
+4. Run `Chất lượng cao` / `Tự nhiên` first.
+5. Observe live status; app remains responsive.
+6. Final MP4 appears in preview with the supplied audio and visible talking/head motion.
+7. `Mở video` works and `Lưu bản sao` creates a copy without modifying canonical pipeline outputs.
+8. Run a second short job with `Sinh động`; verify stronger but bounded motion.
+9. Start a job and test `Dừng`; verify process ends without false completion.
+10. Smoke-check P1/P2/P3/Voice Render/Xóa Sub navigation after Avatar test.
 
 ## Gates
-- Execution: PASS for fail-soft source publication.
-- Automated/static: WAITING exact Owner checkout preflight; no GitHub CI run is available.
-- Code review: PASS for narrow GitHub diff/full-file review.
-- Owner runtime: WAITING same-video rerun.
-- Documentation synchronization: IN PROGRESS until handoff/ACTIVE sync completes.
+- Execution: PASS.
+- Automated/static: WAITING Owner exact-checkout commands.
+- Code review: IN PROGRESS pending final exact-HEAD review.
+- Owner runtime: NOT STARTED.
+- Documentation sync: IN PROGRESS.
 - Merge: BLOCKED.
 
 ## Next action
-Synchronize remaining canonical docs, then Owner runs the exact preflight and same-video runtime scenario. Do not merge.
+Finish docs, perform final GitHub diff/full-file review, then hand exact HEAD to Owner for static + real GPU runtime verification. No merge.
