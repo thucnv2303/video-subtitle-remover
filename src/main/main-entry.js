@@ -2,9 +2,14 @@ const { app, ipcMain, dialog, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { burnP3SubtitleHq, retimeP3Video } = require('./p3-export-bridge');
+const talkingPortrait = require('./talking-portrait-engine');
 
 ipcMain.handle('p3:burnSubtitleHq', async (event, payload) => burnP3SubtitleHq(payload));
 ipcMain.handle('p3:retimeVideo', async (event, payload) => retimeP3Video(payload));
+ipcMain.handle('talking-portrait:status', async () => talkingPortrait.engineStatus());
+ipcMain.handle('talking-portrait:chooseEngine', async (event) => talkingPortrait.chooseEngineRoot(event));
+ipcMain.handle('talking-portrait:generate', async (event, payload) => talkingPortrait.spawnJoyVasa(event, payload));
+ipcMain.handle('talking-portrait:cancel', async () => talkingPortrait.cancel());
 ipcMain.handle('app:saveCopy', async (event, payload = {}) => {
   const sourcePath = path.resolve(String(payload.sourcePath || ''));
   if (!sourcePath || !fs.existsSync(sourcePath)) return { ok: false, error: 'Không tìm thấy file kết quả để tải.' };
