@@ -29,6 +29,8 @@ Run-Step 'git' @('-C',$RepoRoot,'fetch','origin')
 Run-Step 'git' @('-C',$RepoRoot,'checkout','--detach',$UpstreamCommit)
 
 Run-Step $Python @('-m','pip','install','-r',(Join-Path $RepoRoot 'requirements.txt'))
+Run-Step $Python @('-m','pip','install','pyloudnorm')
+Run-Step $Python @('-c','import pyloudnorm; print("pyloudnorm-import-ok")')
 Run-Step $Python @('-m','pip','install','--upgrade','torch==2.8.0','torchvision==0.23.0','torchaudio==2.8.0','--index-url','https://download.pytorch.org/whl/cu128')
 Run-Step $Python @('-m','pip','install','huggingface_hub','modelscope')
 
