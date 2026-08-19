@@ -1,54 +1,41 @@
 # Current Task
 
 ## Task ID
-TALKING-PORTRAIT-JOYVASA-035
+WAN-ANIMATE-BENCHMARK-037
 
 ## Status
-SOURCE_BOOTSTRAP_PUBLISHED_OWNER_STATIC_AND_GPU_RUNTIME_WAITING_MERGE_BLOCKED
+HARNESS_PUBLISHED_RTX5060TI_RUNTIME_WAITING_MERGE_BLOCKED
 
 ## Exact basis
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Branch: `review/TALKING-PORTRAIT-JOYVASA-035`.
-- Draft PR: #75.
-- Base: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034@0ee0ed2760622aab603a2088d6064ee747cad9ed`.
-- JoyVASA bootstrap pin: `916a90f8de490e8648fee460c1200bd5d9a795af`.
+- Branch: `review/WAN-ANIMATE-BENCHMARK-037`.
+- Base SHA: `1b1b8ba4b82078534b7fa24582be7e44688319bd`.
+- Task 036 / PR #76 head `d6274aaff8109fd1637c885389ff952996d3ab01` is explicitly excluded.
+- Upstream research pin: `Wan-Video/Wan2.2@42bf4cfaa384bc21833865abc2f9e6c0e67233dc`.
 
 ## User outcome
-Standalone AI Avatar creates a talking portrait MP4 from one image + one voice file with local JoyVASA, without changing P1/P2/P3/Voice Render/Xoa Sub authority.
+Benchmark real Wan2.2-Animate-14B Character Replacement on RTX 5060 Ti 16GB before building AI Video Remix UI.
 
 ## Acceptance
-- Truthful engine readiness and no fake generation.
-- Separate `joyvasa` environment; app's existing Python environment remains untouched.
-- Safe argv child process, one job at a time, cancellable.
-- Bounded presets map only to supported JoyVASA parameters.
-- Output is isolated, previewable, openable and Save Copy exportable.
-- Vietnamese audio is accepted as driving audio; quality itself is determined by real runtime evidence.
+- 3–5 second source video + one reference image.
+- Replace Character mode.
+- Prefer 480p.
+- Real generated MP4.
+- No CUDA OOM on RTX 5060 Ti 16GB.
+- Source timing/audio retained within practical mux tolerance.
+- Owner judges identity reasonable, body motion faithful, background stable.
+- No UI or existing pipeline integration.
 
-## Required Owner commands
-```text
-git fetch origin
-git switch review/TALKING-PORTRAIT-JOYVASA-035
-git pull --ff-only
-node --check src/main/talking-portrait-engine.js
-node --check src/main/main-entry.js
-node --check src/main/preload.js
-node --check src/renderer/js/talking-portrait.js
-node scripts/verify-talking-portrait.js
-powershell -ExecutionPolicy Bypass -File scripts/setup-joyvasa.ps1
-git diff --check 0ee0ed2760622aab603a2088d6064ee747cad9ed..HEAD
-```
+## Runtime
+Use dedicated worktree `E:\Project AI\Video-sub-remove-wan-benchmark` and run `scripts/run-wan-animate-benchmark.ps1` with explicit source video, reference image, Wan checkout and Animate checkpoint paths.
 
-## Runtime acceptance
-1. AI Avatar reports Ready after bootstrap.
-2. Frontal portrait + short Vietnamese voice generates an MP4 with audio and visible lip/head motion.
-3. Preview/Open/Save Copy work.
-4. A second job can be cancelled without false success.
-5. Existing P1/P2/P3/Voice Render/Xoa Sub navigation still smoke-passes.
+## Fallback rule
+If the official single-GPU path OOMs after CPU T5 + model offload + dtype conversion at 832x480, record that failure. Then revise/spike WanVideoWrapper/ComfyUI FP8/quantized + block/model offload. Do not silently change backend and call the official path PASS.
 
 ## Gates
-- Execution: PASS.
-- Automated/static: WAITING Owner exact checkout.
-- Code review: PASS before final exact-HEAD docs re-read.
-- Owner runtime: NOT STARTED.
-- Documentation sync: IN PROGRESS until handoff update.
-- Merge: BLOCKED.
+- Execution: PASS for harness publication.
+- Automated verification: WAITING.
+- Code review: WAITING.
+- Owner GPU runtime: NOT STARTED.
+- Documentation synchronization: IN PROGRESS.
+- Merge permission: BLOCKED.
