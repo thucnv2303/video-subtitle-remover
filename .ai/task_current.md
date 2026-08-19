@@ -4,58 +4,48 @@
 TALKING-PORTRAIT-ECHOMIMICV3-036
 
 ## Status
-OWNER_RETEST_WAITING_AFTER_CUDA_OOM_MITIGATION_MERGE_BLOCKED
+CONTROLLED_SEQUENTIAL_CPU_OFFLOAD_PUBLISHED_OWNER_RETEST_WAITING_MERGE_BLOCKED
 
 ## Exact basis
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Branch: `review/TALKING-PORTRAIT-ECHOMIMICV3-036`.
 - Draft PR: #76.
 - Base: `review/TALKING-PORTRAIT-JOYVASA-035@1b1b8ba4b82078534b7fa24582be7e44688319bd`.
-- Latest source mitigation commit: `2d5874b079f434ddf8a8d8908f2dbce527273506`.
+- Low-VRAM source commit: `e5d4ea273759f70b7030cd7073f1035948d9e53e`.
 - EchoMimicV3 upstream pin: `7e89489ca51c0d008fc1963ec6c03fc5bd0b9397`.
 
 ## User outcome
-Use EchoMimicV3 Flash as the AI Avatar `Chất lượng cao` renderer while preserving JoyVASA as the fast/preview path. The immediate objective is to obtain one real quality benchmark MP4 on the Owner RTX 5060 Ti 16 GB without lowering quality prematurely.
+Use EchoMimicV3 Flash as AI Avatar `Chất lượng cao` while preserving JoyVASA as fast/preview. Obtain one real quality MP4 on RTX 5060 Ti 16 GB without lowering spatial quality prematurely.
 
-## Verified current blocker
-The first real EchoMimicV3 quality run reached inference and loaded the Flash checkpoint, then failed in VAE mask latent encoding with CUDA OOM. The GPU had 15.93 GiB total VRAM and could not allocate an additional 540 MiB. This supersedes earlier setup/dependency blockers.
+## Verified blocker and root cause
+The 768p/49-frame mitigation still OOMed in VAE mask latent encoding, again requiring 540 MiB after physical VRAM was exhausted. `expandable_segments` is unsupported on this Windows Torch build. Upstream accepted a `GPU_memory_mode` argument but did not use it; two unconditional `pipeline.to(device=device)` calls kept the whole pipeline on CUDA.
 
-## Current mitigation under test
-`src/main/echomimicv3-engine.js` at source commit `2d5874b079f434ddf8a8d8908f2dbce527273506`:
-- 768x768, 25 FPS, 8 inference steps retained;
-- `video_length` 81 -> 49 frames;
-- TeaCache offload enabled;
-- child env sets `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`;
-- misleading sequential CPU offload claim removed;
-- explicit OOM classification added.
+## Controlled mitigation under test
+- Keep 768x768, 25 FPS, 49 frames, Flash 8-step and TeaCache offload.
+- Patch exact pinned upstream so `GPU_memory_mode=sequential_cpu_offload` calls `pipeline.enable_sequential_cpu_offload()` and does not subsequently force the full pipeline back to CUDA.
+- Setup applies/verifies the patch with marker `VSR_LOW_VRAM_OFFLOAD_V1`.
+- Engine requires the marker before reporting Ready and passes the mode explicitly.
+- No random quality reductions are permitted.
 
-## Owner retest
-From `E:\Project AI\Video-sub-remove-owner-test-LONG012`:
-```text
-git fetch origin
-git merge --ff-only origin/review/TALKING-PORTRAIT-ECHOMIMICV3-036
-git rev-parse HEAD
-```
-The exact HEAD for the retest must be the latest branch HEAD after canonical docs synchronization, not merely the source commit above.
+## Owner retest procedure
+From `E:\Project AI\Video-sub-remove-owner-test-LONG012`, fast-forward to the latest branch HEAD, run the setup script once, confirm the low-VRAM READY marker, restart the app, then render the same portrait + Vietnamese voice with `Chất lượng cao`.
 
-Then restart the app; do not rerun model setup unless engine readiness is no longer Ready. Use the same portrait and Vietnamese voice, select `Chất lượng cao`, and render.
+Required runtime evidence:
+- setup: `[EchoMimicV3] low-vram: sequential CPU offload V1`;
+- render: `VSR_LOW_VRAM_OFFLOAD_V1: sequential CPU offload enabled.`;
+- either a real MP4 is produced or the exact new failure log is captured.
 
-## Acceptance for next report
-- EchoMimicV3 starts on the 49-frame profile.
-- No CUDA OOM; an MP4 is produced, OR a new exact failure log is captured.
-- If MP4 succeeds, Owner evaluates mouth sync, eye/blink activity, facial expression, head motion, temporal stability, and realism versus JoyVASA.
-- If OOM persists, stop. Do not manually reduce resolution/settings; PM must design the next controlled low-VRAM profile.
+If OOM persists: STOP. Do not manually lower resolution, frames or settings.
 
 ## Gates
-- Execution: PASS for current mitigation publication.
-- Automated/static: WAITING final exact HEAD verification.
-- Code review: WAITING final exact HEAD review.
+- Execution: PASS for low-VRAM source publication.
+- Automated/static: WAITING Owner exact-HEAD/setup evidence; GitHub has no CI status for the source commit.
+- Code review: PASS for narrow source diff/full files.
 - Owner runtime: WAITING RETEST.
-- Documentation sync: IN PROGRESS until handoff is synchronized and files are re-read.
+- Documentation sync: PASS after final exact-HEAD re-read.
 - Merge: BLOCKED.
 
 ## Forbidden
 - Do not merge PR #76.
-- Do not modify P1/P2/P3, Voice Render, standalone Xoa Sub, or task 034.
-- Do not reinstall/change the JoyVASA runtime.
-- Do not guess multiple quality reductions after another OOM.
+- Do not modify P1/P2/P3, Voice Render, standalone Xoa Sub, task 034, or JoyVASA runtime.
+- Do not retry with arbitrary lower quality if sequential offload still OOMs.
