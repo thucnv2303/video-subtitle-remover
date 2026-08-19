@@ -28,10 +28,18 @@ def main() -> None:
         raise RuntimeError("Partial V2 runtime markers detected; refusing transform")
 
     full_gpu_line = "    pipeline.to(device=device)\n"
-    if text.count(full_gpu_line) != 2:
-        raise RuntimeError(f"Expected exactly two full-pipeline CUDA placements; found {text.count(full_gpu_line)}")
+    positions = []
+    search_from = 0
+    while True:
+        pos = text.find(full_gpu_line, search_from)
+        if pos < 0:
+            break
+        positions.append(pos)
+        search_from = pos + len(full_gpu_line)
+    if len(positions) != 2:
+        raise RuntimeError(f"Expected exactly two full-pipeline CUDA placements; found {len(positions)}")
 
-    first = text.index(full_gpu_line)
+    first, second = positions
     offload_block = (
         "    if GPU_memory_mode == \"sequential_cpu_offload\":\n"
         "        print(\"VSR_LOW_VRAM_OFFLOAD_V2: sequential CPU offload + chunked long-audio enabled.\")\n"
@@ -42,10 +50,12 @@ def main() -> None:
         "    else:\n"
         "        raise ValueError(f\"Unsupported GPU_memory_mode: {GPU_memory_mode}\")\n"
     )
-    text = text[:first] + offload_block + text[first + len(full_gpu_line):]
-
-    second = require_single(text, full_gpu_line, "remaining full-pipeline CUDA placement")
-    text = text[:second] + text[second + len(full_gpu_line):]
+    text = (
+        text[:first]
+        + offload_block
+        + text[first + len(full_gpu_line):second]
+        + text[second + len(full_gpu_line):]
+    )
 
     import_line = "from moviepy import VideoFileClip, AudioFileClip\n"
     require_single(text, import_line, "MoviePy import")
@@ -74,7 +84,6 @@ def main() -> None:
             raise ValueError("video_length must allow at least 5 frames for chunked rendering")
         chunk_stride = chunk_max_frames - 1
 
-        # Extract Wav2Vec features once for the whole voice on CPU. Only each chunk is moved to CUDA.
         mel_input, sr = librosa.load(audio_path, sr=16000)
         mel_input = loudness_norm(mel_input, sr)
         print(f"VSR_LONG_AUDIO_V2: duration={audio_clip.duration:.3f}s total_frames={total_video_frames} chunk_frames={chunk_max_frames} stride={chunk_stride}")
