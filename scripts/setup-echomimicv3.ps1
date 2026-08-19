@@ -76,8 +76,14 @@ def retry(label, fn, attempts=3):
     raise last
 
 
-wan_marker = os.path.join(wan_root, "model_index.json")
-if not os.path.exists(wan_marker):
+wan_required = [
+    os.path.join(wan_root, "config.json"),
+    os.path.join(wan_root, "diffusion_pytorch_model.safetensors"),
+    os.path.join(wan_root, "Wan2.1_VAE.pth"),
+    os.path.join(wan_root, "models_t5_umt5-xxl-enc-bf16.pth"),
+    os.path.join(wan_root, "models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth"),
+]
+if not all(os.path.exists(path) for path in wan_required):
     print("[EchoMimicV3] Downloading/resuming Wan 1.3B base model (HTTP, single worker)...")
     retry(
         "Wan model download",
@@ -132,7 +138,11 @@ Run-Step $Python @($smokePath)
 $missing = @()
 @(
   (Join-Path $RepoRoot 'infer_flash.py'),
-  (Join-Path $WanRoot 'model_index.json'),
+  (Join-Path $WanRoot 'config.json'),
+  (Join-Path $WanRoot 'diffusion_pytorch_model.safetensors'),
+  (Join-Path $WanRoot 'Wan2.1_VAE.pth'),
+  (Join-Path $WanRoot 'models_t5_umt5-xxl-enc-bf16.pth'),
+  (Join-Path $WanRoot 'models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth'),
   (Join-Path $AudioRoot 'config.json'),
   (Join-Path $TransformerRoot 'diffusion_pytorch_model.safetensors')
 ) | ForEach-Object { if (-not (Test-Path $_)) { $missing += $_ } }
