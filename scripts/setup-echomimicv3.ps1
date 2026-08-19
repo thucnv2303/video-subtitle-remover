@@ -30,8 +30,15 @@ Run-Step 'git' @('-C',$RepoRoot,'fetch','origin')
 Run-Step 'git' @('-C',$RepoRoot,'checkout','--detach',$UpstreamCommit)
 
 if (-not (Test-Path $LowVramPatch)) { throw "Thiếu low-VRAM patch: $LowVramPatch" }
-& git -C $RepoRoot apply --reverse --check $LowVramPatch 2>$null
-if ($LASTEXITCODE -eq 0) {
+$previousErrorActionPreference = $ErrorActionPreference
+try {
+  $ErrorActionPreference = 'Continue'
+  & git -C $RepoRoot apply --reverse --check $LowVramPatch 2>$null
+  $patchAlreadyApplied = ($LASTEXITCODE -eq 0)
+} finally {
+  $ErrorActionPreference = $previousErrorActionPreference
+}
+if ($patchAlreadyApplied) {
   Write-Host '[EchoMimicV3] VSR low-VRAM patch already applied.'
 } else {
   Run-Step 'git' @('-C',$RepoRoot,'apply','--check',$LowVramPatch)

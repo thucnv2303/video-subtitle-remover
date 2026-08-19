@@ -8,8 +8,8 @@ diff --git a/infer_flash.py b/infer_flash.py
          if fsdp_dit:
              shard_fn = partial(shard_model, device_id=device, param_dtype=weight_dtype)
              pipeline.transformer = shard_fn(pipeline.transformer)
- 
- 
+
+
 -    pipeline.to(device=device)
 +    if GPU_memory_mode == "sequential_cpu_offload":
 +        print("VSR_LOW_VRAM_OFFLOAD_V1: sequential CPU offload enabled.")
@@ -19,13 +19,13 @@ diff --git a/infer_flash.py b/infer_flash.py
 +        pipeline.to(device=device)
 +    else:
 +        raise ValueError(f"Unsupported GPU_memory_mode: {GPU_memory_mode}")
- 
+
      coefficients = get_teacache_coefficients(model_name) if enable_teacache else None
 @@ -307,7 +314,6 @@ def main():
- 
+
      generator = torch.Generator(device=device).manual_seed(seed)
- 
+
 -    pipeline.to(device=device)
- 
+
      # Create output directory
      if not os.path.exists(save_path):
