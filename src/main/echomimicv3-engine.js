@@ -6,6 +6,7 @@ const ROOT = 'C:\\VSR-EchoMimicV3';
 const REPO = path.join(ROOT, 'repo');
 const PYTHON = path.join(ROOT, 'venv', 'Scripts', 'python.exe');
 const FLASH = path.join(ROOT, 'flash');
+const LOW_VRAM_MARKER = 'VSR_LOW_VRAM_OFFLOAD_V1';
 let activeChild = null;
 
 function assets() {
@@ -33,7 +34,12 @@ function status() {
     a.transformer,
   ];
   const missing = required.filter(x => !fs.existsSync(x));
-  return { ok: missing.length === 0, name: 'EchoMimicV3 Flash', runtimeRoot: ROOT, missing, running: Boolean(activeChild) };
+  let lowVramPatched = false;
+  if (fs.existsSync(a.script)) {
+    try { lowVramPatched = fs.readFileSync(a.script, 'utf8').includes(LOW_VRAM_MARKER); } catch (_) { lowVramPatched = false; }
+  }
+  if (!lowVramPatched) missing.push('EchoMimicV3 low-VRAM runtime patch V1');
+  return { ok: missing.length === 0, name: 'EchoMimicV3 Flash', runtimeRoot: ROOT, missing, running: Boolean(activeChild), lowVramPatched };
 }
 
 function safeFile(value, exts, label) {
@@ -76,7 +82,7 @@ async function generate(event, payload = {}) {
   emit('info', `Engine: EchoMimicV3 Flash · upstream pinned · 8-step`);
   emit('info', `Input staged: ${image}`);
   emit('info', `Voice staged: ${audio}`);
-  emit('info', 'Owner benchmark profile: 768x768 · 25 FPS · 49 frames · TeaCache offload.');
+  emit('info', 'Owner low-VRAM profile: 768x768 · 25 FPS · 49 frames · sequential CPU offload · TeaCache offload.');
 
   const args = [a.script,
     '--image_path', image, '--audio_path', audio,
@@ -86,6 +92,7 @@ async function generate(event, payload = {}) {
     '--sampler_name', 'Flow_Unipc', '--video_length', '49', '--guidance_scale', '5.0',
     '--audio_guidance_scale', '2.0', '--audio_scale', '1.0', '--neg_scale', '1.0', '--neg_steps', '0',
     '--seed', '43', '--enable_teacache', '--teacache_threshold', '0.1', '--num_skip_start_steps', '5', '--teacache_offload',
+    '--GPU_memory_mode', 'sequential_cpu_offload',
     '--ulysses_degree', '1', '--ring_degree', '1', '--weight_dtype', 'bfloat16', '--sample_size', '768', '768',
     '--fps', '25', '--add_prompt', '', '--negative_prompt', 'static face, frozen expression, stiff head, bad mouth, deformed face, jitter', '--shift', '5.0'];
 
@@ -95,7 +102,6 @@ async function generate(event, payload = {}) {
       ...process.env,
       PYTHONUTF8: '1',
       PYTHONIOENCODING: 'utf-8',
-      PYTORCH_CUDA_ALLOC_CONF: 'expandable_segments:True',
     };
     const child = spawn(PYTHON, args, { cwd: REPO, windowsHide: true, env });
     activeChild = child;
@@ -112,12 +118,12 @@ async function generate(event, payload = {}) {
         const isOom = /CUDA out of memory|torch\.OutOfMemoryError/i.test(combined);
         const tail = (stderr||stdout).trim().split(/\r?\n/).slice(-16).join('\n');
         const error = isOom
-          ? 'EchoMimicV3 hết VRAM trên profile 768p/49 frames. Không tự hạ chất lượng; cần chuyển sang profile low-VRAM có kiểm soát.'
+          ? 'EchoMimicV3 vẫn hết VRAM với profile sequential CPU offload 768p/49 frames. Dừng retry; cần PM review profile tiếp theo.'
           : (tail || `EchoMimicV3 kết thúc với mã ${code}.`);
         resolve({ok:false,runId,error,code,outputDir,oom:isOom}); return;
       }
       settled=true; emit('success',`EchoMimicV3 hoàn tất: ${outputPath}`);
-      resolve({ok:true,runId,outputPath,outputDir,engine:'echomimicv3',ratio:'source',profile:'flash-8step-768-49f'});
+      resolve({ok:true,runId,outputPath,outputDir,engine:'echomimicv3',ratio:'source',profile:'flash-8step-768-49f-sequential-offload'});
     });
   });
 }

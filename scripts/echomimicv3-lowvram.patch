@@ -1,0 +1,31 @@
+diff --git a/infer_flash.py b/infer_flash.py
+--- a/infer_flash.py
++++ b/infer_flash.py
+@@ -291,11 +291,18 @@ def main():
+     if ulysses_degree > 1 or ring_degree > 1:
+         from functools import partial
+         transformer.enable_multi_gpus_inference()
+         if fsdp_dit:
+             shard_fn = partial(shard_model, device_id=device, param_dtype=weight_dtype)
+             pipeline.transformer = shard_fn(pipeline.transformer)
+ 
+ 
+-    pipeline.to(device=device)
++    if GPU_memory_mode == "sequential_cpu_offload":
++        print("VSR_LOW_VRAM_OFFLOAD_V1: sequential CPU offload enabled.")
++        pipeline.enable_sequential_cpu_offload()
++    elif GPU_memory_mode == "full_gpu":
++        print("VSR_LOW_VRAM_OFFLOAD_V1: full GPU mode enabled.")
++        pipeline.to(device=device)
++    else:
++        raise ValueError(f"Unsupported GPU_memory_mode: {GPU_memory_mode}")
+ 
+     coefficients = get_teacache_coefficients(model_name) if enable_teacache else None
+@@ -307,7 +314,6 @@ def main():
+ 
+     generator = torch.Generator(device=device).manual_seed(seed)
+ 
+-    pipeline.to(device=device)
+ 
+     # Create output directory
+     if not os.path.exists(save_path):

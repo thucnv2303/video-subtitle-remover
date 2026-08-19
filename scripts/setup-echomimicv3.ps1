@@ -6,6 +6,7 @@ $VenvRoot = Join-Path $RuntimeRoot 'venv'
 $Python = Join-Path $VenvRoot 'Scripts\python.exe'
 $UpstreamCommit = '7e89489ca51c0d008fc1963ec6c03fc5bd0b9397'
 $BootstrapPython = 'C:\VSR-JoyVASA\venv\Scripts\python.exe'
+$LowVramPatch = Join-Path $PSScriptRoot 'echomimicv3-lowvram.patch'
 
 function Run-Step([string]$File, [string[]]$Arguments) {
   if (-not $Arguments -or $Arguments.Count -eq 0) { throw "Refusing to launch command without arguments: $File" }
@@ -27,6 +28,16 @@ Run-Step $Python @('-m','pip','install','--upgrade','pip','setuptools','wheel')
 if (-not (Test-Path (Join-Path $RepoRoot '.git'))) { Run-Step 'git' @('clone','https://github.com/antgroup/echomimic_v3.git',$RepoRoot) }
 Run-Step 'git' @('-C',$RepoRoot,'fetch','origin')
 Run-Step 'git' @('-C',$RepoRoot,'checkout','--detach',$UpstreamCommit)
+
+if (-not (Test-Path $LowVramPatch)) { throw "Thiếu low-VRAM patch: $LowVramPatch" }
+& git -C $RepoRoot apply --reverse --check $LowVramPatch 2>$null
+if ($LASTEXITCODE -eq 0) {
+  Write-Host '[EchoMimicV3] VSR low-VRAM patch already applied.'
+} else {
+  Run-Step 'git' @('-C',$RepoRoot,'apply','--check',$LowVramPatch)
+  Run-Step 'git' @('-C',$RepoRoot,'apply',$LowVramPatch)
+  Write-Host '[EchoMimicV3] Applied VSR low-VRAM patch V1.'
+}
 
 Run-Step $Python @('-m','pip','install','-r',(Join-Path $RepoRoot 'requirements.txt'))
 Run-Step $Python @('-m','pip','install','pyloudnorm')
@@ -138,9 +149,14 @@ print('cuda-smoke', x.item())
 '@ | Set-Content -Encoding ASCII $smokePath
 Run-Step $Python @($smokePath)
 
+$inferFlash = Join-Path $RepoRoot 'infer_flash.py'
+if (-not (Select-String -Path $inferFlash -Pattern 'VSR_LOW_VRAM_OFFLOAD_V1' -Quiet)) {
+  throw 'EchoMimicV3 low-VRAM patch marker missing after setup.'
+}
+
 $missing = @()
 @(
-  (Join-Path $RepoRoot 'infer_flash.py'),
+  $inferFlash,
   (Join-Path $WanRoot 'config.json'),
   (Join-Path $WanRoot 'diffusion_pytorch_model.safetensors'),
   (Join-Path $WanRoot 'Wan2.1_VAE.pth'),
@@ -152,5 +168,6 @@ $missing = @()
 if ($missing.Count -gt 0) { throw "Thiếu asset EchoMimicV3: $($missing -join ', ')" }
 
 Write-Host '[EchoMimicV3] READY'
+Write-Host '[EchoMimicV3] low-vram: sequential CPU offload V1'
 Write-Host "[EchoMimicV3] runtime: $RuntimeRoot"
 Write-Host "[EchoMimicV3] upstream: $UpstreamCommit"
