@@ -76,22 +76,28 @@ async function generate(event, payload = {}) {
   emit('info', `Engine: EchoMimicV3 Flash · upstream pinned · 8-step`);
   emit('info', `Input staged: ${image}`);
   emit('info', `Voice staged: ${audio}`);
-  emit('info', 'Quality test profile: 768x768 · 25 FPS · TeaCache · sequential CPU offload.');
+  emit('info', 'Owner benchmark profile: 768x768 · 25 FPS · 49 frames · TeaCache offload.');
 
   const args = [a.script,
     '--image_path', image, '--audio_path', audio,
     '--prompt', 'A natural person is speaking with realistic facial expressions, subtle head movement, blinking and conversational emotion.',
     '--num_inference_steps', '8', '--config_path', a.config, '--model_name', a.model,
     '--transformer_path', a.transformer, '--save_path', outputDir, '--wav2vec_model_dir', a.audio,
-    '--sampler_name', 'Flow_Unipc', '--video_length', '81', '--guidance_scale', '5.0',
+    '--sampler_name', 'Flow_Unipc', '--video_length', '49', '--guidance_scale', '5.0',
     '--audio_guidance_scale', '2.0', '--audio_scale', '1.0', '--neg_scale', '1.0', '--neg_steps', '0',
-    '--seed', '43', '--enable_teacache', '--teacache_threshold', '0.1', '--num_skip_start_steps', '5',
+    '--seed', '43', '--enable_teacache', '--teacache_threshold', '0.1', '--num_skip_start_steps', '5', '--teacache_offload',
     '--ulysses_degree', '1', '--ring_degree', '1', '--weight_dtype', 'bfloat16', '--sample_size', '768', '768',
     '--fps', '25', '--add_prompt', '', '--negative_prompt', 'static face, frozen expression, stiff head, bad mouth, deformed face, jitter', '--shift', '5.0'];
 
   return new Promise(resolve => {
     let stdout = ''; let stderr = ''; let settled = false;
-    const child = spawn(PYTHON, args, { cwd: REPO, windowsHide: true, env: { ...process.env, PYTHONUTF8:'1', PYTHONIOENCODING:'utf-8' } });
+    const env = {
+      ...process.env,
+      PYTHONUTF8: '1',
+      PYTHONIOENCODING: 'utf-8',
+      PYTORCH_CUDA_ALLOC_CONF: 'expandable_segments:True',
+    };
+    const child = spawn(PYTHON, args, { cwd: REPO, windowsHide: true, env });
     activeChild = child;
     child.stdout.on('data', c => { const t=c.toString(); stdout += t; emit('info',t); });
     child.stderr.on('data', c => { const t=c.toString(); stderr += t; emit('info',t); });
@@ -101,11 +107,17 @@ async function generate(event, payload = {}) {
       if (settled) return;
       const outputPath = findNewestMp4(outputDir);
       if (code !== 0 || !outputPath) {
-        settled=true; const tail=(stderr||stdout).trim().split(/\r?\n/).slice(-16).join('\n');
-        resolve({ok:false,runId,error:tail || `EchoMimicV3 kết thúc với mã ${code}.`,code,outputDir}); return;
+        settled=true;
+        const combined = `${stderr}\n${stdout}`;
+        const isOom = /CUDA out of memory|torch\.OutOfMemoryError/i.test(combined);
+        const tail = (stderr||stdout).trim().split(/\r?\n/).slice(-16).join('\n');
+        const error = isOom
+          ? 'EchoMimicV3 hết VRAM trên profile 768p/49 frames. Không tự hạ chất lượng; cần chuyển sang profile low-VRAM có kiểm soát.'
+          : (tail || `EchoMimicV3 kết thúc với mã ${code}.`);
+        resolve({ok:false,runId,error,code,outputDir,oom:isOom}); return;
       }
       settled=true; emit('success',`EchoMimicV3 hoàn tất: ${outputPath}`);
-      resolve({ok:true,runId,outputPath,outputDir,engine:'echomimicv3',ratio:'source',profile:'flash-8step-768'});
+      resolve({ok:true,runId,outputPath,outputDir,engine:'echomimicv3',ratio:'source',profile:'flash-8step-768-49f'});
     });
   });
 }
