@@ -20,7 +20,7 @@ New-Item -ItemType Directory -Force -Path $RuntimeRoot | Out-Null
 if (-not (Test-Path $BootstrapPython)) {
   $py = Get-Command py -ErrorAction SilentlyContinue
   if ($py) { $BootstrapPython = 'py'; $bootstrapArgs = @('-3.10') }
-  else { throw 'Không tìm thấy Python 3.10 bootstrap. Hãy chạy setup JoyVASA trước hoặc cài Python 3.10.' }
+  else { throw 'Python 3.10 bootstrap not found. Run JoyVASA setup first or install Python 3.10.' }
 } else { $bootstrapArgs = @() }
 
 if (-not (Test-Path $Python)) { Run-Step $BootstrapPython ($bootstrapArgs + @('-m','venv',$VenvRoot)) }
@@ -30,8 +30,8 @@ if (-not (Test-Path (Join-Path $RepoRoot '.git'))) { Run-Step 'git' @('clone','h
 Run-Step 'git' @('-C',$RepoRoot,'fetch','origin')
 Run-Step 'git' @('-C',$RepoRoot,'checkout','--detach',$UpstreamCommit)
 
-if (-not (Test-Path $LowVramPatch)) { throw "Thiếu low-VRAM patch V2: $LowVramPatch" }
-if (-not (Test-Path $LegacyLowVramPatch)) { throw "Thiếu legacy low-VRAM patch V1: $LegacyLowVramPatch" }
+if (-not (Test-Path $LowVramPatch)) { throw "Missing low-VRAM patch V2: $LowVramPatch" }
+if (-not (Test-Path $LegacyLowVramPatch)) { throw "Missing legacy low-VRAM patch V1: $LegacyLowVramPatch" }
 $inferFlash = Join-Path $RepoRoot 'infer_flash.py'
 $inferSource = Get-Content -Raw -Path $inferFlash
 if ($inferSource.Contains('VSR_LOW_VRAM_OFFLOAD_V2')) {
@@ -45,8 +45,8 @@ if ($inferSource.Contains('VSR_LOW_VRAM_OFFLOAD_V2')) {
   Write-Host '[EchoMimicV3] Applied VSR low-VRAM patch V2.'
 } else {
   $runtimeDirty = & git -C $RepoRoot status --porcelain -- infer_flash.py
-  if ($LASTEXITCODE -ne 0) { throw 'Không kiểm tra được trạng thái infer_flash.py.' }
-  if ($runtimeDirty) { throw "infer_flash.py có thay đổi runtime không nhận diện được; dừng để tránh overwrite: $runtimeDirty" }
+  if ($LASTEXITCODE -ne 0) { throw 'Failed to inspect infer_flash.py runtime state.' }
+  if ($runtimeDirty) { throw "Unrecognized infer_flash.py runtime changes detected; refusing overwrite: $runtimeDirty" }
   Run-Step 'git' @('-C',$RepoRoot,'apply','--check',$LowVramPatch)
   Run-Step 'git' @('-C',$RepoRoot,'apply',$LowVramPatch)
   Write-Host '[EchoMimicV3] Applied VSR low-VRAM patch V2.'
@@ -71,8 +71,6 @@ import os
 import shutil
 import time
 
-# hf-xet can fail while reconstructing very large files on Windows with
-# "Background writer channel closed". Force the regular HTTP downloader.
 os.environ["HF_HUB_DISABLE_XET"] = "1"
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "0"
 
@@ -85,7 +83,6 @@ wan_root = os.path.join(flash_root, "Wan2.1-Fun-V1.1-1.3B-InP")
 audio_root = os.path.join(flash_root, "chinese-wav2vec2-base")
 transformer_root = os.path.join(flash_root, "transformer")
 os.makedirs(transformer_root, exist_ok=True)
-
 
 def retry(label, fn, attempts=3):
     last = None
@@ -101,7 +98,6 @@ def retry(label, fn, attempts=3):
             print(f"[EchoMimicV3] Retry in {wait_s}s; existing downloaded files are kept.")
             time.sleep(wait_s)
     raise last
-
 
 wan_required = [
     os.path.join(wan_root, "config.json"),
@@ -180,7 +176,7 @@ $missing = @()
   (Join-Path $AudioRoot 'config.json'),
   (Join-Path $TransformerRoot 'diffusion_pytorch_model.safetensors')
 ) | ForEach-Object { if (-not (Test-Path $_)) { $missing += $_ } }
-if ($missing.Count -gt 0) { throw "Thiếu asset EchoMimicV3: $($missing -join ', ')" }
+if ($missing.Count -gt 0) { throw "Missing EchoMimicV3 asset(s): $($missing -join ', ')" }
 
 Write-Host '[EchoMimicV3] READY'
 Write-Host '[EchoMimicV3] low-vram: sequential CPU offload + long-audio chunking V2'
