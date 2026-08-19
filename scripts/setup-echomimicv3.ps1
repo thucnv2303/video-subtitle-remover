@@ -7,6 +7,7 @@ $Python = Join-Path $VenvRoot 'Scripts\python.exe'
 $UpstreamCommit = '7e89489ca51c0d008fc1963ec6c03fc5bd0b9397'
 $BootstrapPython = 'C:\VSR-JoyVASA\venv\Scripts\python.exe'
 $LowVramPatch = Join-Path $PSScriptRoot 'echomimicv3-lowvram.patch'
+$LegacyLowVramPatch = Join-Path $PSScriptRoot 'echomimicv3-lowvram-v1.patch'
 
 function Run-Step([string]$File, [string[]]$Arguments) {
   if (-not $Arguments -or $Arguments.Count -eq 0) { throw "Refusing to launch command without arguments: $File" }
@@ -29,21 +30,26 @@ if (-not (Test-Path (Join-Path $RepoRoot '.git'))) { Run-Step 'git' @('clone','h
 Run-Step 'git' @('-C',$RepoRoot,'fetch','origin')
 Run-Step 'git' @('-C',$RepoRoot,'checkout','--detach',$UpstreamCommit)
 
-if (-not (Test-Path $LowVramPatch)) { throw "Thiếu low-VRAM patch: $LowVramPatch" }
-$previousErrorActionPreference = $ErrorActionPreference
-try {
-  $ErrorActionPreference = 'Continue'
-  & git -C $RepoRoot apply --reverse --check $LowVramPatch 2>$null
-  $patchAlreadyApplied = ($LASTEXITCODE -eq 0)
-} finally {
-  $ErrorActionPreference = $previousErrorActionPreference
-}
-if ($patchAlreadyApplied) {
-  Write-Host '[EchoMimicV3] VSR low-VRAM patch already applied.'
-} else {
+if (-not (Test-Path $LowVramPatch)) { throw "Thiếu low-VRAM patch V2: $LowVramPatch" }
+if (-not (Test-Path $LegacyLowVramPatch)) { throw "Thiếu legacy low-VRAM patch V1: $LegacyLowVramPatch" }
+$inferFlash = Join-Path $RepoRoot 'infer_flash.py'
+$inferSource = Get-Content -Raw -Path $inferFlash
+if ($inferSource.Contains('VSR_LOW_VRAM_OFFLOAD_V2')) {
+  Write-Host '[EchoMimicV3] VSR low-VRAM patch V2 already applied.'
+} elseif ($inferSource.Contains('VSR_LOW_VRAM_OFFLOAD_V1')) {
+  Write-Host '[EchoMimicV3] Migrating low-VRAM patch V1 -> V2.'
+  Run-Step 'git' @('-C',$RepoRoot,'apply','--reverse','--check',$LegacyLowVramPatch)
+  Run-Step 'git' @('-C',$RepoRoot,'apply','--reverse',$LegacyLowVramPatch)
   Run-Step 'git' @('-C',$RepoRoot,'apply','--check',$LowVramPatch)
   Run-Step 'git' @('-C',$RepoRoot,'apply',$LowVramPatch)
-  Write-Host '[EchoMimicV3] Applied VSR low-VRAM patch V1.'
+  Write-Host '[EchoMimicV3] Applied VSR low-VRAM patch V2.'
+} else {
+  $runtimeDirty = & git -C $RepoRoot status --porcelain -- infer_flash.py
+  if ($LASTEXITCODE -ne 0) { throw 'Không kiểm tra được trạng thái infer_flash.py.' }
+  if ($runtimeDirty) { throw "infer_flash.py có thay đổi runtime không nhận diện được; dừng để tránh overwrite: $runtimeDirty" }
+  Run-Step 'git' @('-C',$RepoRoot,'apply','--check',$LowVramPatch)
+  Run-Step 'git' @('-C',$RepoRoot,'apply',$LowVramPatch)
+  Write-Host '[EchoMimicV3] Applied VSR low-VRAM patch V2.'
 }
 
 Run-Step $Python @('-m','pip','install','-r',(Join-Path $RepoRoot 'requirements.txt'))
@@ -156,9 +162,11 @@ print('cuda-smoke', x.item())
 '@ | Set-Content -Encoding ASCII $smokePath
 Run-Step $Python @($smokePath)
 
-$inferFlash = Join-Path $RepoRoot 'infer_flash.py'
-if (-not (Select-String -Path $inferFlash -Pattern 'VSR_LOW_VRAM_OFFLOAD_V1' -Quiet)) {
-  throw 'EchoMimicV3 low-VRAM patch marker missing after setup.'
+if (-not (Select-String -Path $inferFlash -Pattern 'VSR_LOW_VRAM_OFFLOAD_V2' -Quiet)) {
+  throw 'EchoMimicV3 low-VRAM patch V2 marker missing after setup.'
+}
+if (-not (Select-String -Path $inferFlash -Pattern 'VSR_LONG_AUDIO_V2' -Quiet)) {
+  throw 'EchoMimicV3 long-audio V2 marker missing after setup.'
 }
 
 $missing = @()
@@ -175,6 +183,6 @@ $missing = @()
 if ($missing.Count -gt 0) { throw "Thiếu asset EchoMimicV3: $($missing -join ', ')" }
 
 Write-Host '[EchoMimicV3] READY'
-Write-Host '[EchoMimicV3] low-vram: sequential CPU offload V1'
+Write-Host '[EchoMimicV3] low-vram: sequential CPU offload + long-audio chunking V2'
 Write-Host "[EchoMimicV3] runtime: $RuntimeRoot"
 Write-Host "[EchoMimicV3] upstream: $UpstreamCommit"
