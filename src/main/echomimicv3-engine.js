@@ -8,6 +8,7 @@ const PYTHON = path.join(ROOT, 'venv', 'Scripts', 'python.exe');
 const FLASH = path.join(ROOT, 'flash');
 const LOW_VRAM_MARKER = 'VSR_LOW_VRAM_OFFLOAD_V2';
 const LONG_AUDIO_MARKER = 'VSR_LONG_AUDIO_V2';
+const MODEL_OFFLOAD_MARKER = 'VSR_MODEL_CPU_OFFLOAD_BENCH_V1';
 let activeChild = null;
 
 function assets() {
@@ -22,28 +23,17 @@ function assets() {
 
 function status() {
   const a = assets();
-  const required = [
-    PYTHON,
-    a.script,
-    a.config,
-    path.join(a.model, 'config.json'),
-    path.join(a.model, 'diffusion_pytorch_model.safetensors'),
-    path.join(a.model, 'Wan2.1_VAE.pth'),
-    path.join(a.model, 'models_t5_umt5-xxl-enc-bf16.pth'),
-    path.join(a.model, 'models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth'),
-    path.join(a.audio, 'config.json'),
-    a.transformer,
-  ];
+  const required = [PYTHON,a.script,a.config,path.join(a.model,'config.json'),path.join(a.model,'diffusion_pytorch_model.safetensors'),path.join(a.model,'Wan2.1_VAE.pth'),path.join(a.model,'models_t5_umt5-xxl-enc-bf16.pth'),path.join(a.model,'models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth'),path.join(a.audio,'config.json'),a.transformer];
   const missing = required.filter(x => !fs.existsSync(x));
   let runtimeSource = '';
-  if (fs.existsSync(a.script)) {
-    try { runtimeSource = fs.readFileSync(a.script, 'utf8'); } catch (_) { runtimeSource = ''; }
-  }
+  if (fs.existsSync(a.script)) { try { runtimeSource = fs.readFileSync(a.script,'utf8'); } catch (_) {} }
   const lowVramPatched = runtimeSource.includes(LOW_VRAM_MARKER);
   const longAudioPatched = runtimeSource.includes(LONG_AUDIO_MARKER);
+  const modelOffloadReady = runtimeSource.includes(MODEL_OFFLOAD_MARKER);
   if (!lowVramPatched) missing.push('EchoMimicV3 low-VRAM runtime patch V2');
   if (!longAudioPatched) missing.push('EchoMimicV3 long-audio runtime patch V2');
-  return { ok: missing.length === 0, name: 'EchoMimicV3 Flash', runtimeRoot: ROOT, missing, running: Boolean(activeChild), lowVramPatched, longAudioPatched };
+  if (!modelOffloadReady) missing.push('EchoMimicV3 model CPU offload benchmark runtime');
+  return { ok: missing.length === 0, name:'EchoMimicV3 Flash', runtimeRoot:ROOT, missing, running:Boolean(activeChild), lowVramPatched, longAudioPatched, modelOffloadReady };
 }
 
 function safeFile(value, exts, label) {
@@ -52,89 +42,30 @@ function safeFile(value, exts, label) {
   if (!exts.includes(path.extname(file).toLowerCase())) throw new Error(`${label} không đúng định dạng.`);
   return file;
 }
+function copyInput(source, dir, stem) { const target=path.join(dir,`${stem}${path.extname(source).toLowerCase()}`); fs.copyFileSync(source,target); return target; }
+function findNewestMp4(dir) { if(!fs.existsSync(dir)) return ''; return fs.readdirSync(dir).filter(x=>x.toLowerCase().endsWith('.mp4')).map(x=>path.join(dir,x)).filter(x=>fs.statSync(x).isFile()).sort((a,b)=>fs.statSync(b).mtimeMs-fs.statSync(a).mtimeMs)[0]||''; }
 
-function copyInput(source, dir, stem) {
-  const target = path.join(dir, `${stem}${path.extname(source).toLowerCase()}`);
-  fs.copyFileSync(source, target);
-  return target;
-}
-
-function findNewestMp4(dir) {
-  if (!fs.existsSync(dir)) return '';
-  return fs.readdirSync(dir).filter(x => x.toLowerCase().endsWith('.mp4')).map(x => path.join(dir, x))
-    .filter(x => fs.statSync(x).isFile()).sort((a,b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0] || '';
-}
-
-async function generate(event, payload = {}) {
-  if (activeChild) return { ok: false, error: 'Đang có một EchoMimicV3 job chạy.' };
-  const ready = status();
-  if (!ready.ok) return { ok: false, error: 'EchoMimicV3 Flash chưa sẵn sàng. Chạy scripts/setup-echomimicv3.ps1 trước.', status: ready };
-  let image, audio;
-  try {
-    image = safeFile(payload.imagePath, ['.jpg','.jpeg','.png','.webp','.bmp'], 'ảnh nhân vật');
-    audio = safeFile(payload.audioPath, ['.wav','.mp3','.m4a','.flac','.ogg','.aac'], 'voice');
-  } catch (error) { return { ok: false, error: error.message }; }
-
-  const runId = `echo-${Date.now()}`;
-  const runDir = path.join(ROOT, 'runs', runId);
-  const outputDir = path.join(runDir, 'output');
-  fs.mkdirSync(outputDir, { recursive: true });
-  image = copyInput(image, runDir, 'portrait');
-  audio = copyInput(audio, runDir, 'voice');
-  const a = assets();
-  const emit = (type, message) => { if (message && !event.sender.isDestroyed()) event.sender.send('talking-portrait:progress', { runId, type, message: String(message).trim() }); };
-  emit('info', 'Engine: EchoMimicV3 Flash · upstream pinned · 8-step');
-  emit('info', `Input staged: ${image}`);
-  emit('info', `Voice staged: ${audio}`);
-  emit('info', 'Owner low-VRAM long-audio profile: 768x768 · 25 FPS · 49-frame chunks · sequential CPU offload · TeaCache offload.');
-
-  const args = [a.script,
-    '--image_path', image, '--audio_path', audio,
-    '--prompt', 'A natural person is speaking with realistic facial expressions, subtle head movement, blinking and conversational emotion.',
-    '--num_inference_steps', '8', '--config_path', a.config, '--model_name', a.model,
-    '--transformer_path', a.transformer, '--save_path', outputDir, '--wav2vec_model_dir', a.audio,
-    '--sampler_name', 'Flow_Unipc', '--video_length', '49', '--guidance_scale', '5.0',
-    '--audio_guidance_scale', '2.0', '--audio_scale', '1.0', '--neg_scale', '1.0', '--neg_steps', '0',
-    '--seed', '43', '--enable_teacache', '--teacache_threshold', '0.1', '--num_skip_start_steps', '5', '--teacache_offload',
-    '--GPU_memory_mode', 'sequential_cpu_offload',
-    '--ulysses_degree', '1', '--ring_degree', '1', '--weight_dtype', 'bfloat16', '--sample_size', '768', '768',
-    '--fps', '25', '--add_prompt', '', '--negative_prompt', 'static face, frozen expression, stiff head, bad mouth, deformed face, jitter', '--shift', '5.0'];
-
-  return new Promise(resolve => {
-    let stdout = ''; let stderr = ''; let settled = false;
-    const env = {
-      ...process.env,
-      PYTHONUTF8: '1',
-      PYTHONIOENCODING: 'utf-8',
-    };
-    const child = spawn(PYTHON, args, { cwd: REPO, windowsHide: true, env });
-    activeChild = child;
-    child.stdout.on('data', c => { const t=c.toString(); stdout += t; emit('info',t); });
-    child.stderr.on('data', c => { const t=c.toString(); stderr += t; emit('info',t); });
-    child.on('error', error => { if (activeChild===child) activeChild=null; if (!settled) { settled=true; resolve({ok:false,runId,error:`Không khởi động được EchoMimicV3: ${error.message}`}); } });
-    child.on('close', code => {
-      if (activeChild===child) activeChild=null;
-      if (settled) return;
-      const outputPath = findNewestMp4(outputDir);
-      if (code !== 0 || !outputPath) {
-        settled=true;
-        const combined = `${stderr}\n${stdout}`;
-        const isOom = /CUDA out of memory|torch\.OutOfMemoryError/i.test(combined);
-        const tail = (stderr||stdout).trim().split(/\r?\n/).slice(-20).join('\n');
-        const error = isOom
-          ? 'EchoMimicV3 vẫn hết VRAM với long-audio chunking V2 ở 768p/49-frame chunks. Dừng retry; cần PM review.'
-          : (tail || `EchoMimicV3 kết thúc với mã ${code}.`);
-        resolve({ok:false,runId,error,code,outputDir,oom:isOom}); return;
-      }
-      settled=true; emit('success',`EchoMimicV3 hoàn tất: ${outputPath}`);
-      resolve({ok:true,runId,outputPath,outputDir,engine:'echomimicv3',ratio:'source',profile:'flash-8step-768-longaudio-v2'});
-    });
+async function generate(event, payload={}) {
+  if (activeChild) return {ok:false,error:'Đang có một EchoMimicV3 job chạy.'};
+  const ready=status();
+  if(!ready.ok) return {ok:false,error:'EchoMimicV3 Flash chưa sẵn sàng. Chạy scripts/setup-echomimicv3.ps1 trước.',status:ready};
+  let image,audio;
+  try { image=safeFile(payload.imagePath,['.jpg','.jpeg','.png','.webp','.bmp'],'ảnh nhân vật'); audio=safeFile(payload.audioPath,['.wav','.mp3','.m4a','.flac','.ogg','.aac'],'voice'); } catch(error){ return {ok:false,error:error.message}; }
+  const runId=`echo-${Date.now()}`;
+  const runDir=path.join(ROOT,'runs',runId); const outputDir=path.join(runDir,'output'); fs.mkdirSync(outputDir,{recursive:true});
+  image=copyInput(image,runDir,'portrait'); audio=copyInput(audio,runDir,'voice');
+  const a=assets(); const emit=(type,message)=>{ if(message&&!event.sender.isDestroyed()) event.sender.send('talking-portrait:progress',{runId,type,message:String(message).trim()}); };
+  emit('info','Engine: EchoMimicV3 Flash · upstream pinned · 8-step');
+  emit('info',`Input staged: ${image}`); emit('info',`Voice staged: ${audio}`);
+  emit('info','Owner performance benchmark: 768x768 · 25 FPS · 49-frame chunks · MODEL CPU offload · TeaCache offload. Stop after chunk 1 timing is captured.');
+  const args=[a.script,'--image_path',image,'--audio_path',audio,'--prompt','A natural person is speaking with realistic facial expressions, subtle head movement, blinking and conversational emotion.','--num_inference_steps','8','--config_path',a.config,'--model_name',a.model,'--transformer_path',a.transformer,'--save_path',outputDir,'--wav2vec_model_dir',a.audio,'--sampler_name','Flow_Unipc','--video_length','49','--guidance_scale','5.0','--audio_guidance_scale','2.0','--audio_scale','1.0','--neg_scale','1.0','--neg_steps','0','--seed','43','--enable_teacache','--teacache_threshold','0.1','--num_skip_start_steps','5','--teacache_offload','--GPU_memory_mode','model_cpu_offload','--ulysses_degree','1','--ring_degree','1','--weight_dtype','bfloat16','--sample_size','768','768','--fps','25','--add_prompt','','--negative_prompt','static face, frozen expression, stiff head, bad mouth, deformed face, jitter','--shift','5.0'];
+  return new Promise(resolve=>{
+    let stdout='',stderr='',settled=false;
+    const child=spawn(PYTHON,args,{cwd:REPO,windowsHide:true,env:{...process.env,PYTHONUTF8:'1',PYTHONIOENCODING:'utf-8'}}); activeChild=child;
+    child.stdout.on('data',c=>{const t=c.toString(); stdout+=t; emit('info',t);}); child.stderr.on('data',c=>{const t=c.toString(); stderr+=t; emit('info',t);});
+    child.on('error',error=>{if(activeChild===child)activeChild=null;if(!settled){settled=true;resolve({ok:false,runId,error:`Không khởi động được EchoMimicV3: ${error.message}`});}});
+    child.on('close',code=>{if(activeChild===child)activeChild=null;if(settled)return;const outputPath=findNewestMp4(outputDir);if(code!==0||!outputPath){settled=true;const combined=`${stderr}\n${stdout}`;const isOom=/CUDA out of memory|torch\.OutOfMemoryError/i.test(combined);const tail=(stderr||stdout).trim().split(/\r?\n/).slice(-20).join('\n');resolve({ok:false,runId,error:isOom?'EchoMimicV3 model CPU offload benchmark OOM. Dừng retry; cần PM review.':(tail||`EchoMimicV3 kết thúc với mã ${code}.`),code,outputDir,oom:isOom});return;} settled=true;emit('success',`EchoMimicV3 hoàn tất: ${outputPath}`);resolve({ok:true,runId,outputPath,outputDir,engine:'echomimicv3',ratio:'source',profile:'flash-8step-768-model-offload-bench'});});
   });
 }
-
-function cancel() {
-  if (!activeChild) return { ok:true, cancelled:false };
-  try { const accepted=activeChild.kill(); return {ok:accepted,cancelled:accepted}; } catch(error) { return {ok:false,error:error.message}; }
-}
-
-module.exports = { status, generate, cancel };
+function cancel(){if(!activeChild)return{ok:true,cancelled:false};try{const accepted=activeChild.kill();return{ok:accepted,cancelled:accepted};}catch(error){return{ok:false,error:error.message};}}
+module.exports={status,generate,cancel};

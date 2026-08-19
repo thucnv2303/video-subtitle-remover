@@ -44,6 +44,9 @@ def main() -> None:
         "    if GPU_memory_mode == \"sequential_cpu_offload\":\n"
         "        print(\"VSR_LOW_VRAM_OFFLOAD_V2: sequential CPU offload + chunked long-audio enabled.\")\n"
         "        pipeline.enable_sequential_cpu_offload()\n"
+        "    elif GPU_memory_mode == \"model_cpu_offload\":\n"
+        "        print(\"VSR_MODEL_CPU_OFFLOAD_BENCH_V1: model CPU offload enabled.\")\n"
+        "        pipeline.enable_model_cpu_offload()\n"
         "    elif GPU_memory_mode == \"full_gpu\":\n"
         "        print(\"VSR_LOW_VRAM_OFFLOAD_V2: full GPU mode enabled.\")\n"
         "        pipeline.to(device=device)\n"
@@ -87,15 +90,7 @@ def main() -> None:
         mel_input, sr = librosa.load(audio_path, sr=16000)
         mel_input = loudness_norm(mel_input, sr)
         print(f"VSR_LONG_AUDIO_V2: duration={audio_clip.duration:.3f}s total_frames={total_video_frames} chunk_frames={chunk_max_frames} stride={chunk_stride}")
-        audio_feature_wav2vec = get_audio_embed(
-            mel_input,
-            wav2vec_feature_extractor,
-            audio_encoder,
-            total_video_frames,
-            sr=16000,
-            fps=fps,
-            device='cpu',
-        )
+        audio_feature_wav2vec = get_audio_embed(mel_input, wav2vec_feature_extractor, audio_encoder, total_video_frames, sr=16000, fps=fps, device='cpu')
 
         current_reference = Image.fromarray(ref_start).convert("RGB")
         chunk_paths = []
@@ -105,46 +100,27 @@ def main() -> None:
             raw_chunk_frames = min(chunk_max_frames, total_video_frames - chunk_start)
             if chunk_start > 0 and raw_chunk_frames <= 1:
                 break
-
             chunk_frames = raw_chunk_frames
             remainder = (chunk_frames - 1) % vae.config.temporal_compression_ratio
             if remainder:
                 chunk_frames += vae.config.temporal_compression_ratio - remainder
             chunk_frames = min(chunk_frames, chunk_max_frames)
-
             chunk_index += 1
-            print(
-                f"VSR_LONG_AUDIO_V2: chunk={chunk_index} start={chunk_start} "
-                f"actual_frames={raw_chunk_frames} infer_frames={chunk_frames}"
-            )
+            print(f"VSR_LONG_AUDIO_V2: chunk={chunk_index} start={chunk_start} actual_frames={raw_chunk_frames} infer_frames={chunk_frames}")
 
             local_centers = torch.arange(chunk_start, chunk_start + chunk_frames).unsqueeze(1)
-            context_offsets = (torch.arange(2 * 2 + 1) - 2).unsqueeze(0)
-            center_indices = local_centers + context_offsets
-            center_indices = torch.clamp(center_indices, min=0, max=audio_feature_wav2vec.shape[0] - 1)
-            audio_embeds = audio_feature_wav2vec[center_indices]
-            audio_embeds = audio_embeds.unsqueeze(0).to(device=device, dtype=weight_dtype)
+            context_offsets = (torch.arange(5) - 2).unsqueeze(0)
+            center_indices = torch.clamp(local_centers + context_offsets, min=0, max=audio_feature_wav2vec.shape[0] - 1)
+            audio_embeds = audio_feature_wav2vec[center_indices].unsqueeze(0).to(device=device, dtype=weight_dtype)
 
             latent_frames = (chunk_frames - 1) // vae.config.temporal_compression_ratio + 1
             if enable_riflex:
                 pipeline.transformer.enable_riflex(k=riflex_k, L_test=latent_frames)
             if coefficients is not None:
-                pipeline.transformer.enable_teacache(
-                    coefficients,
-                    num_inference_steps,
-                    teacache_threshold,
-                    num_skip_start_steps=num_skip_start_steps,
-                    offload=teacache_offload,
-                )
+                pipeline.transformer.enable_teacache(coefficients, num_inference_steps, teacache_threshold, num_skip_start_steps=num_skip_start_steps, offload=teacache_offload)
 
             sample_size_0, sample_size_1 = get_sample_size(current_reference, sample_size)
-            input_video, input_video_mask, clip_image = get_image_to_video_latent2(
-                current_reference,
-                None,
-                video_length=chunk_frames,
-                sample_size=[sample_size_0, sample_size_1],
-            )
-
+            input_video, input_video_mask, clip_image = get_image_to_video_latent2(current_reference, None, video_length=chunk_frames, sample_size=[sample_size_0, sample_size_1])
             sample = pipeline(
                 prompt,
                 num_frames=chunk_frames,
@@ -174,47 +150,38 @@ def main() -> None:
             last_frame = sample[0, :, raw_chunk_frames - 1].permute(1, 2, 0).float().numpy()
             last_frame = np.clip(last_frame * 255.0, 0, 255).astype(np.uint8)
             current_reference = Image.fromarray(last_frame).convert("RGB")
-
             chunk_sample = sample if chunk_start == 0 else sample[:, :, 1:]
             chunk_path = os.path.join(save_path, f"{image_name}_chunk_{chunk_index:04d}.mp4")
             save_videos_grid(chunk_sample, chunk_path, fps=fps)
             chunk_paths.append(chunk_path)
-
             del sample, chunk_sample, audio_embeds, input_video, input_video_mask, clip_image
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
         if not chunk_paths:
             raise RuntimeError("Chunked EchoMimicV3 produced no video chunks")
-
         chunk_clips = [VideoFileClip(chunk_path) for chunk_path in chunk_paths]
         video_clip = concatenate_videoclips(chunk_clips, method="chain")
         expected_video_duration = total_video_frames / fps
         if video_clip.duration + (1.0 / fps) < audio_clip.duration:
-            raise RuntimeError(
-                f"Chunked duration too short: video={video_clip.duration:.3f}s audio={audio_clip.duration:.3f}s"
-            )
+            raise RuntimeError(f"Chunked duration too short: video={video_clip.duration:.3f}s audio={audio_clip.duration:.3f}s")
         video_clip = video_clip.with_audio(audio_clip)
         video_clip.write_videofile(output_video_path, codec="libx264", audio_codec="aac", threads=2)
-
         video_clip.close()
         for clip in chunk_clips:
             clip.close()
         audio_clip.close()
         for chunk_path in chunk_paths:
             os.remove(chunk_path)
-
         print(f"VSR_LONG_AUDIO_V2: completed frames={total_video_frames} duration={expected_video_duration:.3f}s")
         print(f"Saved output to: {output_video_path}")
 '''
 
     text = text[:start] + new_block + text[end:]
-
     if text.count(LOW_VRAM_MARKER) != 2:
         raise RuntimeError("Unexpected low-VRAM V2 marker count after transform")
     if text.count(LONG_AUDIO_MARKER) < 2:
         raise RuntimeError("Long-audio V2 markers missing after transform")
-
     target.write_text(text, encoding="utf-8", newline="\n")
     print("[EchoMimicV3] Applied deterministic runtime transform V2.")
 
