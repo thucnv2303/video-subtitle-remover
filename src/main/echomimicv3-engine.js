@@ -20,7 +20,18 @@ function assets() {
 
 function status() {
   const a = assets();
-  const required = [PYTHON, a.script, a.config, path.join(a.model, 'model_index.json'), path.join(a.audio, 'config.json'), a.transformer];
+  const required = [
+    PYTHON,
+    a.script,
+    a.config,
+    path.join(a.model, 'config.json'),
+    path.join(a.model, 'diffusion_pytorch_model.safetensors'),
+    path.join(a.model, 'Wan2.1_VAE.pth'),
+    path.join(a.model, 'models_t5_umt5-xxl-enc-bf16.pth'),
+    path.join(a.model, 'models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth'),
+    path.join(a.audio, 'config.json'),
+    a.transformer,
+  ];
   const missing = required.filter(x => !fs.existsSync(x));
   return { ok: missing.length === 0, name: 'EchoMimicV3 Flash', runtimeRoot: ROOT, missing, running: Boolean(activeChild) };
 }
