@@ -9,17 +9,30 @@ $Transform = Join-Path $PSScriptRoot 'echomimicv3-selective-v4.py'
 
 if (-not (Test-Path $Python)) { throw 'EchoMimicV3 Python runtime missing.' }
 if (-not (Test-Path $InferFlash)) { throw "Missing runtime file: $InferFlash" }
-if (-not (Test-Path $Pipeline)) { throw "Missing pipeline file: $Pipeline" }
+if (-not (Test-Path $Pipeline)) { throw "Missing runtime file: $Pipeline" }
 if (-not (Test-Path $Transform)) { throw "Missing V4 transform: $Transform" }
 
 $inferSource = Get-Content -Raw $InferFlash
 $pipelineSource = Get-Content -Raw $Pipeline
-if (-not $inferSource.Contains('VSR_SELECTIVE_GPU_V3') -or -not $pipelineSource.Contains('VSR_SELECTIVE_GPU_V3')) {
-  throw 'Selective V4 requires the recognized V3 runtime. Run upgrade-echomimicv3-selective-v3.ps1 first.'
+$inferV3 = $inferSource.Contains('VSR_SELECTIVE_GPU_V3')
+$inferV4 = $inferSource.Contains('VSR_SELECTIVE_GPU_V4')
+$pipelineV3 = $pipelineSource.Contains('VSR_SELECTIVE_GPU_V3')
+$pipelineV4 = $pipelineSource.Contains('VSR_SELECTIVE_GPU_V4')
+
+if ($inferV4 -and $pipelineV4) {
+  Write-Host '[EchoMimicV3] Selective GPU V4 already applied to infer and pipeline.'
+} elseif ($inferV3 -and $pipelineV3) {
+  Write-Host '[EchoMimicV3] Migrating recognized V3 runtime -> V4.'
+  & $Python $Transform $InferFlash $Pipeline
+  if ($LASTEXITCODE -ne 0) { throw "Selective V4 transform failed ($LASTEXITCODE)." }
+} elseif ($inferV4 -and $pipelineV3) {
+  Write-Host '[EchoMimicV3] Recovering recognized partial V4 migration: infer=V4, pipeline=V3.'
+  & $Python $Transform $InferFlash $Pipeline
+  if ($LASTEXITCODE -ne 0) { throw "Selective V4 recovery transform failed ($LASTEXITCODE)." }
+} else {
+  throw "Unrecognized selective runtime state; refusing migration. inferV3=$inferV3 inferV4=$inferV4 pipelineV3=$pipelineV3 pipelineV4=$pipelineV4"
 }
 
-& $Python $Transform $InferFlash $Pipeline
-if ($LASTEXITCODE -ne 0) { throw "Selective V4 transform failed ($LASTEXITCODE)." }
 & $Python -m py_compile $InferFlash $Pipeline
 if ($LASTEXITCODE -ne 0) { throw "Selective V4 py_compile failed ($LASTEXITCODE)." }
 
