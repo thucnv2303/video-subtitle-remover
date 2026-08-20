@@ -40,7 +40,7 @@ def transform_pipeline(path: Path) -> None:
     old_device = '''        device = self._execution_device
         weight_dtype = self.text_encoder.dtype
 
-        
+
         do_classifier_free_guidance = guidance_scale > 1.0
 '''
     new_device = '''        device = self._execution_device
