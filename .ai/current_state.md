@@ -1,42 +1,34 @@
 # Current State
 
 ## Status
-TALKING-PORTRAIT-JOYVASA-035 — SOURCE + BOOTSTRAP PUBLISHED / OWNER STATIC + GPU RUNTIME WAITING / MERGE BLOCKED
+TALKING-PORTRAIT-ECHOMIMICV3-036 — REJECTED / DROP / CLEANUP REQUIRED / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Active feature branch: `review/TALKING-PORTRAIT-JOYVASA-035`.
-- Draft PR: #75.
-- Base: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034@0ee0ed2760622aab603a2088d6064ee747cad9ed`.
-- JoyVASA upstream pinned for bootstrap: `jdh-algo/JoyVASA@916a90f8de490e8648fee460c1200bd5d9a795af`.
-- Task 034 / PR #74 remains independently blocked on its Owner runtime gate.
+- Rejected experiment branch: `review/TALKING-PORTRAIT-ECHOMIMICV3-036`.
+- Rejected Draft PR: #76.
+- Experiment base: `1b1b8ba4b82078534b7fa24582be7e44688319bd`.
+- Drop-record branch: `review/TALKING-PORTRAIT-ECHOMIMICV3-036-DROP` created from the clean experiment base so rejected EchoMimic source is not promoted.
 
-## Implemented
-1. Isolated AI Avatar tab: portrait + audio -> JoyVASA human inference -> MP4 preview/export.
-2. Electron main owns engine discovery, validation, child process, output isolation and cancellation.
-3. Natural/Expressive/Calm and bounded expression/head values map to upstream cfg_scale/driving_multiplier. Eye/lip independent controls remain disabled because upstream retargeting is WIP.
-4. `scripts/setup-joyvasa.ps1` provides a pinned Windows bootstrap into `tools/JoyVASA`, using separate Conda env `joyvasa`; it does not mutate the existing P1/P2 Python environment.
-5. `scripts/verify-talking-portrait.js` adds deterministic assertions for preset bounds/defaults without requiring Electron runtime/GPU.
+## Owner runtime result
+Owner completed the final EchoMimicV3 49-frame block-offload benchmark on RTX 5060 Ti 16 GB. The 14.86 s / 372-frame input started at 15:37:21 and completed at 16:46:57, about 69m36s wall-clock. Eight inference chunks were required; full 49-frame chunks spent about 6m17s-6m21s in the 8-step denoise loop, plus phase/offload overhead. This exceeds the declared viability gate (>180 s = DROP) by a very large margin.
+
+The generated video completed successfully, proving functional execution, but Owner judged the visual result not good enough. The experiment therefore fails both product-quality and performance viability for the target local machine.
+
+## Decision
+- EchoMimicV3 is rejected for this product path.
+- Do not merge PR #76 or any EchoMimicV3 experiment commits into the product line.
+- Do not spend further engineering time tuning block-offload/full-GPU/selective-GPU variants for task 036.
+- Local EchoMimicV3 runtime/models/runs may be removed after confirming they are isolated under `C:\VSR-EchoMimicV3`.
+- Existing unrelated shared model/cache directories must not be deleted as part of this cleanup.
 
 ## Gates
-- Execution: PASS for source/bootstrap publication.
-- Automated/static verification: WAITING Owner exact checkout. Required: Node syntax checks, deterministic adapter script, PowerShell parse/run, git diff check.
-- Code review: PASS for current source structure and engine boundary; final exact-HEAD re-read still required after docs sync.
-- Owner runtime: NOT STARTED. Requires bootstrap success plus one real GPU image/audio generation.
-- Documentation synchronization: IN PROGRESS until task_current/handoff reflect latest HEAD.
-- Merge permission: BLOCKED.
+- Execution: PASS (end-to-end render completed).
+- Automated/static verification: PASS for the tested experiment checkout before runtime.
+- Code review: INVALIDATED for merge because the implementation is rejected on viability.
+- Owner runtime: FAIL — performance and quality.
+- Documentation synchronization: PASS on this drop-record branch after canonical files are updated.
+- Merge permission: BLOCKED permanently for task 036 / PR #76.
 
-## Owner verification sequence
-From exact PR #75 checkout:
-1. `node --check src/main/talking-portrait-engine.js`
-2. `node --check src/main/main-entry.js`
-3. `node --check src/main/preload.js`
-4. `node --check src/renderer/js/talking-portrait.js`
-5. `node scripts/verify-talking-portrait.js`
-6. `powershell -ExecutionPolicy Bypass -File scripts/setup-joyvasa.ps1`
-7. Start app, open AI Avatar, confirm engine Ready, select a clear frontal portrait + short Vietnamese voice, Generate.
-8. Confirm MP4 preview contains source audio, Open works, Save Copy works, Cancel works on a second run.
-9. `git diff --check 0ee0ed2760622aab603a2088d6064ee747cad9ed..HEAD`
-
-## Merge
-BLOCKED until Owner runtime PASS is recorded into canonical `.ai/` and all gates are re-reviewed.
+## Next permitted action
+Close PR #76 without merge, clean the isolated local EchoMimicV3 runtime, and return product authority to the pre-EchoMimic base / next explicitly approved avatar direction.
