@@ -1,54 +1,35 @@
 # Current Task
 
 ## Task ID
-TALKING-PORTRAIT-JOYVASA-035
+TALKING-PORTRAIT-ECHOMIMICV3-036
 
 ## Status
-SOURCE_BOOTSTRAP_PUBLISHED_OWNER_STATIC_AND_GPU_RUNTIME_WAITING_MERGE_BLOCKED
+REJECTED_DROP_CLEANUP_REQUIRED_MERGE_BLOCKED
 
 ## Exact basis
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Branch: `review/TALKING-PORTRAIT-JOYVASA-035`.
-- Draft PR: #75.
-- Base: `review/P1-P2-PER-JOB-EXPORT-NOVOCAL-034@0ee0ed2760622aab603a2088d6064ee747cad9ed`.
-- JoyVASA bootstrap pin: `916a90f8de490e8648fee460c1200bd5d9a795af`.
+- Experiment branch: `review/TALKING-PORTRAIT-ECHOMIMICV3-036`.
+- Draft PR: #76.
+- Clean experiment base: `1b1b8ba4b82078534b7fa24582be7e44688319bd`.
+- Drop record: `review/TALKING-PORTRAIT-ECHOMIMICV3-036-DROP`.
 
-## User outcome
-Standalone AI Avatar creates a talking portrait MP4 from one image + one voice file with local JoyVASA, without changing P1/P2/P3/Voice Render/Xoa Sub authority.
+## Owner outcome
+Final 14.86 s benchmark rendered successfully but required about 69m36s wall-clock on RTX 5060 Ti 16 GB with block-offload V5/V5.1. Declared viability gate was <90 s good, 90-180 s marginal, >180 s DROP. Owner also reported the generated visual quality was not good enough.
 
-## Acceptance
-- Truthful engine readiness and no fake generation.
-- Separate `joyvasa` environment; app's existing Python environment remains untouched.
-- Safe argv child process, one job at a time, cancellable.
-- Bounded presets map only to supported JoyVASA parameters.
-- Output is isolated, previewable, openable and Save Copy exportable.
-- Vietnamese audio is accepted as driving audio; quality itself is determined by real runtime evidence.
-
-## Required Owner commands
-```text
-git fetch origin
-git switch review/TALKING-PORTRAIT-JOYVASA-035
-git pull --ff-only
-node --check src/main/talking-portrait-engine.js
-node --check src/main/main-entry.js
-node --check src/main/preload.js
-node --check src/renderer/js/talking-portrait.js
-node scripts/verify-talking-portrait.js
-powershell -ExecutionPolicy Bypass -File scripts/setup-joyvasa.ps1
-git diff --check 0ee0ed2760622aab603a2088d6064ee747cad9ed..HEAD
-```
-
-## Runtime acceptance
-1. AI Avatar reports Ready after bootstrap.
-2. Frontal portrait + short Vietnamese voice generates an MP4 with audio and visible lip/head motion.
-3. Preview/Open/Save Copy work.
-4. A second job can be cancelled without false success.
-5. Existing P1/P2/P3/Voice Render/Xoa Sub navigation still smoke-passes.
+## Decision
+Task 036 is terminated. No additional EchoMimicV3 optimization is authorized. PR #76 must not merge. Cleanup is limited to the isolated EchoMimicV3 runtime/model/run root after path verification.
 
 ## Gates
 - Execution: PASS.
-- Automated/static: WAITING Owner exact checkout.
-- Code review: PASS before final exact-HEAD docs re-read.
-- Owner runtime: NOT STARTED.
-- Documentation sync: IN PROGRESS until handoff update.
-- Merge: BLOCKED.
+- Automated/static: PASS for tested experiment.
+- Code review: INVALIDATED for merge.
+- Owner runtime: FAIL.
+- Documentation sync: PASS after current_state/task_current/handoff are consistent on the drop-record branch.
+- Merge: BLOCKED permanently.
+
+## Required cleanup evidence
+1. Verify `C:\VSR-EchoMimicV3` is the isolated EchoMimic runtime root.
+2. Stop any process whose executable/command line points into that root.
+3. Remove `C:\VSR-EchoMimicV3` recursively.
+4. Confirm the path no longer exists.
+5. Do not delete global Hugging Face/Torch caches or unrelated project model directories without separate evidence they belong exclusively to EchoMimicV3.
