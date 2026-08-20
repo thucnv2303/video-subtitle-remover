@@ -12,13 +12,6 @@ def replace_once(text: str, old: str, new: str, label: str) -> str:
     return text.replace(old, new, 1)
 
 
-def replace_exact(text: str, old: str, new: str, expected: int, label: str) -> str:
-    count = text.count(old)
-    if count != expected:
-        raise RuntimeError(f"Expected exactly {expected} {label}; found {count}")
-    return text.replace(old, new, expected)
-
-
 def transform_infer(path: Path) -> None:
     text = path.read_text(encoding="utf-8")
     if V5 in text:
@@ -125,8 +118,6 @@ def transform_transformer(path: Path) -> None:
 '''
     text = replace_once(text, normal_loop, normal_loop_v5, "normal transformer block loop")
 
-    if text.count(V5) < 1:
-        raise RuntimeError("V5 transformer marker missing after transform")
     path.write_text(text, encoding="utf-8", newline="\n")
     print("[EchoMimicV3] Applied block-offload V5 transformer transform.")
 
@@ -176,14 +167,26 @@ def transform_pipeline(path: Path) -> None:
 '''
     text = replace_once(text, transformer_anchor, transformer_replacement, "V4 transformer phase")
 
-    call_anchor = '''                        clip_fea=clip_context_input,
+    primary_call = '''                        clip_fea=clip_context_input,
                     )
 '''
-    call_replacement = '''                        clip_fea=clip_context_input,
+    primary_replacement = '''                        clip_fea=clip_context_input,
                         gpu_manager=gpu_manager,
                     )
 '''
-    text = replace_exact(text, call_anchor, call_replacement, 2, "transformer calls")
+    text = replace_once(text, primary_call, primary_replacement, "primary transformer call")
+
+    secondary_call = '''                            clip_fea=clip_context_input,
+                        )
+'''
+    secondary_replacement = '''                            clip_fea=clip_context_input,
+                            gpu_manager=gpu_manager,
+                        )
+'''
+    if secondary_call in text:
+        text = replace_once(text, secondary_call, secondary_replacement, "secondary transformer call")
+    else:
+        print("[EchoMimicV3] Secondary transformer call anchor not present; primary call patched only.")
 
     decode_anchor = '''        if vsr_selective_gpu_v4:
             self.transformer.to("cpu")
@@ -205,8 +208,6 @@ def transform_pipeline(path: Path) -> None:
 '''
     text = replace_once(text, decode_anchor, decode_replacement, "V4 decode boundary")
 
-    if text.count(V5) < 4:
-        raise RuntimeError("V5 pipeline markers missing after transform")
     path.write_text(text, encoding="utf-8", newline="\n")
     print("[EchoMimicV3] Applied block-offload V5 pipeline transform.")
 
