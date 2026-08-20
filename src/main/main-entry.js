@@ -38,14 +38,17 @@ ipcMain.handle('app:saveCopy', async (event, payload = {}) => {
   }
 });
 
+function loadRendererModule(window, relativePath, label) {
+  const source = `(async () => { await import(new URL(${JSON.stringify(relativePath)}, location.href).href); return true; })()`;
+  window.webContents.executeJavaScript(source)
+    .catch(error => console.error(`${label} module load failed:`, error));
+}
+
 app.on('browser-window-created', (event, window) => {
   window.webContents.on('did-finish-load', () => {
-    window.webContents.executeJavaScript("import(new URL('./js/pipeline3/preview-ass-parity.js', location.href).href)")
-      .catch(error => console.error('[P3] Preview parity module load failed:', error));
-    window.webContents.executeJavaScript("import(new URL('./js/job-export-controls.js', location.href).href)")
-      .catch(error => console.error('[Job Export] module load failed:', error));
-    window.webContents.executeJavaScript("import(new URL('./js/talking-portrait.js', location.href).href)")
-      .catch(error => console.error('[AI Avatar] module load failed:', error));
+    loadRendererModule(window, './js/pipeline3/preview-ass-parity.js', '[P3] Preview parity');
+    loadRendererModule(window, './js/job-export-controls.js', '[Job Export]');
+    loadRendererModule(window, './js/talking-portrait.js', '[AI Avatar]');
   });
 });
 
