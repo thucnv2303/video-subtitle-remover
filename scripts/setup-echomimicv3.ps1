@@ -34,8 +34,16 @@ if (-not (Test-Path $LegacyLowVramPatch)) { throw "Missing legacy low-VRAM patch
 if (-not (Test-Path $RuntimeTransform)) { throw "Missing runtime transform V2: $RuntimeTransform" }
 $inferFlash = Join-Path $RepoRoot 'infer_flash.py'
 $inferSource = Get-Content -Raw -Path $inferFlash
-if ($inferSource.Contains('VSR_LOW_VRAM_OFFLOAD_V2') -and $inferSource.Contains('VSR_LONG_AUDIO_V2')) {
+$runtimeV2Recognized = $inferSource.Contains('VSR_LOW_VRAM_OFFLOAD_V2') -and $inferSource.Contains('VSR_LONG_AUDIO_V2')
+
+if ($runtimeV2Recognized) {
   Write-Host '[EchoMimicV3] VSR runtime transform V2 already applied.'
+  if (-not $inferSource.Contains('VSR_MODEL_CPU_OFFLOAD_BENCH_V1')) {
+    Write-Host '[EchoMimicV3] Existing V2 runtime predates model-offload benchmark; rebuilding from clean upstream.'
+    Run-Step 'git' @('-C',$RepoRoot,'checkout','--detach',$UpstreamCommit)
+    Run-Step 'git' @('-C',$RepoRoot,'restore','--source',$UpstreamCommit,'--','infer_flash.py')
+    $runtimeV2Recognized = $false
+  }
 } elseif ($inferSource.Contains('VSR_LOW_VRAM_OFFLOAD_V1')) {
   Write-Host '[EchoMimicV3] Migrating low-VRAM patch V1 -> clean upstream.'
   Run-Step 'git' @('-C',$RepoRoot,'apply','--reverse','--check',$LegacyLowVramPatch)
@@ -44,10 +52,12 @@ if ($inferSource.Contains('VSR_LOW_VRAM_OFFLOAD_V2') -and $inferSource.Contains(
   throw 'Partial EchoMimicV3 V2 runtime markers detected; refusing overwrite.'
 }
 
-$runtimeDirty = & git -C $RepoRoot status --porcelain -- infer_flash.py
-if ($LASTEXITCODE -ne 0) { throw 'Failed to inspect infer_flash.py runtime state.' }
-if ($runtimeDirty) { throw "Unrecognized infer_flash.py runtime changes detected; refusing overwrite: $runtimeDirty" }
-Run-Step $Python @($RuntimeTransform,$inferFlash)
+if (-not $runtimeV2Recognized) {
+  $runtimeDirty = & git -C $RepoRoot status --porcelain -- infer_flash.py
+  if ($LASTEXITCODE -ne 0) { throw 'Failed to inspect infer_flash.py runtime state.' }
+  if ($runtimeDirty) { throw "Unrecognized infer_flash.py runtime changes detected; refusing overwrite: $runtimeDirty" }
+  Run-Step $Python @($RuntimeTransform,$inferFlash)
+}
 Run-Step $Python @('-m','py_compile',$inferFlash)
 
 Run-Step $Python @('-m','pip','install','-r',(Join-Path $RepoRoot 'requirements.txt'))
@@ -135,12 +145,13 @@ Run-Step $Python @($smokePath)
 
 if (-not (Select-String -Path $inferFlash -Pattern 'VSR_LOW_VRAM_OFFLOAD_V2' -Quiet)) { throw 'EchoMimicV3 low-VRAM V2 marker missing after setup.' }
 if (-not (Select-String -Path $inferFlash -Pattern 'VSR_LONG_AUDIO_V2' -Quiet)) { throw 'EchoMimicV3 long-audio V2 marker missing after setup.' }
+if (-not (Select-String -Path $inferFlash -Pattern 'VSR_MODEL_CPU_OFFLOAD_BENCH_V1' -Quiet)) { throw 'EchoMimicV3 model CPU offload benchmark marker missing after setup.' }
 
 $missing = @()
 @($inferFlash,(Join-Path $WanRoot 'config.json'),(Join-Path $WanRoot 'diffusion_pytorch_model.safetensors'),(Join-Path $WanRoot 'Wan2.1_VAE.pth'),(Join-Path $WanRoot 'models_t5_umt5-xxl-enc-bf16.pth'),(Join-Path $WanRoot 'models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth'),(Join-Path $AudioRoot 'config.json'),(Join-Path $TransformerRoot 'diffusion_pytorch_model.safetensors')) | ForEach-Object { if (-not (Test-Path $_)) { $missing += $_ } }
 if ($missing.Count -gt 0) { throw "Missing EchoMimicV3 asset(s): $($missing -join ', ')" }
 
 Write-Host '[EchoMimicV3] READY'
-Write-Host '[EchoMimicV3] low-vram: sequential CPU offload + long-audio chunking V2'
+Write-Host '[EchoMimicV3] performance benchmark: model CPU offload + long-audio chunking V2'
 Write-Host "[EchoMimicV3] runtime: $RuntimeRoot"
 Write-Host "[EchoMimicV3] upstream: $UpstreamCommit"
