@@ -8,7 +8,7 @@ const PYTHON = path.join(ROOT, 'venv', 'Scripts', 'python.exe');
 const FLASH = path.join(ROOT, 'flash');
 const LOW_VRAM_MARKER = 'VSR_LOW_VRAM_OFFLOAD_V2';
 const LONG_AUDIO_MARKER = 'VSR_LONG_AUDIO_V2';
-const SELECTIVE_MARKER = 'VSR_SELECTIVE_GPU_V3';
+const SELECTIVE_MARKER = 'VSR_SELECTIVE_GPU_V4';
 let activeChild = null;
 
 function assets() {
@@ -34,7 +34,7 @@ function status() {
   const selectiveGpuReady = runtimeSource.includes(SELECTIVE_MARKER) && pipelineSource.includes(SELECTIVE_MARKER);
   if (!lowVramPatched) missing.push('EchoMimicV3 low-VRAM runtime patch V2');
   if (!longAudioPatched) missing.push('EchoMimicV3 long-audio runtime patch V2');
-  if (!selectiveGpuReady) missing.push('EchoMimicV3 selective GPU residency V3');
+  if (!selectiveGpuReady) missing.push('EchoMimicV3 selective GPU residency V4');
   return { ok: missing.length === 0, name:'EchoMimicV3 Flash', runtimeRoot:ROOT, missing, running:Boolean(activeChild), lowVramPatched, longAudioPatched, selectiveGpuReady };
 }
 
@@ -50,7 +50,7 @@ function findNewestMp4(dir) { if(!fs.existsSync(dir)) return ''; return fs.readd
 async function generate(event, payload={}) {
   if (activeChild) return {ok:false,error:'Đang có một EchoMimicV3 job chạy.'};
   const ready=status();
-  if(!ready.ok) return {ok:false,error:'EchoMimicV3 Flash V3 chưa sẵn sàng. Chạy scripts/upgrade-echomimicv3-selective-v3.ps1 trước.',status:ready};
+  if(!ready.ok) return {ok:false,error:'EchoMimicV3 Flash V4 chưa sẵn sàng. Chạy scripts/upgrade-echomimicv3-selective-v4.ps1 trước.',status:ready};
   let image,audio;
   try { image=safeFile(payload.imagePath,['.jpg','.jpeg','.png','.webp','.bmp'],'ảnh nhân vật'); audio=safeFile(payload.audioPath,['.wav','.mp3','.m4a','.flac','.ogg','.aac'],'voice'); } catch(error){ return {ok:false,error:error.message}; }
   const runId=`echo-${Date.now()}`;
@@ -59,14 +59,14 @@ async function generate(event, payload={}) {
   const a=assets(); const emit=(type,message)=>{ if(message&&!event.sender.isDestroyed()) event.sender.send('talking-portrait:progress',{runId,type,message:String(message).trim()}); };
   emit('info','Engine: EchoMimicV3 Flash · upstream pinned · 8-step');
   emit('info',`Input staged: ${image}`); emit('info',`Voice staged: ${audio}`);
-  emit('info','Owner performance benchmark V3: 768x768 · 25 FPS · 49-frame chunks · selective GPU residency · transformer resident during denoise. Stop after chunk 1 timing is captured.');
-  const args=[a.script,'--image_path',image,'--audio_path',audio,'--prompt','A natural person is speaking with realistic facial expressions, subtle head movement, blinking and conversational emotion.','--num_inference_steps','8','--config_path',a.config,'--model_name',a.model,'--transformer_path',a.transformer,'--save_path',outputDir,'--wav2vec_model_dir',a.audio,'--sampler_name','Flow_Unipc','--video_length','49','--guidance_scale','5.0','--audio_guidance_scale','2.0','--audio_scale','1.0','--neg_scale','1.0','--neg_steps','0','--seed','43','--enable_teacache','--teacache_threshold','0.1','--num_skip_start_steps','5','--teacache_offload','--GPU_memory_mode','selective_gpu_v3','--ulysses_degree','1','--ring_degree','1','--weight_dtype','bfloat16','--sample_size','768','768','--fps','25','--add_prompt','','--negative_prompt','static face, frozen expression, stiff head, bad mouth, deformed face, jitter','--shift','5.0'];
+  emit('info','Owner performance benchmark V4: 768x768 · 25 FPS · 49-frame chunks · T5/CLIP CPU · selective VAE GPU · transformer resident during denoise. Stop after chunk 1 timing is captured.');
+  const args=[a.script,'--image_path',image,'--audio_path',audio,'--prompt','A natural person is speaking with realistic facial expressions, subtle head movement, blinking and conversational emotion.','--num_inference_steps','8','--config_path',a.config,'--model_name',a.model,'--transformer_path',a.transformer,'--save_path',outputDir,'--wav2vec_model_dir',a.audio,'--sampler_name','Flow_Unipc','--video_length','49','--guidance_scale','5.0','--audio_guidance_scale','2.0','--audio_scale','1.0','--neg_scale','1.0','--neg_steps','0','--seed','43','--enable_teacache','--teacache_threshold','0.1','--num_skip_start_steps','5','--teacache_offload','--GPU_memory_mode','selective_gpu_v4','--ulysses_degree','1','--ring_degree','1','--weight_dtype','bfloat16','--sample_size','768','768','--fps','25','--add_prompt','','--negative_prompt','static face, frozen expression, stiff head, bad mouth, deformed face, jitter','--shift','5.0'];
   return new Promise(resolve=>{
     let stdout='',stderr='',settled=false;
     const child=spawn(PYTHON,args,{cwd:REPO,windowsHide:true,env:{...process.env,PYTHONUTF8:'1',PYTHONIOENCODING:'utf-8'}}); activeChild=child;
     child.stdout.on('data',c=>{const t=c.toString(); stdout+=t; emit('info',t);}); child.stderr.on('data',c=>{const t=c.toString(); stderr+=t; emit('info',t);});
     child.on('error',error=>{if(activeChild===child)activeChild=null;if(!settled){settled=true;resolve({ok:false,runId,error:`Không khởi động được EchoMimicV3: ${error.message}`});}});
-    child.on('close',code=>{if(activeChild===child)activeChild=null;if(settled)return;const outputPath=findNewestMp4(outputDir);if(code!==0||!outputPath){settled=true;const combined=`${stderr}\n${stdout}`;const isOom=/CUDA out of memory|torch\.OutOfMemoryError/i.test(combined);const tail=(stderr||stdout).trim().split(/\r?\n/).slice(-20).join('\n');resolve({ok:false,runId,error:isOom?'EchoMimicV3 selective GPU V3 OOM. Dừng retry; cần PM review.':(tail||`EchoMimicV3 kết thúc với mã ${code}.`),code,outputDir,oom:isOom});return;} settled=true;emit('success',`EchoMimicV3 hoàn tất: ${outputPath}`);resolve({ok:true,runId,outputPath,outputDir,engine:'echomimicv3',ratio:'source',profile:'flash-8step-768-selective-gpu-v3'});});
+    child.on('close',code=>{if(activeChild===child)activeChild=null;if(settled)return;const outputPath=findNewestMp4(outputDir);if(code!==0||!outputPath){settled=true;const combined=`${stderr}\n${stdout}`;const isOom=/CUDA out of memory|torch\.OutOfMemoryError/i.test(combined);const tail=(stderr||stdout).trim().split(/\r?\n/).slice(-20).join('\n');resolve({ok:false,runId,error:isOom?'EchoMimicV3 selective GPU V4 OOM. Dừng retry; cần PM review.':(tail||`EchoMimicV3 kết thúc với mã ${code}.`),code,outputDir,oom:isOom});return;} settled=true;emit('success',`EchoMimicV3 hoàn tất: ${outputPath}`);resolve({ok:true,runId,outputPath,outputDir,engine:'echomimicv3',ratio:'source',profile:'flash-8step-768-selective-gpu-v4'});});
   });
 }
 function cancel(){
