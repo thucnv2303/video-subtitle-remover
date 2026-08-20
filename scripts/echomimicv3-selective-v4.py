@@ -12,6 +12,13 @@ def replace_once(text: str, old: str, new: str, label: str) -> str:
     return text.replace(old, new, 1)
 
 
+def replace_exact_count(text: str, old: str, new: str, expected: int, label: str) -> str:
+    count = text.count(old)
+    if count != expected:
+        raise RuntimeError(f"Expected exactly {expected} {label}; found {count}")
+    return text.replace(old, new, expected)
+
+
 def transform_infer(path: Path) -> None:
     text = path.read_text(encoding="utf-8")
     if NEW_MARKER in text:
@@ -70,7 +77,7 @@ def transform_pipeline(path: Path) -> None:
     old_prompt_device = '''            max_sequence_length=max_sequence_length,
             device=device,
         )
-        
+
         if vsr_selective_gpu_v3:
             self.text_encoder.to("cpu")
             torch.cuda.empty_cache()
@@ -128,18 +135,9 @@ def transform_pipeline(path: Path) -> None:
 '''
     text = replace_once(text, old_clip_start, new_clip_start, "V3 CLIP phase start")
 
-    text = replace_once(
-        text,
-        '            clip_image = TF.to_tensor(clip_image).sub_(0.5).div_(0.5).to(device, weight_dtype) \n',
-        '            clip_image = TF.to_tensor(clip_image).sub_(0.5).div_(0.5).to(clip_device, weight_dtype) \n',
-        "first CLIP input placement",
-    )
-    text = replace_once(
-        text,
-        '            clip_image = TF.to_tensor(clip_image).sub_(0.5).div_(0.5).to(device, weight_dtype) \n',
-        '            clip_image = TF.to_tensor(clip_image).sub_(0.5).div_(0.5).to(clip_device, weight_dtype) \n',
-        "second CLIP input placement",
-    )
+    old_clip_input = '            clip_image = TF.to_tensor(clip_image).sub_(0.5).div_(0.5).to(device, weight_dtype) \n'
+    new_clip_input = '            clip_image = TF.to_tensor(clip_image).sub_(0.5).div_(0.5).to(clip_device, weight_dtype) \n'
+    text = replace_exact_count(text, old_clip_input, new_clip_input, 2, "CLIP input placements")
 
     old_denoise = '''        if vsr_selective_gpu_v3:
             self.clip_image_encoder.to("cpu")
