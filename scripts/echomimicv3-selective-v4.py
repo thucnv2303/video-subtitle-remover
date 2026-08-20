@@ -74,42 +74,27 @@ def transform_pipeline(path: Path) -> None:
 '''
     text = replace_once(text, old_device, new_device, "V3 pipeline device block")
 
-    old_prompt_device = '''            max_sequence_length=max_sequence_length,
-            device=device,
-        )
-
-        if vsr_selective_gpu_v3:
+    text = replace_once(text, "            device=device,\n        )", "            device=prompt_device,\n        )", "encode_prompt device argument")
+    old_post_prompt = '''        if vsr_selective_gpu_v3:
             self.text_encoder.to("cpu")
             torch.cuda.empty_cache()
             print("VSR_SELECTIVE_GPU_V3: phase=text_encoder -> cpu")
-
-        # 4. Prepare timesteps
 '''
-    new_prompt_device = '''            max_sequence_length=max_sequence_length,
-            device=prompt_device,
-        )
-
-        if vsr_selective_gpu_v4:
+    new_post_prompt = '''        if vsr_selective_gpu_v4:
             prompt_embeds = [u.to(device=device, dtype=weight_dtype) for u in prompt_embeds]
             if negative_prompt_embeds is not None:
                 negative_prompt_embeds = [u.to(device=device, dtype=weight_dtype) for u in negative_prompt_embeds]
             print("VSR_SELECTIVE_GPU_V4: prompt embeddings CPU -> CUDA")
-
-        # 4. Prepare timesteps
 '''
-    text = replace_once(text, old_prompt_device, new_prompt_device, "V3 post-prompt block")
+    text = replace_once(text, old_post_prompt, new_post_prompt, "V3 post-prompt phase")
 
     old_mask = '''        if vsr_selective_gpu_v3:
             print("VSR_SELECTIVE_GPU_V3: phase=vae_encode -> cuda")
             self.vae.to(device)
-
-        # Prepare mask latent variables
 '''
     new_mask = '''        if vsr_selective_gpu_v4:
             print("VSR_SELECTIVE_GPU_V4: phase=vae_encode -> cuda")
             self.vae.to(device)
-
-        # Prepare mask latent variables
 '''
     text = replace_once(text, old_mask, new_mask, "V3 VAE encode start")
 
@@ -119,8 +104,6 @@ def transform_pipeline(path: Path) -> None:
             print("VSR_SELECTIVE_GPU_V3: phase=vae_encode -> cpu")
             print("VSR_SELECTIVE_GPU_V3: phase=clip -> cuda")
             self.clip_image_encoder.to(device)
-
-        # Prepare clip latent variables
 '''
     new_clip_start = '''        if vsr_selective_gpu_v4:
             self.vae.to("cpu")
@@ -130,8 +113,6 @@ def transform_pipeline(path: Path) -> None:
             print("VSR_SELECTIVE_GPU_V4: clip_image_encoder stays on CPU")
         else:
             clip_device = device
-
-        # Prepare clip latent variables
 '''
     text = replace_once(text, old_clip_start, new_clip_start, "V3 CLIP phase start")
 
@@ -145,8 +126,6 @@ def transform_pipeline(path: Path) -> None:
             print("VSR_SELECTIVE_GPU_V3: phase=clip -> cpu")
             print("VSR_SELECTIVE_GPU_V3: phase=transformer -> cuda (resident for denoise loop)")
             self.transformer.to(device)
-
-        # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
 '''
     new_denoise = '''        if vsr_selective_gpu_v4:
             if torch.is_tensor(clip_context):
@@ -156,8 +135,6 @@ def transform_pipeline(path: Path) -> None:
             print("VSR_SELECTIVE_GPU_V4: CLIP context CPU -> CUDA")
             print("VSR_SELECTIVE_GPU_V4: phase=transformer -> cuda (resident for denoise loop)")
             self.transformer.to(device)
-
-        # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
 '''
     text = replace_once(text, old_denoise, new_denoise, "V3 transformer phase start")
 
@@ -167,8 +144,6 @@ def transform_pipeline(path: Path) -> None:
             print("VSR_SELECTIVE_GPU_V3: phase=transformer -> cpu")
             print("VSR_SELECTIVE_GPU_V3: phase=vae_decode -> cuda")
             self.vae.to(device)
-
-        if output_type == "numpy":
 '''
     new_decode = '''        if vsr_selective_gpu_v4:
             self.transformer.to("cpu")
@@ -176,8 +151,6 @@ def transform_pipeline(path: Path) -> None:
             print("VSR_SELECTIVE_GPU_V4: phase=transformer -> cpu")
             print("VSR_SELECTIVE_GPU_V4: phase=vae_decode -> cuda")
             self.vae.to(device)
-
-        if output_type == "numpy":
 '''
     text = replace_once(text, old_decode, new_decode, "V3 decode phase start")
 
@@ -185,15 +158,11 @@ def transform_pipeline(path: Path) -> None:
             self.vae.to("cpu")
             torch.cuda.empty_cache()
             print("VSR_SELECTIVE_GPU_V3: phase=vae_decode -> cpu")
-
-        # Offload all models
 '''
     new_free = '''        if vsr_selective_gpu_v4:
             self.vae.to("cpu")
             torch.cuda.empty_cache()
             print("VSR_SELECTIVE_GPU_V4: phase=vae_decode -> cpu")
-
-        # Offload all models
 '''
     text = replace_once(text, old_free, new_free, "V3 post-decode phase")
 
