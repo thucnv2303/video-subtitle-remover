@@ -4,7 +4,7 @@
 TALKING-PORTRAIT-ECHOMIMICV3-036
 
 ## Status
-SELECTIVE_GPU_RESIDENCY_V3_PUBLISHED_STATIC_AND_OWNER_BENCHMARK_WAITING_MERGE_BLOCKED
+MMGP_V5_2_1_DENOISE_BREAKTHROUGH_TOTAL_CHUNK_TIMING_WAITING_MERGE_BLOCKED
 
 ## Exact basis
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -14,59 +14,45 @@ SELECTIVE_GPU_RESIDENCY_V3_PUBLISHED_STATIC_AND_OWNER_BENCHMARK_WAITING_MERGE_BL
 - EchoMimicV3 upstream pin: `7e89489ca51c0d008fc1963ec6c03fc5bd0b9397`.
 
 ## User outcome
-Use EchoMimicV3 Flash as AI Avatar `Chất lượng cao` on RTX 5060 Ti 16 GB at 768x768/25 FPS with complete voice duration and product-acceptable render speed.
+Use EchoMimicV3 Flash as AI Avatar `Chất lượng cao` on RTX 5060 Ti 16 GB at 768x768/25 FPS with complete voice duration, acceptable talking-head quality, and practical render speed.
 
 ## Verified progression
-1. Full GPU: FAIL by CUDA OOM at VAE mask latent encode.
-2. Sequential CPU offload: memory success but performance FAIL.
-3. Long-audio V2: fixes the short-output duration cap using sequential 49-frame chunks.
-4. Model CPU offload benchmark: performance FAIL; first chunk did not finish after roughly 44 minutes.
-5. PM decision: stop retrying whole-pipeline offload modes and use selective component residency.
+1. V5.1 is the functional end-to-end baseline but took ~69m36s for 14.86 s and visual quality still needs revision.
+2. V5.2 moves transformer memory management to MMGP `LowRAM_HighVRAM`, 90% VRAM budget, with `quanto.qint8` transformer quantization and TeaCache.
+3. Audio-model repair restored the isolated Chinese wav2vec checkpoint and passed local Wav2Vec2 load verification.
+4. V5.2.1 fixes MMGP default-device interference by keeping wav2vec indexing tensors on CPU and moving only gathered embeddings to CUDA.
+5. Owner V5.2.1 runtime reached real inference and completed first-chunk denoise 8/8 in ~132.9 s for 49 frames at 768x768/25 FPS. This is a major improvement over V5.1 ~381 s/chunk denoise.
+6. No CUDA OOM or exception occurred during those 8 denoise steps.
+7. External `flash_attn` package is absent; Torch SDPA backends report enabled. Runtime warns that padding mask is disabled with scaled-dot-product attention and may significantly affect performance.
 
-## V3 implementation under test
-- Preserve 768x768, 25 FPS, Flash 8-step, TeaCache and 49-frame long-audio chunks.
-- T5: GPU only for prompt encode.
-- VAE: GPU only for latent encode and later decode.
-- CLIP image encoder: GPU only for image-context encode.
-- Transformer: move to GPU once before denoise and keep resident through all diffusion steps.
-- Return inactive components to CPU and clear CUDA cache at phase boundaries.
-- Runtime markers must include `VSR_SELECTIVE_GPU_V3` in both patched upstream files.
-- Windows Cancel must terminate the whole EchoMimicV3 process tree.
+## Current acceptance benchmark
+Keep benchmark controlled: 768x768, 25 FPS, 49-frame chunks, Flash 8-step, TeaCache, MMGP `LowRAM_HighVRAM` 90% budget.
 
-## Acceptance benchmark
-For the first 49-frame chunk at 768x768/25 FPS/8-step:
-- under 90 s: good;
-- 90-180 s: marginal, PM review required;
-- over 180 s: performance FAIL for this local default;
-- any CUDA OOM/exception: STOP and report exact traceback.
+Required remaining evidence for chunk 1:
+- `VSR_MMGP_V52: chunk=1 pipeline_seconds=...`;
+- peak CUDA allocation marker if emitted;
+- confirmation that chunk 1 output/decode completed without OOM/exception;
+- stop/cancel once chunk 2 begins; full 14.86 s render is not required for this measurement.
 
-## Required local evidence before benchmark
-- exact branch HEAD after fast-forward;
-- `node --check src/main/echomimicv3-engine.js` PASS;
-- `git diff --check 1b1b8ba4b82078534b7fa24582be7e44688319bd..HEAD` PASS;
-- `scripts/upgrade-echomimicv3-selective-v3.ps1` reports `SELECTIVE GPU V3 READY`;
-- upgrader `py_compile` succeeds for both `infer_flash.py` and `pipeline_wan_fun_inpaint_audio_2512.py`.
+Interpretation:
+- <=180 s total first-chunk pipeline: performance architecture PASS for this R&D stage;
+- >180 s: PM must inspect phase timing before further tuning;
+- any OOM/exception: STOP and report exact traceback.
 
-## Owner runtime evidence
-Require phase markers in order:
-- `phase=text_encoder -> cuda` then CPU;
-- `phase=vae_encode -> cuda` then CPU;
-- `phase=clip -> cuda` then CPU;
-- `phase=transformer -> cuda (resident for denoise loop)`;
-- after denoise, transformer CPU;
-- `phase=vae_decode -> cuda` then CPU.
-Also capture `VSR_LONG_AUDIO_V2: chunk=1` and the time until chunk 1 completes or failure occurs.
+## Next engineering decision
+Do not change quality settings yet. Once total first-chunk timing is known, isolate the next experiment. Current likely candidate is attention-path optimization because MMGP has removed most custom block-transfer overhead while external FlashAttention is absent. Any FlashAttention experiment must first prove Windows/PyTorch/RTX 5060 Ti compatibility; do not blindly install or replace attention code.
 
 ## Gates
-- Execution: PASS for V3 publication.
-- Automated/static: WAITING local evidence.
-- Code review: PASS for V3 architecture/scope, runtime unverified.
-- Owner runtime: NOT STARTED V3.
-- Documentation sync: PASS after V3 state update.
+- Execution: PASS through V5.2.1 publication/bootstrap.
+- Automated/static: PASS for the published upgrader path based on prior Owner upgrade success.
+- Code review: WAITING final review after current R&D iteration.
+- Owner runtime: PARTIAL PASS — first-chunk denoise 8/8 completed in ~133 s; total chunk/decode still WAITING.
+- Documentation sync: PASS after current sync.
 - Merge: BLOCKED.
 
 ## Forbidden
 - Do not merge PR #76.
 - Do not modify P1/P2/P3, Voice Render, standalone Xoa Sub, task 034, or JoyVASA runtime.
-- Do not retry arbitrary lower resolution/chunk/settings after a V3 failure.
-- Do not return to sequential/model CPU offload as the product path without a new PM decision.
+- Do not return to custom V5.1 block streaming as the preferred path.
+- Do not lower resolution/frame rate/steps while collecting the controlled V5.2.1 benchmark.
+- Do not install an arbitrary FlashAttention wheel/build until compatibility is verified.
