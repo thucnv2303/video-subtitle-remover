@@ -4,7 +4,7 @@
 `TALKING-PORTRAIT-ECHOMIMICV3-036`
 
 ## Status
-SELECTIVE GPU RESIDENCY V3 PUBLISHED / LOCAL STATIC+UPGRADE VERIFICATION WAITING / OWNER BENCHMARK WAITING / MERGE BLOCKED
+MMGP V5.2.1 FIRST-CHUNK DENOISE BREAKTHROUGH / TOTAL CHUNK TIMING WAITING / R&D CONTINUES / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -15,44 +15,37 @@ SELECTIVE GPU RESIDENCY V3 PUBLISHED / LOCAL STATIC+UPGRADE VERIFICATION WAITING
 - Runtime: `C:\VSR-EchoMimicV3`.
 - Owner test worktree: `E:\Project AI\Video-sub-remove-owner-test-LONG012`.
 
-## Runtime history
-- Full GPU 768p/49 frames reached real inference but OOMed during VAE mask latent encoding, short by about 540 MiB at the failing allocation.
-- Sequential CPU offload avoided OOM and produced output, but was too slow.
-- Long-audio V2 corrected the ~49-frame total-duration cap by rendering one loaded pipeline as sequential chunks.
-- Sequential V2 remained impractical for ~15 s audio.
-- Model CPU offload benchmark also failed the performance target: Owner observed roughly 44 minutes without first-chunk completion.
+## Runtime checkpoint
+- V5.1 produced the first complete ~14.86 s result but required ~69m36s and visual quality remains below product acceptance.
+- V5.2 replaced custom transformer block streaming with MMGP `LowRAM_HighVRAM`, 90% detected VRAM budget, `quanto.qint8`, pinned RAM, TeaCache, and 49-frame/8-step controlled benchmark.
+- The isolated Chinese wav2vec model was repaired after the first V5.2 attempt exposed missing model weights.
+- V5.2 then exposed CPU/GPU index-device conflict caused by MMGP default-device behavior.
+- V5.2.1 fixes indexing by explicitly keeping `center_indices` on CPU and transferring only selected audio embeddings to CUDA.
+- Owner runtime on V5.2.1 reached real denoise and completed 8/8 steps for chunk 1 in about 132.9 s (11:37:35 -> 11:39:48), versus V5.1 roughly 381 s/chunk denoise.
+- No OOM/exception occurred during the 8 denoise steps.
+- Diagnostics: MMGP 3.7.12, LowRAM_HighVRAM, budget 14679 MiB / 16310 MiB, transformer qint8, ~1888.18 MB transformer pinned RAM, `flash_attn_package=False`, Torch flash/memory-efficient/math SDP flags enabled.
+- The supplied Owner log ends at denoise completion; first-chunk decode/output `pipeline_seconds` and peak CUDA are still missing.
 
 ## PM decision
-Do not keep tuning whole-pipeline CPU offload. Preserve the quality profile and use phase-based selective GPU residency so only the active component occupies CUDA, while the transformer stays resident for the entire expensive denoise loop.
-
-## Published V3
-- `scripts/echomimicv3-selective-v3.py`: deterministic transform for recognized V2 runtime + exact pinned pipeline.
-- `scripts/upgrade-echomimicv3-selective-v3.ps1`: applies V3 and compiles both patched upstream Python files before READY.
-- `src/main/echomimicv3-engine.js`: uses `--GPU_memory_mode selective_gpu_v3`, requires V3 markers in infer + pipeline, and uses Windows `taskkill /T /F` for process-tree cancellation.
-- Phase order: T5 GPU -> CPU; VAE encode GPU -> CPU; CLIP GPU -> CPU; transformer GPU resident through denoise -> CPU; VAE decode GPU -> CPU.
-- Quality remains Flash 8-step, 768x768, 25 FPS, 49-frame chunks and TeaCache.
+Keep MMGP V5.2.1 as the active performance architecture. Do not revert to V5.1 custom block streaming. Do not tune quality yet. First close the controlled first-chunk timing measurement. After that, PM may authorize one isolated attention-backend experiment if compatibility is proven.
 
 ## Exact next action
-1. Verify current PR #76 exact HEAD after this docs sync.
-2. Owner fast-forwards `E:\Project AI\Video-sub-remove-owner-test-LONG012` to that exact HEAD.
-3. Run `node --check src/main/echomimicv3-engine.js`.
-4. Run `git diff --check 1b1b8ba4b82078534b7fa24582be7e44688319bd..HEAD`.
-5. Run `powershell -ExecutionPolicy Bypass -File scripts/upgrade-echomimicv3-selective-v3.ps1` once.
-6. Require `[EchoMimicV3] SELECTIVE GPU V3 READY`; any transform/compile error => STOP and send exact output.
-7. If static/upgrade gate passes, start app and run one controlled `Chất lượng cao` benchmark.
-8. Measure first 49-frame chunk: <90 s good, 90-180 s marginal, >180 s FAIL. Any OOM/exception => STOP.
-9. Do not lower quality/settings automatically.
+1. Do not start another full benchmark if the current process/log can still provide the missing lines.
+2. Capture lines after chunk-1 denoise until `VSR_MMGP_V52: chunk=1 pipeline_seconds=...` and peak CUDA marker/output completion.
+3. If `VSR_LONG_AUDIO_V2: chunk=2` begins, cancel the render; no full 14.86 s render is needed for this benchmark.
+4. Send the chunk-1 tail log to PM.
+5. PM classifies total first-chunk timing and chooses exactly one next R&D experiment.
 
 ## Gates
-- Execution: PASS for V3 publication.
-- Automated verification: WAITING local static/upgrader evidence.
-- Code review: PASS for V3 architecture/scope; runtime remains unverified.
-- Owner runtime: NOT STARTED V3.
+- Execution: PASS through V5.2.1.
+- Automated/static verification: PASS for current upgrader/bootstrap evidence.
+- Code review: WAITING final review after R&D iteration.
+- Owner runtime: PARTIAL PASS — denoise performance breakthrough verified; decode/output timing waiting.
 - Documentation synchronization: PASS after this update.
 - Merge permission: BLOCKED.
 
 ## Forbidden
 - No merge.
-- No P1/P2/P3, Voice Render, Xoa Sub, task-034, or JoyVASA runtime changes.
-- No repeated quality reductions after V3 failure.
-- No claim that V3 is production-ready until first-chunk timing and real MP4 behavior are verified.
+- No P1/P2/P3, Voice Render, Xoa Sub, task-034, or JoyVASA changes.
+- No uncontrolled changes to resolution/FPS/chunk/steps during benchmark comparison.
+- No arbitrary FlashAttention installation/build until RTX 5060 Ti + Windows + installed PyTorch compatibility is established.
