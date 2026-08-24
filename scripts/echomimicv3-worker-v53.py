@@ -214,8 +214,10 @@ class EchoWorker:
                 fps=FPS,
                 device="cpu",
             )
-            local_centers = torch.arange(0, infer_frames).unsqueeze(1)
-            context_offsets = (torch.arange(5) - 2).unsqueeze(0)
+            # MMGP can change Torch's default device. Wav2Vec features stay on CPU,
+            # therefore every tensor used to index them must be explicitly CPU too.
+            local_centers = torch.arange(0, infer_frames, device="cpu").unsqueeze(1)
+            context_offsets = (torch.arange(5, device="cpu") - 2).unsqueeze(0)
             center_indices = torch.clamp(
                 local_centers + context_offsets,
                 min=0,
