@@ -56,6 +56,24 @@ class EchoWorker:
             sys.path.insert(0, str(repo))
         os.chdir(repo)
 
+        # IMPORTANT: load Wav2Vec before importing infer_flash/EchoMimic runtime.
+        # The isolated repair smoke test uses this order successfully. Importing the
+        # full EchoMimic stack first can put this environment on an incompatible
+        # safetensors safe_open(..., backend=...) path during transformers loading.
+        from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2Model
+
+        emit_control("model_init_start", marker="VSR_WORKER_V53: model_init_start")
+        self.audio_encoder = Wav2Vec2Model.from_pretrained(
+            self.args.audio_model,
+            local_files_only=True,
+        ).to("cpu")
+        self.audio_encoder.feature_extractor._freeze_parameters()
+        self.wav2vec_feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(
+            self.args.audio_model,
+            local_files_only=True,
+        )
+        print("VSR_WORKER_V53: wav2vec_ready", flush=True)
+
         import infer_flash as rt
         import numpy as np
         import torch
@@ -71,11 +89,6 @@ class EchoWorker:
         self.AudioFileClip = AudioFileClip
         self.VideoFileClip = VideoFileClip
         self.weight_dtype = torch.bfloat16
-
-        emit_control("model_init_start", marker="VSR_WORKER_V53: model_init_start")
-        self.audio_encoder = rt.Wav2Vec2Model.from_pretrained(self.args.audio_model, local_files_only=True).to("cpu")
-        self.audio_encoder.feature_extractor._freeze_parameters()
-        self.wav2vec_feature_extractor = rt.Wav2Vec2FeatureExtractor.from_pretrained(self.args.audio_model, local_files_only=True)
 
         self.device = rt.set_multi_gpus_devices(1, 1)
         config = rt.OmegaConf.load(self.args.config)
