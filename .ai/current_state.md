@@ -1,45 +1,52 @@
 # Current State
 
 ## Status
-TALKING-PORTRAIT-ECHOMIMICV3-036 — R&D CONTINUE / MMGP V5.2.5 CONTROLLED CHUNK COMPLETE / PERSISTENT-WORKER ARCHITECTURE NEXT / MERGE BLOCKED
+TALKING-PORTRAIT-ECHOMIMICV3-036 — V5.3 SOURCE PUBLISHED / STATIC REVIEW COMPLETE / OWNER TWO-JOB RUNTIME WAITING / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
 - Active review branch: `review/TALKING-PORTRAIT-ECHOMIMICV3-036`.
 - Draft PR: #76, open, not merged.
 - Base: `review/TALKING-PORTRAIT-JOYVASA-035@1b1b8ba4b82078534b7fa24582be7e44688319bd`.
-- Verified source HEAD before this docs sync: `731e0cfaa43a46c2af0bf225d12ab9beff6301b4`.
+- V5.3 source commit: `c396b1799d669e44b86770ceeab37d51aa2f1d59`.
 - EchoMimicV3 upstream pin: `7e89489ca51c0d008fc1963ec6c03fc5bd0b9397`.
-- GPU: NVIDIA GeForce RTX 5060 Ti, 15.93 GiB VRAM.
 - Runtime root: `C:\VSR-EchoMimicV3`.
 - Owner worktree: `E:\Project AI\Video-sub-remove-owner-test-LONG012`.
 
-## Verified runtime progression
-1. Full GPU 768p failed by CUDA OOM; 16 GB cannot hold the unquantized whole pipeline resident.
-2. Sequential/model CPU offload avoided OOM but was product-infeasible.
-3. Custom block streaming V5.1 was the first end-to-end success: ~14.86 s output completed in ~69m36s; visual quality still needs revision.
-4. V5.2 moved memory management to MMGP `LowRAM_HighVRAM`, 90% VRAM budget, transformer `quanto.qint8`, MMGP hooks/pinned RAM, TeaCache, controlled 49-frame benchmark.
-5. Audio model repair and V5.2.1 CPU-index fix removed bootstrap/indexing blockers.
-6. V5.2.2/V5.2.3/V5.2.4 isolated and removed post-denoise stalls caused by Diffusers hook cleanup / BaseOutput return on the MMGP path.
-7. V5.2.5 added flushed post-return timing and a hard stop after chunk 1.
-8. Owner V5.2.5 benchmark completed chunk 1 cleanly: `pipeline_seconds=186.672`, `peak_cuda_gb=10.930`, 49 frames, 768x768, 25 FPS, Flash 8-step, TeaCache, MMGP 90% budget.
-9. Denoise itself completed in ~130 s; VAE decode took ~10.856 s; GPU->CPU frame transfer took ~0.082 s. No OOM or exception occurred.
-10. Cold start remains large: render request at 10:12:50 reached `pipeline_start` at 10:16:58 (~248 s). Current Electron engine spawns a fresh Python `infer_flash.py` process per render, forcing model load, MMGP setup, and transformer quantization on every click.
-11. Upstream `app_mm.py` loads pipeline/Wav2Vec/MMGP once at process startup and reuses them across repeated `generate()` calls. Current app architecture does not reuse the warm model state.
-12. `flash_attn_package=False`; Torch SDP backends report enabled and runtime warns the padding-mask SDPA path may significantly affect performance.
+## Verified runtime baseline
+1. V5.1 completed ~14.86 s end-to-end in ~69m36s; visual quality remains below product acceptance.
+2. V5.2.x established MMGP `LowRAM_HighVRAM`, 90% VRAM budget and stable controlled 49-frame execution.
+3. Owner V5.2.5: `pipeline_seconds=186.672`, `peak_cuda_gb=10.930`, no OOM/exception.
+4. Cold request-to-pipeline startup was ~248 s because the previous Electron engine spawned fresh Python inference per render.
 
-## Engineering conclusion
-MMGP is now the verified active memory architecture. The next highest-ROI change is not another per-kernel tweak: it is a persistent EchoMimic worker so model loading/MMGP quantization happens once per app/runtime session instead of once per render. After warm-worker timing is verified, optimize chunk length/attention/step profile in isolated A/B benchmarks.
+## V5.3 source
+- Added `scripts/echomimicv3-worker-v53.py`.
+- Reworked `src/main/echomimicv3-engine.js` to own one long-lived worker lifecycle.
+- Heavy model/MMGP initialization is outside the per-job handler.
+- JSON-lines control messages are prefixed `VSR_WORKER_JSON ` so ordinary runtime stdout cannot be mistaken for protocol.
+- One active job is allowed at a time.
+- Cancel terminates the worker process tree; next render must bootstrap a clean worker.
+- Worker emits boot/model-init/READY/job cold-warm/pipeline timing/peak CUDA/completion/failure markers.
+- Controlled V5.3 output remains 768x768, 25 FPS, max 49 frames, 8 steps, TeaCache threshold 0.1, seed 43 and MMGP 90% budget.
+
+## Verification
+- Local Python syntax (`py_compile`) for the new worker: PASS before publication.
+- Local Node syntax (`node --check`) for the replacement engine: PASS before publication.
+- GitHub source commit and PR head verified after publication.
+- PR #76 remains Draft/open at exact source HEAD `c396b1799d669e44b86770ceeab37d51aa2f1d59` before this docs commit.
+- GitHub reports no commit status checks for the source commit.
+- GPU/runtime behavior is not verified by ChatGPT environment.
 
 ## Gates
-- Functional feasibility: PASS from V5.1 end-to-end output.
-- MMGP controlled first chunk: PASS for stability; 186.672 s is slightly above the <=180 s R&D target.
-- VRAM headroom: PASS for 49-frame profile; peak allocation 10.930 GiB on 15.93 GiB GPU.
-- Cold-start performance: FAIL / primary architecture bottleneck.
-- Visual quality: NEEDS_REVISION; quality tuning remains deferred until warm-worker baseline exists.
-- Code review: WAITING for next R&D iteration.
-- Documentation synchronization: PASS after this update.
+- V5.2.5 runtime benchmark: PASS.
+- V5.3 source publication: PASS.
+- V5.3 static syntax: PASS.
+- V5.3 code review: PASS for narrow architecture/source; GPU-specific behavior remains runtime-gated.
+- V5.3 Owner two-job warm reuse: WAITING.
+- V5.3 cancellation/restart Owner runtime: WAITING.
+- Visual quality: NEEDS_REVISION and intentionally deferred.
+- Documentation synchronization: PASS after this docs commit.
 - Merge permission: BLOCKED.
 
 ## Next permitted action
-Design and implement a narrow persistent-worker V5.3: start one long-lived Python process, initialize EchoMimic/MMGP once, accept render jobs over a simple local IPC boundary, keep one-job-at-a-time semantics and cancellation, and measure cold-start separately from warm render time. Do not merge PR #76.
+Owner checks out the exact PR #76 head after this docs commit and runs two sequential `Chất lượng cao` renders in the same app session. Required evidence is the full Render log showing one worker model initialization/READY, first job `warm=false`, second job `warm=true`, no repeated model-init/MMGP setup before job 2, both pipeline timings/peak CUDA, and no OOM/exception. Do not merge PR #76.
