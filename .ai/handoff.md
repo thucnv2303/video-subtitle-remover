@@ -4,7 +4,7 @@
 `TALKING-PORTRAIT-ECHOMIMICV3-036`
 
 ## Status
-MMGP V5.2.1 FIRST-CHUNK DENOISE BREAKTHROUGH / TOTAL CHUNK TIMING WAITING / R&D CONTINUES / MERGE BLOCKED
+MMGP V5.2.5 CONTROLLED CHUNK VERIFIED / V5.3 PERSISTENT WORKER NEXT / R&D CONTINUES / MERGE BLOCKED
 
 ## Authority
 - Repository: `thucnv2303/video-subtitle-remover`.
@@ -15,37 +15,47 @@ MMGP V5.2.1 FIRST-CHUNK DENOISE BREAKTHROUGH / TOTAL CHUNK TIMING WAITING / R&D 
 - Runtime: `C:\VSR-EchoMimicV3`.
 - Owner test worktree: `E:\Project AI\Video-sub-remove-owner-test-LONG012`.
 
-## Runtime checkpoint
-- V5.1 produced the first complete ~14.86 s result but required ~69m36s and visual quality remains below product acceptance.
-- V5.2 replaced custom transformer block streaming with MMGP `LowRAM_HighVRAM`, 90% detected VRAM budget, `quanto.qint8`, pinned RAM, TeaCache, and 49-frame/8-step controlled benchmark.
-- The isolated Chinese wav2vec model was repaired after the first V5.2 attempt exposed missing model weights.
-- V5.2 then exposed CPU/GPU index-device conflict caused by MMGP default-device behavior.
-- V5.2.1 fixes indexing by explicitly keeping `center_indices` on CPU and transferring only selected audio embeddings to CUDA.
-- Owner runtime on V5.2.1 reached real denoise and completed 8/8 steps for chunk 1 in about 132.9 s (11:37:35 -> 11:39:48), versus V5.1 roughly 381 s/chunk denoise.
-- No OOM/exception occurred during the 8 denoise steps.
-- Diagnostics: MMGP 3.7.12, LowRAM_HighVRAM, budget 14679 MiB / 16310 MiB, transformer qint8, ~1888.18 MB transformer pinned RAM, `flash_attn_package=False`, Torch flash/memory-efficient/math SDP flags enabled.
-- The supplied Owner log ends at denoise completion; first-chunk decode/output `pipeline_seconds` and peak CUDA are still missing.
+## Verified runtime checkpoint
+- V5.1 remains the first complete ~14.86 s functional baseline: ~69m36s, visual quality below product acceptance.
+- V5.2 adopted MMGP `LowRAM_HighVRAM`, 90% VRAM budget, qint8 transformer, pinned RAM and TeaCache.
+- V5.2.1 fixed CPU wav2vec indexing under MMGP.
+- V5.2.2-V5.2.4 instrumented decode/return and removed MMGP-path stalls from Diffusers cleanup/BaseOutput handling.
+- V5.2.5 hard-stops after chunk 1 and flushes timing/peak diagnostics.
+- Owner V5.2.5 evidence: first 49-frame chunk completed with `pipeline_seconds=186.672`, `peak_cuda_gb=10.930`; VAE decode 10.856 s; frames GPU->CPU 0.082 s; no OOM/exception.
+- Controlled <=180 s target was missed by 6.672 s, so performance is improved but not accepted as production-ready.
+- More importantly, request at 10:12:50 reached pipeline start at 10:16:58 (~248 s cold start). GitHub source confirms `src/main/echomimicv3-engine.js` currently spawns a fresh Python `infer_flash.py` process for every render.
+- Upstream `app_mm.py` demonstrates the intended reusable architecture: initialize pipeline/Wav2Vec/MMGP once and reuse for repeated generation calls.
 
 ## PM decision
-Keep MMGP V5.2.1 as the active performance architecture. Do not revert to V5.1 custom block streaming. Do not tune quality yet. First close the controlled first-chunk timing measurement. After that, PM may authorize one isolated attention-backend experiment if compatibility is proven.
+Keep MMGP. Do not revert to custom block streaming and do not tune visual quality yet. V5.3 is a narrow persistent-worker experiment because eliminating repeated model load/quantization has higher expected product value than trying to recover only 6.7 s from the current controlled chunk target.
 
 ## Exact next action
-1. Do not start another full benchmark if the current process/log can still provide the missing lines.
-2. Capture lines after chunk-1 denoise until `VSR_MMGP_V52: chunk=1 pipeline_seconds=...` and peak CUDA marker/output completion.
-3. If `VSR_LONG_AUDIO_V2: chunk=2` begins, cancel the render; no full 14.86 s render is needed for this benchmark.
-4. Send the chunk-1 tail log to PM.
-5. PM classifies total first-chunk timing and chooses exactly one next R&D experiment.
+Implement V5.3 on the same review branch with a long-lived Python EchoMimic worker and minimal local IPC. Initialize model/MMGP once, process one job at a time, preserve cancellation/restart, and emit markers proving whether a job is cold or warm. Benchmark two sequential jobs in one app session using the same controlled settings; second job must not repeat full model loading/quantization.
+
+## Required evidence next
+- exact source commit and changed files;
+- static/syntax verification;
+- worker READY marker;
+- two sequential jobs in same worker lifetime;
+- proof second job skips full load/quantization;
+- warm first-chunk `pipeline_seconds` and peak CUDA;
+- no OOM/exception;
+- cancellation/restart behavior evidence before final acceptance.
 
 ## Gates
-- Execution: PASS through V5.2.1.
-- Automated/static verification: PASS for current upgrader/bootstrap evidence.
-- Code review: WAITING final review after R&D iteration.
-- Owner runtime: PARTIAL PASS — denoise performance breakthrough verified; decode/output timing waiting.
+- V5.2.5 runtime benchmark: PASS.
+- MMGP stability/VRAM: PASS for controlled 49-frame chunk.
+- Product performance: NEEDS_REVISION.
+- V5.3 implementation: NOT STARTED.
+- Automated verification: WAITING V5.3.
+- Code review: WAITING V5.3.
+- Owner runtime: WAITING V5.3.
 - Documentation synchronization: PASS after this update.
 - Merge permission: BLOCKED.
 
 ## Forbidden
 - No merge.
 - No P1/P2/P3, Voice Render, Xoa Sub, task-034, or JoyVASA changes.
-- No uncontrolled changes to resolution/FPS/chunk/steps during benchmark comparison.
-- No arbitrary FlashAttention installation/build until RTX 5060 Ti + Windows + installed PyTorch compatibility is established.
+- No quality/resolution/FPS/step changes during V5.3 benchmark.
+- No arbitrary FlashAttention install/build yet.
+- No silent fallback to fresh-process-per-render when benchmarking persistent-worker performance.
