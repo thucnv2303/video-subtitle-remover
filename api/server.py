@@ -4,7 +4,7 @@ import asyncio
 import threading
 import traceback
 import json
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 # Disable slow online connectivity check for Paddle / PaddleOCR
 os.environ["PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK"] = "True"
@@ -2978,6 +2978,347 @@ def video_render_cut_and_concat(req: VideoRenderRequest):
             "vocal_removed": req.remove_vocal
         }
     except Exception as e:
+        traceback.print_exc()
+        return {"status": "error", "error": str(e)}
+
+
+# ─── AI Video Auto-Remix & Multi-Video Director ────────────────────────────
+
+class DetectFaceFreeReq(BaseModel):
+    video_path: str
+    sample_step_sec: Optional[float] = 0.35
+    min_clip_sec: Optional[float] = 1.0
+
+@app.post("/api/ai-remix/detect-face-free-timeline")
+def api_detect_face_free_timeline(req: DetectFaceFreeReq):
+    """
+    Quét video bằng OpenCV Face Detection, loại bỏ các frame có mặt người và trả về timeline các cảnh sạch.
+    """
+    try:
+        try:
+            from face_detector import detect_face_free_intervals, format_sec_to_hms
+        except ImportError:
+            from api.face_detector import detect_face_free_intervals, format_sec_to_hms
+        return detect_face_free_intervals(
+            video_path=req.video_path,
+            sample_step_sec=req.sample_step_sec or 0.35,
+            min_clip_sec=req.min_clip_sec or 1.0
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return {"status": "error", "error": str(e)}
+
+
+class AutoRemixDirectorReq(BaseModel):
+    video_path: str
+    face_free_intervals: Optional[List[Dict[str, Any]]] = None
+    ai_config: Optional[Dict[str, Any]] = None
+    sample_step_sec: Optional[float] = 0.35
+
+@app.post("/api/ai-remix/auto-director")
+def api_ai_remix_auto_director(req: AutoRemixDirectorReq):
+    """
+    AI Local Director: Nhận danh sách cảnh sạch và tự động phân tích để:
+    1. Tái cấu trúc Timeline cắt dựng mới (Hook -> Tính năng -> Trải nghiệm -> CTA).
+    2. Viết kịch bản Voiceover lồng tiếng truyền cảm có nhấn nhá *...* và ngắt nhịp ...
+    """
+    import urllib.request, urllib.error
+    try:
+        # 1. Nếu chưa có face_free_intervals, tự động chạy face detector
+        intervals = req.face_free_intervals
+        face_info = {}
+        if not intervals:
+            try:
+                from face_detector import detect_face_free_intervals, format_sec_to_hms
+            except ImportError:
+                from api.face_detector import detect_face_free_intervals, format_sec_to_hms
+            face_res = detect_face_free_intervals(req.video_path, req.sample_step_sec or 0.35)
+            if face_res.get("status") != "ok":
+                return {"status": "error", "error": face_res.get("error", "Lỗi quét mặt người")}
+            intervals = face_res.get("face_free_intervals", [])
+            face_info = face_res
+
+        if not intervals:
+            return {"status": "error", "error": "Không tìm thấy phân đoạn sạch nào sau khi lọc mặt người."}
+
+        # 2. Chuẩn bị prompt gửi AI Local / LLM
+        clean_clips_text = json.dumps(intervals, ensure_ascii=False, indent=2)
+        system_prompt = (
+            "Bạn là Đạo diễn Video AI chuyên nghiệp (AI Video Director & Viral Content Creator).\n"
+            "Nhiệm vụ của bạn là nhận danh sách các phân đoạn video sạch đã loại bỏ mặt người, sau đó:\n"
+            "1. Tái cấu trúc (Remix) lại thứ tự các phân đoạn trên để tạo thành video hoàn chỉnh cuốn hút (Hook -> Tính năng -> Trải nghiệm -> Kêu gọi CTA). "
+            "Nếu một phân đoạn quá dài (>6 giây), hãy chia nhỏ mốc thời gian 3-5 giây để nhịp video nhanh và hấp dẫn.\n"
+            "2. Viết kịch bản Voiceover tiếng Việt truyền cảm, ngôn từ đời thường lôi cuốn, câu ngắn 8-14 từ, "
+            "sử dụng dấu *từ khóa* để nhấn nhá từ đắt giá, dùng ... để ngắt nhịp lấy hơi, dùng — để chuyển ý, viết số thành chữ.\n\n"
+            "BẮT BUỘC trả về DUY NHẤT một chuỗi JSON hợp lệ theo cấu trúc sau (không kèm văn bản giải thích nào khác):\n"
+            "{\n"
+            '  "remix_clips": [\n'
+            '    {"name": "Đoạn 1: [Hook / Vấn đề] Giật tít lôi cuốn (clip1)", "start": "00:00:03", "to": "00:00:06"},\n'
+            '    {"name": "Đoạn 2: [Tính năng / Giải pháp] Thao tác thực tế (clip2)", "start": "00:00:07", "to": "00:00:10"}\n'
+            "  ],\n"
+            '  "voiceover_script": "Nội dung lời thoại lồng tiếng có nhấn *từ khóa* và ngắt nhịp...",\n'
+            '  "estimated_duration": 25\n'
+            "}"
+        )
+
+        user_content = f"Danh sách các phân đoạn video sạch:\n{clean_clips_text}\n\nHãy tạo Timeline remix mới và kịch bản Voiceover cho video này."
+
+        ai_cfg = req.ai_config or {}
+        provider = str(ai_cfg.get('provider', 'ollama')).lower()
+        model = str(ai_cfg.get('model', '')).strip()
+        endpoint = str(ai_cfg.get('endpoint', '')).strip()
+
+        api_keys = ai_cfg.get('api_keys', [])
+        if not api_keys and ai_cfg.get('api_key'):
+            api_keys = [ai_cfg.get('api_key')]
+
+        if provider == 'ollama':
+            if not endpoint:
+                endpoint = "http://localhost:11434/api/chat"
+            ollama_model = model or (api_keys[0] if api_keys else '') or 'qwen2.5'
+            api_keys = [ollama_model]
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content}
+        ]
+
+        llm_reply = None
+        for key_or_model in api_keys:
+            try:
+                if provider == 'ollama':
+                    data = json.dumps({"model": key_or_model, "messages": messages, "stream": False, "format": "json"}).encode('utf-8')
+                    req_http = urllib.request.Request(endpoint or "http://localhost:11434/api/chat", data=data, headers={'Content-Type': 'application/json'})
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=120).read().decode('utf-8'))
+                    llm_reply = res_data['message']['content']
+                    break
+                elif provider == 'gemini':
+                    gemini_model = model or "gemini-2.5-flash"
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={key_or_model}"
+                    data = json.dumps({"contents": [{"parts": [{"text": system_prompt + "\n\n" + user_content}]}]}).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+                    llm_reply = res_data['candidates'][0]['content']['parts'][0]['text']
+                    break
+                elif provider == 'deepseek':
+                    ds_model = model or "deepseek-chat"
+                    url = "https://api.deepseek.com/chat/completions"
+                    data = json.dumps({"model": ds_model, "messages": messages}).encode('utf-8')
+                    req_http = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key_or_model}'})
+                    res_data = json.loads(urllib.request.urlopen(req_http, timeout=60).read().decode('utf-8'))
+                    llm_reply = res_data['choices'][0]['message']['content']
+                    break
+            except Exception as exc:
+                print(f"[AutoDirector] LLM call failed for key/model {key_or_model}: {exc}", flush=True)
+                continue
+
+        # 3. Parse JSON từ phản hồi của LLM
+        remix_clips = []
+        voiceover_script = ""
+
+        if llm_reply:
+            try:
+                clean_text = llm_reply.strip()
+                m = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', clean_text)
+                if m:
+                    clean_text = m.group(1).strip()
+                else:
+                    m2 = re.search(r'\{[\s\S]*\}', clean_text)
+                    if m2:
+                        clean_text = m2.group(0).strip()
+                parsed_json = json.loads(clean_text)
+                remix_clips = parsed_json.get("remix_clips", [])
+                voiceover_script = parsed_json.get("voiceover_script", "")
+            except Exception as pe:
+                print(f"[AutoDirector] JSON parse error, falling back to rule-based director: {pe}", flush=True)
+
+        # 4. Fallback Rule-based Director nếu LLM không trả JSON
+        if not remix_clips:
+            print("[AutoDirector] Using intelligent rule-based sequence builder...", flush=True)
+            remix_clips = []
+            for idx, item in enumerate(intervals):
+                dur = item.get("duration", 0)
+                s_sec = item.get("start_sec", 0.0)
+                # If segment is longer than 6s, slice into attractive 3-4s chunks
+                if dur > 6.0:
+                    mid = s_sec + min(4.0, dur / 2.0)
+                    remix_clips.append({
+                        "name": f"Đoạn {len(remix_clips)+1}: Phân cảnh nổi bật {idx+1}A (clip{len(remix_clips)+1})",
+                        "start": item["start"],
+                        "to": format_sec_to_hms(mid)
+                    })
+                    remix_clips.append({
+                        "name": f"Đoạn {len(remix_clips)+1}: Phân cảnh trải nghiệm {idx+1}B (clip{len(remix_clips)+1})",
+                        "start": format_sec_to_hms(mid),
+                        "to": item["to"]
+                    })
+                else:
+                    remix_clips.append({
+                        "name": f"Đoạn {len(remix_clips)+1}: Phân cảnh {idx+1} (clip{len(remix_clips)+1})",
+                        "start": item["start"],
+                        "to": item["to"]
+                    })
+
+        if not voiceover_script:
+            voiceover_script = "Nếu bạn đang tìm kiếm *giải pháp tốt nhất*... hãy xem ngay trải nghiệm này! Thiết kế *cực kỳ thông minh*... tiện lợi và hiệu quả vượt trội. Bấm ngay để sở hữu ngay hôm nay!"
+
+        return {
+            "status": "ok",
+            "video_path": req.video_path,
+            "face_intervals": face_info.get("face_intervals", []),
+            "face_free_intervals": intervals,
+            "remix_clips": remix_clips,
+            "voiceover_script": voiceover_script
+        }
+    except Exception as e:
+        traceback.print_exc()
+        return {"status": "error", "error": str(e)}
+
+
+class AutoRemixProcessReq(BaseModel):
+    video_path: str
+    output_path: Optional[str] = None
+    tts_voice: Optional[str] = "default"
+    mode: Optional[str] = "lossless"
+    remove_vocal: Optional[bool] = True
+    ai_config: Optional[Dict[str, Any]] = None
+    remix_clips: Optional[List[Dict[str, Any]]] = None
+    voiceover_script: Optional[str] = None
+
+@app.post("/api/ai-remix/process-single-video")
+def api_ai_remix_process_single_video(req: AutoRemixProcessReq):
+    """
+    Quy trình 1-Click tự động hóa trọn gói cho 1 video:
+    Lọc mặt người -> AI Director -> Cắt & Ghép Timeline -> TTS Voice -> Khử Vocal & Mix Audio -> Video Thành Phẩm.
+    """
+    import tempfile, subprocess, shutil, os as _os
+    temp_dir = tempfile.mkdtemp(prefix="vsr_auto_remix_")
+    try:
+        # 1. Chạy AI Director nếu chưa có kịch bản
+        remix_clips = req.remix_clips
+        voice_script = req.voiceover_script
+
+        if not remix_clips or not voice_script:
+            dir_res = api_ai_remix_auto_director(AutoRemixDirectorReq(
+                video_path=req.video_path,
+                ai_config=req.ai_config
+            ))
+            if dir_res.get("status") != "ok":
+                return {"status": "error", "error": dir_res.get("error", "Lỗi AI Director")}
+            remix_clips = dir_res.get("remix_clips", [])
+            voice_script = dir_res.get("voiceover_script", "")
+
+        if not remix_clips:
+            return {"status": "error", "error": "Không có phân đoạn cắt nào được tạo."}
+
+        # 2. Cắt và ghép video theo timeline mới
+        stitched_video = _os.path.join(temp_dir, "stitched_remix.mp4")
+        video_cut_req = VideoRenderRequest(
+            video_path=req.video_path,
+            clips=[VideoRenderClip(id=f"c_{i}", name=c.get("name"), start=c["start"], to=c["to"]) for i, c in enumerate(remix_clips)],
+            output_path=stitched_video,
+            mode=req.mode or "lossless",
+            remove_vocal=False
+        )
+        cut_res = video_render_cut_and_concat(video_cut_req)
+        if cut_res.get("status") != "ok" or not _os.path.isfile(stitched_video):
+            return {"status": "error", "error": cut_res.get("error", "Lỗi cắt ghép video")}
+
+        # 3. Tạo audio lồng tiếng Voiceover TTS
+        tts_audio = _os.path.join(temp_dir, "tts_voice.wav")
+        clean_voice_text = voice_script.replace('*', '')  # Bỏ markdown cho TTS engine
+        try:
+            from tts_engine import generate_speech
+            tts_res = generate_speech(
+                text=clean_voice_text,
+                voice_id=req.tts_voice or "default",
+                output_path=tts_audio
+            )
+        except Exception as te:
+            print(f"[AutoRemix] TTS engine error fallback: {te}", flush=True)
+            tts_res = None
+
+        # 4. Xác định output path
+        output_path = req.output_path
+        if not output_path:
+            base, ext = _os.path.splitext(req.video_path)
+            output_path = f"{base}_AI_REMIX{ext or '.mp4'}"
+        _os.makedirs(_os.path.dirname(_os.path.abspath(output_path)), exist_ok=True)
+
+        # 5. Khử giọng cũ & Hòa trộn âm thanh hoàn chỉnh
+        has_tts = tts_res and _os.path.isfile(tts_audio) and _os.path.getsize(tts_audio) > 0
+
+        if req.remove_vocal:
+            # Tách nhạc nền BGM từ stitched video
+            vocal_res = api_remove_vocal(RemoveVocalReq(video_path=stitched_video))
+            bg_audio = vocal_res.get("audio_path") if (vocal_res.get("status") in ("ok", "warning")) else None
+            
+            if bg_audio and _os.path.isfile(bg_audio) and has_tts:
+                # Mix TTS voice + BGM nhạc nền
+                mix_cmd = [
+                    'ffmpeg', '-y',
+                    '-i', stitched_video,
+                    '-i', tts_audio,
+                    '-i', bg_audio,
+                    '-filter_complex', '[1:a]volume=1.0[v];[2:a]volume=0.25[bg];[v][bg]amix=inputs=2:duration=first[aout]',
+                    '-map', '0:v:0',
+                    '-map', '[aout]',
+                    '-c:v', 'copy',
+                    '-c:a', 'aac', '-b:a', '192k',
+                    output_path
+                ]
+            elif has_tts:
+                # Chỉ ghép TTS voice
+                mix_cmd = [
+                    'ffmpeg', '-y',
+                    '-i', stitched_video,
+                    '-i', tts_audio,
+                    '-map', '0:v:0',
+                    '-map', '1:a:0',
+                    '-c:v', 'copy',
+                    '-c:a', 'aac', '-b:a', '192k',
+                    output_path
+                ]
+            else:
+                shutil.copy(stitched_video, output_path)
+                mix_cmd = None
+        else:
+            if has_tts:
+                # Mix TTS voice với audio gốc giảm âm lượng
+                mix_cmd = [
+                    'ffmpeg', '-y',
+                    '-i', stitched_video,
+                    '-i', tts_audio,
+                    '-filter_complex', '[0:a]volume=0.2[orig];[1:a]volume=1.0[v];[v][orig]amix=inputs=2:duration=first[aout]',
+                    '-map', '0:v:0',
+                    '-map', '[aout]',
+                    '-c:v', 'copy',
+                    '-c:a', 'aac', '-b:a', '192k',
+                    output_path
+                ]
+            else:
+                shutil.copy(stitched_video, output_path)
+                mix_cmd = None
+
+        if mix_cmd:
+            res_mix = subprocess.run(mix_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res_mix.returncode != 0 or not _os.path.isfile(output_path) or _os.path.getsize(output_path) == 0:
+                print(f"[AutoRemix] Audio mix fallback: {res_mix.stderr.decode('utf-8', errors='replace')}", flush=True)
+                shutil.copy(stitched_video, output_path)
+
+        # Cleanup
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        print(f"[AutoRemix] Video processed successfully -> {output_path}", flush=True)
+
+        return {
+            "status": "ok",
+            "output_video_path": output_path,
+            "remix_clips": remix_clips,
+            "voiceover_script": voice_script,
+            "clips_count": len(remix_clips)
+        }
+    except Exception as e:
+        shutil.rmtree(temp_dir, ignore_errors=True)
         traceback.print_exc()
         return {"status": "error", "error": str(e)}
 

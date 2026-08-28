@@ -266,6 +266,42 @@ class APIClient {
     return r.json();
   }
 
+  async detectFaceFreeTimeline(videoPath, sampleStep = 0.35, minClipSec = 1.0) {
+    const r = await fetch(`${this.base}/api/ai-remix/detect-face-free-timeline`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, sample_step_sec: sampleStep, min_clip_sec: minClipSec })
+    });
+    return r.json();
+  }
+
+  async aiRemixAutoDirector(videoPath, faceFreeIntervals = null, aiConfig = null, sampleStep = 0.35) {
+    const r = await fetch(`${this.base}/api/ai-remix/auto-director`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, face_free_intervals: faceFreeIntervals, ai_config: aiConfig, sample_step_sec: sampleStep })
+    });
+    return r.json();
+  }
+
+  async aiRemixProcessSingleVideo(videoPath, outputPath = null, ttsVoice = 'default', mode = 'lossless', removeVocal = true, aiConfig = null, remixClips = null, voiceoverScript = null) {
+    const r = await fetch(`${this.base}/api/ai-remix/process-single-video`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        video_path: videoPath,
+        output_path: outputPath,
+        tts_voice: ttsVoice,
+        mode,
+        remove_vocal: removeVocal,
+        ai_config: aiConfig,
+        remix_clips: remixClips,
+        voiceover_script: voiceoverScript
+      })
+    });
+    return r.json();
+  }
+
   async detectSubPositions(videoPath, sampleStep = 30) {
     const r = await fetch(`${this.base}/api/detect-sub-positions`, {
       method: 'POST',
