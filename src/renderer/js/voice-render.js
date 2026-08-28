@@ -549,9 +549,21 @@
     const filePath = result && !result.canceled && result.filePaths?.[0];
     if (!filePath) return;
     state.refAudioPath = filePath;
-    document.getElementById('vr-clone-file').textContent = filePath.split(/[\\/]/).pop();
-    document.getElementById('vr-save-clone').disabled = true;
-    vrLog(`Đã chọn audio mẫu clone: ${filePath.split(/[\\/]/).pop()}`, 'info');
+    const fileName = filePath.split(/[\\/]/).pop();
+    const fileEl = document.getElementById('vr-clone-file');
+    if (fileEl) fileEl.textContent = fileName;
+    
+    // Tự động gợi ý tên giọng nếu ô tên đang trống
+    const nameInput = document.getElementById('vr-clone-name');
+    if (nameInput && !nameInput.value.trim()) {
+      nameInput.value = fileName.replace(/\.[^/.]+$/, '');
+    }
+    
+    // Mở khóa nút lưu ngay khi đã chọn audio mẫu
+    const saveBtn = document.getElementById('vr-save-clone');
+    if (saveBtn) saveBtn.disabled = false;
+    
+    vrLog(`Đã chọn audio mẫu clone: ${fileName}`, 'info');
   }
 
   async function testClone() {
@@ -585,21 +597,45 @@
   function saveClone() {
     const name = document.getElementById('vr-clone-name')?.value.trim();
     const language = document.getElementById('vr-clone-language')?.value || 'vi';
-    const samplePath = document.getElementById('vr-clone-preview-audio')?.dataset.samplePath || '';
-    if (!name || !state.refAudioPath || !samplePath) return;
+    const samplePath = document.getElementById('vr-clone-preview-audio')?.dataset.samplePath || state.refAudioPath || '';
+    
+    if (!name) {
+      window.showToast?.('Vui lòng nhập tên giọng clone.', 'warning');
+      document.getElementById('vr-clone-name')?.focus();
+      return;
+    }
+    if (!state.refAudioPath) {
+      window.showToast?.('Vui lòng chọn file audio mẫu trước.', 'warning');
+      return;
+    }
+
     const voices = getSavedVoices();
-    voices.push({ name, language: languageLabel(language), audioPath: state.refAudioPath, audioFile: state.refAudioPath.split(/[\\/]/).pop(), samplePath, note: document.getElementById('vr-clone-note')?.value.trim() || '', date: new Date().toLocaleDateString('vi-VN') });
+    voices.push({
+      name,
+      language: languageLabel(language),
+      audioPath: state.refAudioPath,
+      audioFile: state.refAudioPath.split(/[\\/]/).pop(),
+      samplePath: samplePath || state.refAudioPath,
+      note: document.getElementById('vr-clone-note')?.value.trim() || '',
+      date: new Date().toLocaleDateString('vi-VN')
+    });
     saveVoices(voices);
     state.selectedVoiceId = `clone:${voices.length - 1}`;
     localStorage.setItem('voice_render_voice', state.selectedVoiceId);
     renderVoiceList();
     vrLog(`Đã lưu voice clone vào thư viện chung: ${name}`, 'success');
     window.showToast?.('Voice clone đã có trong thư viện chung.', 'success');
+    
+    // Reset và đóng modal
     state.refAudioPath = '';
-    document.getElementById('vr-clone-name').value = '';
-    document.getElementById('vr-clone-note').value = '';
-    document.getElementById('vr-clone-file').textContent = 'Chưa chọn file';
-    document.getElementById('vr-save-clone').disabled = true;
+    const nameInput = document.getElementById('vr-clone-name');
+    if (nameInput) nameInput.value = '';
+    const noteInput = document.getElementById('vr-clone-note');
+    if (noteInput) noteInput.value = '';
+    const fileLine = document.getElementById('vr-clone-file');
+    if (fileLine) fileLine.textContent = 'Chưa chọn file';
+    const saveBtn = document.getElementById('vr-save-clone');
+    if (saveBtn) saveBtn.disabled = true;
     closeCloneModal();
   }
 

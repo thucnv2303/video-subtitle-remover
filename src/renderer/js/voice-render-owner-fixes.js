@@ -274,10 +274,10 @@
       const prosody = document.getElementById('vr-clone-prosody')?.value || 'Tự nhiên · Ấm';
       const speedFactor = Number(document.getElementById('vr-clone-speed')?.value || 1);
       const duplicateName = readSavedVoices().some((voice) => String(voice.name || '').trim().toLowerCase() === name.toLowerCase());
-      if (duplicateName || profileIsDuplicate(prosody, speedFactor)) {
+      if (duplicateName) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        window.showToast?.(duplicateName ? 'Tên voice đã tồn tại.' : 'Profile ngữ điệu + tốc độ đã trùng voice khác. Hãy chọn profile riêng.', 'warning');
+        window.showToast?.('Tên voice đã tồn tại. Vui lòng đặt tên khác.', 'warning');
         return;
       }
       pendingCloneProfile = { name, prosody, speedFactor };

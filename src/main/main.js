@@ -356,8 +356,9 @@ ipcMain.handle('dialog:saveFile', async (event, defaultPath) => {
       { name: 'All Files', extensions: ['*'] }
     ]
   };
-  const { canceled, filePath } = mainWindow && !mainWindow.isDestroyed()
-    ? await dialog.showSaveDialog(mainWindow, options)
+  const owner = (event?.sender && BrowserWindow.fromWebContents(event.sender)) || mainWindow;
+  const { canceled, filePath } = owner && !owner.isDestroyed()
+    ? await dialog.showSaveDialog(owner, options)
     : await dialog.showSaveDialog(options);
   if (canceled || !filePath) return null;
   return path.extname(filePath) ? filePath : `${filePath}.wav`;
