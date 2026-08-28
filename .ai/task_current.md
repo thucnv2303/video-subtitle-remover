@@ -1,12 +1,11 @@
 # Current Task
 
 ## Task Name
-`FIX-VOICE-RENDER-POPUP-AND-SAVE-FLOW`
+`FIX-VOICE-RENDER-AUDIO-TRUNCATION-AND-FORMAT-ALIGNMENT`
 
 ## Objective
-1. Sửa lỗi modal Clone Voice không tự đóng sau khi chọn audio/lưu giọng trong tab Voice Render.
-2. Tự động mở khóa nút Lưu khi đã chọn file audio mẫu, tự động điền tên giọng và đóng popup ngay lập tức sau khi lưu.
-3. Sửa lỗi Save Dialog gắn đúng window context trong Electron main process.
+1. Sửa thuật toán chia nhỏ câu trong Voice Render: Hỗ trợ đa dạng dấu kết câu (. ! ? … \n) và tự động chia tiếp theo mệnh đề nếu câu quá dài, ngăn chặn triệt để hiện tượng mô hình AI bị quá tải token làm nuốt/cắt mất đoạn cuối văn bản.
+2. Chuẩn hóa Edge TTS xuất file PCM WAV tiêu chuẩn (chuyển đổi từ MP3 qua FFmpeg) để quá trình concat merge và phát âm thanh trên app không bị đứt đuôi âm thanh.
 - Scope: `src/renderer/js/ai-auto-remix.js`, `src/renderer/styles/ai-auto-remix.css`.
 
 ## User outcome
