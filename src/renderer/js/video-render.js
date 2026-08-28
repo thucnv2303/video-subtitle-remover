@@ -538,25 +538,82 @@ ffmpeg -ss 00:00:04 -to 00:00:06 -i input.mp4 -c copy clip3.mp4"></textarea>
       });
     });
 
-    // File choose
+    // File choose & Drag-and-drop
+    const applySelectedVideo = (path) => {
+      if (!path) return;
+      state.videoPath = path;
+      const input = document.getElementById('vidr-video-path');
+      if (input) input.value = path;
+      const videoEl = document.getElementById('vidr-preview-video');
+      if (videoEl) {
+        videoEl.src = 'file:///' + path.replace(/\\/g, '/');
+        videoEl.load();
+      }
+      vidrLog(`Đã chọn video: ${path}`, 'info');
+      window.showToast?.(`Đã tải video: ${path.split(/[\\/]/).pop()}`, 'success');
+    };
+
     const chooseVideo = async () => {
       try {
-        const path = await window.electronAPI?.openFileDialog?.(['mp4', 'mkv', 'mov', 'avi', 'ts', 'webm']);
-        if (path) {
-          state.videoPath = path;
-          const input = document.getElementById('vidr-video-path');
-          if (input) input.value = path;
-          const videoEl = document.getElementById('vidr-preview-video');
-          if (videoEl) videoEl.src = 'file:///' + path.replace(/\\/g, '/');
-          vidrLog(`Đã chọn video: ${path}`, 'info');
+        if (window.electronAPI?.openFile) {
+          const result = await window.electronAPI.openFile([
+            { name: 'Video Files', extensions: ['mp4', 'mkv', 'mov', 'avi', 'ts', 'webm', 'flv', 'wmv', 'm4v'] }
+          ]);
+          const path = !result?.canceled && result?.filePaths?.[0];
+          if (path) {
+            applySelectedVideo(path);
+            return;
+          }
         }
+
+        // Fallback: HTML5 file input
+        let fileInput = document.getElementById('vidr-hidden-file-input');
+        if (!fileInput) {
+          fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.id = 'vidr-hidden-file-input';
+          fileInput.accept = 'video/*,.mp4,.mkv,.mov,.avi,.ts,.webm,.flv';
+          fileInput.style.display = 'none';
+          document.body.appendChild(fileInput);
+          fileInput.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              const path = window.electronAPI?.getPathForFile?.(file) || file.path || file.name;
+              applySelectedVideo(path);
+            }
+          });
+        }
+        fileInput.click();
       } catch (e) {
         console.warn('Dialog error:', e);
+        vidrLog(`Lỗi chọn video: ${e.message}`, 'error');
       }
     };
 
     document.getElementById('vidr-btn-pick-video')?.addEventListener('click', chooseVideo);
     document.getElementById('vidr-btn-browse-file')?.addEventListener('click', chooseVideo);
+
+    // Support Drag and Drop video file directly onto page
+    const pageEl = document.getElementById(PAGE_ID);
+    if (pageEl) {
+      pageEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      pageEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const file = e.dataTransfer?.files?.[0];
+        if (file) {
+          const path = window.electronAPI?.getPathForFile?.(file) || file.path || file.name;
+          if (path && /\.(mp4|mkv|mov|avi|ts|webm|flv|wmv|m4v)$/i.test(path)) {
+            applySelectedVideo(path);
+          } else {
+            window.showToast?.('Vui lòng kéo thả file định dạng video (.mp4, .mkv, .mov...).', 'warning');
+          }
+        }
+      });
+    }
 
     // Parse button
     document.getElementById('vidr-btn-parse')?.addEventListener('click', () => {
