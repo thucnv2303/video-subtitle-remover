@@ -287,50 +287,6 @@
     log('Tab AI Video Auto-Remix đã sẵn sàng hoạt động.', 'info');
   }
 
-  function renderQueue() {
-    const container = document.getElementById('remix-queue-container');
-    const countEl = document.getElementById('remix-queue-count');
-    if (!container) return;
-
-    if (countEl) countEl.textContent = `${state.queue.length} video`;
-
-    if (!state.queue.length) {
-      container.innerHTML = `
-        <div style="text-align:center;padding:24px;color:#64748b;font-size:12px;border:1px dashed rgba(255,255,255,0.1);border-radius:8px;">
-          Kéo thả nhiều video hoặc bấm <b>"📁 Thêm Video"</b> để bắt đầu
-        </div>
-      `;
-      renderActiveDetails();
-      return;
-    }
-
-    container.innerHTML = state.queue.map(item => {
-      const isAct = item.id === state.activeId;
-      const badgeCls = item.status === 'processing' ? 'remix-badge-processing' : item.status === 'done' ? 'remix-badge-done' : item.status === 'error' ? 'remix-badge-error' : 'remix-badge-idle';
-      const badgeText = item.status === 'processing' ? 'Đang xử lý...' : item.status === 'done' ? 'Hoàn tất ✓' : item.status === 'error' ? 'Lỗi ✕' : 'Chờ';
-      
-      return `
-        <div class="remix-queue-item ${isAct ? 'active' : ''}" data-id="${item.id}">
-          <div class="remix-queue-info">
-            <span class="remix-queue-name" title="${escapeHtml(item.path)}">${escapeHtml(item.name)}</span>
-            <span class="remix-queue-status">${item.clipsCount ? `${item.clipsCount} clips` : 'Chưa phân tích'}</span>
-          </div>
-          <span class="remix-badge ${badgeCls}">${badgeText}</span>
-        </div>
-      `;
-    }).join('');
-
-    container.querySelectorAll('.remix-queue-item').forEach(el => {
-      el.addEventListener('click', () => {
-        state.activeId = el.dataset.id;
-        renderQueue();
-        renderActiveDetails();
-      });
-    });
-
-    renderActiveDetails();
-  }
-
   function renderActiveDetails() {
     const item = getActiveItem();
     const titleEl = document.getElementById('remix-active-title');
@@ -596,6 +552,89 @@
     }
   }
 
+  function renderQueue() {
+    const container = document.getElementById('remix-queue-container');
+    const countEl = document.getElementById('remix-queue-count');
+    if (!container) return;
+
+    if (countEl) countEl.textContent = `${state.queue.length} video`;
+
+    if (!state.queue.length) {
+      container.innerHTML = `
+        <div id="remix-dropzone-click" style="text-align:center;padding:32px 16px;color:#64748b;font-size:13px;border:2px dashed rgba(56,189,248,0.3);border-radius:10px;cursor:pointer;background:rgba(56,189,248,0.03);display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s ease;">
+          <span style="font-size:32px;">📥</span>
+          <span style="color:#f1f5f9;font-weight:600;font-size:13px;">Kéo thả nhiều video vào đây</span>
+          <span style="font-size:11px;color:#38bdf8;">hoặc bấm vào ô này để chọn tệp video</span>
+        </div>
+      `;
+      document.getElementById('remix-dropzone-click')?.addEventListener('click', chooseVideos);
+      renderActiveDetails();
+      return;
+    }
+
+    container.innerHTML = state.queue.map(item => {
+      const isAct = item.id === state.activeId;
+      const badgeCls = item.status === 'processing' ? 'remix-badge-processing' : item.status === 'done' ? 'remix-badge-done' : item.status === 'error' ? 'remix-badge-error' : 'remix-badge-idle';
+      const badgeText = item.status === 'processing' ? 'Đang xử lý...' : item.status === 'done' ? 'Hoàn tất ✓' : item.status === 'error' ? 'Lỗi ✕' : 'Chờ';
+      
+      return `
+        <div class="remix-queue-item ${isAct ? 'active' : ''}" data-id="${item.id}">
+          <div class="remix-queue-info">
+            <span class="remix-queue-name" title="${escapeHtml(item.path)}">${escapeHtml(item.name)}</span>
+            <span class="remix-queue-status">${item.clipsCount ? `${item.clipsCount} clips` : 'Chưa phân tích'}</span>
+          </div>
+          <span class="remix-badge ${badgeCls}">${badgeText}</span>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.remix-queue-item').forEach(el => {
+      el.addEventListener('click', () => {
+        state.activeId = el.dataset.id;
+        renderQueue();
+        renderActiveDetails();
+      });
+    });
+
+    renderActiveDetails();
+  }
+
+  const chooseVideos = async () => {
+    let paths = [];
+    if (window.electronAPI?.openFile) {
+      try {
+        const res = await window.electronAPI.openFile([
+          { name: 'Video Files', extensions: ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv', 'ts'] }
+        ]);
+        if (!res?.canceled && res?.filePaths?.length) {
+          paths = res.filePaths;
+        } else if (Array.isArray(res) && res.length) {
+          paths = res;
+        }
+      } catch (err) {
+        console.warn('Electron openFile error:', err);
+      }
+    }
+
+    if (!paths.length) {
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.multiple = true;
+      inp.accept = 'video/*';
+      inp.onchange = (e) => {
+        const files = Array.from(e.target.files || []);
+        const fpaths = files.map(f => f.path || f.name).filter(Boolean);
+        if (fpaths.length) addFilesToQueue(fpaths);
+      };
+      inp.click();
+      return;
+    }
+
+    if (paths.length) {
+      addFilesToQueue(paths);
+    }
+  };
+
   function addFilesToQueue(filePaths) {
     if (!Array.isArray(filePaths) || !filePaths.length) return;
     let added = 0;
@@ -646,28 +685,7 @@
     });
 
     // Add files button
-    document.getElementById('remix-btn-add-files')?.addEventListener('click', async () => {
-      if (window.electronAPI?.openFile) {
-        const res = await window.electronAPI.openFile({
-          properties: ['openFile', 'multiSelections'],
-          filters: [{ name: 'Videos', extensions: ['mp4', 'mkv', 'mov', 'avi', 'webm', 'ts'] }]
-        });
-        if (res && Array.isArray(res)) {
-          addFilesToQueue(res);
-        }
-      } else {
-        const inp = document.createElement('input');
-        inp.type = 'file';
-        inp.multiple = true;
-        inp.accept = 'video/*';
-        inp.onchange = (e) => {
-          const files = Array.from(e.target.files || []);
-          const paths = files.map(f => f.path || f.name).filter(Boolean);
-          addFilesToQueue(paths);
-        };
-        inp.click();
-      }
-    });
+    document.getElementById('remix-btn-add-files')?.addEventListener('click', chooseVideos);
 
     // Clear queue
     document.getElementById('remix-btn-clear-queue')?.addEventListener('click', () => {
@@ -728,7 +746,9 @@
         e.stopPropagation();
         const files = Array.from(e.dataTransfer?.files || []);
         const paths = files.map(f => f.path || f.name).filter(Boolean);
-        addFilesToQueue(paths);
+        if (paths.length) {
+          addFilesToQueue(paths);
+        }
       });
     }
   }
