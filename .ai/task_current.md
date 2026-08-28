@@ -1,11 +1,11 @@
 # Current Task
 
 ## Task Name
-`FIX-SETTINGS-CSS-IMPORT-AND-DEFAULT-OVERVIEW-RENDER`
+`FIX-SETTINGS-DIRECT-DOM-BINDING-AND-REMOVE-DOM-OVERWRITE`
 
 ## Objective
-1. Import trực tiếp `settings-approved.css` vào đầu `src/renderer/styles/main.css` để đảm bảo styling của giao diện Cài đặt luôn được nạp đầy đủ 100%.
-2. Cập nhật `src/renderer/js/components/settings.js` và `src/renderer/js/app.js` tự động kích hoạt view Tổng quan (Overview) khi bấm vào tab Cài đặt.
+1. Gỡ bỏ hoàn toàn hàm `mountSettings()` ghi đè chuỗi HTML bị lỗi lên `.settings-scroll` trong `src/renderer/js/components/settings.js`.
+2. Chuyển `settings.js` sang cơ chế trực tiếp lắng nghe và điều khiển các thành phần giao diện tĩnh sẵn có trong `index.html`.
 - Scope: `src/renderer/js/ai-auto-remix.js`, `src/renderer/styles/ai-auto-remix.css`.
 
 ## User outcome
