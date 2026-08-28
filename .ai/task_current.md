@@ -1,11 +1,11 @@
 # Current Task
 
 ## Task Name
-`FIX-SETTINGS-PAGE-VIEW-ACTIVATION-AND-CSS-FLEX`
+`FIX-SETTINGS-CSS-IMPORT-AND-DEFAULT-OVERVIEW-RENDER`
 
 ## Objective
-1. Cấu hình rõ ràng thuộc tính display flex cho `#page-settings.active`, `.settings-scroll` và `.settings-view.active` trong `src/renderer/styles/settings-approved.css`.
-2. Bổ sung cơ chế kích hoạt an toàn `showSettingsView('overview')` trong `settings.js` và `app.js` khi người dùng bấm vào tab Cài đặt, đảm bảo nội dung thẻ overview và các form con luôn hiển thị tức thì.
+1. Import trực tiếp `settings-approved.css` vào đầu `src/renderer/styles/main.css` để đảm bảo styling của giao diện Cài đặt luôn được nạp đầy đủ 100%.
+2. Cập nhật `src/renderer/js/components/settings.js` và `src/renderer/js/app.js` tự động kích hoạt view Tổng quan (Overview) khi bấm vào tab Cài đặt.
 - Scope: `src/renderer/js/ai-auto-remix.js`, `src/renderer/styles/ai-auto-remix.css`.
 
 ## User outcome
