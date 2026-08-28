@@ -243,8 +243,6 @@
         targetPage.classList.add('active');
       }
       if (page === 'settings') {
-        if (typeof window.initSettings === 'function') window.initSettings();
-        if (typeof window.showSettingsView === 'function') window.showSettingsView('overview');
         if (typeof window.loadSettingsValues === 'function') window.loadSettingsValues();
         if (typeof window.checkTTSStatus === 'function') window.checkTTSStatus();
       }

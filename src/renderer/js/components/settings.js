@@ -24,37 +24,7 @@ if (document.readyState === 'loading') {
   setTimeout(() => initSettings(), 0);
 }
 
-function bindShell() {
-  const app = document.querySelector('.app-container');
-  const sync = () => { const on = document.getElementById('page-settings')?.classList.contains('active'); app?.classList.toggle('settings-shell-active', !!on); if (on) showView('overview'); };
-  document.querySelectorAll('.nav-item').forEach(x => x.addEventListener('click', () => setTimeout(sync,0)));
-  sync();
-}
-function bindViews() {
-  document.querySelectorAll('#page-settings [data-settings-target]').forEach(x => {
-    x.addEventListener('click', (e) => {
-      e.preventDefault();
-      showView(x.dataset.settingsTarget);
-    });
-  });
-}
 
-export function showView(name = 'overview') {
-  const views = document.querySelectorAll('#page-settings .settings-view');
-  let matched = false;
-  views.forEach(v => {
-    const isTarget = v.dataset.settingsView === name;
-    v.classList.toggle('active', isTarget);
-    if (isTarget) matched = true;
-  });
-  if (!matched && views.length > 0) {
-    views[0].classList.add('active');
-  }
-  if (name === 'system') refreshDiagnostics();
-  if (name === 'overview') syncOverview();
-  document.querySelector('#page-settings .settings-scroll')?.scrollTo(0, 0);
-}
-window.showSettingsView = showView;
 
 export function loadSettingsValues() {
   const provider = localStorage.getItem('ai_provider') || 'gemini'; migrateLegacy(provider);
