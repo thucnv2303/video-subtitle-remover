@@ -145,8 +145,32 @@ function bindShell() {
   document.querySelectorAll('.nav-item').forEach(x => x.addEventListener('click', () => setTimeout(sync,0)));
   sync();
 }
-function bindViews() { document.querySelectorAll('#page-settings [data-settings-target]').forEach(x => x.addEventListener('click', () => showView(x.dataset.settingsTarget))); }
-function showView(name) { document.querySelectorAll('#page-settings .settings-view').forEach(v => v.classList.toggle('active', v.dataset.settingsView === name)); if (name==='system') refreshDiagnostics(); if (name==='overview') syncOverview(); document.querySelector('#page-settings .settings-scroll')?.scrollTo(0,0); }
+function bindViews() {
+  document.querySelectorAll('#page-settings [data-settings-target]').forEach(x => {
+    x.addEventListener('click', (e) => {
+      e.preventDefault();
+      showView(x.dataset.settingsTarget);
+    });
+  });
+}
+
+export function showView(name = 'overview') {
+  mountSettings();
+  const views = document.querySelectorAll('#page-settings .settings-view');
+  let matched = false;
+  views.forEach(v => {
+    const isTarget = v.dataset.settingsView === name;
+    v.classList.toggle('active', isTarget);
+    if (isTarget) matched = true;
+  });
+  if (!matched && views.length > 0) {
+    views[0].classList.add('active');
+  }
+  if (name === 'system') refreshDiagnostics();
+  if (name === 'overview') syncOverview();
+  document.querySelector('#page-settings .settings-scroll')?.scrollTo(0, 0);
+}
+window.showSettingsView = showView;
 
 export function loadSettingsValues() {
   const provider = localStorage.getItem('ai_provider') || 'gemini'; migrateLegacy(provider);

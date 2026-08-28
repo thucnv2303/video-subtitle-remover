@@ -238,8 +238,13 @@
       el.navItems.forEach(n => n.classList.remove('active'));
       item.classList.add('active');
       el.pages.forEach(p => p.classList.remove('active'));
-      $(`#page-${page}`)?.classList.add('active');
+      const targetPage = document.getElementById(`page-${page}`);
+      if (targetPage) {
+        targetPage.classList.add('active');
+      }
       if (page === 'settings') {
+        if (typeof window.initSettings === 'function') window.initSettings();
+        if (typeof window.showSettingsView === 'function') window.showSettingsView('overview');
         if (typeof window.loadSettingsValues === 'function') window.loadSettingsValues();
         if (typeof window.checkTTSStatus === 'function') window.checkTTSStatus();
       }

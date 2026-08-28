@@ -1,7 +1,8 @@
-#page-settings { background: radial-gradient(circle at 82% 10%, rgba(37,99,235,.08), transparent 34%), #0b1521; color:#f4f7fb; }
-#page-settings .settings-scroll { padding: 26px 38px 38px; overflow-y:auto; }
-#page-settings .settings-view { display:none; max-width:1240px; margin:0 auto; }
-#page-settings .settings-view.active { display:block; }
+#page-settings { display: none; flex: 1; flex-direction: column; width: 100%; height: 100%; background: radial-gradient(circle at 82% 10%, rgba(37,99,235,.08), transparent 34%), #0b1521; color:#f4f7fb; box-sizing: border-box; overflow: hidden; }
+#page-settings.active { display: flex !important; }
+#page-settings .settings-scroll { flex: 1; width: 100%; height: 100%; padding: 26px 38px 38px; overflow-y:auto; box-sizing: border-box; }
+#page-settings .settings-view { display:none; width: 100%; max-width:1240px; margin:0 auto; box-sizing: border-box; }
+#page-settings .settings-view.active { display:block !important; }
 #page-settings .approved-page-header { margin: 0 0 20px; }
 #page-settings .approved-page-header h1 { font-size:30px; line-height:1.15; font-weight:750; letter-spacing:-.02em; color:#f8fafc; }
 #page-settings .approved-page-header p { margin-top:7px; color:#aab7c8; font-size:14px; }
