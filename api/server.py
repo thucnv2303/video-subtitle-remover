@@ -2089,6 +2089,13 @@ def api_remove_vocal(req: RemoveVocalReq):
                     "method_used": "original",
                     "message": "Không thể tách vocal, dùng audio gốc"}
 
+    except Exception as e:
+        if os.path.exists(raw_audio):
+            os.remove(raw_audio)
+        traceback.print_exc()
+        return {"status": "error", "error": str(e)}
+
+
 class RemoveVocalVideoReq(BaseModel):
     video_path: str
     output_video_path: Optional[str] = None
