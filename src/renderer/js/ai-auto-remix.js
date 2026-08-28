@@ -153,7 +153,6 @@
         <!-- 3-Column Futuristic Grid -->
         <div class="remix-grid">
           
-          <!-- Column 1: Batch Video Queue -->
           <div class="remix-card">
             <div class="remix-card-header">
               <h3 class="remix-card-title">
@@ -162,17 +161,22 @@
               <span id="remix-queue-count" style="font-size:11px;color:#38bdf8;font-weight:700;">0 Video</span>
             </div>
 
-            <!-- Queue Container -->
+            <div class="remix-select-all-bar">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;">
+                <input type="checkbox" id="remix-select-all" class="remix-job-checkbox" checked>
+                <span>Chọn tất cả</span>
+              </label>
+              <span id="remix-selected-badge" style="color:#38bdf8;font-weight:700;">0/0 đã chọn</span>
+            </div>
+
             <div id="remix-queue-container" class="remix-queue-list"></div>
 
-            <!-- Drag & Drop Zone -->
             <div id="remix-dropzone-box" class="remix-dropzone">
               <span style="font-size:26px;">☁️</span>
               <div style="font-size:12px;font-weight:700;color:#f1f5f9;">Drag & Drop Videos</div>
               <div style="font-size:11px;color:#64748b;">Kéo thả video vào đây hoặc bấm để chọn</div>
             </div>
 
-            <!-- Auto Settings Switches -->
             <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;display:flex;flex-direction:column;gap:8px;font-size:11px;">
               <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span style="color:#cbd5e1;">🚫 Lọc mặt người:</span>
@@ -198,7 +202,6 @@
             </div>
           </div>
 
-          <!-- Column 2: Live AI Director & Remix Timeline -->
           <div class="remix-card">
             <div class="remix-card-header">
               <h3 class="remix-card-title">
@@ -207,7 +210,6 @@
               <span id="remix-active-title" style="font-size:11px;color:#38bdf8;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Chưa chọn</span>
             </div>
 
-            <!-- Face Stats & Director Top Box -->
             <div class="remix-director-grid">
               <div class="remix-director-box">
                 <div style="font-size:11px;font-weight:700;color:#cbd5e1;">🚫 Bộ lọc mặt người:</div>
@@ -221,11 +223,10 @@
                 </div>
               </div>
 
-              <!-- Timeline Sequence Cards -->
               <div class="remix-director-box">
-                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;color:#cbd5e1;">
-                  <span>🎬 Remix Timeline</span>
-                  <span id="remix-clips-count" style="color:#38bdf8;font-size:10px;">0 clips</span>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;font-weight:700;color:#cbd5e1;">🎬 Remix Timeline:</span>
+                  <span id="remix-clips-count" style="font-size:10px;color:#38bdf8;font-weight:700;">0 clips</span>
                 </div>
                 <div id="remix-timeline-list" class="remix-timeline-sequence">
                   <div style="color:#64748b;font-size:11px;text-align:center;padding:12px;">Chưa có phân đoạn remix.</div>
@@ -233,55 +234,49 @@
               </div>
             </div>
 
-            <!-- Auto-Voiceover Script Editor -->
             <div class="remix-script-editor-wrap">
               <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:12px;font-weight:700;color:#cbd5e1;">🎙 Auto-Voiceover Script Editor</span>
-                <button id="remix-btn-re-ai" style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;">✨ AI Viết lại</button>
+                <span style="font-size:11px;font-weight:700;color:#cbd5e1;">🎙 Auto-Voiceover Script Editor</span>
+                <button id="remix-btn-re-ai" style="background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;cursor:pointer;">✨ AI Viết lại</button>
               </div>
               <textarea id="remix-voiceover-input" class="remix-script-textarea" placeholder="Kịch bản lồng tiếng có nhấn nhá do AI tự động sinh ra..."></textarea>
               <div class="remix-keyword-bar">
                 <span>Keywords:</span>
-                <span class="remix-chip chip-cyan">AI Hook</span>
-                <span class="remix-chip chip-purple">Speed</span>
+                <span class="remix-chip chip-purple">AI Hook</span>
+                <span class="remix-chip chip-cyan">Speed</span>
                 <span class="remix-chip chip-green">Features</span>
                 <span class="remix-chip chip-cyan">Quality</span>
               </div>
             </div>
 
-            <!-- Product Thumbnail Preview Showcase -->
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <span style="font-size:12px;font-weight:700;color:#cbd5e1;">🖼 Product Thumbnail Preview</span>
-              <div id="remix-thumb-showcase" class="remix-thumb-showcase" title="Bấm để mở ảnh Thumbnail">
-                <img id="remix-thumb-img" class="remix-thumb-bg" src="" alt="Thumbnail" style="display:none;">
-                <span id="remix-thumb-badge-tag" class="remix-thumb-badge-tag">⚡ VIRAL</span>
-                <div id="remix-thumb-placeholder" style="color:#64748b;font-size:12px;text-align:center;padding:20px;">
-                  Thumbnail sản phẩm sắc nét sẽ tự động tạo khi chạy Auto-Remix.
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <span style="font-size:11px;font-weight:700;color:#cbd5e1;">🖼 Product Thumbnail Preview</span>
+              <div id="remix-thumb-showcase" class="remix-thumb-showcase">
+                <img id="remix-thumb-img" class="remix-thumb-bg" style="display:none;" />
+                <div id="remix-thumb-placeholder" style="color:#64748b;font-size:11px;text-align:center;padding:16px;">
+                  Thumbnail sản phẩm sắc nét sẽ tự động tạo khi chạy Auto-Remix
                 </div>
                 <div id="remix-thumb-overlay" class="remix-thumb-overlay-text" style="display:none;">
-                  <span id="remix-thumb-headline-display" class="remix-thumb-headline-main">SIÊU PHẨM HOT | 4K</span>
-                  <span id="remix-thumb-sub-display" style="font-size:11px;color:#fff;">TIỆN LỢI - HIỆU QUẢ VƯỢT TRỘI</span>
+                  <div id="remix-thumb-headline-display" class="remix-thumb-headline-main">SIÊU PHẨM TĂNG ÁP</div>
+                  <div id="remix-thumb-sub-display" style="font-size:11px;color:#fff;font-weight:600;">PHUN MẠNH GẤP 5 LẦN</div>
                 </div>
+                <div id="remix-thumb-badge-tag" class="remix-thumb-badge-tag">VIRAL</div>
               </div>
             </div>
-
           </div>
 
-          <!-- Column 3: Video Player & Batch Runner -->
           <div class="remix-card">
             <div class="remix-card-header">
               <h3 class="remix-card-title">
                 <span>📺 Video Player</span>
               </h3>
-              <span id="remix-render-status" style="font-size:11px;color:#34d399;font-weight:700;">Sẵn sàng</span>
+              <span id="remix-render-status" style="font-size:11px;color:#38bdf8;font-weight:600;">Sẵn sàng</span>
             </div>
 
-            <!-- Main Video Player -->
             <div class="remix-video-box">
               <video id="remix-preview-video" controls></video>
             </div>
 
-            <!-- Batch Progress Bar -->
             <div style="display:flex;flex-direction:column;gap:6px;">
               <div style="display:flex;justify-content:space-between;font-size:11px;">
                 <span id="remix-progress-text" style="color:#94a3b8;font-weight:600;">Batch Progress: 0/0 video</span>
@@ -292,19 +287,20 @@
               </div>
             </div>
 
-            <!-- Start 1-Click Action Button -->
-            <button id="remix-btn-start-batch" class="remix-btn-glow">
-              <span>🚀 START 1-CLICK AUTO REMIX</span>
-            </button>
+            <div class="remix-action-row">
+              <button id="remix-btn-start-batch" class="remix-btn-glow">
+                <span>🚀 START AUTO REMIX</span>
+              </button>
+              <button id="remix-btn-cancel-batch" class="remix-btn-cancel">
+                <span>⛔ HỦY XỬ LÝ</span>
+              </button>
+            </div>
 
-            <!-- Event Log Console -->
             <div style="display:flex;flex-direction:column;gap:4px;">
               <span style="font-size:11px;font-weight:700;color:#94a3b8;">Event Log Console</span>
               <div id="remix-terminal-log" class="remix-terminal"></div>
             </div>
-
           </div>
-
         </div>
       </div>
     `;
@@ -318,9 +314,29 @@
   function renderQueue() {
     const container = document.getElementById('remix-queue-container');
     const countEl = document.getElementById('remix-queue-count');
+    const selectAllCheckbox = document.getElementById('remix-select-all');
+    const selectedBadge = document.getElementById('remix-selected-badge');
+    const startBtn = document.getElementById('remix-btn-start-batch');
     if (!container) return;
 
     if (countEl) countEl.textContent = `${state.queue.length} Video`;
+
+    const selectedCount = state.queue.filter(i => i.selected !== false).length;
+    if (selectedBadge) selectedBadge.textContent = `${selectedCount}/${state.queue.length} đã chọn`;
+    if (selectAllCheckbox) {
+      selectAllCheckbox.checked = state.queue.length > 0 && selectedCount === state.queue.length;
+      selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < state.queue.length;
+    }
+
+    if (startBtn && !state.runningBatch) {
+      if (selectedCount === 0) {
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<span>🚀 CHỌN ÍT NHẤT 1 VIDEO ĐỂ CHẠY</span>';
+      } else {
+        startBtn.disabled = false;
+        startBtn.innerHTML = `<span>🚀 START AUTO REMIX (${selectedCount} VIDEO ĐÃ CHỌN)</span>`;
+      }
+    }
 
     if (!state.queue.length) {
       container.innerHTML = `
@@ -334,28 +350,57 @@
 
     container.innerHTML = state.queue.map(item => {
       const isAct = item.id === state.activeId;
-      const badgeCls = item.status === 'processing' ? 'badge-processing' : item.status === 'done' ? 'badge-done' : item.status === 'error' ? 'badge-error' : 'badge-idle';
-      const badgeText = item.status === 'processing' ? 'Đang chạy' : item.status === 'done' ? 'Done' : item.status === 'error' ? 'Error' : 'Idle';
+      const isChecked = item.selected !== false;
+      const badgeCls = item.status === 'processing' ? 'badge-processing' : item.status === 'done' ? 'badge-done' : item.status === 'cancelled' ? 'badge-cancelled' : item.status === 'error' ? 'badge-error' : 'badge-idle';
+      const badgeText = item.status === 'processing' ? 'Đang chạy' : item.status === 'done' ? 'Done' : item.status === 'cancelled' ? 'Đã hủy' : item.status === 'error' ? 'Error' : 'Idle';
       
       return `
         <div class="remix-queue-card ${isAct ? 'active' : ''}" data-id="${item.id}">
           <div class="remix-queue-left">
+            <input type="checkbox" class="remix-job-checkbox remix-item-check" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
             <div class="remix-queue-play-icon">▶</div>
             <div class="remix-queue-meta">
               <span class="remix-queue-filename" title="${escapeHtml(item.path)}">${escapeHtml(item.name)}</span>
               <span class="remix-queue-sub">${item.clipsCount ? `${item.clipsCount} clips` : 'Chờ phân tích'}</span>
             </div>
           </div>
-          <span class="remix-status-badge ${badgeCls}">${badgeText}</span>
+          <div class="remix-queue-actions">
+            <button class="remix-btn-run-single" data-id="${item.id}" title="Chạy riêng video này">▶ Chạy</button>
+            <span class="remix-status-badge ${badgeCls}">${badgeText}</span>
+          </div>
         </div>
       `;
     }).join('');
 
     container.querySelectorAll('.remix-queue-card').forEach(el => {
-      el.addEventListener('click', () => {
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('.remix-job-checkbox') || e.target.closest('.remix-btn-run-single')) return;
         state.activeId = el.dataset.id;
         renderQueue();
         renderActiveDetails();
+      });
+    });
+
+    container.querySelectorAll('.remix-item-check').forEach(chk => {
+      chk.addEventListener('click', (e) => e.stopPropagation());
+      chk.addEventListener('change', (e) => {
+        const id = chk.dataset.id;
+        const item = state.queue.find(q => q.id === id);
+        if (item) {
+          item.selected = chk.checked;
+          renderQueue();
+        }
+      });
+    });
+
+    container.querySelectorAll('.remix-btn-run-single').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const item = state.queue.find(q => q.id === id);
+        if (item) {
+          handleBatchProcess(item);
+        }
       });
     });
 
@@ -558,15 +603,21 @@
         id,
         path: p,
         name,
+        selected: true,
         status: 'idle',
         faceStats: null,
         remixClips: [],
+        clipsCount: 0,
         voiceScript: '',
         thumbnailPath: '',
         thumbnailHeadline: '',
         thumbnailSubHeadline: '',
         thumbnailBadge: '',
+        thumbnailFeatures: [],
+        productName: '',
+        customerAvatar: '',
         outputPath: '',
+        scriptPath: '',
         error: ''
       });
       added++;
@@ -582,15 +633,20 @@
     }
   }
 
-  async function handleBatchProcess() {
+  async function handleBatchProcess(singleItem = null) {
     if (state.runningBatch) return;
-    if (!state.queue.length) {
-      window.showToast?.('Vui lòng thêm ít nhất 1 video vào hàng đợi.', 'warning');
+
+    const itemsToProcess = singleItem ? [singleItem] : state.queue.filter(i => i.selected !== false);
+    if (!itemsToProcess.length) {
+      window.showToast?.('Vui lòng chọn ít nhất 1 video để xử lý.', 'warning');
       return;
     }
 
     state.runningBatch = true;
+    state.cancelRequested = false;
+
     const btn = document.getElementById('remix-btn-start-batch');
+    const cancelBtn = document.getElementById('remix-btn-cancel-batch');
     const fill = document.getElementById('remix-progress-fill');
     const pctText = document.getElementById('remix-progress-pct');
     const statusText = document.getElementById('remix-render-status');
@@ -598,21 +654,30 @@
 
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<span>⏳ ĐANG XỬ LÝ HÀNG LOẠT (VUI LÒNG CHỜ)...</span>';
+      btn.innerHTML = '<span>⏳ ĐANG XỬ LÝ (VUI LÒNG CHỜ)...</span>';
+    }
+    if (cancelBtn) {
+      cancelBtn.style.display = 'inline-flex';
     }
 
-    log(`🚀 Bắt đầu chuỗi tự động hóa 1-Click cho ${state.queue.length} video...`, 'info');
+    log(`🚀 Bắt đầu tự động hóa cho ${itemsToProcess.length} video...`, 'info');
     let completedCount = 0;
 
-    for (let i = 0; i < state.queue.length; i++) {
-      const item = state.queue[i];
+    for (let i = 0; i < itemsToProcess.length; i++) {
+      if (state.cancelRequested) {
+        log('⛔ Người dùng đã bấm HỦY XỬ LÝ. Đang dừng các tác vụ tiếp theo...', 'warning');
+        window.showToast?.('Đã hủy tiến trình xử lý!', 'info');
+        break;
+      }
+
+      const item = itemsToProcess[i];
       state.activeId = item.id;
       item.status = 'processing';
       renderQueue();
 
-      if (progText) progText.textContent = `Batch Progress: ${i + 1}/${state.queue.length} (${item.name})`;
+      if (progText) progText.textContent = `Progress: ${i + 1}/${itemsToProcess.length} (${item.name})`;
       if (statusText) statusText.textContent = `Processing Video ${i + 1}...`;
-      log(`[${i+1}/${state.queue.length}] Bắt đầu xử lý: ${item.name}`, 'info');
+      log(`[${i+1}/${itemsToProcess.length}] Bắt đầu xử lý: ${item.name}`, 'info');
 
       try {
         const aiConfig = getResolvedAiConfig();
@@ -620,9 +685,17 @@
         const removeVocal = document.getElementById('remix-opt-remove-vocal')?.checked ?? true;
         const genThumb = document.getElementById('remix-opt-gen-thumb')?.checked ?? true;
 
+        if (state.cancelRequested) break;
+
         // Bước 1: Quét lọc mặt & AI Director
         log(`🔍 [${item.name}] Đang quét lọc khuôn mặt người & AI Director lập Timeline + Kịch bản...`, 'info');
         const dirRes = await window.api.aiRemixAutoDirector(item.path, null, aiConfig, 0.35);
+
+        if (state.cancelRequested) {
+          item.status = 'cancelled';
+          renderQueue();
+          break;
+        }
 
         if (dirRes && dirRes.status === 'ok') {
           item.faceStats = {
@@ -641,6 +714,12 @@
           item.clipsCount = item.remixClips.length;
           renderActiveDetails();
           log(`✨ [${item.name}] Sản phẩm: ${item.productName || item.thumbnailHeadline} | Lọc ${dirRes.face_intervals?.length || 0} đoạn mặt người. Tạo ${item.remixClips.length} phân đoạn remix!`, 'success');
+        }
+
+        if (state.cancelRequested) {
+          item.status = 'cancelled';
+          renderQueue();
+          break;
         }
 
         // Bước 2: Cắt ghép video, lồng tiếng TTS, khử vocal và tạo Thumbnail
@@ -673,28 +752,37 @@
           throw new Error(procRes?.error || 'Lỗi xử lý video');
         }
       } catch (err) {
-        item.status = 'error';
-        item.error = err.message;
-        log(`❌ [${item.name}] Lỗi: ${err.message}`, 'error');
+        if (state.cancelRequested) {
+          item.status = 'cancelled';
+        } else {
+          item.status = 'error';
+          item.error = err.message;
+          log(`❌ [${item.name}] Lỗi: ${err.message}`, 'error');
+        }
       }
 
       completedCount++;
-      const pct = Math.round((completedCount / state.queue.length) * 100);
+      const pct = Math.round((completedCount / itemsToProcess.length) * 100);
       if (fill) fill.style.width = `${pct}%`;
       if (pctText) pctText.textContent = `${pct}%`;
       renderQueue();
     }
 
-    if (progText) progText.textContent = `Đã hoàn tất ${completedCount}/${state.queue.length} video!`;
-    if (statusText) statusText.textContent = 'Hoàn tất xuất sắc!';
-    window.showToast?.('Đã hoàn tất Auto-Remix cho toàn bộ hàng đợi!', 'success');
-    log('🎉🎉 ĐÃ HOÀN TẤT AUTO-REMIX CHO TOÀN BỘ HÀNG ĐỢI MULTI-VIDEO!', 'success');
+    if (state.cancelRequested) {
+      if (statusText) statusText.textContent = 'Đã hủy xử lý!';
+      log('⛔ ĐÃ HỦY TIẾN TRÌNH XỬ LÝ THEO YÊU CỦA BẠN!', 'warning');
+    } else {
+      if (progText) progText.textContent = `Đã hoàn tất ${completedCount}/${itemsToProcess.length} video!`;
+      if (statusText) statusText.textContent = 'Hoàn tất xuất sắc!';
+      window.showToast?.(`Đã hoàn tất Auto-Remix cho ${completedCount} video!`, 'success');
+      log(`🎉🎉 ĐÃ HOÀN TẤT AUTO-REMIX CHO ${completedCount} VIDEO!`, 'success');
+    }
 
     state.runningBatch = false;
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '<span>🚀 START 1-CLICK AUTO REMIX</span>';
-    }
+    state.cancelRequested = false;
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    if (btn) btn.disabled = false;
+    renderQueue();
   }
 
   function bindEvents() {
@@ -718,6 +806,13 @@
     document.getElementById('remix-btn-add-files')?.addEventListener('click', chooseVideos);
     document.getElementById('remix-dropzone-box')?.addEventListener('click', chooseVideos);
 
+    // Select all checkbox
+    document.getElementById('remix-select-all')?.addEventListener('change', (e) => {
+      const isChecked = e.target.checked;
+      state.queue.forEach(item => { item.selected = isChecked; });
+      renderQueue();
+    });
+
     // Clear queue
     document.getElementById('remix-btn-clear-queue')?.addEventListener('click', () => {
       if (state.runningBatch) return;
@@ -727,8 +822,16 @@
       log('Đã xóa toàn bộ hàng đợi video.', 'info');
     });
 
+    // Cancel Batch button
+    document.getElementById('remix-btn-cancel-batch')?.addEventListener('click', () => {
+      if (state.runningBatch) {
+        state.cancelRequested = true;
+        log('⏳ Đang yêu cầu hủy tiến trình xử lý, vui lòng chờ...', 'warning');
+      }
+    });
+
     // Start Batch button
-    document.getElementById('remix-btn-start-batch')?.addEventListener('click', handleBatchProcess);
+    document.getElementById('remix-btn-start-batch')?.addEventListener('click', () => handleBatchProcess());
 
     // AI Re-write script
     document.getElementById('remix-btn-re-ai')?.addEventListener('click', async () => {

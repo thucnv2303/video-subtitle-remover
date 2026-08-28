@@ -6,11 +6,12 @@
   display: none;
   height: 100%;
   overflow-y: auto;
-  padding: 16px 24px;
+  padding: 16px 20px;
   box-sizing: border-box;
   background: #080c14;
   color: #f1f5f9;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  width: 100%;
 }
 
 .ai-remix-page.active {
@@ -18,11 +19,13 @@
 }
 
 .remix-shell {
-  max-width: 1760px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-sizing: border-box;
 }
 
 /* Header bar */
@@ -32,12 +35,14 @@
   align-items: center;
   padding-bottom: 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
 }
 
 .remix-header-left {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .remix-header-title {
@@ -66,21 +71,23 @@
   margin-top: 2px;
 }
 
-/* 3-Column Grid */
+/* 3-Column Responsive Grid Filling Full Screen */
 .remix-grid {
   display: grid;
-  grid-template-columns: 340px 1.35fr 1.15fr;
+  grid-template-columns: minmax(330px, 1.1fr) minmax(460px, 1.65fr) minmax(390px, 1.25fr);
   gap: 18px;
   align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-@media (max-width: 1380px) {
+@media (max-width: 1300px) {
   .remix-grid {
-    grid-template-columns: 320px 1fr 1fr;
+    grid-template-columns: 320px 1.2fr 1fr;
   }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1100px) {
   .remix-grid {
     grid-template-columns: 1fr;
   }
@@ -96,6 +103,7 @@
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
 }
 
 .remix-card-header {
@@ -116,7 +124,19 @@
   margin: 0;
 }
 
-/* Column 1: Video Queue */
+/* Column 1: Video Queue & Selection Controls */
+.remix-select-all-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
 .remix-queue-list {
   display: flex;
   flex-direction: column;
@@ -130,13 +150,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  gap: 8px;
 }
 
 .remix-queue-card:hover {
@@ -154,21 +175,30 @@
 .remix-queue-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   overflow: hidden;
+  flex: 1;
+}
+
+.remix-job-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #0284c7;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .remix-queue-play-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #38bdf8;
-  font-size: 13px;
+  font-size: 11px;
   flex-shrink: 0;
 }
 
@@ -177,6 +207,7 @@
   flex-direction: column;
   gap: 2px;
   overflow: hidden;
+  flex: 1;
 }
 
 .remix-queue-filename {
@@ -186,13 +217,40 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 170px;
+  max-width: 150px;
 }
 
 .remix-queue-sub {
   font-size: 11px;
   color: #64748b;
   font-family: monospace;
+}
+
+.remix-queue-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.remix-btn-run-single {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.remix-btn-run-single:hover {
+  background: #0284c7;
+  color: #fff;
 }
 
 /* Status Badges */
@@ -230,6 +288,12 @@
   border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
+.badge-cancelled {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+}
+
 @keyframes pulseBadge {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.7; transform: scale(0.97); }
@@ -240,7 +304,7 @@
   border: 2px dashed rgba(56, 189, 248, 0.3);
   background: rgba(56, 189, 248, 0.03);
   border-radius: 12px;
-  padding: 24px 16px;
+  padding: 20px 16px;
   text-align: center;
   cursor: pointer;
   display: flex;
@@ -456,21 +520,28 @@
   object-fit: contain;
 }
 
-/* Action Button */
+.remix-action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
 .remix-btn-glow {
+  flex: 1;
   background: linear-gradient(135deg, #0284c7 0%, #7c3aed 100%);
   color: #fff;
   border: none;
   border-radius: 10px;
-  padding: 14px 20px;
-  font-size: 14px;
+  padding: 14px 18px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.5px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4), 0 0 30px rgba(2, 132, 199, 0.2);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -486,6 +557,29 @@
   box-shadow: none;
   cursor: not-allowed;
   transform: none;
+}
+
+.remix-btn-cancel {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  color: #f87171;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.remix-btn-cancel:hover {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
 }
 
 /* Terminal Log */
