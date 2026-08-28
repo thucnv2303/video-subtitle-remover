@@ -1,11 +1,11 @@
 # Current Task
 
 ## Task Name
-`FIX-SAVE-DIALOG-AUTO-DISMISS`
+`FIX-SETTINGS-PAGE-BLANK-DISPLAY`
 
 ## Objective
-1. Bỏ modal parent window lock trong các hàm Electron dialog (`dialog:saveFile`, `dialog:openDirectory`, `app:saveCopy`) để khắc phục triệt để hiện tượng hộp thoại / popup chọn đường dẫn lưu bị treo, không tự đóng sau khi người dùng bấm Save.
-2. Đảm bảo luồng render Voice Render nhận đường dẫn lưu và chạy tiến trình mượt mà.
+1. Sửa lỗi thẻ HTML bị vỡ/lặp trong `#page-settings` tại `src/renderer/index.html`.
+2. Gắn `window.initSettings = initSettings` và kích hoạt tự động `initSettings()` khi DOM ready trong `src/renderer/js/components/settings.js` để tab Cài đặt hiển thị đầy đủ giao diện cấu hình AI, TTS, Lưu trữ và Phần cứng.
 - Scope: `src/renderer/js/ai-auto-remix.js`, `src/renderer/styles/ai-auto-remix.css`.
 
 ## User outcome
