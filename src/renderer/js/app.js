@@ -68,7 +68,7 @@
     const baseName = fileName.replace(/\.[^.]+$/, '');
     const dir = filePath.replace(/\\/g, '/').replace(/\/[^/]+$/, '');
     const outputPath = state.outputDir
-      ? state.outputDir.replace(/\\/g, '/') + '/' + baseName + '_no_sub.mp4'
+      ? state.outputDir.replace(/\\/g, '/').replace(/\/+$/, '') + '/' + baseName + '_no_sub.mp4'
       : dir + '/' + baseName + '_no_sub.mp4';
     return {
       id: Math.random().toString(36).substr(2, 9),
@@ -360,7 +360,7 @@
   function saveControlsToJob() {
     const job = getActiveJob();
     if (!job || job.status === 'processing') return;
-    job.algorithm   = el.algoSelect?.value || 'sttn-auto';
+    job.algorithm   = el.algoSelect?.value || 'lama';
     job.maskMode    = el.maskMode?.value   || 'box';
     job.extractSrt  = $('#chk-extract-srt')?.checked   || false;
     job.asrFallback = $('#chk-asr-fallback')?.checked  || false;
@@ -546,7 +546,7 @@
 
   document.getElementById('btn-start-all')?.addEventListener('click', () => {
     // btn-start-all ở Step 1 → chạy Pipeline 1 (AI Analysis + TTS), KHÔNG inpaint
-    state.jobs.filter(j => j.status === 'idle').forEach(j => {
+    state.jobs.filter(j => !['queued', 'processing'].includes(j.status)).forEach(j => {
       j.pipeline = 1; // đánh dấu chạy pipeline 1
       j.status   = 'queued';
     });
@@ -571,9 +571,10 @@
 
   function updateStartButton() {
     const job = getActiveJob();
-    const canStart = job && job.status === 'idle' && state.isBackendReady;
+    const canStart = job && job.status !== 'processing' && job.status !== 'queued' && state.isBackendReady;
     if (el.btnStart) {
       el.btnStart.disabled = !canStart;
+      el.btnStart.textContent = (job?.status === 'finished' || job?.status === 'error') ? '▶ Chạy lại' : '▶ Bắt đầu';
       el.btnStart.classList.toggle('hidden', job?.status === 'processing');
     }
     if (el.btnCancel) el.btnCancel.classList.toggle('hidden', job?.status !== 'processing' && job?.status !== 'queued');
@@ -624,35 +625,28 @@
       prompt:    localStorage.getItem('ai_prompt')    || '',
     };
 
-    let subtitleAreas = [], frameRange = null, inputPath = job.filePath;
+    let subtitleAreas = [], regionsPayload = null;
 
     if (job.subtitleMode === 'manual' && job.regions.length > 0) {
-      const passIdx = state.processingPassIndex;
-      if (passIdx >= job.regions.length) { onJobFinished(job); return; }
-      const region = job.regions[passIdx];
-      subtitleAreas = [[region.ymin, region.ymax, region.xmin, region.xmax]];
-      frameRange    = { start: region.startFrame, end: region.endFrame };
-      if (passIdx > 0) inputPath = job.outputPath.replace(/_no_sub\.mp4$/, `_pass${passIdx}_no_sub.mp4`);
-      const outputPath = passIdx < job.regions.length - 1
-        ? job.outputPath.replace(/_no_sub\.mp4$/, `_pass${passIdx+1}_no_sub.mp4`)
-        : job.outputPath;
-      addLog(`  Pass ${passIdx+1}/${job.regions.length}: Vùng #${region.label} (frame ${region.startFrame}-${region.endFrame})`, 'info');
+      subtitleAreas = job.regions.map(r => [r.ymin, r.ymax, r.xmin, r.xmax]);
+      regionsPayload = job.regions;
+      addLog(`[Inpaint] Bắt đầu xóa đồng loạt ${job.regions.length} vùng phụ đề trực tiếp trong 1 lượt (Single-Pass)...`, 'info');
       try {
-        await api.startProcessBatch([{
-          input_path: inputPath, output_path: outputPath,
-          subtitle_areas: subtitleAreas, frame_range: frameRange,
+        const res = await api.startProcessBatch([{
+          input_path: job.filePath, output_path: job.outputPath,
+          subtitle_areas: subtitleAreas, regions: regionsPayload,
           inpaint_mode: job.algorithm, mask_mode: job.maskMode || 'box',
-          extract_srt: passIdx === 0 ? job.extractSrt : false,
-          asr_fallback: passIdx === 0 ? (job.asrFallback || false) : false,
-          asr_language: job.asrLanguage || 'vi',
+          extract_srt: job.extractSrt,
+          asr_fallback: job.asrFallback || false, asr_language: job.asrLanguage || 'vi',
           ai_rewrite: false, ai_config: aiConfig, tts_voice: 'none',
         }]);
+        job.backendJobId = res?.jobs?.[0] || null;
         state.pollTimer = setInterval(pollProgress, 2000);
       } catch (e) { _jobError(job, e.message); }
     } else {
       addLog(`[Debug] extract_srt=${job.extractSrt}, ai_rewrite=${job.aiRewrite}, tts_generate=${job.ttsGenerate}`, 'info');
       try {
-        await api.startProcessBatch([{
+        const res = await api.startProcessBatch([{
           input_path: job.filePath, output_path: job.outputPath,
           subtitle_areas: subtitleAreas, inpaint_mode: job.algorithm,
           mask_mode: job.maskMode || 'box', extract_srt: job.extractSrt,
@@ -660,6 +654,7 @@
           // ai_rewrite và tts_voice luôn false/none — xử lý ở frontend pipeline 1
           ai_rewrite: false, ai_config: aiConfig, tts_voice: 'none',
         }]);
+        job.backendJobId = res?.jobs?.[0] || null;
         state.pollTimer = setInterval(pollProgress, 2000);
       } catch (e) { _jobError(job, e.message); }
     }
@@ -678,18 +673,24 @@
     if (!job) return;
     try {
       const st = await api.getStatus();
-      const backendJob = st.current_job_id && st.jobs ? st.jobs[st.current_job_id] : null;
+      const targetJobId = job.backendJobId;
+      if (!targetJobId) return;
+      const backendJob = st.jobs ? st.jobs[targetJobId] : null;
       if (backendJob) {
-        const pct = backendJob.progress || 0;
-        job.progress = pct;
-        if (state.activeJobId === job.id) {
-          setProgress(pct, backendJob.status === 'processing' ? `${pct}%` : backendJob.status);
-          if (pct > 0 && state.videoInfo?.total_frames) {
-            loadSyncedFrame(Math.min(Math.floor((pct/100)*state.videoInfo.total_frames), state.videoInfo.total_frames-1));
+        const pct = Number(backendJob.progress || 0);
+        if (Number.isFinite(pct) && pct > 0) {
+          job.progress = pct;
+          if (state.activeJobId === job.id) {
+            setProgress(pct, backendJob.status === 'processing' ? `${pct}%` : backendJob.status);
+            if (state.videoInfo?.total_frames) {
+              loadSyncedFrame(Math.min(Math.floor((pct/100)*state.videoInfo.total_frames), state.videoInfo.total_frames-1));
+            }
           }
+          renderJobList();
         }
-        renderJobList();
-        if (backendJob.status === 'finished' || pct >= 100) onJobFinished(job);
+        if (backendJob.status === 'finished' && backendJob.is_finished === true) {
+          onJobFinished(job);
+        }
       }
     } catch (e) { /* ignore polling errors */ }
   }
@@ -697,20 +698,26 @@
   function handleWSMessage(msg) {
     if (msg.type !== 'progress' || !msg.data) return;
     const d   = msg.data;
-    const pct = d.progress || 0;
+    const pct = Number(d.progress || 0);
     // Tìm job đang chạy — ưu tiên pipeline1JobId (OCR job), sau đó processingJobId (inpaint job)
     const job = state.jobs.find(j => j.id === state.pipeline1JobId)
              || state.jobs.find(j => j.id === state.processingJobId);
     if (!job) return;
-    job.progress = pct;
-    if (state.activeJobId === job.id) {
-      setProgress(pct, d.status || `${pct}%`);
-      if (d.frame !== undefined && state.videoInfo) loadSyncedFrame(d.frame);
-    }
-    renderJobList();
+    if (d.job_id && job.backendJobId && d.job_id !== job.backendJobId) return;
 
-    // Nếu là inpaint job (không phải pipeline1), mới gọi onJobFinished
-    if (!state.pipeline1JobId && (d.is_finished || pct >= 100)) onJobFinished(job);
+    if (Number.isFinite(pct) && pct > 0) {
+      job.progress = pct;
+      if (state.activeJobId === job.id) {
+        setProgress(pct, d.status || `${pct}%`);
+        if (d.frame !== undefined && state.videoInfo) loadSyncedFrame(d.frame);
+      }
+      renderJobList();
+    }
+
+    // Nếu là inpaint job (không phải pipeline1), chỉ gọi onJobFinished khi backend gửi cờ is_finished: true và status === 'finished'
+    if (!state.pipeline1JobId && d.is_finished === true && d.status === 'finished') {
+      onJobFinished(job);
+    }
 
     // Handle srt_content từ backend WS (OCR kết quả)
     if (d.srt_content && !job.srtContent) {
@@ -726,19 +733,10 @@
     state.processingStartTime = null;
     if (el.btnCancel) el.btnCancel.textContent = '⬛ Hủy xử lý';
 
-    // Multi-pass check
-    if (job.subtitleMode === 'manual' && job.regions.length > 0) {
-      state.processingPassIndex++;
-      if (state.processingPassIndex < job.regions.length) {
-        addLog(`  Pass ${state.processingPassIndex}/${job.regions.length} hoàn tất, tiếp tục...`, 'info');
-        job.progress = Math.round((state.processingPassIndex / job.regions.length) * 100);
-        renderJobList(); runNextPass(job); return;
-      }
-    }
-
     // All inpaint passes done
     job.progress = 100;
-    state.processingJobId    = null;
+    job.status = 'finished';
+    state.processingJobId = null;
     state.processingPassIndex = 0;
     addLog(`✅ Xóa sub hoàn tất: ${job.fileName}`, 'success');
 
@@ -1005,10 +1003,15 @@
         if (el.frameInfoOrig && state.videoInfo) el.frameInfoOrig.textContent = `${frameNum}/${state.videoInfo.total_frames-1}`;
         if (el.timelineOrig) el.timelineOrig.value = frameNum;
         renderRegionOverlays();
+        const job = getActiveJob();
+        if (job?.outputPath) {
+          loadResultFrame(frameNum, job.outputPath);
+        }
       };
       img.src = url;
     } catch (e) { /* ignore frame load errors during seek */ }
   }
+  window.loadOrigFrame = loadOrigFrame;
 
   async function loadResultFrame(frameNum, outputPath) {
     try {
@@ -1028,11 +1031,45 @@
       img.src = url;
     } catch (e) { /* ignore */ }
   }
+  window.loadResultFrame = loadResultFrame;
 
   function loadSyncedFrame(frameNum) {
     const job = getActiveJob();
     loadOrigFrame(frameNum, job?.filePath);
     if (job?.status === 'finished' && job.outputPath) loadResultFrame(frameNum, job.outputPath);
+  }
+
+  function attachHoldToStep(btn, stepFn) {
+    if (!btn) return;
+    let timer = null;
+    let interval = null;
+    let isHolding = false;
+
+    const start = (e) => {
+      if (e && e.button !== undefined && e.button !== 0) return;
+      isHolding = true;
+      stepFn();
+      timer = setTimeout(() => {
+        if (!isHolding) return;
+        interval = setInterval(() => {
+          if (!isHolding) { clearInterval(interval); return; }
+          stepFn();
+        }, 50);
+      }, 250);
+    };
+
+    const stop = () => {
+      isHolding = false;
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (interval) { clearInterval(interval); interval = null; }
+    };
+
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('mouseup', stop);
+    btn.addEventListener('mouseleave', stop);
+    btn.addEventListener('touchstart', (e) => { start(e.touches?.[0] || e); }, { passive: true });
+    btn.addEventListener('touchend', stop);
+    btn.addEventListener('touchcancel', stop);
   }
 
   async function loadVideo(job) {
@@ -1070,16 +1107,30 @@
   // Timeline controls
   el.timelineOrig?.addEventListener('input', () => {
     const job = getActiveJob(); if (!job) return;
-    loadOrigFrame(parseInt(el.timelineOrig.value), job.filePath);
+    const f = parseInt(el.timelineOrig.value);
+    loadOrigFrame(f, job.filePath);
   });
   el.timelineResult?.addEventListener('input', () => {
     const job = getActiveJob(); if (!job || !job.outputPath) return;
     loadResultFrame(parseInt(el.timelineResult.value), job.outputPath);
   });
-  el.btnPrevOrig?.addEventListener('click',  () => { const f = Math.max(0, state.currentFrameOrig-1); const j=getActiveJob(); if(j) loadOrigFrame(f, j.filePath); });
-  el.btnNextOrig?.addEventListener('click',  () => { const j=getActiveJob(); if(j&&state.videoInfo) loadOrigFrame(Math.min(state.currentFrameOrig+1, state.videoInfo.total_frames-1), j.filePath); });
-  el.btnPrevResult?.addEventListener('click',() => { const j=getActiveJob(); if(j?.outputPath) loadResultFrame(Math.max(0, state.currentFrameResult-1), j.outputPath); });
-  el.btnNextResult?.addEventListener('click',() => { const j=getActiveJob(); if(j?.outputPath&&state.videoInfo) loadResultFrame(Math.min(state.currentFrameResult+1, state.videoInfo.total_frames-1), j.outputPath); });
+
+  attachHoldToStep(el.btnPrevOrig, () => {
+    const j = getActiveJob();
+    if (j) loadOrigFrame(Math.max(0, state.currentFrameOrig - 1), j.filePath);
+  });
+  attachHoldToStep(el.btnNextOrig, () => {
+    const j = getActiveJob();
+    if (j && state.videoInfo) loadOrigFrame(Math.min(state.currentFrameOrig + 1, state.videoInfo.total_frames - 1), j.filePath);
+  });
+  attachHoldToStep(el.btnPrevResult, () => {
+    const j = getActiveJob();
+    if (j?.outputPath) loadResultFrame(Math.max(0, state.currentFrameResult - 1), j.outputPath);
+  });
+  attachHoldToStep(el.btnNextResult, () => {
+    const j = getActiveJob();
+    if (j?.outputPath && state.videoInfo) loadResultFrame(Math.min(state.currentFrameResult + 1, state.videoInfo.total_frames - 1), j.outputPath);
+  });
 
   el.btnPlayOrig?.addEventListener('click', () => {
     if (state.playIntervalOrig) { clearInterval(state.playIntervalOrig); state.playIntervalOrig = null; el.btnPlayOrig.textContent = '▶'; return; }
@@ -1132,9 +1183,15 @@
     const ch = el.canvasOrig.clientHeight || el.canvasOrig.height;
     const scaleX = cw / (state.videoInfo.width || 1);
     const scaleY = ch / (state.videoInfo.height || 1);
+    const currentFrame = Number(state.currentFrameOrig ?? el.timelineOrig?.value ?? 0);
+
     job.regions.forEach((r, i) => {
+      const inRange = (r.startFrame == null || r.endFrame == null) || (currentFrame >= r.startFrame && currentFrame <= r.endFrame);
+      if (!inRange) return;
+
       const div = document.createElement('div');
       div.className = 'region-overlay';
+      div.dataset.regionIndex = String(i);
       div.style.cssText = `position:absolute;border:2px solid ${REGION_COLORS[i%REGION_COLORS.length]};pointer-events:none;
         left:${r.xmin*scaleX}px;top:${r.ymin*scaleY}px;
         width:${(r.xmax-r.xmin)*scaleX}px;height:${(r.ymax-r.ymin)*scaleY}px;`;

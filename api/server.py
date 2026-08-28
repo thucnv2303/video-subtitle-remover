@@ -6,11 +6,17 @@ import traceback
 import json
 from typing import List, Optional
 
-# Fix Windows console encoding
+# Disable slow online connectivity check for Paddle / PaddleOCR
+os.environ["PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK"] = "True"
+os.environ["PADDLE_DISABLE_TELEMETRY"] = "1"
+
+# Fix Windows console encoding cleanly without closing underlying buffer
 if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -70,6 +76,7 @@ class JobRequest(BaseModel):
     tts_bg_volume: int = 10
     frame_range: Optional[dict] = None  # {"start": int, "end": int}
     mask_mode: str = "box"  # "box" | "tight" | "soft"
+    regions: Optional[List[dict]] = None  # Danh sách các vùng thủ công [{xmin, xmax, ymin, ymax, startFrame, endFrame, maskMode}]
     asr_fallback: bool = False   # Run Whisper in parallel; use as fallback if no text detected
     asr_language: str = "vi"     # Language for Whisper transcription
 
@@ -90,17 +97,23 @@ def progress_listener(progress_total, is_finished):
     try:
         if not current_job_id or current_job_id not in jobs: return
         job = jobs[current_job_id]
-        # Scale inpaint progress to 0-80% range, reserving 80-100% for post-processing
-        inpaint_pct = min(int(progress_total * 0.80), 80)
+        has_post = bool(
+            job.get("extract_srt") or
+            job.get("ai_rewrite") or
+            (job.get("tts_voice") and job.get("tts_voice") != "none")
+        )
+        if has_post:
+            inpaint_pct = max(1, min(int(progress_total * 0.80), 80))
+        else:
+            inpaint_pct = max(1, min(int(progress_total), 99))
         job["progress"] = inpaint_pct
-        # NEVER set status to finished here — inpaint done != job done
         
         # Broadcast to websockets from background thread
         msg = {
             "job_id": current_job_id,
             "progress": inpaint_pct,
             "status": "processing",
-            "is_finished": False  # Never True here
+            "is_finished": False
         }
         if subtitle_remover_instance and hasattr(subtitle_remover_instance, 'frame_count') and subtitle_remover_instance.frame_count > 0:
             frame = int((progress_total / 100) * subtitle_remover_instance.frame_count)
@@ -209,8 +222,9 @@ def worker_loop():
             
             
             # Monkey-patch SubtitleRemover.run to skip inpainting if requested
-            _original_run = getattr(SubtitleRemover, 'run', None)
+            _original_run = getattr(SubtitleRemover, '_original_run', getattr(SubtitleRemover, 'run', None))
             if _original_run and not hasattr(SubtitleRemover, '_patched'):
+                SubtitleRemover._original_run = _original_run
                 def patched_run(self):
                     if getattr(self, 'skip_inpaint', False):
                         from backend.main import SubtitleDetect, expand_frame_ranges, config
@@ -234,12 +248,30 @@ def worker_loop():
                         self.notify_progress_listeners()
                         return
                     else:
-                        return _original_run(self)
-                    SubtitleRemover.run = patched_run
-                    SubtitleRemover._patched = True
+                        return SubtitleRemover._original_run(self)
+                SubtitleRemover.run = patched_run
+                SubtitleRemover._patched = True
                 
-                sr = SubtitleRemover(job["input_path"])
-                sr.skip_inpaint = job.get("skip_inpaint", False)
+            sr = SubtitleRemover(job["input_path"], gui_mode=True)
+            sr.skip_inpaint = job.get("skip_inpaint", False)
+            
+            # Hook update_preview_with_comp for real-time preview during inpainting
+            last_comp_preview_time = [0.0]
+            def _live_preview_comp(orig_frame, comp_frame):
+                global latest_preview_frame
+                if is_cancelled: return
+                now = time.time()
+                if now - last_comp_preview_time[0] < 0.1:
+                    return
+                last_comp_preview_time[0] = now
+                try:
+                    target = comp_frame if comp_frame is not None else orig_frame
+                    if target is not None:
+                        _, buffer = cv2.imencode('.jpg', target, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                        latest_preview_frame = buffer.tobytes()
+                except Exception:
+                    pass
+            sr.update_preview_with_comp = _live_preview_comp
 
             sr.extract_srt = job.get("extract_srt", False)
             sr.ai_rewrite = job.get("ai_rewrite", False)
@@ -251,8 +283,7 @@ def worker_loop():
             sr.asr_language = job.get("asr_language", "vi")
             sr.remove_vocal = job.get("remove_vocal", False)
 
-            # Bug #7 fix: wire is_cancelled flag into SubtitleRemover so cancel actually stops processing.
-            # SubtitleRemover checks self.is_stop_run to break its frame loop.
+            # Wire is_cancelled flag into SubtitleRemover so cancel actually stops processing.
             def _check_cancelled():
                 if is_cancelled:
                     sr.is_stop_run = True
@@ -265,15 +296,19 @@ def worker_loop():
             class VideoWriterWithPreview:
                 def __init__(self, writer):
                     self._writer = writer
+                    self._last_time = 0.0
                 def write(self, frame):
                     global latest_preview_frame
                     if is_cancelled:
                         return
-                    try:
-                        _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
-                        latest_preview_frame = buffer.tobytes()
-                    except Exception:
-                        pass
+                    now = time.time()
+                    if now - self._last_time >= 0.1:
+                        self._last_time = now
+                        try:
+                            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                            latest_preview_frame = buffer.tobytes()
+                        except Exception:
+                            pass
                     if self._writer:
                         self._writer.write(frame)
                 def release(self):
@@ -301,15 +336,56 @@ def worker_loop():
                     return SubtitleDetect._original_detect_subtitle(self_detect, frame)
                     
                 SubtitleDetect.detect_subtitle = intercept_detect_subtitle
+                if not hasattr(SubtitleDetect, '_orig_find_sub_frame_no'):
+                    SubtitleDetect._orig_find_sub_frame_no = SubtitleDetect.find_subtitle_frame_no
+                def _custom_find_sub_frame_no(self_det, sub_remover=None):
+                    if sub_remover and getattr(sub_remover, 'custom_sub_list', None):
+                        print(f'[CustomRegions] SubtitleDetect using {len(sub_remover.custom_sub_list)} predefined frames in single pass', flush=True)
+                        return sub_remover.custom_sub_list
+                    return SubtitleDetect._orig_find_sub_frame_no(self_det, sub_remover=sub_remover)
+                SubtitleDetect.find_subtitle_frame_no = _custom_find_sub_frame_no
             except ImportError:
                 pass
+
+            # If job has custom/manual regions, build custom_sub_list for 1 single unified pass
+            if job.get("regions"):
+                custom_sub_list = {}
+                for r in job["regions"]:
+                    xmin = int(r.get("xmin", 0))
+                    xmax = int(r.get("xmax", 0))
+                    ymin = int(r.get("ymin", 0))
+                    ymax = int(r.get("ymax", 0))
+                    sf = int(r.get("startFrame", 0))
+                    ef = int(r.get("endFrame", sr.frame_count - 1))
+                    box = (xmin, xmax, ymin, ymax)
+                    for f in range(sf, ef + 1):
+                        custom_sub_list.setdefault(f, []).append(box)
+                sr.custom_sub_list = custom_sub_list
+                print(f'[CustomRegions] Loaded {len(job["regions"])} regions covering {len(custom_sub_list)} frames for single-pass inpaint.', flush=True)
                 
             subtitle_remover_instance = sr
             if job["subtitle_areas"]:
                 sr.sub_areas = [tuple(area) for area in job["subtitle_areas"]]
-            # If no subtitle_areas, SubtitleRemover auto-detects (full screen)
-            sr.video_out_path = job["output_path"]
-            
+
+            # Validate and fallback output_path if the target drive or dir is inaccessible
+            out_target = job.get("output_path") or ""
+            out_dir = os.path.dirname(os.path.abspath(out_target)) if out_target else ""
+            try:
+                if out_dir:
+                    os.makedirs(out_dir, exist_ok=True)
+                sr.video_out_path = out_target
+            except Exception:
+                fallback_dir = os.path.dirname(os.path.abspath(job["input_path"]))
+                filename = os.path.basename(out_target) if out_target else f"{sr.vd_name}_no_sub.mp4"
+                safe_out = os.path.join(fallback_dir, filename)
+                try:
+                    os.makedirs(fallback_dir, exist_ok=True)
+                except Exception:
+                    pass
+                job["output_path"] = safe_out
+                sr.video_out_path = safe_out
+                print(f'[Path] Target output dir {out_dir} not accessible, fell back to {safe_out}', flush=True)
+
             # Mask mode: pass to SubtitleRemover for tight/soft mask generation
             sr.mask_mode = job.get("mask_mode", "box")
             
@@ -452,6 +528,7 @@ def worker_loop():
             final_output = getattr(sr, 'video_out_path', job.get('output_path', ''))
             job["status"] = "finished"
             job["progress"] = 100
+            job["is_finished"] = True
             job["output_path"] = final_output
             print(f'[Job] Hoàn tất toàn bộ pipeline. Output: {final_output}', flush=True)
             if event_loop:
@@ -529,6 +606,7 @@ def start_process(req: ProcessBatchRequest):
             "input_path": j.input_path,
             "output_path": j.output_path,
             "subtitle_areas": j.subtitle_areas or [],
+            "regions": j.regions or [],
             "inpaint_mode": j.inpaint_mode,
             "mask_mode": j.mask_mode,
             "frame_range": j.frame_range,
@@ -542,6 +620,7 @@ def start_process(req: ProcessBatchRequest):
             "tts_bg_volume": j.tts_bg_volume,
             "status": "pending",
             "progress": 0,
+            "is_finished": False,
             "error": None
         }
         job_queue.append(job_id)
@@ -2150,6 +2229,170 @@ def api_detect_sub_positions(req: DetectSubPositionsReq):
         return {"status": "error", "error": str(e)}
 
 
+class AutoDetectRegionsReq(BaseModel):
+    video_path: str
+    sample_step: int = 15
+    padding: int = 12
+    mask_mode: str = "box"
+
+@app.post("/api/auto-detect-regions")
+def api_auto_detect_regions(req: AutoDetectRegionsReq):
+    """
+    Quét video tự động phát hiện các vùng phụ đề (tọa độ pixel + frame range) cho chế độ Thủ công.
+    """
+    if not cv2:
+        return {"status": "error", "error": "OpenCV not available"}
+    if not os.path.exists(req.video_path):
+        return {"status": "error", "error": "Video not found"}
+
+    try:
+        cap = cv2.VideoCapture(req.video_path)
+        total_f  = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        width    = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height   = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps_v    = cap.get(cv2.CAP_PROP_FPS) or 30
+        cap.release()
+
+        if total_f <= 0 or height <= 0:
+            return {"status": "error", "error": "Cannot read video properties"}
+
+        try:
+            from backend.tools.subtitle_detect import DirectDBNet, ModelConfig
+            model_config = ModelConfig()
+            net = DirectDBNet(model_config.DET_MODEL_DIR)
+        except Exception:
+            return {"status": "error", "error": "Subtitle detector not available"}
+
+        # Quét tuần tự video theo bước nhảy mẫu 6 frame (đảm bảo tốc độ quét cao < 1.5s và không sót frame)
+        cap = cv2.VideoCapture(req.video_path)
+        frame_box_dict = {}
+        f = 0
+        step = max(req.sample_step, 5)
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            if f % step == 0:
+                boxes = net.predict(frame)
+                sub_boxes = []
+                for b in boxes:
+                    bx1, bx2, by1, by2 = b
+                    bw = bx2 - bx1
+                    bh = by2 - by1
+                    b_cy = (by1 + by2) / 2.0
+
+                    # 1. Bộ lọc Vùng phụ đề (Subtitle Zone): Hỗ trợ cả banner trên (<= 45% H) và phụ đề dưới (>= 58% H)
+                    is_sub_zone = (b_cy <= 0.45 * height) or (b_cy >= 0.58 * height)
+
+                    # 2. Tiêu chuẩn hình dáng Banner / Dòng chữ phụ đề (Độ dài >= 120px, tỷ lệ W/H >= 1.5)
+                    is_banner = (bw >= 120 and 18 <= bh <= 150 and (bw / float(max(1, bh))) >= 1.5)
+
+                    if is_sub_zone and is_banner:
+                        sub_boxes.append(b)
+                if sub_boxes:
+                    frame_box_dict[f] = sub_boxes
+            f += 1
+        cap.release()
+
+        if not frame_box_dict:
+            return {
+                "status": "ok",
+                "regions": [],
+                "video_height": height,
+                "video_width": width,
+                "message": "Không tìm thấy vùng phụ đề nào"
+            }
+
+        def box_center(b):
+            return (b[0] + b[1]) / 2.0, (b[2] + b[3]) / 2.0
+
+        # Xây dựng các track phụ đề chặt chẽ theo câu (GAP_LIMIT = step + 2 frames)
+        raw_tracks = []
+        GAP_LIMIT = step + 2
+
+        for f_idx in sorted(frame_box_dict.keys()):
+            boxes = frame_box_dict[f_idx]
+            for b in boxes:
+                cx, cy = box_center(b)
+                bw = b[1] - b[0]
+                bh = b[3] - b[2]
+                best_track = None
+                best_dist = 999999
+                for t in raw_tracks:
+                    if f_idx - t['frames'][-1] <= GAP_LIMIT:
+                        lcx, lcy = box_center(t['boxes'][-1])
+                        lbw = t['boxes'][-1][1] - t['boxes'][-1][0]
+                        dy = abs(cy - lcy)
+                        dx = abs(cx - lcx)
+                        dw = abs(bw - lbw)
+                        if dy <= 14 and dx <= 35 and dw <= 65:
+                            dist = dy * 2.0 + dx + dw * 0.5
+                            if dist < best_dist:
+                                best_dist = dist
+                                best_track = t
+                if best_track is not None:
+                    best_track['frames'].append(f_idx)
+                    best_track['boxes'].append(b)
+                else:
+                    raw_tracks.append({'frames': [f_idx], 'boxes': [b]})
+
+        # Lọc các track phụ đề thực thụ (tồn tại >= 12 frame hoặc ít nhất 2 mẫu quét)
+        import numpy as np
+        final_subs = []
+        for t in raw_tracks:
+            dur = t['frames'][-1] - t['frames'][0] + 1
+            if dur >= 12 and len(t['frames']) >= 2:
+                all_b = np.array(t['boxes'])
+                sf = max(0, t['frames'][0] - 2)
+                ef = min(total_f - 1, t['frames'][-1] + 2)
+                x1 = int(np.min(all_b[:, 0]))
+                x2 = int(np.max(all_b[:, 1]))
+                y1 = int(np.min(all_b[:, 2]))
+                y2 = int(np.max(all_b[:, 3]))
+                final_subs.append({'sf': sf, 'ef': ef, 'x1': x1, 'x2': x2, 'y1': y1, 'y2': y2})
+
+        final_subs.sort(key=lambda s: (s['sf'], s['y1']))
+
+        # Áp dụng padding thích ứng thông minh:
+        # - Phía trái (pad_left): mở rộng đủ bao trọn số thứ tự (e.g. 1., 8., 10.), bullet, icon, dấu ngoặc
+        # - Phía phải (pad_right): mở rộng trọn dấu câu, emoji, ký tự cuối
+        # - Phía trên/dưới (pad_y): mở rộng đủ bao phủ dấu mũ, nét viền đen (stroke), bóng đổ (drop shadow), hiệu ứng phát sáng (glow)
+        segments = []
+        for s in final_subs:
+            bh = max(20, s['y2'] - s['y1'])
+            pad_left = max(45, int(1.4 * bh))
+            pad_right = max(28, int(0.55 * bh))
+            pad_y = max(24, int(0.35 * bh))
+
+            xmin = max(0, s['x1'] - pad_left)
+            xmax = min(width, s['x2'] + pad_right)
+            ymin = max(0, s['y1'] - pad_y)
+            ymax = min(height, s['y2'] + pad_y)
+
+            if (xmax - xmin) >= 30 and (ymax - ymin) >= 15:
+                segments.append({
+                    "label": len(segments) + 1,
+                    "startFrame": int(s['sf']),
+                    "endFrame": int(s['ef']),
+                    "xmin": int(xmin),
+                    "xmax": int(xmax),
+                    "ymin": int(ymin),
+                    "ymax": int(ymax),
+                    "maskMode": req.mask_mode
+                })
+
+        print(f'[AutoRegions] Detected {len(segments)} clean subtitle regions for manual fine-tuning', flush=True)
+        return {
+            "status": "ok",
+            "regions": segments,
+            "video_height": height,
+            "video_width": width
+        }
+    except Exception as e:
+        traceback.print_exc()
+        return {"status": "error", "error": str(e)}
+
+
 # ─── Burn Subtitle with Position Awareness (ASS format) ────────────────────
 
 class BurnSubPositionedReq(BaseModel):
@@ -2519,6 +2762,145 @@ def write_file(req: WriteFileRequest):
             f.write(req.content)
         return {"status": "ok", "path": req.path}
     except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+class VideoRenderClip(BaseModel):
+    id: str
+    name: Optional[str] = None
+    start: str
+    to: str
+
+class VideoRenderRequest(BaseModel):
+    video_path: str
+    clips: List[VideoRenderClip]
+    output_path: Optional[str] = None
+    mode: Optional[str] = "lossless"
+
+@app.post("/api/video-render/cut-and-concat")
+def video_render_cut_and_concat(req: VideoRenderRequest):
+    """
+    Cut video into specified timeline segments and concatenate into a single output video.
+    Supports lossless stream-copy or accurate re-encode mode.
+    """
+    import tempfile, subprocess, shutil, os as _os
+    try:
+        if not _os.path.isfile(req.video_path):
+            return {"status": "error", "error": f"Không tìm thấy video nguồn: {req.video_path}"}
+        if not req.clips:
+            return {"status": "error", "error": "Danh sách clip rỗng, vui lòng cung cấp ít nhất 1 đoạn cắt."}
+
+        # Determine output path
+        output_path = req.output_path
+        if not output_path:
+            base, ext = _os.path.splitext(req.video_path)
+            output_path = f"{base}_remix{ext or '.mp4'}"
+        _os.makedirs(_os.path.dirname(_os.path.abspath(output_path)), exist_ok=True)
+
+        temp_dir = tempfile.mkdtemp(prefix="vsr_video_render_")
+        clip_paths = []
+
+        # 1. Cut each clip
+        for idx, clip in enumerate(req.clips):
+            clip_name = clip.name or f"clip_{idx+1}"
+            safe_name = f"clip_{idx+1:03d}.mp4"
+            clip_file = _os.path.join(temp_dir, safe_name)
+            
+            start_val = str(clip.start).strip()
+            to_val = str(clip.to).strip()
+
+            if req.mode == "accurate":
+                cmd = [
+                    'ffmpeg', '-y',
+                    '-ss', start_val,
+                    '-to', to_val,
+                    '-i', req.video_path,
+                    '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                    '-c:a', 'aac', '-b:a', '192k',
+                    clip_file
+                ]
+            else:
+                # Lossless fast copy
+                cmd = [
+                    'ffmpeg', '-y',
+                    '-ss', start_val,
+                    '-to', to_val,
+                    '-i', req.video_path,
+                    '-c', 'copy',
+                    '-avoid_negative_ts', 'make_zero',
+                    clip_file
+                ]
+
+            print(f"[VideoRender] Cutting clip {idx+1}/{len(req.clips)}: {clip_name} ({start_val} -> {to_val})...", flush=True)
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res.returncode != 0 or not _os.path.isfile(clip_file) or _os.path.getsize(clip_file) == 0:
+                err_msg = res.stderr.decode('utf-8', errors='replace')
+                print(f"[VideoRender] Fast copy failed for clip {idx+1}, retrying with re-encode fallback: {err_msg}", flush=True)
+                # Fallback to re-encode
+                cmd_fallback = [
+                    'ffmpeg', '-y',
+                    '-ss', start_val,
+                    '-to', to_val,
+                    '-i', req.video_path,
+                    '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '20',
+                    '-c:a', 'aac',
+                    clip_file
+                ]
+                res_fb = subprocess.run(cmd_fallback, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if res_fb.returncode != 0 or not _os.path.isfile(clip_file) or _os.path.getsize(clip_file) == 0:
+                    shutil.rmtree(temp_dir, ignore_errors=True)
+                    return {"status": "error", "error": f"Lỗi cắt đoạn {clip_name}: {res_fb.stderr.decode('utf-8', errors='replace')}"}
+
+            clip_paths.append(clip_file)
+
+        # 2. Concat list
+        concat_txt = _os.path.join(temp_dir, "concat_list.txt")
+        with open(concat_txt, 'w', encoding='utf-8') as f:
+            for p in clip_paths:
+                # Use forward slash for ffmpeg concat file
+                norm_p = p.replace('\\', '/')
+                f.write(f"file '{norm_p}'\n")
+
+        # 3. Concat clips into final video
+        print(f"[VideoRender] Concatenating {len(clip_paths)} clips into {output_path}...", flush=True)
+        concat_cmd = [
+            'ffmpeg', '-y',
+            '-f', 'concat',
+            '-safe', '0',
+            '-i', concat_txt,
+            '-c', 'copy',
+            output_path
+        ]
+        res_concat = subprocess.run(concat_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        # If copy concat fails, re-encode concat
+        if res_concat.returncode != 0 or not _os.path.isfile(output_path) or _os.path.getsize(output_path) == 0:
+            print(f"[VideoRender] Concat copy failed, falling back to concat re-encode...", flush=True)
+            concat_cmd_fb = [
+                'ffmpeg', '-y',
+                '-f', 'concat',
+                '-safe', '0',
+                '-i', concat_txt,
+                '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                '-c:a', 'aac',
+                output_path
+            ]
+            res_concat_fb = subprocess.run(concat_cmd_fb, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res_concat_fb.returncode != 0 or not _os.path.isfile(output_path) or _os.path.getsize(output_path) == 0:
+                shutil.rmtree(temp_dir, ignore_errors=True)
+                return {"status": "error", "error": f"Lỗi ghép chuỗi clip: {res_concat_fb.stderr.decode('utf-8', errors='replace')}"}
+
+        # Cleanup
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        print(f"[VideoRender] Successfully exported stitched video: {output_path}", flush=True)
+        return {
+            "status": "ok",
+            "output_path": output_path,
+            "clips_count": len(clip_paths),
+            "mode_used": req.mode
+        }
+    except Exception as e:
+        traceback.print_exc()
         return {"status": "error", "error": str(e)}
 
 

@@ -208,7 +208,7 @@
     const start = document.getElementById('btn-start');
     if (start && (activeStep() === '2' || standalone)) {
       const blockedByP1 = !standalone && s.jobs.some(job => !isStandaloneJob(job) && busy(job.p1Status));
-      start.disabled = !selected || !p2Eligible(selected, standalone) || ![P2.READY, P2.ERROR].includes(selected.p2Status) || blockedByP1;
+      start.disabled = !selected || !p2Eligible(selected, standalone) || busy(selected.p2Status) || blockedByP1;
     }
   }
 
@@ -269,8 +269,8 @@
       toast('Pipeline 2 đang khóa trong khi hàng đợi Pipeline 1 còn chạy.', 'warning');
       return false;
     }
-    if (![P2.READY, P2.ERROR].includes(job.p2Status)) {
-      toast(job.p2Status === P2.FINISHED ? 'Job này đã hoàn tất Pipeline 2.' : 'Job Pipeline 2 chưa sẵn sàng.', 'info');
+    if (busy(job.p2Status)) {
+      toast('Job Pipeline 2 đang được xử lý.', 'info');
       return false;
     }
 
@@ -301,7 +301,7 @@
   function startAllStandalone() {
     const s = state();
     if (!s || !standaloneMode()) return 0;
-    const jobs = s.jobs.filter(job => isStandaloneJob(job) && [P2.READY, P2.ERROR].includes(job.p2Status));
+    const jobs = s.jobs.filter(job => isStandaloneJob(job) && !busy(job.p2Status));
     jobs.forEach(job => {
       job.pipeline = 2;
       job.algorithm = document.getElementById('algo-select')?.value || job.algorithm || 'sttn-auto';

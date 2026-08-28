@@ -8,8 +8,23 @@ import { addLog, showToast } from '../utils/logger.js';
 const DEFAULT_PROMPTS = [
   {
     id: 'p1',
-    name: 'Dịch sang Tiếng Việt (Mặc định)',
-    content: 'Bạn là chuyên gia dịch thuật phụ đề. Hãy dịch phụ đề sau sang Tiếng Việt thật tự nhiên. Giữ nguyên định dạng dòng.',
+    name: '🎙️ Lồng tiếng truyền cảm & Nhấn nhá (Mặc định)',
+    content: 'Bạn là chuyên gia lồng tiếng Voice Talent. Hãy viết lại/dịch văn bản sau thành kịch bản nói tiếng Việt cực kỳ tự nhiên, câu ngắn 8-14 từ dễ lấy hơi, văn phong nói sống động. Dùng *từ khóa* để nhấn mạnh từ đắt giá, dùng ... để ngắt nhịp lấy hơi, dùng — để chuyển ý, viết số thành chữ. Giữ nguyên định dạng dòng/SRT nếu có.',
+  },
+  {
+    id: 'p2',
+    name: '🔥 Review / Bán hàng TikTok (Sôi nổi & Kích thích)',
+    content: 'Bạn là MC Reviewer chuyên nghiệp. Hãy viết lại văn bản sau theo phong cách cuốn hút, tạo tò mò, nhấn mạnh tính năng độc đáo bằng dấu *từ khóa*, ngắt nhịp hồi hộp bằng ... và kết thúc bằng câu kêu gọi hành động hào hứng.',
+  },
+  {
+    id: 'p3',
+    name: '📖 Kể chuyện & Drama (Hồi hộp & Lắng đọng)',
+    content: 'Bạn là người dẫn chuyện Audio Book. Hãy viết lại văn bản sau với nhịp điệu chậm rãi, sâu lắng, chèn các khoảng ngắt ... để tạo sự hồi hộp, nhấn nhá *từ khóa* ở các bước ngoặt cảm xúc.',
+  },
+  {
+    id: 'p4',
+    name: '📝 Dịch sát nghĩa phụ đề (Chuẩn phụ đề)',
+    content: 'Bạn là chuyên gia dịch thuật phụ đề. Hãy dịch phụ đề sau sang Tiếng Việt thật tự nhiên, chính xác, giữ nguyên cấu trúc dòng và timestamp.',
   },
 ];
 

@@ -220,6 +220,15 @@ function installVoiceRenderQualityFixScript() {
   document.head.appendChild(script);
 }
 
+function installTalkingPortraitScript() {
+  if (document.querySelector('script[data-talking-portrait]')) return;
+  const script = document.createElement('script');
+  script.src = 'js/talking-portrait.js';
+  script.defer = true;
+  script.dataset.talkingPortrait = 'true';
+  document.head.appendChild(script);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   installFilePathCompatScript();
   installP1SpinnerPhaseScript();
@@ -227,6 +236,7 @@ window.addEventListener('DOMContentLoaded', () => {
   installP2RuntimeScript();
   installVoiceRenderScript();
   installVoiceRenderQualityFixScript();
+  installTalkingPortraitScript();
   let attempts = 0;
   const timer = setInterval(() => {
     attempts += 1;

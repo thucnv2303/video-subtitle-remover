@@ -95,7 +95,13 @@ class PythonBridge extends EventEmitter {
     }
 
     this.backendRef = this._findBackendReference();
-    const childEnv = { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8' };
+    const childEnv = {
+      ...process.env,
+      PYTHONUNBUFFERED: '1',
+      PYTHONIOENCODING: 'utf-8',
+      PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK: 'True',
+      PADDLE_DISABLE_TELEMETRY: '1'
+    };
     if (this.backendRef) {
       childEnv.VSR_BACKEND_REF = this.backendRef;
       childEnv.PYTHONPATH = [this.backendRef, process.env.PYTHONPATH].filter(Boolean).join(path.delimiter);

@@ -163,7 +163,13 @@
               <label class="vr-field"><span>Ngôn ngữ</span><select id="vr-language"><option value="vi">Tiếng Việt</option><option value="en">English</option><option value="zh">中文</option><option value="ja">日本語</option><option value="ko">한국어</option></select></label>
             </div>
             <div class="vr-selected-voice"><div><span>Giọng đang chọn</span><strong id="vr-selected-voice-name">OmniVoice mặc định</strong></div><button id="vr-focus-voices" class="vr-link-btn" type="button">Chọn giọng ↓</button></div>
-            <label class="vr-field vr-text-field"><span>Nội dung render <small>(hỗ trợ văn bản dài)</small></span><textarea id="vr-text" placeholder="Nhập hoặc dán văn bản cần render..."></textarea></label>
+            <label class="vr-field vr-text-field">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span>Nội dung render <small>(hỗ trợ văn bản dài)</small></span>
+                <button id="vr-btn-ai-prosody" type="button" class="vr-link-btn" style="color:var(--accent,#3b82f6); font-weight:600; cursor:pointer;" title="Dùng AI LLM tự động phân tích và chèn nhịp ngắt, dấu nhấn nhá *...* và cảm xúc">✨ AI Thêm cảm xúc & Nhấn nhá</button>
+              </div>
+              <textarea id="vr-text" placeholder="Nhập hoặc dán văn bản cần render..."></textarea>
+            </label>
             <div class="vr-stats"><div><span>Từ</span><b id="vr-word-count">0</b></div><div><span>Ký tự</span><b id="vr-char-count">0</b></div><div><span>Ước tính</span><b id="vr-duration-est">0 phút</b></div><div><span>Chunk</span><b id="vr-chunk-est">0</b></div></div>
             <div class="vr-long-box"><div class="vr-long-title">Xử lý văn bản dài</div><label><span>Tự chia chunk</span><input id="vr-auto-chunk" type="checkbox" checked></label><label><span>Kích thước chunk</span><select id="vr-chunk-size"><option value="1200">1.200 ký tự</option><option value="1800" selected>1.800 ký tự</option><option value="2500">2.500 ký tự</option><option value="3500">3.500 ký tự</option></select></label><label><span>Giữ đoạn văn</span><input id="vr-keep-paragraphs" type="checkbox" checked></label><label><span>Ghép file đầu ra</span><input id="vr-merge-output" type="checkbox" checked disabled></label></div>
             <div class="vr-actions"><button id="vr-preview-selected" class="vr-btn secondary" type="button">▶ Nghe thử giọng</button><button id="vr-start" class="vr-btn primary" type="button">Render toàn bộ</button></div>
@@ -668,6 +674,43 @@
 
   function bindPage() {
     document.getElementById('vr-text')?.addEventListener('input', updateEstimates);
+    document.getElementById('vr-btn-ai-prosody')?.addEventListener('click', async () => {
+      const textarea = document.getElementById('vr-text');
+      const text = textarea?.value?.trim();
+      if (!text) {
+        vrLog('Vui lòng nhập hoặc dán văn bản trước khi bấm AI thêm cảm xúc.', 'warn');
+        textarea?.focus();
+        return;
+      }
+      const btn = document.getElementById('vr-btn-ai-prosody');
+      const originalLabel = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳ AI đang tối ưu cảm xúc...';
+      vrLog('Đang gửi văn bản tới AI LLM để tối ưu ngữ điệu và ngắt nhịp...', 'info');
+
+      try {
+        const aiConfig = {
+          provider: localStorage.getItem('ai_provider') || 'gemini',
+          api_keys: [localStorage.getItem('ai_api_key') || ''],
+          endpoint: localStorage.getItem('ai_endpoint') || '',
+          prompt: 'Bạn là chuyên gia lồng tiếng Voice Talent. Hãy viết lại văn bản sau thành kịch bản nói tiếng Việt cực kỳ tự nhiên, câu ngắn 8-14 từ dễ lấy hơi, văn phong nói sống động. Dùng *từ khóa* để nhấn mạnh từ đắt giá, dùng ... để ngắt nhịp lấy hơi, dùng — để chuyển ý, viết số thành chữ. Trả về trực tiếp văn bản kịch bản hoàn chỉnh, không giải thích.',
+        };
+
+        const res = await window.api.aiRewrite(text, aiConfig);
+        if (res && res.status === 'ok' && res.result) {
+          textarea.value = res.result.trim();
+          updateEstimates();
+          vrLog('✨ Đã tối ưu kịch bản có cảm xúc & nhấn nhá thành công!', 'success');
+        } else {
+          vrLog(`Không thể tối ưu kịch bản: ${res?.error || 'Lỗi kết nối AI'}`, 'error');
+        }
+      } catch (err) {
+        vrLog(`Lỗi xử lý AI: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+      }
+    });
     document.getElementById('vr-chunk-size')?.addEventListener('change', updateEstimates);
     document.getElementById('vr-auto-chunk')?.addEventListener('change', updateEstimates);
     document.getElementById('vr-keep-paragraphs')?.addEventListener('change', updateEstimates);

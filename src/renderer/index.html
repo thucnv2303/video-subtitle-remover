@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -166,7 +166,7 @@
 
                    <!-- Log Console (Shrunk) -->
                    <div class="tk-log-console" style="height: 120px; border-radius: 6px; display:flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border);">
-                      <div class="tk-log-header" style="padding: 6px 12px;">
+                      <div class="tk-log-header" style="padding: 6px 12px; display:flex; justify-content:space-between; align-items:center;">
                          <span style="font-size: 0.85rem; font-weight: bold;">Console Log</span>
                          <div>
                             <button class="tk-btn tk-btn-sm" id="step1-btn-copy-log">Copy</button>
@@ -186,123 +186,122 @@
             <div id="step-2-content" class="pipeline-pane" style="display: none;">
               <!-- INJECT OLD 3-COL CONTENT HERE, BUT STRIPPED -->
               <div class="three-col" id="step2-three-col">
-                
-        <!-- 3-Column Layout -->
-        <div class="three-col">
 
-          <!-- COL 1: Controls -->
-          <div class="col-controls">
-            <div class="col-header">
-              <h3>Bảng Điều Khiển</h3>
-              <div class="status-badge" id="backend-status">
-                <span class="status-dot"></span>
-                <span class="status-text">...</span>
-              </div>
-            </div>
-
-            <div class="ctrl-section">
-              <button class="btn btn-accent btn-block" id="btn-open-file">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Chọn Video
-              </button>
-            </div>
-
-            <div class="ctrl-section">
-              <label class="ctrl-label">Thuật toán</label>
-              <select id="algo-select" class="dropdown">
-                <option value="sttn-auto">STTN Auto (Tốt nhất)</option>
-                <option value="lama">LaMa (Anime)</option>
-                <option value="propainter">ProPainter (Chậm)</option>
-                <option value="opencv">OpenCV (Cơ bản)</option>
-              </select>
-            </div>
-
-            <div class="ctrl-section">
-              <label class="ctrl-label">Chế độ mask</label>
-              <select id="mask-mode" class="dropdown">
-                <option value="box">Hộp (Box) — Mặc định</option>
-                <option value="tight">Chặt (Tight) — Cho text overlay</option>
-                <option value="soft">Mềm (Soft) — Mịn nhất</option>
-              </select>
-            </div>
-
-            <div class="ctrl-section">
-              <label class="ctrl-label">Chế độ phát hiện</label>
-              <div class="toggle-group">
-                <button class="toggle-btn active" id="mode-auto">Tự động</button>
-                <button class="toggle-btn" id="mode-manual">Thủ công</button>
-              </div>
-            </div>
-
-            <div class="regions-panel hidden" id="regions-panel">
-              <div class="regions-header">
-                <label class="ctrl-label">VÙNG SUB</label>
-                <button class="btn btn-sm btn-accent" id="btn-draw-region">+ Vẽ vùng</button>
-              </div>
-              <div class="regions-list" id="regions-list">
-                <div class="region-empty">Bấm "+ Vẽ vùng" rồi kéo chuột trên video</div>
-              </div>
-            </div>
-
-            <div class="ctrl-divider"></div>
-
-            <!-- Job Cards Container -->
-            <div class="job-cards-container" style="display:none;">
-              
-              <!-- SRT Extraction -->
-              <div class="job-card" id="card-srt">
-                <div class="job-card-header">
-                  <label class="chk-label"><input type="checkbox" id="chk-extract-srt" checked><span>Trích xuất SRT</span></label>
-                  <button class="btn-expand">▼</button>
-                </div>
-                <div class="job-card-body" id="body-srt">
-                  <div class="form-group" style="margin-bottom: 8px;">
-                    <label class="chk-label"><input type="checkbox" id="chk-asr-fallback"><span>Bóc băng âm thanh gốc (Whisper)</span></label>
-                  </div>
-                  <!-- ASR options panel — shown/hidden by chk-asr-fallback (Bug #4 fix) -->
-                  <div id="asr-options" style="display:none; margin-bottom:8px; padding:8px; background:rgba(124,58,237,0.07); border-radius:6px; border:1px solid rgba(124,58,237,0.2);">
-                    <div class="form-group" style="margin-bottom:6px">
-                      <label class="form-label">Ngôn ngữ ASR (Whisper)</label>
-                      <select id="asr-language" class="dropdown form-input">
-                        <option value="auto">Tự động phát hiện (Auto)</option>
-                        <option value="zh">Tiếng Trung</option>
-                        <option value="vi">Tiếng Việt</option>
-                        <option value="en">Tiếng Anh</option>
-                      </select>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                      <span class="form-label" style="margin:0; white-space:nowrap">Trạng thái:</span>
-                      <span class="status-chip" id="asr-status-chip" style="font-size:0.75rem;">⏳ Đang kiểm tra...</span>
+                <!-- COL 1: Controls -->
+                <div class="col-controls">
+                  <div class="col-header">
+                    <h3>Bảng Điều Khiển</h3>
+                    <div class="status-badge" id="backend-status">
+                      <span class="status-dot"></span>
+                      <span class="status-text">...</span>
                     </div>
                   </div>
-                  <textarea class="form-input" id="srt-content" rows="3" readonly placeholder="Nội dung SRT..."></textarea>
-                </div>
-              </div>
 
-              <!-- AI Rewrite -->
-              <div class="job-card" id="card-ai">
-                <div class="job-card-header">
-                  <label class="chk-label"><input type="checkbox" id="chk-ai-rewrite"><span>AI Viết lại phụ đề</span></label>
-                  <button class="btn-expand">▼</button>
-                </div>
-                <div class="job-card-body" id="body-ai">
-                  <div class="form-group" style="margin-bottom:8px">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
-                      <label class="form-label" style="margin:0">Chọn Prompt</label>
-                      <button class="btn btn-xs btn-ghost" id="btn-manage-prompts">⚙️ Quản lý</button>
+                  <div class="ctrl-section">
+                    <button class="btn btn-accent btn-block" id="btn-open-file">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      Chọn Video
+                    </button>
+                  </div>
+
+                  <div class="ctrl-section">
+                    <label class="ctrl-label">Thuật toán</label>
+                    <select id="algo-select" class="dropdown">
+                      <option value="lama" selected>LaMa (GPU - Xóa sạch sắc nét nhất)</option>
+                      <option value="sttn-auto">STTN Auto (Video chuyển động)</option>
+                      <option value="propainter">ProPainter (Chất lượng cao - Chậm)</option>
+                      <option value="opencv">OpenCV (Cơ bản - Nhanh)</option>
+                    </select>
+                  </div>
+
+                  <div class="ctrl-section">
+                    <label class="ctrl-label">Chế độ mask</label>
+                    <select id="mask-mode" class="dropdown">
+                      <option value="box" selected>Hộp (Box) — Sạch nhất, xóa triệt để viền & bóng (Khuyên dùng)</option>
+                      <option value="tight">Chặt (Tight) — Bám sát nét chữ</option>
+                      <option value="soft">Mềm (Soft) — Hòa trộn biên mờ</option>
+                    </select>
+                  </div>
+
+                  <div class="ctrl-section">
+                    <label class="ctrl-label">Chế độ phát hiện</label>
+                    <div class="toggle-group">
+                      <button class="toggle-btn active" id="mode-auto">Tự động</button>
+                      <button class="toggle-btn" id="mode-manual">Thủ công</button>
                     </div>
-                    <select id="ai-prompt-select" class="dropdown form-input"></select>
                   </div>
-                  <textarea class="form-input" id="ai-content" rows="4" placeholder="Nội dung AI..."></textarea>
-                  <!-- Action buttons for AI card (Bug #4 fix) -->
-                  <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-                    <button class="btn btn-xs btn-ghost" id="btn-ai-import" title="Nhập file SRT từ máy tính">📂 Nhập SRT</button>
-                    <button class="btn btn-xs btn-ghost" id="btn-retry-ai" title="Gửi SRT gốc lên AI để viết lại">🔄 Viết lại AI</button>
-                    <button class="btn btn-xs btn-accent" style="flex:1" id="btn-ai-apply">💾 Áp dụng phụ đề</button>
-                  </div>
-                </div>
-              </div>
 
+                  <div class="regions-panel hidden" id="regions-panel">
+                    <div class="regions-header" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                      <label class="ctrl-label" style="margin-bottom:0">VÙNG SUB</label>
+                      <div style="display:flex;gap:4px;">
+                        <button class="btn btn-sm btn-secondary" id="btn-auto-scan-regions" title="AI quét video tự động tạo các Box phụ đề" style="font-size:11px;padding:3px 7px;">⚡ Tự quét Box</button>
+                        <button class="btn btn-sm btn-accent" id="btn-draw-region" style="font-size:11px;padding:3px 7px;">+ Vẽ vùng</button>
+                      </div>
+                    </div>
+                    <div class="regions-list" id="regions-list">
+                      <div class="region-empty">Bấm "+ Vẽ vùng" hoặc "⚡ Tự quét Box"</div>
+                    </div>
+                  </div>
+
+                  <div class="ctrl-divider"></div>
+
+                  <!-- Job Cards Container -->
+                  <div class="job-cards-container" style="display:none;">
+                    
+                    <!-- SRT Extraction -->
+                    <div class="job-card" id="card-srt">
+                      <div class="job-card-header">
+                        <label class="chk-label"><input type="checkbox" id="chk-extract-srt" checked><span>Trích xuất SRT</span></label>
+                        <button class="btn-expand">▼</button>
+                      </div>
+                      <div class="job-card-body" id="body-srt">
+                        <div class="form-group" style="margin-bottom: 8px;">
+                          <label class="chk-label"><input type="checkbox" id="chk-asr-fallback"><span>Bóc băng âm thanh gốc (Whisper)</span></label>
+                        </div>
+                        <!-- ASR options panel — shown/hidden by chk-asr-fallback (Bug #4 fix) -->
+                        <div id="asr-options" style="display:none; margin-bottom:8px; padding:8px; background:rgba(124,58,237,0.07); border-radius:6px; border:1px solid rgba(124,58,237,0.2);">
+                          <div class="form-group" style="margin-bottom:6px">
+                            <label class="form-label">Ngôn ngữ ASR (Whisper)</label>
+                            <select id="asr-language" class="dropdown form-input">
+                              <option value="auto">Tự động phát hiện (Auto)</option>
+                              <option value="zh">Tiếng Trung</option>
+                              <option value="vi">Tiếng Việt</option>
+                              <option value="en">Tiếng Anh</option>
+                            </select>
+                          </div>
+                          <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="form-label" style="margin:0; white-space:nowrap">Trạng thái:</span>
+                            <span class="status-chip" id="asr-status-chip" style="font-size:0.75rem;">⏳ Đang kiểm tra...</span>
+                          </div>
+                        </div>
+                        <textarea class="form-input" id="srt-content" rows="3" readonly placeholder="Nội dung SRT..."></textarea>
+                      </div>
+                    </div>
+
+                    <!-- AI Rewrite -->
+                    <div class="job-card" id="card-ai">
+                      <div class="job-card-header">
+                        <label class="chk-label"><input type="checkbox" id="chk-ai-rewrite"><span>AI Viết lại phụ đề</span></label>
+                        <button class="btn-expand">▼</button>
+                      </div>
+                      <div class="job-card-body" id="body-ai">
+                        <div class="form-group" style="margin-bottom:8px">
+                          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+                            <label class="form-label" style="margin:0">Chọn Prompt</label>
+                            <button class="btn btn-xs btn-ghost" id="btn-manage-prompts">⚙️ Quản lý</button>
+                          </div>
+                          <select id="ai-prompt-select" class="dropdown form-input"></select>
+                        </div>
+                        <textarea class="form-input" id="ai-content" rows="4" placeholder="Nội dung AI..."></textarea>
+                        <!-- Action buttons for AI card (Bug #4 fix) -->
+                        <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                          <button class="btn btn-xs btn-ghost" id="btn-ai-import" title="Nhập file SRT từ máy tính">📂 Nhập SRT</button>
+                          <button class="btn btn-xs btn-ghost" id="btn-retry-ai" title="Gửi SRT gốc lên AI để viết lại">🔄 Viết lại AI</button>
+                          <button class="btn btn-xs btn-accent" style="flex:1" id="btn-ai-apply">💾 Áp dụng phụ đề</button>
+                        </div>
+                      </div>
+                    </div>
               <!-- Voice Generation -->
               <div class="job-card" id="card-voice">
                 <div class="job-card-header">
@@ -684,31 +683,7 @@
             <div class="form-group" style="margin-top: 10px;">
               <label class="chk-label" title="Sử dụng AI để tách nhạc nền, xóa hoàn toàn giọng nói gốc của video. Sẽ tốn thêm thời gian xử lý.">
                 <input type="checkbox" id="tts-remove-vocal">
-                <span>Xóa giọng gốc (Chỉ giữ nhạc nền - AI UVR)</span>
-              </label>
-            </div>
-
-            <div class="form-divider"></div>
-
-            <!-- Voice Clone Section -->
-            <h3>🧬 Clone giọng mới</h3>
-            <p class="form-desc" style="margin-bottom:8px">Upload audio mẫu (3-15 giây) để clone giọng nói bất kỳ</p>
-
-            <div class="form-group">
-              <label class="form-label">Tên giọng</label>
-              <input type="text" id="clone-voice-name" class="form-input" placeholder="VD: Giọng MC Thúy, Narrator...">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Audio mẫu (WAV/MP3/M4A/FLAC/OGG, 3-15s)</label>
-              <div class="file-upload-row">
-                <button class="btn btn-outline" id="btn-upload-ref-audio">📁 Chọn file audio</button>
-                <span class="form-desc" id="ref-audio-name">Chưa chọn file</span>
-              </div>
-              <audio id="ref-audio-preview" controls style="width:100%;margin-top:6px;display:none"></audio>
-            </div>
-
-            <button id="btn-clone-voice" class="btn btn-accent" style="margin-top:4px" disabled>🧬 Thêm giọng clone</button>
+                <span>Xóa giọng gốc (Chỉ gi�            <button id="btn-clone-voice" class="btn btn-accent" style="margin-top:4px" disabled>🧬 Thêm giọng clone</button>
 
             <div class="form-divider"></div>
 
@@ -731,6 +706,31 @@
             </div>
 
             <div class="form-divider"></div>
+            <button id="btn-save-ai" class="btn btn-primary" style="margin-top:12px;">💾 Lưu cài đặt AI</button>
+          </div>
+
+          <!-- Storage -->
+          <div class="settings-card">
+            <h3>📁 Lưu trữ & Xuất file</h3>
+            <div class="setting-row">
+              <div><span class="form-label">Thư mục đầu ra</span><br><span class="form-desc" id="output-dir-text">Mặc định (cùng thư mục video gốc)</span></div>
+              <button class="btn btn-outline" id="btn-output-dir">Chọn thư mục</button>
+            </div>
+          </div>
+
+          <!-- Hardware -->
+          <div class="settings-card">
+            <h3>🖥 Phần cứng</h3>
+            <div class="setting-row">
+              <div><span class="form-label">GPU</span><br><span class="form-desc" id="gpu-detail">Đang phát hiện...</span></div>
+              <div class="gpu-chip" id="gpu-chip"><span class="status-dot"></span><span>—</span></div>
+            </div>
+            <div class="setting-row">
+              <div><span class="form-label">CUDA</span><br><span class="form-desc" id="cuda-version">—</span></div>
+            </div>
+          </div>
+        </div>
+      </section>></div>
             <button id="btn-save-ai" class="btn btn-primary" style="margin-top:12px;">💾 Lưu cài đặt AI</button>
           </div>
 
@@ -824,7 +824,9 @@
 
   <!-- Main app (non-module, runs after modules above are registered) -->
   <script src="js/app.js" defer></script>
+  <script src="js/voice-render.js" defer></script>
+  <script src="js/voice-render-owner-fixes.js" defer></script>
+  <script src="js/video-render.js" defer></script>
+  <script src="js/talking-portrait.js" defer></script>
 </body>
 </html>
-
-

@@ -239,6 +239,24 @@ class APIClient {
     return result;
   }
 
+  async aiRewrite(srtContent, aiConfig = {}) {
+    const r = await fetch(`${this.base}/api/ai-rewrite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ srt_content: srtContent, ai_config: aiConfig })
+    });
+    return r.json();
+  }
+
+  async videoRenderCutAndConcat(videoPath, clips = [], outputPath = null, mode = 'lossless') {
+    const r = await fetch(`${this.base}/api/video-render/cut-and-concat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, clips, output_path: outputPath, mode })
+    });
+    return r.json();
+  }
+
   async detectSubPositions(videoPath, sampleStep = 30) {
     const r = await fetch(`${this.base}/api/detect-sub-positions`, {
       method: 'POST',
