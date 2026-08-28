@@ -25,9 +25,7 @@ ipcMain.handle('app:saveCopy', async (event, payload = {}) => {
   const defaultPath = path.join(path.dirname(sourcePath), suggestedName);
   const owner = BrowserWindow.fromWebContents(event.sender);
   const options = { title: 'Tải kết quả', defaultPath };
-  const result = owner && !owner.isDestroyed()
-    ? await dialog.showSaveDialog(owner, options)
-    : await dialog.showSaveDialog(options);
+  const result = await dialog.showSaveDialog(options);
   if (result.canceled || !result.filePath) return { ok: false, canceled: true };
 
   try {

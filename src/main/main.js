@@ -342,9 +342,7 @@ ipcMain.handle('dialog:openDirectory', async () => {
     title: 'Chọn thư mục đầu ra',
     properties: ['openDirectory']
   };
-  return mainWindow && !mainWindow.isDestroyed()
-    ? dialog.showOpenDialog(mainWindow, options)
-    : dialog.showOpenDialog(options);
+  return dialog.showOpenDialog(options);
 });
 
 ipcMain.handle('dialog:saveFile', async (event, defaultPath) => {
@@ -356,10 +354,7 @@ ipcMain.handle('dialog:saveFile', async (event, defaultPath) => {
       { name: 'All Files', extensions: ['*'] }
     ]
   };
-  const owner = (event?.sender && BrowserWindow.fromWebContents(event.sender)) || mainWindow;
-  const { canceled, filePath } = owner && !owner.isDestroyed()
-    ? await dialog.showSaveDialog(owner, options)
-    : await dialog.showSaveDialog(options);
+  const { canceled, filePath } = await dialog.showSaveDialog(options);
   if (canceled || !filePath) return null;
   return path.extname(filePath) ? filePath : `${filePath}.wav`;
 });
