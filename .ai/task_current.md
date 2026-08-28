@@ -1,13 +1,12 @@
 # Current Task
 
-## Task ID
-REDESIGN-AI-AUTO-REMIX-EXACT-DEMO-UI
+## Task Name
+`UPGRADE-AI-VOICEOVER-MATCH-DURATION-AND-ECOMMERCE-THUMBNAIL`
 
-## Status
-SOURCE_IMPLEMENTED_SYNTAX_PASS_TESTED_OWNER_CONFIRM_WAITING
-
-## Exact basis
-- Repository: `thucnv2303/video-subtitle-remover`.
+## Objective
+1. Nâng cấp AI Director phân tích sâu ngữ cảnh sản phẩm, chân dung khách hàng & nỗi đau.
+2. Tự động tính toán và sinh kịch bản Voiceover độ dài chuẩn khớp 100% thời lượng video remix.
+3. Nâng cấp Thumbnail Studio thiết kế E-Commerce Banner bắt mắt, nhận diện rõ tên sản phẩm và 3 cam kết tính năng vàng.
 - Scope: `src/renderer/js/ai-auto-remix.js`, `src/renderer/styles/ai-auto-remix.css`.
 
 ## User outcome
