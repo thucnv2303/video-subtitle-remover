@@ -1,11 +1,11 @@
 # Current Task
 
 ## Task Name
-`FIX-VOICE-RENDER-AUDIO-TRUNCATION-AND-FORMAT-ALIGNMENT`
+`FIX-SAVE-DIALOG-AUTO-DISMISS`
 
 ## Objective
-1. Sửa thuật toán chia nhỏ câu trong Voice Render: Hỗ trợ đa dạng dấu kết câu (. ! ? … \n) và tự động chia tiếp theo mệnh đề nếu câu quá dài, ngăn chặn triệt để hiện tượng mô hình AI bị quá tải token làm nuốt/cắt mất đoạn cuối văn bản.
-2. Chuẩn hóa Edge TTS xuất file PCM WAV tiêu chuẩn (chuyển đổi từ MP3 qua FFmpeg) để quá trình concat merge và phát âm thanh trên app không bị đứt đuôi âm thanh.
+1. Bỏ modal parent window lock trong các hàm Electron dialog (`dialog:saveFile`, `dialog:openDirectory`, `app:saveCopy`) để khắc phục triệt để hiện tượng hộp thoại / popup chọn đường dẫn lưu bị treo, không tự đóng sau khi người dùng bấm Save.
+2. Đảm bảo luồng render Voice Render nhận đường dẫn lưu và chạy tiến trình mượt mà.
 - Scope: `src/renderer/js/ai-auto-remix.js`, `src/renderer/styles/ai-auto-remix.css`.
 
 ## User outcome
