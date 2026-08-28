@@ -191,6 +191,15 @@ ffmpeg -ss 00:00:04 -to 00:00:06 -i input.mp4 -c copy clip3.mp4"></textarea>
               </select>
             </div>
 
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;user-select:none;color:#e2e8f0;margin:2px 0;">
+              <input type="checkbox" id="vidr-remove-vocal" style="accent-color:#3b82f6;width:15px;height:15px;">
+              <span><strong>Xóa giọng nói gốc</strong> <small style="color:var(--text-muted,#94a3b8);">(Chỉ giữ lại nhạc & âm thanh nền BGM)</small></span>
+            </label>
+
+            <div style="display:flex;gap:8px;">
+              <button id="vidr-btn-isolate-bgm" class="vidr-btn secondary" type="button" style="width:100%;font-size:12px;padding:6px 10px;" title="Tách bỏ giọng nói ra khỏi video nguồn ngay lập tức và tạo video chỉ có nhạc nền">🎵 Tách nhạc nền video nguồn (1-Click)</button>
+            </div>
+
             <div class="vidr-field">
               <span>File đầu ra</span>
               <input type="text" id="vidr-output-path" class="vidr-input" placeholder="Tự động đặt tên theo video gốc (_remix.mp4)">
@@ -469,15 +478,17 @@ ffmpeg -ss 00:00:04 -to 00:00:06 -i input.mp4 -c copy clip3.mp4"></textarea>
 
     const mode = modeSelect?.value || 'lossless';
     const outputPath = outputPathInp?.value?.trim() || null;
+    const removeVocal = document.getElementById('vidr-remove-vocal')?.checked || false;
 
-    vidrLog(`Bắt đầu xử lý ${state.clips.length} phân đoạn (Chế độ: ${mode})...`, 'info');
+    vidrLog(`Bắt đầu xử lý ${state.clips.length} phân đoạn (Chế độ: ${mode}${removeVocal ? ', Xóa giọng nói gốc' : ''})...`, 'info');
 
     try {
       const res = await window.api.videoRenderCutAndConcat(
         state.videoPath,
         state.clips,
         outputPath,
-        mode
+        mode,
+        removeVocal
       );
 
       if (res && res.status === 'ok') {
@@ -597,6 +608,40 @@ ffmpeg -ss 00:00:26 -to 00:00:29 -i input.mp4 -c copy clip6.mp4`;
     });
 
     document.getElementById('vidr-btn-start-render')?.addEventListener('click', handleStartRender);
+
+    document.getElementById('vidr-btn-isolate-bgm')?.addEventListener('click', async () => {
+      if (!state.videoPath) {
+        window.showToast?.('Vui lòng chọn video nguồn trước.', 'warning');
+        vidrLog('Cảnh báo: Chưa chọn video nguồn để tách BGM.', 'warn');
+        return;
+      }
+      const btn = document.getElementById('vidr-btn-isolate-bgm');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳ Đang tách vocal & giữ BGM...';
+      vidrLog('Bắt đầu tách giọng nói gốc ra khỏi video nguồn...', 'info');
+
+      try {
+        const res = await window.api.removeVocalVideo(state.videoPath);
+        if (res && res.status === 'ok') {
+          vidrLog(`🎉 Tách giọng nói thành công! Video giữ nhạc nền lưu tại: ${res.output_video_path}`, 'success');
+          window.showToast?.('Tách giọng gốc thành công!', 'success');
+          const videoEl = document.getElementById('vidr-preview-video');
+          if (videoEl) {
+            videoEl.src = 'file:///' + res.output_video_path.replace(/\\/g, '/');
+            videoEl.play();
+          }
+        } else {
+          throw new Error(res?.error || 'Không thể tách vocal');
+        }
+      } catch (err) {
+        vidrLog(`Lỗi tách vocal: ${err.message}`, 'error');
+        window.showToast?.(`Lỗi: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    });
   }
 
   function init() {

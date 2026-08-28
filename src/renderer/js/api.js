@@ -248,11 +248,20 @@ class APIClient {
     return r.json();
   }
 
-  async videoRenderCutAndConcat(videoPath, clips = [], outputPath = null, mode = 'lossless') {
+  async videoRenderCutAndConcat(videoPath, clips = [], outputPath = null, mode = 'lossless', removeVocal = false) {
     const r = await fetch(`${this.base}/api/video-render/cut-and-concat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ video_path: videoPath, clips, output_path: outputPath, mode })
+      body: JSON.stringify({ video_path: videoPath, clips, output_path: outputPath, mode, remove_vocal: removeVocal })
+    });
+    return r.json();
+  }
+
+  async removeVocalVideo(videoPath, outputVideoPath = null) {
+    const r = await fetch(`${this.base}/api/remove-vocal-video`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, output_video_path: outputVideoPath })
     });
     return r.json();
   }

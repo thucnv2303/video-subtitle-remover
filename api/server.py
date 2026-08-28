@@ -2089,9 +2089,58 @@ def api_remove_vocal(req: RemoveVocalReq):
                     "method_used": "original",
                     "message": "Không thể tách vocal, dùng audio gốc"}
 
+class RemoveVocalVideoReq(BaseModel):
+    video_path: str
+    output_video_path: Optional[str] = None
+
+@app.post("/api/remove-vocal-video")
+def api_remove_vocal_video(req: RemoveVocalVideoReq):
+    """
+    Tách giọng nói gốc ra khỏi video, giữ lại nhạc/âm thanh nền và tạo ra video mới.
+    """
+    import os, subprocess, tempfile
+    try:
+        if not os.path.exists(req.video_path):
+            return {"status": "error", "error": f"Không tìm thấy video: {req.video_path}"}
+        
+        # 1. Tách nhạc nền BGM
+        vocal_res = api_remove_vocal(RemoveVocalReq(video_path=req.video_path))
+        if vocal_res.get("status") not in ("ok", "warning") or not vocal_res.get("audio_path"):
+            return {"status": "error", "error": vocal_res.get("error", "Lỗi tách vocal")}
+        
+        bg_audio = vocal_res["audio_path"]
+        
+        # 2. Tạo video output mới với bg_audio
+        output_video = req.output_video_path
+        if not output_video:
+            base, ext = os.path.splitext(req.video_path)
+            output_video = f"{base}_no_vocal{ext or '.mp4'}"
+            
+        os.makedirs(os.path.dirname(os.path.abspath(output_video)), exist_ok=True)
+        
+        # Ghép video track gốc với audio track nhạc nền mới
+        cmd = [
+            'ffmpeg', '-y',
+            '-i', req.video_path,
+            '-i', bg_audio,
+            '-map', '0:v:0',
+            '-map', '1:a:0',
+            '-c:v', 'copy',
+            '-c:a', 'aac', '-b:a', '192k',
+            '-shortest',
+            output_video
+        ]
+        res = subprocess.run(cmd, capture_output=True)
+        if res.returncode != 0 or not os.path.isfile(output_video) or os.path.getsize(output_video) == 0:
+            return {"status": "error", "error": f"Lỗi ghép video không vocal: {res.stderr.decode('utf-8', errors='replace')}"}
+            
+        return {
+            "status": "ok",
+            "output_video_path": output_video,
+            "bg_audio_path": bg_audio,
+            "method_used": vocal_res.get("method_used", "unknown")
+        }
     except Exception as e:
-        if os.path.exists(raw_audio):
-            os.remove(raw_audio)
         traceback.print_exc()
         return {"status": "error", "error": str(e)}
 
@@ -2776,12 +2825,13 @@ class VideoRenderRequest(BaseModel):
     clips: List[VideoRenderClip]
     output_path: Optional[str] = None
     mode: Optional[str] = "lossless"
+    remove_vocal: Optional[bool] = False
 
 @app.post("/api/video-render/cut-and-concat")
 def video_render_cut_and_concat(req: VideoRenderRequest):
     """
     Cut video into specified timeline segments and concatenate into a single output video.
-    Supports lossless stream-copy or accurate re-encode mode.
+    Supports lossless stream-copy or accurate re-encode mode, and optional vocal removal.
     """
     import tempfile, subprocess, shutil, os as _os
     try:
@@ -2890,6 +2940,17 @@ def video_render_cut_and_concat(req: VideoRenderRequest):
                 shutil.rmtree(temp_dir, ignore_errors=True)
                 return {"status": "error", "error": f"Lỗi ghép chuỗi clip: {res_concat_fb.stderr.decode('utf-8', errors='replace')}"}
 
+        # 4. Optional vocal removal on the final video
+        if req.remove_vocal:
+            print(f"[VideoRender] Removing vocal from output video: {output_path}...", flush=True)
+            temp_novocal = _os.path.join(temp_dir, "video_novocal.mp4")
+            vocal_res = api_remove_vocal_video(RemoveVocalVideoReq(video_path=output_path, output_video_path=temp_novocal))
+            if vocal_res.get("status") == "ok" and _os.path.isfile(temp_novocal) and _os.path.getsize(temp_novocal) > 0:
+                shutil.move(temp_novocal, output_path)
+                print(f"[VideoRender] Successfully removed vocal and preserved BGM: {output_path}", flush=True)
+            else:
+                print(f"[VideoRender] Warning: remove vocal failed: {vocal_res.get('error')}", flush=True)
+
         # Cleanup
         shutil.rmtree(temp_dir, ignore_errors=True)
         print(f"[VideoRender] Successfully exported stitched video: {output_path}", flush=True)
@@ -2897,7 +2958,8 @@ def video_render_cut_and_concat(req: VideoRenderRequest):
             "status": "ok",
             "output_path": output_path,
             "clips_count": len(clip_paths),
-            "mode_used": req.mode
+            "mode_used": req.mode,
+            "vocal_removed": req.remove_vocal
         }
     except Exception as e:
         traceback.print_exc()
