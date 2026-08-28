@@ -133,150 +133,178 @@
     page.className = 'page ai-remix-page';
     page.innerHTML = `
       <div class="remix-shell">
+        <!-- Top Header Bar -->
         <div class="remix-header">
-          <div>
-            <h1>⚡ AI Video Auto-Remix <span style="font-size:12px;font-weight:400;color:#38bdf8;border:1px solid rgba(56,189,248,0.3);padding:2px 8px;border-radius:12px;">Smart Multi-Video Director</span></h1>
-            <p>Tự động hóa 100%: Quét loại bỏ mặt người ➔ AI Local sinh Timeline kịch bản mới ➔ Lồng tiếng Voiceover ➔ Cắt ghép hàng loạt chỉ với 1 nút bấm.</p>
+          <div class="remix-header-left">
+            <div class="remix-header-title">
+              <span>⚡ AI VIDEO AUTO-REMIX</span>
+              <span class="remix-pill-badge">PRO DIRECTOR</span>
+            </div>
+            <div class="remix-header-subtitle">
+              Tự động hóa 100%: Quét loại bỏ mặt người ➔ AI sinh Timeline ➔ Lồng tiếng Voiceover ➔ Tạo Thumbnail ➔ Xuất hàng loạt 1-Click
+            </div>
           </div>
-          <div style="display:flex;gap:8px;">
-            <button id="remix-btn-add-files" class="remix-btn-secondary">📁 Thêm Video</button>
-            <button id="remix-btn-clear-queue" class="remix-btn-secondary" style="color:#f87171;">🗑 Xóa danh sách</button>
+          <div style="display:flex;gap:10px;">
+            <button id="remix-btn-add-files" class="remix-btn-glow" style="padding:8px 16px;font-size:12px;box-shadow:none;">📁 Thêm Video</button>
+            <button id="remix-btn-clear-queue" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">🗑 Xóa danh sách</button>
           </div>
         </div>
 
+        <!-- 3-Column Futuristic Grid -->
         <div class="remix-grid">
-          <!-- Cột 1: Hàng đợi Video & Cấu hình -->
+          
+          <!-- Column 1: Batch Video Queue -->
           <div class="remix-card">
-            <h3 class="remix-card-title">
-              <span>1. Hàng đợi Multi-Video</span>
-              <span id="remix-queue-count" style="font-size:12px;color:#94a3b8;">0 video</span>
-            </h3>
-
-            <div id="remix-queue-container" class="remix-queue-list">
-              <div style="text-align:center;padding:24px;color:#64748b;font-size:12px;border:1px dashed rgba(255,255,255,0.1);border-radius:8px;">
-                Kéo thả nhiều video hoặc bấm <b>"📁 Thêm Video"</b> để bắt đầu
-              </div>
+            <div class="remix-card-header">
+              <h3 class="remix-card-title">
+                <span>📁 Batch Video Queue</span>
+              </h3>
+              <span id="remix-queue-count" style="font-size:11px;color:#38bdf8;font-weight:700;">0 Video</span>
             </div>
 
-            <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;display:flex;flex-direction:column;gap:10px;">
-              <h4 style="margin:0;font-size:13px;color:#cbd5e1;">⚙️ Cấu hình Tự Động Hóa:</h4>
-              
-              <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
-                <span>🚫 Loại bỏ khuôn mặt người:</span>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                  <input type="checkbox" id="remix-opt-filter-faces" checked> <b>Bật lọc mặt</b>
-                </label>
-              </div>
+            <!-- Queue Container -->
+            <div id="remix-queue-container" class="remix-queue-list"></div>
 
-              <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
-                <span>🎤 Giọng đọc Voiceover:</span>
-                <select id="remix-opt-voice" style="background:#0a0f1d;border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:6px;padding:4px 8px;font-size:12px;">
+            <!-- Drag & Drop Zone -->
+            <div id="remix-dropzone-box" class="remix-dropzone">
+              <span style="font-size:26px;">☁️</span>
+              <div style="font-size:12px;font-weight:700;color:#f1f5f9;">Drag & Drop Videos</div>
+              <div style="font-size:11px;color:#64748b;">Kéo thả video vào đây hoặc bấm để chọn</div>
+            </div>
+
+            <!-- Auto Settings Switches -->
+            <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;display:flex;flex-direction:column;gap:8px;font-size:11px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:#cbd5e1;">🚫 Lọc mặt người:</span>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="remix-opt-filter-faces" checked> <b>Bật</b></label>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:#cbd5e1;">🎤 Giọng đọc TTS:</span>
+                <select id="remix-opt-voice" style="background:#080c14;border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:4px;padding:2px 6px;font-size:11px;">
                   <option value="default">OmniVoice Mặc định</option>
-                  <option value="thucnu">Thục Nữ (Truyền cảm)</option>
-                  <option value="namminh">Nam Minh (Mạnh mẽ)</option>
-                  <option value="hoaimy">Hoài My (Nhẹ nhàng)</option>
+                  <option value="thucnu">Thục Nữ</option>
+                  <option value="namminh">Nam Minh</option>
+                  <option value="hoaimy">Hoài My</option>
                 </select>
               </div>
-
-              <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
-                <span>🎵 Âm thanh video gốc:</span>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                  <input type="checkbox" id="remix-opt-remove-vocal" checked> <b>Khử vocal, giữ BGM</b>
-                </label>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:#cbd5e1;">🎵 Khử vocal video gốc:</span>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="remix-opt-remove-vocal" checked> <b>Giữ BGM</b></label>
               </div>
-
-              <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
-                <span>🖼 Tạo ảnh Thumbnail sản phẩm:</span>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                  <input type="checkbox" id="remix-opt-gen-thumb" checked> <b>Bật tạo Thumbnail</b>
-                </label>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:#cbd5e1;">🖼 Tạo ảnh Thumbnail:</span>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="remix-opt-gen-thumb" checked> <b>Bật</b></label>
               </div>
             </div>
           </div>
 
-          <!-- Cột 2: Đạo diễn AI & Kịch bản dựng -->
+          <!-- Column 2: Live AI Director & Remix Timeline -->
           <div class="remix-card">
-            <h3 class="remix-card-title">
-              <span>2. Đạo diễn AI & Kịch bản dựng</span>
+            <div class="remix-card-header">
+              <h3 class="remix-card-title">
+                <span>🧠 Live AI Director</span>
+              </h3>
               <span id="remix-active-title" style="font-size:11px;color:#38bdf8;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Chưa chọn</span>
-            </h3>
-
-            <!-- Thống kê lọc mặt -->
-            <div id="remix-face-stats" class="remix-face-box">
-              <span><b>🚫 Trạng thái lọc mặt người:</b> Đang chờ quét...</span>
             </div>
 
-            <!-- Bảng Timeline kịch bản mới -->
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:12px;font-weight:600;color:#cbd5e1;">🎬 Timeline Remix mới:</span>
-                <span id="remix-clips-count" style="font-size:11px;color:#94a3b8;">0 phân đoạn</span>
-              </div>
-              <div id="remix-timeline-list" class="remix-timeline-list">
-                <div style="color:#64748b;font-size:12px;text-align:center;padding:16px;">Chưa có phân đoạn remix.</div>
-              </div>
-            </div>
-
-            <!-- Kịch bản Voiceover -->
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:12px;font-weight:600;color:#cbd5e1;">🎙 Kịch bản Voiceover tự động:</span>
-                <button id="remix-btn-re-ai" class="remix-btn-secondary" style="padding:2px 8px;font-size:11px;">✨ AI Viết lại</button>
-              </div>
-              <textarea id="remix-voiceover-input" class="remix-script-box" placeholder="Kịch bản lồng tiếng có nhấn nhá do AI tự động sinh ra..."></textarea>
-            </div>
-
-            <!-- Thumbnail Sản Phẩm Preview & Info -->
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <span style="font-size:12px;font-weight:600;color:#cbd5e1;">🖼 Ảnh Thumbnail sản phẩm:</span>
-              <div id="remix-thumb-preview-box" class="remix-thumb-preview-wrap">
-                <img id="remix-thumb-img" class="remix-thumb-img" src="" alt="Thumbnail" style="display:none;" title="Bấm để xem ảnh kích thước lớn">
-                <div id="remix-thumb-placeholder" style="color:#64748b;font-size:12px;text-align:center;flex:1;">
-                  Ảnh thumbnail sẽ tự động tạo từ frame sản phẩm đẹp nhất khi chạy Auto-Remix.
+            <!-- Face Stats & Director Top Box -->
+            <div class="remix-director-grid">
+              <div class="remix-director-box">
+                <div style="font-size:11px;font-weight:700;color:#cbd5e1;">🚫 Bộ lọc mặt người:</div>
+                <div id="remix-stat-excluded" class="remix-face-stat-item">
+                  <span class="stat-icon-excluded">●</span>
+                  <span id="remix-excluded-text" style="color:#fca5a5;">Chưa quét</span>
                 </div>
-                <div id="remix-thumb-info" style="display:none;flex:1;flex-direction:column;gap:4px;font-size:11px;color:#cbd5e1;">
-                  <div><b>Tiêu đề:</b> <span id="remix-thumb-hl-text" style="color:#fde047;font-weight:700;">-</span></div>
-                  <div><b>Nhãn:</b> <span id="remix-thumb-badge-text" style="color:#f87171;font-weight:700;">-</span></div>
-                  <button id="remix-btn-open-thumb" class="remix-btn-secondary" style="align-self:flex-start;padding:3px 8px;font-size:10px;margin-top:4px;">🔍 Mở ảnh Thumbnail</button>
+                <div id="remix-stat-preserved" class="remix-face-stat-item">
+                  <span class="stat-icon-preserved">✓</span>
+                  <span id="remix-preserved-text" style="color:#6ee7b7;">Chưa có dữ liệu</span>
+                </div>
+              </div>
+
+              <!-- Timeline Sequence Cards -->
+              <div class="remix-director-box">
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;color:#cbd5e1;">
+                  <span>🎬 Remix Timeline</span>
+                  <span id="remix-clips-count" style="color:#38bdf8;font-size:10px;">0 clips</span>
+                </div>
+                <div id="remix-timeline-list" class="remix-timeline-sequence">
+                  <div style="color:#64748b;font-size:11px;text-align:center;padding:12px;">Chưa có phân đoạn remix.</div>
                 </div>
               </div>
             </div>
+
+            <!-- Auto-Voiceover Script Editor -->
+            <div class="remix-script-editor-wrap">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;font-weight:700;color:#cbd5e1;">🎙 Auto-Voiceover Script Editor</span>
+                <button id="remix-btn-re-ai" style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;">✨ AI Viết lại</button>
+              </div>
+              <textarea id="remix-voiceover-input" class="remix-script-textarea" placeholder="Kịch bản lồng tiếng có nhấn nhá do AI tự động sinh ra..."></textarea>
+              <div class="remix-keyword-bar">
+                <span>Keywords:</span>
+                <span class="remix-chip chip-cyan">AI Hook</span>
+                <span class="remix-chip chip-purple">Speed</span>
+                <span class="remix-chip chip-green">Features</span>
+                <span class="remix-chip chip-cyan">Quality</span>
+              </div>
+            </div>
+
+            <!-- Product Thumbnail Preview Showcase -->
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <span style="font-size:12px;font-weight:700;color:#cbd5e1;">🖼 Product Thumbnail Preview</span>
+              <div id="remix-thumb-showcase" class="remix-thumb-showcase" title="Bấm để mở ảnh Thumbnail">
+                <img id="remix-thumb-img" class="remix-thumb-bg" src="" alt="Thumbnail" style="display:none;">
+                <span id="remix-thumb-badge-tag" class="remix-thumb-badge-tag">⚡ VIRAL</span>
+                <div id="remix-thumb-placeholder" style="color:#64748b;font-size:12px;text-align:center;padding:20px;">
+                  Thumbnail sản phẩm sắc nét sẽ tự động tạo khi chạy Auto-Remix.
+                </div>
+                <div id="remix-thumb-overlay" class="remix-thumb-overlay-text" style="display:none;">
+                  <span id="remix-thumb-headline-display" class="remix-thumb-headline-main">SIÊU PHẨM HOT | 4K</span>
+                  <span id="remix-thumb-sub-display" style="font-size:11px;color:#fff;">TIỆN LỢI - HIỆU QUẢ VƯỢT TRỘI</span>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Cột 3: Trình phát Video kết quả & Nút bấm 1-Click -->
+          <!-- Column 3: Video Player & Batch Runner -->
           <div class="remix-card">
-            <h3 class="remix-card-title">
-              <span>3. Xem trước & Xuất Video</span>
-              <span id="remix-render-status" style="font-size:11px;color:#34d399;">Sẵn sàng</span>
-            </h3>
+            <div class="remix-card-header">
+              <h3 class="remix-card-title">
+                <span>📺 Video Player</span>
+              </h3>
+              <span id="remix-render-status" style="font-size:11px;color:#34d399;font-weight:700;">Sẵn sàng</span>
+            </div>
 
-            <!-- Video Player Preview -->
-            <div class="remix-video-wrapper">
+            <!-- Main Video Player -->
+            <div class="remix-video-box">
               <video id="remix-preview-video" controls></video>
             </div>
 
-            <!-- Tiến độ hàng loạt -->
-            <div class="remix-progress-wrap">
-              <div style="display:flex;justify-content:space-between;font-size:12px;">
-                <span id="remix-progress-text">Tiến độ hàng loạt: 0/0 video</span>
-                <span id="remix-progress-pct" style="font-weight:700;color:#38bdf8;">0%</span>
+            <!-- Batch Progress Bar -->
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;justify-content:space-between;font-size:11px;">
+                <span id="remix-progress-text" style="color:#94a3b8;font-weight:600;">Batch Progress: 0/0 video</span>
+                <span id="remix-progress-pct" style="color:#38bdf8;font-weight:800;">0%</span>
               </div>
-              <div class="remix-progress-bar">
-                <div id="remix-progress-fill" class="remix-progress-fill"></div>
+              <div style="width:100%;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;">
+                <div id="remix-progress-fill" style="width:0%;height:100%;background:linear-gradient(90deg,#0284c7,#a855f7);transition:width 0.3s ease;"></div>
               </div>
             </div>
 
-            <!-- Nút bấm 1-Click -->
-            <button id="remix-btn-start-batch" class="remix-btn-primary">
-              <span>⚡ BẮT ĐẦU AUTO REMIX HÀNG LOẠT (1-CLICK)</span>
+            <!-- Start 1-Click Action Button -->
+            <button id="remix-btn-start-batch" class="remix-btn-glow">
+              <span>🚀 START 1-CLICK AUTO REMIX</span>
             </button>
 
-            <!-- Console Log -->
+            <!-- Event Log Console -->
             <div style="display:flex;flex-direction:column;gap:4px;">
-              <span style="font-size:11px;font-weight:600;color:#94a3b8;">Nhật ký xử lý:</span>
-              <div id="remix-log-output" class="remix-log-output"></div>
+              <span style="font-size:11px;font-weight:700;color:#94a3b8;">Event Log Console</span>
+              <div id="remix-terminal-log" class="remix-terminal"></div>
             </div>
+
           </div>
+
         </div>
       </div>
     `;
@@ -287,65 +315,125 @@
     log('Tab AI Video Auto-Remix đã sẵn sàng hoạt động.', 'info');
   }
 
+  function renderQueue() {
+    const container = document.getElementById('remix-queue-container');
+    const countEl = document.getElementById('remix-queue-count');
+    if (!container) return;
+
+    if (countEl) countEl.textContent = `${state.queue.length} Video`;
+
+    if (!state.queue.length) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:24px 12px;color:#64748b;font-size:11px;border:1px dashed rgba(255,255,255,0.08);border-radius:8px;">
+          Chưa có video. Kéo thả video vào ô bên dưới hoặc bấm <b>"📁 Thêm Video"</b>.
+        </div>
+      `;
+      renderActiveDetails();
+      return;
+    }
+
+    container.innerHTML = state.queue.map(item => {
+      const isAct = item.id === state.activeId;
+      const badgeCls = item.status === 'processing' ? 'badge-processing' : item.status === 'done' ? 'badge-done' : item.status === 'error' ? 'badge-error' : 'badge-idle';
+      const badgeText = item.status === 'processing' ? 'Đang chạy' : item.status === 'done' ? 'Done' : item.status === 'error' ? 'Error' : 'Idle';
+      
+      return `
+        <div class="remix-queue-card ${isAct ? 'active' : ''}" data-id="${item.id}">
+          <div class="remix-queue-left">
+            <div class="remix-queue-play-icon">▶</div>
+            <div class="remix-queue-meta">
+              <span class="remix-queue-filename" title="${escapeHtml(item.path)}">${escapeHtml(item.name)}</span>
+              <span class="remix-queue-sub">${item.clipsCount ? `${item.clipsCount} clips` : 'Chờ phân tích'}</span>
+            </div>
+          </div>
+          <span class="remix-status-badge ${badgeCls}">${badgeText}</span>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.remix-queue-card').forEach(el => {
+      el.addEventListener('click', () => {
+        state.activeId = el.dataset.id;
+        renderQueue();
+        renderActiveDetails();
+      });
+    });
+
+    renderActiveDetails();
+  }
+
   function renderActiveDetails() {
     const item = getActiveItem();
     const titleEl = document.getElementById('remix-active-title');
-    const faceEl = document.getElementById('remix-face-stats');
+    const excludedText = document.getElementById('remix-excluded-text');
+    const preservedText = document.getElementById('remix-preserved-text');
     const clipsCountEl = document.getElementById('remix-clips-count');
     const timelineList = document.getElementById('remix-timeline-list');
     const voiceInput = document.getElementById('remix-voiceover-input');
     const videoEl = document.getElementById('remix-preview-video');
+    const thumbImg = document.getElementById('remix-thumb-img');
+    const thumbPlaceholder = document.getElementById('remix-thumb-placeholder');
+    const thumbOverlay = document.getElementById('remix-thumb-overlay');
+    const thumbHl = document.getElementById('remix-thumb-headline-display');
+    const thumbSub = document.getElementById('remix-thumb-sub-display');
+    const thumbBadge = document.getElementById('remix-thumb-badge-tag');
 
     if (!item) {
       if (titleEl) titleEl.textContent = 'Chưa chọn';
-      if (faceEl) faceEl.innerHTML = '<span><b>🚫 Trạng thái lọc mặt:</b> Chưa có video.</span>';
-      if (clipsCountEl) clipsCountEl.textContent = '0 phân đoạn';
-      if (timelineList) timelineList.innerHTML = '<div style="color:#64748b;font-size:12px;text-align:center;padding:16px;">Chưa có phân đoạn remix.</div>';
+      if (excludedText) excludedText.textContent = 'Chưa quét';
+      if (preservedText) preservedText.textContent = 'Chưa có dữ liệu';
+      if (clipsCountEl) clipsCountEl.textContent = '0 clips';
+      if (timelineList) timelineList.innerHTML = '<div style="color:#64748b;font-size:11px;text-align:center;padding:12px;">Chưa có phân đoạn remix.</div>';
       if (voiceInput) voiceInput.value = '';
       if (videoEl) videoEl.src = '';
+      if (thumbImg) thumbImg.style.display = 'none';
+      if (thumbPlaceholder) thumbPlaceholder.style.display = 'block';
+      if (thumbOverlay) thumbOverlay.style.display = 'none';
       return;
     }
 
     if (titleEl) titleEl.textContent = item.name;
 
     // Face stats
-    if (faceEl) {
-      if (item.faceStats) {
-        const faceCount = item.faceStats.face_intervals?.length || 0;
-        const freeCount = item.faceStats.face_free_intervals?.length || 0;
-        faceEl.className = 'remix-face-box ' + (faceCount > 0 ? '' : 'clean');
-        faceEl.innerHTML = `
-          <span><b>🚫 Đã phát hiện & loại bỏ:</b> ${faceCount} đoạn chứa khuôn mặt người.</span>
-          <span><b>✨ Giữ lại:</b> ${freeCount} phân đoạn cảnh sạch (${item.faceStats.total_face_free_duration || 0}s).</span>
-        `;
-      } else {
-        faceEl.className = 'remix-face-box';
-        faceEl.innerHTML = '<span><b>🚫 Trạng thái lọc mặt:</b> Sẵn sàng quét khi bấm bắt đầu.</span>';
-      }
+    if (item.faceStats) {
+      const faceCount = item.faceStats.face_intervals?.length || 0;
+      const freeCount = item.faceStats.face_free_intervals?.length || 0;
+      if (excludedText) excludedText.textContent = `Đã loại bỏ: ${faceCount} đoạn mặt`;
+      if (preservedText) preservedText.textContent = `Giữ lại: ${freeCount} cảnh sạch (${item.faceStats.total_face_free_duration || 0}s)`;
+    } else {
+      if (excludedText) excludedText.textContent = 'Sẵn sàng lọc mặt';
+      if (preservedText) preservedText.textContent = 'Tự động quét khi chạy';
     }
 
-    // Timeline list
-    if (clipsCountEl) clipsCountEl.textContent = `${item.remixClips?.length || 0} phân đoạn`;
+    // Timeline Sequence Cards (Hook, Features, Experience, CTA)
+    if (clipsCountEl) clipsCountEl.textContent = `${item.remixClips?.length || 0} clips`;
     if (timelineList) {
       if (item.remixClips && item.remixClips.length > 0) {
-        timelineList.innerHTML = item.remixClips.map((clip, idx) => `
-          <div class="remix-timeline-card">
-            <div style="display:flex;flex-direction:column;gap:2px;overflow:hidden;">
-              <span style="font-weight:600;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">${escapeHtml(clip.name || `Đoạn ${idx+1}`)}</span>
-              <span style="color:#38bdf8;font-family:monospace;font-size:11px;">${clip.start} ➔ ${clip.to}</span>
+        const dotColors = ['tag-dot-hook', 'tag-dot-feat', 'tag-dot-exp', 'tag-dot-cta'];
+        timelineList.innerHTML = item.remixClips.map((clip, idx) => {
+          const dotCls = dotColors[idx % dotColors.length];
+          return `
+            <div class="remix-timeline-row">
+              <div class="remix-timeline-tag">
+                <span class="${dotCls}"></span>
+                <span style="color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;" title="${escapeHtml(clip.name || `Clip ${idx+1}`)}">${escapeHtml(clip.name || `Clip ${idx+1}`)}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="remix-timeline-time">${clip.start}➔${clip.to}</span>
+                <button class="remix-btn-preview-clip" data-start="${clip.start}" data-to="${clip.to}" style="background:#0284c7;color:#fff;border:none;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;">▶</button>
+              </div>
             </div>
-            <button class="remix-btn-preview" data-start="${clip.start}" data-to="${clip.to}">▶ Xem</button>
-          </div>
-        `).join('');
+          `;
+        }).join('');
 
-        timelineList.querySelectorAll('.remix-btn-preview').forEach(btn => {
+        timelineList.querySelectorAll('.remix-btn-preview-clip').forEach(btn => {
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
             previewClip(item.path, btn.dataset.start, btn.dataset.to);
           });
         });
       } else {
-        timelineList.innerHTML = '<div style="color:#64748b;font-size:12px;text-align:center;padding:16px;">Chưa có phân đoạn remix.</div>';
+        timelineList.innerHTML = '<div style="color:#64748b;font-size:11px;text-align:center;padding:12px;">Chưa có phân đoạn remix.</div>';
       }
     }
 
@@ -354,40 +442,21 @@
       voiceInput.value = item.voiceScript || '';
     }
 
-    // Thumbnail Preview & Info
-    const thumbImg = document.getElementById('remix-thumb-img');
-    const thumbPlaceholder = document.getElementById('remix-thumb-placeholder');
-    const thumbInfo = document.getElementById('remix-thumb-info');
-    const thumbHl = document.getElementById('remix-thumb-hl-text');
-    const thumbBadge = document.getElementById('remix-thumb-badge-text');
-
+    // Thumbnail Preview Showcase
     if (item.thumbnailPath) {
       if (thumbImg) {
         thumbImg.src = toMediaUrl(item.thumbnailPath);
         thumbImg.style.display = 'block';
-        thumbImg.onclick = () => {
-          if (window.electronAPI?.openPath) window.electronAPI.openPath(item.thumbnailPath);
-        };
       }
       if (thumbPlaceholder) thumbPlaceholder.style.display = 'none';
-      if (thumbInfo) {
-        thumbInfo.style.display = 'flex';
-        if (thumbHl) thumbHl.textContent = item.thumbnailHeadline || 'SIÊU PHẨM HOT';
-        if (thumbBadge) thumbBadge.textContent = item.thumbnailBadge || '⚡ BEST SELLER';
-        const openBtn = document.getElementById('remix-btn-open-thumb');
-        if (openBtn) {
-          openBtn.onclick = () => {
-            if (window.electronAPI?.openPath) window.electronAPI.openPath(item.thumbnailPath);
-          };
-        }
-      }
+      if (thumbOverlay) thumbOverlay.style.display = 'flex';
+      if (thumbHl) thumbHl.textContent = item.thumbnailHeadline || 'SIÊU PHẨM HOT | 4K';
+      if (thumbSub) thumbSub.textContent = item.thumbnailSubHeadline || 'TIỆN LỢI - HIỆU QUẢ VƯỢT TRỘI';
+      if (thumbBadge) thumbBadge.textContent = item.thumbnailBadge || '⚡ VIRAL';
     } else {
-      if (thumbImg) {
-        thumbImg.src = '';
-        thumbImg.style.display = 'none';
-      }
+      if (thumbImg) thumbImg.style.display = 'none';
       if (thumbPlaceholder) thumbPlaceholder.style.display = 'block';
-      if (thumbInfo) thumbInfo.style.display = 'none';
+      if (thumbOverlay) thumbOverlay.style.display = 'none';
     }
 
     // Video player
@@ -441,6 +510,78 @@
     log(`Đang xem trước phân đoạn (${start} ➔ ${to})`, 'info');
   }
 
+  const chooseVideos = async () => {
+    let paths = [];
+    if (window.electronAPI?.openFile) {
+      try {
+        const res = await window.electronAPI.openFile([
+          { name: 'Video Files', extensions: ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv', 'ts'] }
+        ]);
+        if (!res?.canceled && res?.filePaths?.length) {
+          paths = res.filePaths;
+        } else if (Array.isArray(res) && res.length) {
+          paths = res;
+        }
+      } catch (err) {
+        console.warn('Electron openFile error:', err);
+      }
+    }
+
+    if (!paths.length) {
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.multiple = true;
+      inp.accept = 'video/*';
+      inp.onchange = (e) => {
+        const files = Array.from(e.target.files || []);
+        const fpaths = files.map(f => f.path || f.name).filter(Boolean);
+        if (fpaths.length) addFilesToQueue(fpaths);
+      };
+      inp.click();
+      return;
+    }
+
+    if (paths.length) {
+      addFilesToQueue(paths);
+    }
+  };
+
+  function addFilesToQueue(filePaths) {
+    if (!Array.isArray(filePaths) || !filePaths.length) return;
+    let added = 0;
+    filePaths.forEach(p => {
+      if (!p || !/\.(mp4|mkv|mov|avi|webm|flv|ts)$/i.test(p)) return;
+      if (state.queue.some(item => item.path === p)) return;
+      const name = p.split(/[\\/]/).pop();
+      const id = 'vid_' + Math.random().toString(36).substr(2, 9);
+      state.queue.push({
+        id,
+        path: p,
+        name,
+        status: 'idle',
+        faceStats: null,
+        remixClips: [],
+        voiceScript: '',
+        thumbnailPath: '',
+        thumbnailHeadline: '',
+        thumbnailSubHeadline: '',
+        thumbnailBadge: '',
+        outputPath: '',
+        error: ''
+      });
+      added++;
+    });
+
+    if (added > 0) {
+      if (!state.activeId && state.queue.length > 0) {
+        state.activeId = state.queue[0].id;
+      }
+      renderQueue();
+      log(`Đã thêm ${added} video vào hàng đợi.`, 'info');
+      window.showToast?.(`Đã nạp ${added} video!`, 'success');
+    }
+  }
+
   async function handleBatchProcess() {
     if (state.runningBatch) return;
     if (!state.queue.length) {
@@ -469,8 +610,8 @@
       item.status = 'processing';
       renderQueue();
 
-      if (progText) progText.textContent = `Tiến độ hàng loạt: ${i + 1}/${state.queue.length} video (${item.name})`;
-      if (statusText) statusText.textContent = `Đang xử lý video ${i + 1}...`;
+      if (progText) progText.textContent = `Batch Progress: ${i + 1}/${state.queue.length} (${item.name})`;
+      if (statusText) statusText.textContent = `Processing Video ${i + 1}...`;
       log(`[${i+1}/${state.queue.length}] Bắt đầu xử lý: ${item.name}`, 'info');
 
       try {
@@ -548,122 +689,7 @@
     state.runningBatch = false;
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<span>⚡ BẮT ĐẦU AUTO REMIX HÀNG LOẠT (1-CLICK)</span>';
-    }
-  }
-
-  function renderQueue() {
-    const container = document.getElementById('remix-queue-container');
-    const countEl = document.getElementById('remix-queue-count');
-    if (!container) return;
-
-    if (countEl) countEl.textContent = `${state.queue.length} video`;
-
-    if (!state.queue.length) {
-      container.innerHTML = `
-        <div id="remix-dropzone-click" style="text-align:center;padding:32px 16px;color:#64748b;font-size:13px;border:2px dashed rgba(56,189,248,0.3);border-radius:10px;cursor:pointer;background:rgba(56,189,248,0.03);display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.2s ease;">
-          <span style="font-size:32px;">📥</span>
-          <span style="color:#f1f5f9;font-weight:600;font-size:13px;">Kéo thả nhiều video vào đây</span>
-          <span style="font-size:11px;color:#38bdf8;">hoặc bấm vào ô này để chọn tệp video</span>
-        </div>
-      `;
-      document.getElementById('remix-dropzone-click')?.addEventListener('click', chooseVideos);
-      renderActiveDetails();
-      return;
-    }
-
-    container.innerHTML = state.queue.map(item => {
-      const isAct = item.id === state.activeId;
-      const badgeCls = item.status === 'processing' ? 'remix-badge-processing' : item.status === 'done' ? 'remix-badge-done' : item.status === 'error' ? 'remix-badge-error' : 'remix-badge-idle';
-      const badgeText = item.status === 'processing' ? 'Đang xử lý...' : item.status === 'done' ? 'Hoàn tất ✓' : item.status === 'error' ? 'Lỗi ✕' : 'Chờ';
-      
-      return `
-        <div class="remix-queue-item ${isAct ? 'active' : ''}" data-id="${item.id}">
-          <div class="remix-queue-info">
-            <span class="remix-queue-name" title="${escapeHtml(item.path)}">${escapeHtml(item.name)}</span>
-            <span class="remix-queue-status">${item.clipsCount ? `${item.clipsCount} clips` : 'Chưa phân tích'}</span>
-          </div>
-          <span class="remix-badge ${badgeCls}">${badgeText}</span>
-        </div>
-      `;
-    }).join('');
-
-    container.querySelectorAll('.remix-queue-item').forEach(el => {
-      el.addEventListener('click', () => {
-        state.activeId = el.dataset.id;
-        renderQueue();
-        renderActiveDetails();
-      });
-    });
-
-    renderActiveDetails();
-  }
-
-  const chooseVideos = async () => {
-    let paths = [];
-    if (window.electronAPI?.openFile) {
-      try {
-        const res = await window.electronAPI.openFile([
-          { name: 'Video Files', extensions: ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv', 'ts'] }
-        ]);
-        if (!res?.canceled && res?.filePaths?.length) {
-          paths = res.filePaths;
-        } else if (Array.isArray(res) && res.length) {
-          paths = res;
-        }
-      } catch (err) {
-        console.warn('Electron openFile error:', err);
-      }
-    }
-
-    if (!paths.length) {
-      const inp = document.createElement('input');
-      inp.type = 'file';
-      inp.multiple = true;
-      inp.accept = 'video/*';
-      inp.onchange = (e) => {
-        const files = Array.from(e.target.files || []);
-        const fpaths = files.map(f => f.path || f.name).filter(Boolean);
-        if (fpaths.length) addFilesToQueue(fpaths);
-      };
-      inp.click();
-      return;
-    }
-
-    if (paths.length) {
-      addFilesToQueue(paths);
-    }
-  };
-
-  function addFilesToQueue(filePaths) {
-    if (!Array.isArray(filePaths) || !filePaths.length) return;
-    let added = 0;
-    filePaths.forEach(p => {
-      if (!p || !/\.(mp4|mkv|mov|avi|webm|flv|ts)$/i.test(p)) return;
-      if (state.queue.some(item => item.path === p)) return;
-      const name = p.split(/[\\/]/).pop();
-      const id = 'vid_' + Math.random().toString(36).substr(2, 9);
-      state.queue.push({
-        id,
-        path: p,
-        name,
-        status: 'idle',
-        faceStats: null,
-        remixClips: [],
-        voiceScript: '',
-        outputPath: '',
-        error: ''
-      });
-      added++;
-    });
-
-    if (added > 0) {
-      if (!state.activeId && state.queue.length > 0) {
-        state.activeId = state.queue[0].id;
-      }
-      renderQueue();
-      log(`Đã thêm ${added} video vào hàng đợi.`, 'info');
-      window.showToast?.(`Đã nạp ${added} video!`, 'success');
+      btn.innerHTML = '<span>🚀 START 1-CLICK AUTO REMIX</span>';
     }
   }
 
@@ -684,8 +710,9 @@
       });
     });
 
-    // Add files button
+    // Add files button & Dropzone click
     document.getElementById('remix-btn-add-files')?.addEventListener('click', chooseVideos);
+    document.getElementById('remix-dropzone-box')?.addEventListener('click', chooseVideos);
 
     // Clear queue
     document.getElementById('remix-btn-clear-queue')?.addEventListener('click', () => {
@@ -725,6 +752,14 @@
       } finally {
         btn.disabled = false;
         btn.textContent = '✨ AI Viết lại';
+      }
+    });
+
+    // Click thumbnail to open
+    document.getElementById('remix-thumb-showcase')?.addEventListener('click', () => {
+      const item = getActiveItem();
+      if (item?.thumbnailPath && window.electronAPI?.openPath) {
+        window.electronAPI.openPath(item.thumbnailPath);
       }
     });
 
