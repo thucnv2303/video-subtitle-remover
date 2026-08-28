@@ -243,45 +243,41 @@
     list.querySelectorAll('[data-preview-voice]').forEach((button) => button.addEventListener('click', () => previewVoice(button.dataset.previewVoice)));
   }
 
-  function periodSentenceUnits(text) {
+  function robustSentenceUnits(text) {
     const source = String(text || '').replace(/\r\n/g, '\n').trim();
     if (!source) return [];
 
+    const paragraphs = source.split(/\n\s*\n+/);
     const units = [];
-    let cursor = 0;
-    for (let index = 0; index < source.length; index += 1) {
-      if (source[index] !== '.') continue;
 
-      let end = index + 1;
-      while (end < source.length && /[”"')\]]/.test(source[end])) end += 1;
-      if (end < source.length && !/\s/.test(source[end])) continue;
+    paragraphs.forEach((p, pIdx) => {
+      const trimmedPara = p.trim();
+      if (!trimmedPara) return;
 
-      let whitespaceEnd = end;
-      while (whitespaceEnd < source.length && /\s/.test(source[whitespaceEnd])) whitespaceEnd += 1;
-      const separator = source.slice(end, whitespaceEnd);
-      const value = source.slice(cursor, end).replace(/\s+/g, ' ').trim();
-      if (value) {
-        units.push({
-          text: value,
-          terminated: true,
-          paragraphBreakAfter: /\n\s*\n/.test(separator),
-        });
-      }
-      cursor = whitespaceEnd;
-      index = whitespaceEnd - 1;
-    }
+      // Chia câu theo các dấu kết thúc câu: . ! ? 。 ！ ？ … hoặc ngắt dòng
+      const rawSentences = trimmedPara.match(/[^.!?。！？…\n]+[.!?。！？…\n]*/g) || [trimmedPara];
 
-    const tail = source.slice(cursor).replace(/\s+/g, ' ').trim();
-    if (tail) units.push({ text: tail, terminated: false, paragraphBreakAfter: false });
+      rawSentences.forEach((s, sIdx) => {
+        const cleaned = s.replace(/\s+/g, ' ').trim();
+        if (cleaned) {
+          units.push({
+            text: cleaned,
+            terminated: true,
+            paragraphBreakAfter: (sIdx === rawSentences.length - 1) && (pIdx < paragraphs.length - 1)
+          });
+        }
+      });
+    });
+
     return units;
   }
 
-  function splitLongText(input, maxChars, preserveParagraphs = true) {
+  function splitLongText(input, maxChars = 280, preserveParagraphs = true) {
     const text = String(input || '').replace(/\r\n/g, '\n').trim();
     if (!text) return [];
 
-    const targetChars = Math.max(120, Number(maxChars) || 450);
-    const units = periodSentenceUnits(text);
+    const targetChars = Math.max(100, Math.min(800, Number(maxChars) || 280));
+    const units = robustSentenceUnits(text);
     const chunks = [];
     let current = '';
 
@@ -292,6 +288,38 @@
     };
 
     for (const unit of units) {
+      // Nếu 1 câu dài vượt quá giới hạn an toàn, tách tiếp theo mệnh đề (, ; : - —) hoặc từ
+      if (unit.text.length > targetChars) {
+        pushCurrent();
+        const subClauses = unit.text.match(/[^,;:—–…]+[,;:—–…]*/g) || [unit.text];
+        let subCurrent = '';
+        for (const clause of subClauses) {
+          const trimmedClause = clause.trim();
+          if (!trimmedClause) continue;
+          if (trimmedClause.length > targetChars) {
+            if (subCurrent) { chunks.push(subCurrent.trim()); subCurrent = ''; }
+            const words = trimmedClause.split(/\s+/);
+            let wordChunk = '';
+            for (const w of words) {
+              if (wordChunk && (wordChunk.length + w.length + 1 > targetChars)) {
+                chunks.push(wordChunk.trim());
+                wordChunk = w;
+              } else {
+                wordChunk = wordChunk ? `${wordChunk} ${w}` : w;
+              }
+            }
+            if (wordChunk) chunks.push(wordChunk.trim());
+          } else if (subCurrent && (subCurrent.length + trimmedClause.length + 1 > targetChars)) {
+            chunks.push(subCurrent.trim());
+            subCurrent = trimmedClause;
+          } else {
+            subCurrent = subCurrent ? `${subCurrent} ${trimmedClause}` : trimmedClause;
+          }
+        }
+        if (subCurrent) chunks.push(subCurrent.trim());
+        continue;
+      }
+
       const candidate = current ? `${current} ${unit.text}` : unit.text;
       if (current && candidate.length > targetChars) {
         pushCurrent();
@@ -300,11 +328,10 @@
         current = candidate;
       }
 
-      if (preserveParagraphs && unit.terminated && unit.paragraphBreakAfter) pushCurrent();
+      if (preserveParagraphs && unit.paragraphBreakAfter) pushCurrent();
     }
 
     pushCurrent();
-    if (chunks.length > 10000) throw new Error('Văn bản tạo quá nhiều chunk.');
     return chunks;
   }
 

@@ -786,17 +786,19 @@ def tts_generate(req: TTSRequest):
     # If voice_name provided and no ref_audio → use Edge TTS
     if req.voice_name and req.voice_name not in ('none', 'default') and not req.ref_audio_path:
         try:
-            import asyncio, threading, tempfile, os
+            import asyncio, threading, tempfile, os, subprocess
             import edge_tts
-            out_path = req.output_path or os.path.join(
-                tempfile.gettempdir(), f'edge_tts_{abs(hash(req.text + req.voice_name))}.mp3'
-            )
+            
+            is_wav_requested = bool(req.output_path and req.output_path.lower().endswith('.wav'))
+            temp_mp3 = os.path.join(tempfile.gettempdir(), f'edge_tts_{abs(hash(req.text + req.voice_name + str(os.getpid())))}.mp3')
+            out_path = req.output_path or temp_mp3
             error_holder = []
 
             def run_in_thread():
                 async def _gen():
                     communicate = edge_tts.Communicate(req.text, req.voice_name)
-                    await communicate.save(out_path)
+                    target = temp_mp3 if is_wav_requested else out_path
+                    await communicate.save(target)
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
@@ -808,10 +810,24 @@ def tts_generate(req: TTSRequest):
 
             t = threading.Thread(target=run_in_thread)
             t.start()
-            t.join(timeout=30)
+            t.join(timeout=45)
 
             if error_holder:
                 return {"status": "error", "error": f"Edge TTS: {error_holder[0]}"}
+
+            if is_wav_requested:
+                if not os.path.exists(temp_mp3) or os.path.getsize(temp_mp3) == 0:
+                    return {"status": "error", "error": "Edge TTS: MP3 file was not created"}
+                # Convert MP3 to standard PCM WAV with ffmpeg so concat merge and player work seamlessly
+                cmd = ['ffmpeg', '-y', '-hide_banner', '-loglevel', 'error', '-i', temp_mp3, '-c:a', 'pcm_s16le', '-ar', '24000', out_path]
+                res = subprocess.run(cmd, capture_output=True, text=True)
+                try:
+                    os.remove(temp_mp3)
+                except Exception:
+                    pass
+                if res.returncode != 0:
+                    return {"status": "error", "error": f"FFmpeg MP3->WAV conversion error: {res.stderr}"}
+
             if os.path.exists(out_path):
                 return {"status": "ok", "audio_path": out_path}
             return {"status": "error", "error": "Edge TTS: file not created"}
