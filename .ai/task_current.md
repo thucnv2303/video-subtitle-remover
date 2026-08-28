@@ -1,11 +1,11 @@
 # Current Task
 
 ## Task Name
-`FIX-SETTINGS-DIRECT-DOM-BINDING-AND-REMOVE-DOM-OVERWRITE`
+`FIX-SETTINGS-PAGE-DIRECT-STATIC-RENDER-AND-LAYOUT-PASS`
 
 ## Objective
-1. Gỡ bỏ hoàn toàn hàm `mountSettings()` ghi đè chuỗi HTML bị lỗi lên `.settings-scroll` trong `src/renderer/js/components/settings.js`.
-2. Chuyển `settings.js` sang cơ chế trực tiếp lắng nghe và điều khiển các thành phần giao diện tĩnh sẵn có trong `index.html`.
+1. Cấu hình trực tiếp layout cho `#page-settings` và `#page-settings.active` ngay trong `src/renderer/styles/main.css`.
+2. Gỡ bỏ hoàn toàn việc gọi `showSettingsView` trong `src/renderer/js/app.js` và `src/renderer/js/components/settings.js` để render các thẻ card cài đặt tĩnh trực tiếp 100%.
 - Scope: `src/renderer/js/ai-auto-remix.js`, `src/renderer/styles/ai-auto-remix.css`.
 
 ## User outcome
