@@ -26,6 +26,15 @@
     document.head.appendChild(link);
   }
 
+  function toMediaUrl(path) {
+    const raw = String(path || '').trim();
+    if (!raw) return '';
+    if (/^(file|blob|https?):/i.test(raw)) return raw;
+    const n = raw.replace(/\\/g, '/');
+    const formatted = n.startsWith('/') ? `file://${n}` : `file:///${n}`;
+    return encodeURI(formatted).replace(/#/g, '%23').replace(/\?/g, '%3F');
+  }
+
   function escapeHtml(val) {
     return String(val ?? '').replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
   }
@@ -402,22 +411,42 @@ ffmpeg -ss 00:00:04 -to 00:00:06 -i input.mp4 -c copy clip3.mp4"></textarea>
 
     const sSec = parseTimeToSeconds(clip.start);
     const tSec = parseTimeToSeconds(clip.to);
+    const targetUrl = toMediaUrl(state.videoPath);
 
-    if (videoEl.src !== 'file:///' + state.videoPath.replace(/\\/g, '/')) {
-      videoEl.src = 'file:///' + state.videoPath.replace(/\\/g, '/');
+    // Clear old timeupdate handler
+    if (videoEl._clipEndHandler) {
+      videoEl.removeEventListener('timeupdate', videoEl._clipEndHandler);
+      videoEl._clipEndHandler = null;
     }
 
-    videoEl.currentTime = sSec;
-    videoEl.play();
-
-    // Auto pause at clip end
-    const onTimeUpdate = () => {
-      if (videoEl.currentTime >= tSec) {
-        videoEl.pause();
-        videoEl.removeEventListener('timeupdate', onTimeUpdate);
+    const seekAndPlay = () => {
+      try {
+        videoEl.currentTime = sSec;
+        const playPromise = videoEl.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(e => console.warn('Preview play catch:', e));
+        }
+      } catch (e) {
+        console.warn('Seek preview error:', e);
       }
     };
-    videoEl.addEventListener('timeupdate', onTimeUpdate);
+
+    if (videoEl.src !== targetUrl) {
+      videoEl.src = targetUrl;
+      videoEl.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+    } else {
+      seekAndPlay();
+    }
+
+    // Auto pause at clip end
+    videoEl._clipEndHandler = () => {
+      if (videoEl.currentTime >= tSec) {
+        videoEl.pause();
+        videoEl.removeEventListener('timeupdate', videoEl._clipEndHandler);
+        videoEl._clipEndHandler = null;
+      }
+    };
+    videoEl.addEventListener('timeupdate', videoEl._clipEndHandler);
     vidrLog(`Đang xem trước ${clip.name} (${clip.start} -> ${clip.to}).`, 'info');
   }
 
@@ -502,8 +531,13 @@ ffmpeg -ss 00:00:04 -to 00:00:06 -i input.mp4 -c copy clip3.mp4"></textarea>
         // Play final video in preview
         const videoEl = document.getElementById('vidr-preview-video');
         if (videoEl) {
-          videoEl.src = 'file:///' + res.output_path.replace(/\\/g, '/');
-          videoEl.play();
+          if (videoEl._clipEndHandler) {
+            videoEl.removeEventListener('timeupdate', videoEl._clipEndHandler);
+            videoEl._clipEndHandler = null;
+          }
+          videoEl.src = toMediaUrl(res.output_path);
+          videoEl.load();
+          videoEl.play().catch(e => console.warn('Play output video catch:', e));
         }
       } else {
         throw new Error(res?.error || 'Không rõ nguyên nhân lỗi từ FFmpeg.');
@@ -546,7 +580,11 @@ ffmpeg -ss 00:00:04 -to 00:00:06 -i input.mp4 -c copy clip3.mp4"></textarea>
       if (input) input.value = path;
       const videoEl = document.getElementById('vidr-preview-video');
       if (videoEl) {
-        videoEl.src = 'file:///' + path.replace(/\\/g, '/');
+        if (videoEl._clipEndHandler) {
+          videoEl.removeEventListener('timeupdate', videoEl._clipEndHandler);
+          videoEl._clipEndHandler = null;
+        }
+        videoEl.src = toMediaUrl(path);
         videoEl.load();
       }
       vidrLog(`Đã chọn video: ${path}`, 'info');
@@ -685,8 +723,13 @@ ffmpeg -ss 00:00:26 -to 00:00:29 -i input.mp4 -c copy clip6.mp4`;
           window.showToast?.('Tách giọng gốc thành công!', 'success');
           const videoEl = document.getElementById('vidr-preview-video');
           if (videoEl) {
-            videoEl.src = 'file:///' + res.output_video_path.replace(/\\/g, '/');
-            videoEl.play();
+            if (videoEl._clipEndHandler) {
+              videoEl.removeEventListener('timeupdate', videoEl._clipEndHandler);
+              videoEl._clipEndHandler = null;
+            }
+            videoEl.src = toMediaUrl(res.output_video_path);
+            videoEl.load();
+            videoEl.play().catch(e => console.warn('Play novocal video catch:', e));
           }
         } else {
           throw new Error(res?.error || 'Không thể tách vocal');
