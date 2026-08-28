@@ -216,7 +216,7 @@
 /* Voiceover Script box */
 .remix-script-box {
   width: 100%;
-  height: 110px;
+  height: 90px;
   background: #0a0f1d;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -232,6 +232,32 @@
 .remix-script-box:focus {
   outline: none;
   border-color: #38bdf8;
+}
+
+/* Thumbnail preview */
+.remix-thumb-preview-wrap {
+  display: flex;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px;
+  align-items: center;
+}
+
+.remix-thumb-img {
+  width: 80px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: #000;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.remix-thumb-img:hover {
+  transform: scale(1.05);
 }
 
 /* Video Player */

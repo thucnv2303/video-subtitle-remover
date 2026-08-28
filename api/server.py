@@ -3049,7 +3049,8 @@ def api_ai_remix_auto_director(req: AutoRemixDirectorReq):
             "1. Tái cấu trúc (Remix) lại thứ tự các phân đoạn trên để tạo thành video hoàn chỉnh cuốn hút (Hook -> Tính năng -> Trải nghiệm -> Kêu gọi CTA). "
             "Nếu một phân đoạn quá dài (>6 giây), hãy chia nhỏ mốc thời gian 3-5 giây để nhịp video nhanh và hấp dẫn.\n"
             "2. Viết kịch bản Voiceover tiếng Việt truyền cảm, ngôn từ đời thường lôi cuốn, câu ngắn 8-14 từ, "
-            "sử dụng dấu *từ khóa* để nhấn nhá từ đắt giá, dùng ... để ngắt nhịp lấy hơi, dùng — để chuyển ý, viết số thành chữ.\n\n"
+            "sử dụng dấu *từ khóa* để nhấn nhá từ đắt giá, dùng ... để ngắt nhịp lấy hơi, dùng — để chuyển ý, viết số thành chữ.\n"
+            "3. Đặt Tiêu đề Thumbnail sản phẩm ngắn gọn giật tít 3-5 từ (viết hoa), câu phụ ngắn 4-6 từ và nhãn nổi bật.\n\n"
             "BẮT BUỘC trả về DUY NHẤT một chuỗi JSON hợp lệ theo cấu trúc sau (không kèm văn bản giải thích nào khác):\n"
             "{\n"
             '  "remix_clips": [\n'
@@ -3057,11 +3058,14 @@ def api_ai_remix_auto_director(req: AutoRemixDirectorReq):
             '    {"name": "Đoạn 2: [Tính năng / Giải pháp] Thao tác thực tế (clip2)", "start": "00:00:07", "to": "00:00:10"}\n'
             "  ],\n"
             '  "voiceover_script": "Nội dung lời thoại lồng tiếng có nhấn *từ khóa* và ngắt nhịp...",\n'
+            '  "thumbnail_headline": "ĐẦU VÒI SEN TĂNG ÁP",\n'
+            '  "thumbnail_sub_headline": "NƯỚC PHUN CỰC MẠNH - TIẾT KIỆM 80%",\n'
+            '  "thumbnail_badge": "⚡ BEST SELLER",\n'
             '  "estimated_duration": 25\n'
             "}"
         )
 
-        user_content = f"Danh sách các phân đoạn video sạch:\n{clean_clips_text}\n\nHãy tạo Timeline remix mới và kịch bản Voiceover cho video này."
+        user_content = f"Danh sách các phân đoạn video sạch:\n{clean_clips_text}\n\nHãy tạo Timeline remix mới, kịch bản Voiceover và tiêu đề Thumbnail cho video này."
 
         ai_cfg = req.ai_config or {}
         provider = str(ai_cfg.get('provider', 'ollama')).lower()
@@ -3115,6 +3119,9 @@ def api_ai_remix_auto_director(req: AutoRemixDirectorReq):
         # 3. Parse JSON từ phản hồi của LLM
         remix_clips = []
         voiceover_script = ""
+        thumb_headline = ""
+        thumb_sub = ""
+        thumb_badge = ""
 
         if llm_reply:
             try:
@@ -3129,6 +3136,9 @@ def api_ai_remix_auto_director(req: AutoRemixDirectorReq):
                 parsed_json = json.loads(clean_text)
                 remix_clips = parsed_json.get("remix_clips", [])
                 voiceover_script = parsed_json.get("voiceover_script", "")
+                thumb_headline = parsed_json.get("thumbnail_headline", "")
+                thumb_sub = parsed_json.get("thumbnail_sub_headline", "")
+                thumb_badge = parsed_json.get("thumbnail_badge", "")
             except Exception as pe:
                 print(f"[AutoDirector] JSON parse error, falling back to rule-based director: {pe}", flush=True)
 
@@ -3162,13 +3172,26 @@ def api_ai_remix_auto_director(req: AutoRemixDirectorReq):
         if not voiceover_script:
             voiceover_script = "Nếu bạn đang tìm kiếm *giải pháp tốt nhất*... hãy xem ngay trải nghiệm này! Thiết kế *cực kỳ thông minh*... tiện lợi và hiệu quả vượt trội. Bấm ngay để sở hữu ngay hôm nay!"
 
+        if not thumb_headline:
+            base_title = os.path.splitext(os.path.basename(req.video_path))[0]
+            thumb_headline = "SIÊU PHẨM HOT" if len(base_title) > 25 else base_title.upper()
+
+        if not thumb_sub:
+            thumb_sub = "TIỆN LỢI - HIỆU QUẢ VƯỢT TRỘI"
+
+        if not thumb_badge:
+            thumb_badge = "⚡ BEST SELLER"
+
         return {
             "status": "ok",
             "video_path": req.video_path,
             "face_intervals": face_info.get("face_intervals", []),
             "face_free_intervals": intervals,
             "remix_clips": remix_clips,
-            "voiceover_script": voiceover_script
+            "voiceover_script": voiceover_script,
+            "thumbnail_headline": thumb_headline,
+            "thumbnail_sub_headline": thumb_sub,
+            "thumbnail_badge": thumb_badge
         }
     except Exception as e:
         traceback.print_exc()
@@ -3178,23 +3201,29 @@ def api_ai_remix_auto_director(req: AutoRemixDirectorReq):
 class AutoRemixProcessReq(BaseModel):
     video_path: str
     output_path: Optional[str] = None
+    output_dir: Optional[str] = None
     tts_voice: Optional[str] = "default"
     mode: Optional[str] = "lossless"
     remove_vocal: Optional[bool] = True
+    generate_thumbnail: Optional[bool] = True
     ai_config: Optional[Dict[str, Any]] = None
     remix_clips: Optional[List[Dict[str, Any]]] = None
     voiceover_script: Optional[str] = None
+    headline: Optional[str] = None
+    sub_headline: Optional[str] = None
+    badge_text: Optional[str] = None
 
 @app.post("/api/ai-remix/process-single-video")
 def api_ai_remix_process_single_video(req: AutoRemixProcessReq):
     """
-    Quy trình 1-Click tự động hóa trọn gói cho 1 video:
-    Lọc mặt người -> AI Director -> Cắt & Ghép Timeline -> TTS Voice -> Khử Vocal & Mix Audio -> Video Thành Phẩm.
+    Quy trình 1-Click tự động hóa trọn gói cho 1 video với tên tệp đồng nhất:
+    <base>_REMIX.mp4, <base>_THUMBNAIL.jpg, <base>_PRODUCT_FRAME.jpg, <base>_SCRIPT.txt
     """
     import tempfile, subprocess, shutil, os as _os
     temp_dir = tempfile.mkdtemp(prefix="vsr_auto_remix_")
     try:
         # 1. Chạy AI Director nếu chưa có kịch bản
+        dir_res = {}
         remix_clips = req.remix_clips
         voice_script = req.voiceover_script
 
@@ -3210,6 +3239,24 @@ def api_ai_remix_process_single_video(req: AutoRemixProcessReq):
 
         if not remix_clips:
             return {"status": "error", "error": "Không có phân đoạn cắt nào được tạo."}
+
+        # Chuẩn hóa đường dẫn output đồng bộ tên
+        out_dir = req.output_dir or _os.path.dirname(_os.path.abspath(req.video_path))
+        filename_stem = _os.path.splitext(_os.path.basename(req.video_path))[0]
+        ext = _os.path.splitext(req.video_path)[1] or '.mp4'
+
+        output_path = req.output_path or _os.path.join(out_dir, f"{filename_stem}_REMIX{ext}")
+        output_thumb_path = _os.path.join(out_dir, f"{filename_stem}_THUMBNAIL.jpg")
+        output_raw_frame = _os.path.join(out_dir, f"{filename_stem}_PRODUCT_FRAME.jpg")
+        output_script_path = _os.path.join(out_dir, f"{filename_stem}_SCRIPT.txt")
+
+        _os.makedirs(_os.path.dirname(_os.path.abspath(output_path)), exist_ok=True)
+
+        # Lưu file kịch bản SCRIPT.txt
+        with open(output_script_path, 'w', encoding='utf-8') as sf:
+            sf.write(f"=== KỊCH BẢN VOICEOVER ===\n\n{voice_script}\n\n=== TIMELINE REMIX ===\n")
+            for idx, c in enumerate(remix_clips):
+                sf.write(f"{idx+1}. {c.get('name', 'Clip')}: {c.get('start')} -> {c.get('to')}\n")
 
         # 2. Cắt và ghép video theo timeline mới
         stitched_video = _os.path.join(temp_dir, "stitched_remix.mp4")
@@ -3238,14 +3285,7 @@ def api_ai_remix_process_single_video(req: AutoRemixProcessReq):
             print(f"[AutoRemix] TTS engine error fallback: {te}", flush=True)
             tts_res = None
 
-        # 4. Xác định output path
-        output_path = req.output_path
-        if not output_path:
-            base, ext = _os.path.splitext(req.video_path)
-            output_path = f"{base}_AI_REMIX{ext or '.mp4'}"
-        _os.makedirs(_os.path.dirname(_os.path.abspath(output_path)), exist_ok=True)
-
-        # 5. Khử giọng cũ & Hòa trộn âm thanh hoàn chỉnh
+        # 4. Khử giọng cũ & Hòa trộn âm thanh hoàn chỉnh
         has_tts = tts_res and _os.path.isfile(tts_audio) and _os.path.getsize(tts_audio) > 0
 
         if req.remove_vocal:
@@ -3306,13 +3346,41 @@ def api_ai_remix_process_single_video(req: AutoRemixProcessReq):
                 print(f"[AutoRemix] Audio mix fallback: {res_mix.stderr.decode('utf-8', errors='replace')}", flush=True)
                 shutil.copy(stitched_video, output_path)
 
+        # 5. Tạo Thumbnail chuyên nghiệp cho sản phẩm
+        thumb_res = {}
+        if req.generate_thumbnail:
+            try:
+                try:
+                    from thumbnail_generator import create_product_thumbnail
+                except ImportError:
+                    from api.thumbnail_generator import create_product_thumbnail
+
+                hl = req.headline or dir_res.get("thumbnail_headline") or "SIÊU PHẨM HOT"
+                sub = req.sub_headline or dir_res.get("thumbnail_sub_headline") or "TIỆN LỢI - HIỆU QUẢ VƯỢT TRỘI"
+                badge = req.badge_text or dir_res.get("thumbnail_badge") or "⚡ BEST SELLER"
+
+                thumb_res = create_product_thumbnail(
+                    video_path=req.video_path,
+                    output_thumbnail_path=output_thumb_path,
+                    headline=hl,
+                    sub_headline=sub,
+                    badge_text=badge,
+                    face_free_intervals=dir_res.get("face_free_intervals"),
+                    raw_frame_output_path=output_raw_frame
+                )
+            except Exception as the:
+                print(f"[AutoRemix] Thumbnail generation warning: {the}", flush=True)
+
         # Cleanup
         shutil.rmtree(temp_dir, ignore_errors=True)
-        print(f"[AutoRemix] Video processed successfully -> {output_path}", flush=True)
+        print(f"[AutoRemix] Video + Thumbnail processed successfully -> {output_path}", flush=True)
 
         return {
             "status": "ok",
             "output_video_path": output_path,
+            "thumbnail_path": output_thumb_path if _os.path.isfile(output_thumb_path) else None,
+            "raw_frame_path": output_raw_frame if _os.path.isfile(output_raw_frame) else None,
+            "script_path": output_script_path if _os.path.isfile(output_script_path) else None,
             "remix_clips": remix_clips,
             "voiceover_script": voice_script,
             "clips_count": len(remix_clips)

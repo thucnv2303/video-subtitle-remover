@@ -184,6 +184,13 @@
                   <input type="checkbox" id="remix-opt-remove-vocal" checked> <b>Khử vocal, giữ BGM</b>
                 </label>
               </div>
+
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
+                <span>🖼 Tạo ảnh Thumbnail sản phẩm:</span>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                  <input type="checkbox" id="remix-opt-gen-thumb" checked> <b>Bật tạo Thumbnail</b>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -217,6 +224,22 @@
                 <button id="remix-btn-re-ai" class="remix-btn-secondary" style="padding:2px 8px;font-size:11px;">✨ AI Viết lại</button>
               </div>
               <textarea id="remix-voiceover-input" class="remix-script-box" placeholder="Kịch bản lồng tiếng có nhấn nhá do AI tự động sinh ra..."></textarea>
+            </div>
+
+            <!-- Thumbnail Sản Phẩm Preview & Info -->
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <span style="font-size:12px;font-weight:600;color:#cbd5e1;">🖼 Ảnh Thumbnail sản phẩm:</span>
+              <div id="remix-thumb-preview-box" class="remix-thumb-preview-wrap">
+                <img id="remix-thumb-img" class="remix-thumb-img" src="" alt="Thumbnail" style="display:none;" title="Bấm để xem ảnh kích thước lớn">
+                <div id="remix-thumb-placeholder" style="color:#64748b;font-size:12px;text-align:center;flex:1;">
+                  Ảnh thumbnail sẽ tự động tạo từ frame sản phẩm đẹp nhất khi chạy Auto-Remix.
+                </div>
+                <div id="remix-thumb-info" style="display:none;flex:1;flex-direction:column;gap:4px;font-size:11px;color:#cbd5e1;">
+                  <div><b>Tiêu đề:</b> <span id="remix-thumb-hl-text" style="color:#fde047;font-weight:700;">-</span></div>
+                  <div><b>Nhãn:</b> <span id="remix-thumb-badge-text" style="color:#f87171;font-weight:700;">-</span></div>
+                  <button id="remix-btn-open-thumb" class="remix-btn-secondary" style="align-self:flex-start;padding:3px 8px;font-size:10px;margin-top:4px;">🔍 Mở ảnh Thumbnail</button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -375,6 +398,42 @@
       voiceInput.value = item.voiceScript || '';
     }
 
+    // Thumbnail Preview & Info
+    const thumbImg = document.getElementById('remix-thumb-img');
+    const thumbPlaceholder = document.getElementById('remix-thumb-placeholder');
+    const thumbInfo = document.getElementById('remix-thumb-info');
+    const thumbHl = document.getElementById('remix-thumb-hl-text');
+    const thumbBadge = document.getElementById('remix-thumb-badge-text');
+
+    if (item.thumbnailPath) {
+      if (thumbImg) {
+        thumbImg.src = toMediaUrl(item.thumbnailPath);
+        thumbImg.style.display = 'block';
+        thumbImg.onclick = () => {
+          if (window.electronAPI?.openPath) window.electronAPI.openPath(item.thumbnailPath);
+        };
+      }
+      if (thumbPlaceholder) thumbPlaceholder.style.display = 'none';
+      if (thumbInfo) {
+        thumbInfo.style.display = 'flex';
+        if (thumbHl) thumbHl.textContent = item.thumbnailHeadline || 'SIÊU PHẨM HOT';
+        if (thumbBadge) thumbBadge.textContent = item.thumbnailBadge || '⚡ BEST SELLER';
+        const openBtn = document.getElementById('remix-btn-open-thumb');
+        if (openBtn) {
+          openBtn.onclick = () => {
+            if (window.electronAPI?.openPath) window.electronAPI.openPath(item.thumbnailPath);
+          };
+        }
+      }
+    } else {
+      if (thumbImg) {
+        thumbImg.src = '';
+        thumbImg.style.display = 'none';
+      }
+      if (thumbPlaceholder) thumbPlaceholder.style.display = 'block';
+      if (thumbInfo) thumbInfo.style.display = 'none';
+    }
+
     // Video player
     if (videoEl) {
       const targetPath = item.outputPath || item.path;
@@ -462,9 +521,10 @@
         const aiConfig = getResolvedAiConfig();
         const ttsVoice = document.getElementById('remix-opt-voice')?.value || 'default';
         const removeVocal = document.getElementById('remix-opt-remove-vocal')?.checked ?? true;
+        const genThumb = document.getElementById('remix-opt-gen-thumb')?.checked ?? true;
 
         // Bước 1: Quét lọc mặt & AI Director
-        log(`🔍 [${item.name}] Đang quét lọc khuôn mặt người & AI Director lập Timeline...`, 'info');
+        log(`🔍 [${item.name}] Đang quét lọc khuôn mặt người & AI Director lập Timeline + Kịch bản...`, 'info');
         const dirRes = await window.api.aiRemixAutoDirector(item.path, null, aiConfig, 0.35);
 
         if (dirRes && dirRes.status === 'ok') {
@@ -475,28 +535,39 @@
           };
           item.remixClips = dirRes.remix_clips || [];
           item.voiceScript = dirRes.voiceover_script || '';
+          item.thumbnailHeadline = dirRes.thumbnail_headline || '';
+          item.thumbnailSubHeadline = dirRes.thumbnail_sub_headline || '';
+          item.thumbnailBadge = dirRes.thumbnail_badge || '';
           item.clipsCount = item.remixClips.length;
           renderActiveDetails();
           log(`✨ [${item.name}] Đã lọc xong ${dirRes.face_intervals?.length || 0} đoạn mặt người. Tạo ${item.remixClips.length} phân đoạn remix!`, 'success');
         }
 
-        // Bước 2: Cắt ghép video, lồng tiếng TTS và khử vocal
-        log(`🎬 [${item.name}] Đang cắt ghép chuỗi cảnh, tạo giọng đọc TTS và hòa trộn âm thanh...`, 'info');
+        // Bước 2: Cắt ghép video, lồng tiếng TTS, khử vocal và tạo Thumbnail
+        log(`🎬 [${item.name}] Đang cắt ghép chuỗi cảnh, tạo giọng đọc TTS, hòa trộn âm thanh và thiết kế Thumbnail...`, 'info');
         const procRes = await window.api.aiRemixProcessSingleVideo(
           item.path,
           null,
           ttsVoice,
           'lossless',
           removeVocal,
+          genThumb,
           aiConfig,
           item.remixClips,
-          item.voiceScript
+          item.voiceScript,
+          item.thumbnailHeadline,
+          item.thumbnailSubHeadline,
+          item.thumbnailBadge
         );
 
         if (procRes && procRes.status === 'ok') {
           item.status = 'done';
           item.outputPath = procRes.output_video_path;
-          log(`🎉 [${item.name}] XỬ LÝ HOÀN TẤT! Video lưu tại: ${item.outputPath}`, 'success');
+          item.thumbnailPath = procRes.thumbnail_path || '';
+          item.scriptPath = procRes.script_path || '';
+          renderActiveDetails();
+          log(`🎉 [${item.name}] XỬ LÝ HOÀN TẤT ĐỒNG BỘ! Video: ${item.outputPath}`, 'success');
+          if (item.thumbnailPath) log(`🖼 Thumbnail đã tạo: ${item.thumbnailPath}`, 'success');
         } else {
           throw new Error(procRes?.error || 'Lỗi xử lý video');
         }
