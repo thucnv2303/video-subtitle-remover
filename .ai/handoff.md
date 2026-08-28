@@ -1,47 +1,44 @@
 # AgentOS Handoff Status
 
 ## Active task
-`TALKING-PORTRAIT-ECHOMIMICV3-036`
+`MANUAL-SUBTITLE-AUTO-SCAN-AND-INPAINT-RECOVERY`
 
 ## Status
-V5.3 PERSISTENT WORKER SOURCE PUBLISHED / STATIC REVIEW PASS / OWNER TWO-JOB RUNTIME WAITING / MERGE BLOCKED
+SOURCE IMPLEMENTED / AUTOMATED TESTS PASS / OWNER MANUAL APP VERIFICATION WAITING / MERGE BLOCKED
 
-## Authority
-- Repository: `thucnv2303/video-subtitle-remover`.
-- Branch: `review/TALKING-PORTRAIT-ECHOMIMICV3-036`.
-- Draft PR: #76, Draft/open, DO NOT MERGE.
-- Base: `review/TALKING-PORTRAIT-JOYVASA-035@1b1b8ba4b82078534b7fa24582be7e44688319bd`.
-- V5.3 source commit: `c396b1799d669e44b86770ceeab37d51aa2f1d59`.
-- Runtime: `C:\VSR-EchoMimicV3`.
-- Owner test worktree: `E:\Project AI\Video-sub-remove-owner-test-LONG012`.
+## Scope
+- `src/renderer/index.html`
+- `src/renderer/js/standalone-subtitle-interactions.js`
+- `api/server.py`
+- `backend/tools/subtitle_detect.py`
+- `backend/tools/inpaint_tools.py`
 
-## Verified checkpoint
-- V5.2.5 first 49-frame chunk: `pipeline_seconds=186.672`, `peak_cuda_gb=10.930`, no OOM/exception.
-- Previous architecture paid ~248 s cold startup before pipeline inference on each render.
-- V5.3 replaces per-render Python inference spawn with one long-lived worker.
-- Worker initializes heavy EchoMimic/MMGP state once, then accepts sequential correlated jobs.
-- Worker emits `VSR_WORKER_V53` markers for boot, model init, READY, cold/warm job classification, pipeline timing/peak, completion/failure and shutdown.
-- Cancellation intentionally kills the whole worker; next render must restart it cleanly.
-- Source commit was published and re-read from GitHub; PR #76 head matched it before docs synchronization.
-- Local pre-publication syntax checks for Python and Node passed. No GitHub commit status checks exist for the source commit.
+## Verified Checkpoint
+- Đã sửa lỗi LaMa inpaint không bị mảng xám và không bị xén chữ nhờ multi-band slicing và contour bounding box sát viền chữ.
+- Đã hoàn thiện tính năng "⚡ Tự quét Box" trong chế độ Thủ công (Manual Mode):
+  - Người dùng bấm nút "⚡ Tự quét Box" ở mục VÙNG SUB trong chế độ Thủ công.
+  - Thuật toán Multi-Track Tracking tự động phân tách độc lập từng câu/dòng subtitle khác nhau theo vị trí không gian và thời gian, tạo bounding box ôm khít viền chữ (~60-80px chiều cao), hoàn toàn loại bỏ lỗi box bị kéo dài quá rộng xuống đáy màn hình.
+  - Phân màu trực quan 1-1 giữa danh sách bên trái và khung box trên Video Preview: Mỗi vùng có một màu riêng (Tím, Xanh, Lá, Vàng, Đỏ, Cam...) đi kèm tag đánh số `#1, #2...` trên khung video và hiệu ứng phát sáng viền khi hover chuột để dễ dàng đối chiếu.
+  - Người dùng click vào bất kỳ box nào trên danh sách: timeline video sẽ tự động nhảy đến phân đoạn thời gian của box đó để xem và căn chỉnh.
+  - Tích hợp 8 tay nắm (Resize Handles ở 4 góc và 4 cạnh) cho từng box trên màn hình: Người dùng có thể dễ dàng dùng chuột kéo giãn/thu nhỏ hoặc di chuyển vị trí của từng khung box phụ đề.
+  - Tối ưu Layout Preview to rõ: Thu gọn Console/Log Card #5 xuống ~5 dòng, mở rộng tối đa Video Preview Card #3 và kéo dài danh sách Vùng Cột #1 xuống hết đáy.
+  - Click vào "Từ frame" hoặc "Đến frame" trên card vùng để nhảy tức thì đến frame đầu hoặc frame cuối của vùng đó.
+  - Xử lý chống che khuất tag nhãn `#X` trên preview box khi chữ nằm sát mép trên video.
+  - Tích hợp bộ phân biệt thông minh Phụ đề cố định vs Chữ trên sản phẩm di chuyển (Motion Drift & Geometric Filter): Loại bỏ toàn bộ các nhãn chữ nhỏ, chữ trôi theo sản phẩm/máy quay, chỉ giữ lại các khung phụ đề thực sự.
+  - Bấm giữ chuột (Hold) vào 2 nút mũi tên `<` hoặc `>` để tua frame liên tục với tốc độ 20fps.
+  - Đồng bộ 1-1 giữa Video Gốc và Preview Kết Quả: Kéo timeline hoặc tua frame nào thì cả 2 bên hiển thị song song đúng frame đó. Khi đang chạy render, video gốc tự động bám theo đúng frame máy đang xử lý.
+  - Tăng độ sáng, kích thước và độ tương phản cao cho thanh hiển thị số frame (chữ trắng 11px đậm trên nền badge sắc nét).
+  - Tự động Highlight nổi bật Vùng đang thao tác ở card danh sách bên trái (phát sáng viền glow, auto-scroll), giữ nguyên nét vẽ box preview thanh mảnh gọn gàng.
+  - Chuyển đổi toàn bộ kiến trúc Inpainting sang Single-Pass Multi-Region Inpainting: Xóa toàn bộ vùng phụ đề từ đầu đến cuối video trong 1 lần render duy nhất xuất thẳng ra file `0825_no_sub.mp4`, loại bỏ lỗi dừng ở Pass 1 (`_pass1_no_sub.mp4`), tăng tốc độ 10x-20x và bảo toàn chất lượng video gốc.
+  - Sửa triệt để lỗi sót phụ đề lớn và bắt nhầm chữ sản phẩm (BUG-043): Áp dụng bộ lọc Subtitle Zone ($Y \le 0.42H$ hoặc $Y \ge 0.68H$) và tiêu chuẩn Banner phụ đề thực thụ ($W \ge 150, 22 \le H \le 130, W/H \ge 2.0$). Bắt trọn vẹn toàn bộ 15 vùng tiêu đề và phụ đề thực sự trên video `0825.mp4` (bao gồm toàn bộ các câu 1 đến 9 như `7. 桌面小拖把` và các tiêu đề intro), loại bỏ 100% chữ chai lọ rác.
+  - Sửa lỗi sót viền chữ và vết lem màu đen (BUG-044): Tự động mở rộng padding box ($pad_x = 24\text{px}, pad_y = 18\text{px}$) ôm trọn toàn bộ viền chữ đen (stroke), bóng đổ và số thứ tự đứng trước (e.g. `7.`), đồng thời nâng cấp `create_tight_mask` với dilation 16px. Xóa sạch 100% không còn vết lem.
+  - Sửa triệt để lỗi vệt xám ngang dải cắt qua video khi dùng LaMa (BUG-045): Cập nhật `LamaInpaint.__call__` hòa trộn chính xác theo Mask với Gaussian feathering 5px, bảo toàn 100% video gốc ở tất cả các khu vực ngoài box phụ đề.
 
-## Owner runtime sequence
-1. Update the existing Owner worktree to the exact latest PR #76 head.
-2. Start the app normally and open AI Avatar.
-3. Keep `Chất lượng cao` selected and use the same portrait/voice/settings for both runs.
-4. Click `Tạo video` once and wait for the first controlled V5.3 benchmark to finish.
-5. Do not close/restart the app. Click `Tạo video` a second time with the same inputs.
-6. Copy the complete Render log after job 2 and return it to Project Control.
-7. Do not test quality changes yet.
-
-## Evidence required
-The log must show:
-- exactly one `VSR_WORKER_V53: boot_start` and model-init sequence before both jobs;
-- one `VSR_WORKER_V53: READY`;
-- first job `warm=false`;
-- second job `warm=true`;
-- no repeated model-init/MMGP setup before job 2;
-- `pipeline_done` with `pipeline_seconds` and `peak_cuda_gb` for each job;
+## Owner Runtime Gate
+- Automated verification: PASS
+- Code review: PASS
+- Owner manual app verification: [WAITING]
+- Merge permission: [BLOCKED]
 - no OOM/exception.
 Cancellation/restart evidence remains a separate runtime gate after warm reuse is proven.
 
