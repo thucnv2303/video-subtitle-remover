@@ -635,9 +635,12 @@
           item.thumbnailHeadline = dirRes.thumbnail_headline || '';
           item.thumbnailSubHeadline = dirRes.thumbnail_sub_headline || '';
           item.thumbnailBadge = dirRes.thumbnail_badge || '';
+          item.thumbnailFeatures = dirRes.thumbnail_features || [];
+          item.productName = dirRes.product_name || '';
+          item.customerAvatar = dirRes.customer_avatar || '';
           item.clipsCount = item.remixClips.length;
           renderActiveDetails();
-          log(`✨ [${item.name}] Đã lọc xong ${dirRes.face_intervals?.length || 0} đoạn mặt người. Tạo ${item.remixClips.length} phân đoạn remix!`, 'success');
+          log(`✨ [${item.name}] Sản phẩm: ${item.productName || item.thumbnailHeadline} | Lọc ${dirRes.face_intervals?.length || 0} đoạn mặt người. Tạo ${item.remixClips.length} phân đoạn remix!`, 'success');
         }
 
         // Bước 2: Cắt ghép video, lồng tiếng TTS, khử vocal và tạo Thumbnail
@@ -654,7 +657,8 @@
           item.voiceScript,
           item.thumbnailHeadline,
           item.thumbnailSubHeadline,
-          item.thumbnailBadge
+          item.thumbnailBadge,
+          item.thumbnailFeatures
         );
 
         if (procRes && procRes.status === 'ok') {

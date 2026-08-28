@@ -284,7 +284,7 @@ class APIClient {
     return r.json();
   }
 
-  async aiRemixProcessSingleVideo(videoPath, outputPath = null, ttsVoice = 'default', mode = 'lossless', removeVocal = true, generateThumbnail = true, aiConfig = null, remixClips = null, voiceoverScript = null, headline = null, subHeadline = null, badgeText = null) {
+  async aiRemixProcessSingleVideo(videoPath, outputPath = null, ttsVoice = 'default', mode = 'lossless', removeVocal = true, generateThumbnail = true, aiConfig = null, remixClips = null, voiceoverScript = null, headline = null, subHeadline = null, badgeText = null, features = null) {
     const r = await fetch(`${this.base}/api/ai-remix/process-single-video`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -300,7 +300,8 @@ class APIClient {
         voiceover_script: voiceoverScript,
         headline,
         sub_headline: subHeadline,
-        badge_text: badgeText
+        badge_text: badgeText,
+        features
       })
     });
     return r.json();
