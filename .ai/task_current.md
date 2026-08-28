@@ -1,12 +1,12 @@
 # Current Task
 
 ## Task Name
-`UPGRADE-AI-VOICEOVER-MATCH-DURATION-AND-ECOMMERCE-THUMBNAIL`
+`RESPONSIVE-FULLSCREEN-LAYOUT-SELECTION-CHECKBOX-AND-CANCEL-BATCH`
 
 ## Objective
-1. Nâng cấp AI Director phân tích sâu ngữ cảnh sản phẩm, chân dung khách hàng & nỗi đau.
-2. Tự động tính toán và sinh kịch bản Voiceover độ dài chuẩn khớp 100% thời lượng video remix.
-3. Nâng cấp Thumbnail Studio thiết kế E-Commerce Banner bắt mắt, nhận diện rõ tên sản phẩm và 3 cam kết tính năng vàng.
+1. Tối ưu tỷ lệ màn hình 100% full-width, loại bỏ co cụm, tỷ lệ 3 cột thoáng đẹp.
+2. Thêm checkbox chọn từng job hoặc chọn tất cả, kèm nút "▶ Chạy" riêng lẻ từng job.
+3. Thêm trạng thái và nút "⛔ HỦY XỬ LÝ (CANCEL)" khi tiến trình đang chạy.
 - Scope: `src/renderer/js/ai-auto-remix.js`, `src/renderer/styles/ai-auto-remix.css`.
 
 ## User outcome
