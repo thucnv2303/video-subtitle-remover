@@ -5,132 +5,17 @@ let legacyMigrated = false;
 let refAudioPath = null;
 let lastVoice = localStorage.getItem('tts_voice') || 'default';
 
-mountSettings();
-ensureStyles();
-
 function ensureStyles() {
-  if (document.querySelector('link[data-settings-approved]')) return;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = 'styles/settings-approved.css';
-  link.dataset.settingsApproved = 'true';
-  document.head.appendChild(link);
-}
-
-function mountSettings() {
-  const root = document.querySelector('#page-settings .settings-scroll');
-  if (!root || root.dataset.approvedMounted === 'true') return;
-  root.innerHTML = `
-  <div class="settings-view active" data-settings-view="overview">
-    <div class="approved-page-header"><h1>Cài đặt</h1><p>Tùy chỉnh các tùy chọn AI, TTS, lưu trữ và kiểm tra trạng thái hệ thống.</p></div>
-    <div class="settings-overview-grid">
-      ${overviewCard('ai','AI','1. AI & Model','Cấu hình nhà cung cấp AI, model và prompt mặc định.','overview-ai-provider','Gemini','overview-ai-model','Chưa chọn model')}
-      ${overviewCard('tts','TTS','2. TTS & Giọng đọc','Ngôn ngữ, giọng mặc định, voice clone và âm lượng nền.','overview-tts-language','Tiếng Việt','overview-tts-voice','Không lồng tiếng')}
-      ${overviewCard('storage','DIR','3. Lưu trữ','Quản lý thư mục lưu và xem các loại tệp đầu ra.','overview-output-dir','Mặc định cùng thư mục video','','')}
-      ${overviewCard('system','SYS','4. Trạng thái hệ thống','Theo dõi Backend, GPU và TTS engine.','overview-backend-status','Backend: Chưa kiểm tra','overview-gpu-status','Compute: Chưa kiểm tra')}
-    </div>
-  </div>
-
-  <div class="settings-view" data-settings-view="ai">
-    ${backButton()}
-    <div class="approved-page-header detail-header"><h1>AI & Model</h1><p>Cấu hình nhà cung cấp AI dùng cho phân tích và viết lại nội dung.</p></div>
-    <section class="approved-panel approved-ai-panel">
-      <div class="approved-panel-title"><span class="panel-title-icon">AI</span><h2>AI & Model</h2></div>
-      <div class="approved-form-row provider-row">
-        <label>Nhà cung cấp AI</label>
-        <div class="provider-segment">
-          <button class="provider-btn disabled-provider" type="button" disabled title="Runtime hiện tại chưa hỗ trợ OpenAI">OpenAI</button>
-          <button class="provider-btn" type="button" data-provider="gemini">Gemini</button>
-          <button class="provider-btn" type="button" data-provider="deepseek">DeepSeek</button>
-          <button class="provider-btn" type="button" data-provider="ollama">Ollama</button>
-        </div>
-        <select id="ai-provider" class="approved-hidden-control" tabindex="-1"><option value="gemini">Gemini</option><option value="deepseek">DeepSeek</option><option value="ollama">Ollama</option></select>
-      </div>
-      <div class="approved-form-row" id="ai-api-key-group">
-        <label for="ai-api-key">API Key</label>
-        <div class="field-with-actions"><input id="ai-api-key" type="password" class="approved-input" autocomplete="off" placeholder="Nhập API key"><button id="btn-toggle-api-key" class="icon-field-btn" type="button">◉</button><button id="btn-check-ai-key" class="approved-secondary-btn compact" type="button">Kiểm tra</button></div>
-        <p class="field-help">API key được lưu cục bộ và chỉ dùng cho provider đang chọn.</p>
-      </div>
-      <div class="approved-form-row" id="ai-model-group"><label for="ai-model">Model</label><input id="ai-model" class="approved-input" list="ai-model-suggestions" placeholder="Nhập hoặc chọn model"><datalist id="ai-model-suggestions"><option value="gemini-2.5-flash"><option value="gemini-2.5-pro"><option value="deepseek-chat"><option value="deepseek-reasoner"><option value="qwen3-coder:30b"></datalist><p class="field-help">Model được lưu riêng cho từng provider.</p></div>
-      <div class="approved-form-row" id="ai-endpoint-group"><label for="ai-endpoint">Ollama endpoint</label><input id="ai-endpoint" class="approved-input" placeholder="http://localhost:11434/api/chat"><p class="field-help">Chỉ áp dụng cho Ollama local.</p></div>
-      <div class="approved-form-row"><label for="ai-prompt">Prompt mặc định</label><textarea id="ai-prompt" class="approved-input approved-textarea" rows="4"></textarea><p class="field-help">Được dùng khi Pipeline 1 không chọn prompt khác.</p></div>
-      <div class="approved-actions-row"><button id="settings-btn-manage-prompts" class="approved-secondary-btn" type="button">☷ Quản lý Prompt</button><button id="btn-check-ai" class="approved-secondary-btn primary-outline" type="button">⌁ Kiểm tra kết nối</button><button id="btn-save-ai" class="approved-primary-btn" type="button">Lưu thay đổi</button></div>
-      <div id="settings-ai-status" class="inline-status"></div>
-    </section>
-  </div>
-
-  <div class="settings-view" data-settings-view="tts">
-    ${backButton()}
-    <div class="approved-page-header detail-header"><h1>TTS & Giọng đọc</h1><p>Cấu hình chuyển văn bản thành giọng nói và quản lý giọng đọc clone.</p></div>
-    <section class="approved-panel approved-tts-panel">
-      <div class="approved-panel-title with-status"><div><span class="panel-title-icon">TTS</span><h2>1. TTS & Giọng đọc</h2></div><span id="tts-status-chip" class="status-chip">Đang kiểm tra...</span></div>
-      <div class="tts-enable-row"><span>Bật TTS</span><label class="approved-switch"><input id="tts-enabled" type="checkbox"><span></span></label></div>
-      <div class="approved-two-col">
-        <div class="approved-form-row compact-field"><label for="tts-language">Ngôn ngữ</label><select id="tts-language" class="approved-input"><option value="vi">Tiếng Việt</option><option value="en">English</option><option value="zh">中文</option><option value="ja">日本語</option><option value="ko">한국어</option></select></div>
-        <div class="approved-form-row compact-field"><label for="tts-voice">Giọng mặc định</label><select id="tts-voice" class="approved-input"><option value="none">Không lồng tiếng</option><option value="default">Giọng mặc định (OmniVoice)</option><option value="vi-VN-HoaiMyNeural">Nữ - Hoài My (Neural)</option><option value="vi-VN-NamMinhNeural">Nam - Nam Minh (Neural)</option><option value="zh-CN-XiaoxiaoNeural">Xiaoxiao - Trung Quốc</option><option value="zh-CN-YunxiNeural">Yunxi - Trung Quốc</option><option value="en-US-JennyNeural">Jenny - English</option><option value="en-US-GuyNeural">Guy - English</option></select></div>
-      </div>
-      <div class="section-divider"></div>
-      <div class="clone-list-heading"><h3>Danh sách giọng clone</h3><button id="settings-add-voice" class="approved-secondary-btn primary-outline" type="button">＋ Thêm giọng clone</button></div>
-      <div id="saved-voices-list" class="approved-voice-list"><div class="voice-empty">Chưa có giọng clone nào.</div></div>
-      <div id="clone-editor" class="clone-editor hidden">
-        <div class="approved-two-col"><div class="approved-form-row compact-field"><label for="clone-voice-name">Tên giọng</label><input id="clone-voice-name" class="approved-input" placeholder="VD: Giọng của tôi"></div><div class="approved-form-row compact-field"><label>Audio mẫu 3–15 giây</label><div class="file-inline"><button id="btn-upload-ref-audio" class="approved-secondary-btn" type="button">Chọn audio</button><span id="ref-audio-name">Chưa chọn file</span></div><audio id="ref-audio-preview" class="hidden-audio" controls></audio></div></div>
-        <button id="btn-clone-voice" class="approved-primary-btn" type="button" disabled>Thêm giọng clone</button>
-      </div>
-      <div class="tts-controls-row"><button id="btn-test-tts" class="approved-secondary-btn" type="button">▷ Nghe thử</button><textarea id="tts-test-text" class="approved-hidden-control" tabindex="-1">Xin chào, đây là giọng đọc được tạo bởi Video Subtitle Remover.</textarea><audio id="tts-test-audio" class="tts-test-audio" controls></audio><div class="volume-control"><span>Âm lượng nhạc nền</span><span>◖</span><input id="tts-bg-volume" type="range" min="0" max="100" value="10"><span id="vol-label" class="volume-value">10%</span></div></div>
-      <div class="section-divider"></div>
-      <div class="approved-two-col tts-checkbox-grid"><label class="approved-check-row"><input id="tts-remove-vocal" type="checkbox"><span><strong>Xóa giọng gốc</strong><small>Loại bỏ giọng nói gốc trong video (nếu có)</small></span></label><label class="approved-check-row"><input type="checkbox" checked disabled><span><strong>Giữ nhạc nền</strong><small>Giữ lại nhạc nền gốc của video</small></span></label></div>
-    </section>
-  </div>
-
-  <div class="settings-view" data-settings-view="storage">
-    ${backButton('‹ Cài đặt  ›  Lưu trữ')}
-    <div class="approved-page-header detail-header"><h1>Lưu trữ</h1><p>Quản lý thư mục lưu trữ và xem các tệp đầu ra được tạo ra sau khi xử lý video.</p></div>
-    <section class="approved-panel storage-panel">
-      <div class="approved-panel-title"><span class="panel-title-icon">DIR</span><h2>Lưu trữ</h2></div>
-      <div class="approved-form-row"><label>Thư mục đầu ra</label><div class="storage-path-row"><div id="output-dir-text" class="approved-input output-path-display">Mặc định (cùng thư mục video gốc)</div><button id="btn-output-dir" class="approved-secondary-btn" type="button">▱ Chọn thư mục</button></div></div>
-      <div class="current-path-block"><strong>Đường dẫn hiện tại</strong><span id="output-dir-current">Mặc định cùng thư mục video gốc</span></div>
-      <div class="section-divider"></div>
-      <div class="output-files-block"><h3>Các tệp đầu ra sẽ được tạo</h3><p>Sau khi xử lý, mỗi video có thể sinh ra các tệp sau trong thư mục đầu ra:</p><div class="output-file-list"><div><span class="file-icon">▣</span><strong>*_no_sub.mp4</strong><span>Video đã xóa phụ đề cháy, giữ nguyên timeline.</span></div><div><span class="file-icon">▣</span><strong>*_with_voice.mp4</strong><span>Video trung gian sau khi ghép voice theo kế hoạch xử lý.</span></div><div><span class="file-icon">▣</span><strong>*_final.mp4</strong><span>Video cuối cùng sau khi Pipeline 3 hoàn tất.</span></div></div><p class="storage-note">ⓘ Các tệp này được lưu trong thư mục đầu ra đã chọn ở trên.</p></div>
-    </section>
-  </div>
-
-  <div class="settings-view" data-settings-view="system">
-    ${backButton()}
-    <div class="approved-page-header detail-header"><h1>Trạng thái hệ thống</h1><p>Theo dõi trạng thái các thành phần cốt lõi của hệ thống.</p></div>
-    <section class="approved-panel system-panel">
-      <div class="system-grid"><div class="system-service-list">
-        ${serviceRow('PY','Backend Python','Xử lý tác vụ chính và điều phối hệ thống','backend-status-chip','Chưa kiểm tra','system-backend-meta','Python service')}
-        ${serviceRow('GPU','GPU','Tăng tốc xử lý và mã hóa video','gpu-status-chip','Chưa kiểm tra','gpu-detail','Đang phát hiện...')}
-        ${serviceRow('TTS','TTS engine','Chuyển văn bản thành giọng nói','system-tts-status-chip','Chưa kiểm tra','system-tts-meta','TTS service')}
-        <div id="gpu-chip" class="approved-hidden-control"><span class="status-dot"></span><span>—</span></div><span id="cuda-version" class="approved-hidden-control">—</span>
-      </div><div id="system-summary-card" class="system-summary-card"><div class="shield-mark">✓</div><h2 id="system-summary-title">Đang kiểm tra hệ thống</h2><p id="system-summary-copy">Trạng thái tổng thể sẽ cập nhật sau khi hoàn tất kiểm tra.</p></div></div>
-      <button id="btn-refresh-diagnostics" class="approved-secondary-btn refresh-system-btn" type="button">↻ Kiểm tra lại</button>
-    </section>
-  </div>`;
-  root.dataset.approvedMounted = 'true';
-  ensureSidebarNote();
-}
-
-function overviewCard(target, icon, title, copy, id1, text1, id2, text2) {
-  const meta = id2 ? `<div class="overview-meta"><span id="${id1}">${text1}</span><span id="${id2}">${text2}</span></div>` : `<div class="overview-meta overview-meta-single"><span id="${id1}">${text1}</span></div>`;
-  return `<button class="settings-overview-card" type="button" data-settings-target="${target}"><div class="overview-card-icon">${icon}</div><div class="overview-card-body"><h2>${title}</h2><p>${copy}</p>${meta}</div><span class="overview-arrow">›</span></button>`;
-}
-function backButton(text='‹ Cài đặt') { return `<button class="settings-back" type="button" data-settings-target="overview">${text}</button>`; }
-function serviceRow(icon,title,copy,chipId,chipText,metaId,metaText) { return `<div class="system-service-row"><div class="service-icon">${icon}</div><div class="service-copy"><h3>${title}</h3><p>${copy}</p></div><div class="service-state"><span id="${chipId}" class="status-chip">${chipText}</span><small id="${metaId}">${metaText}</small></div></div>`; }
-
-function ensureSidebarNote() {
-  const footer = document.querySelector('.sidebar-footer');
-  if (!footer || footer.querySelector('.settings-shell-note')) return;
-  const note = document.createElement('div');
-  note.className = 'settings-shell-note';
-  note.innerHTML = '<span>ⓘ</span><p>Thay đổi cài đặt sẽ được áp dụng cho các dự án mới và tác vụ tiếp theo.</p>';
-  footer.prepend(note);
 }
 
 export function initSettings() {
-  mountSettings();
-  bindShell(); bindViews(); bindProvider(); bindAi(); bindTts(); bindVoiceClone(); bindOutputDir(); bindDiagnostics();
-  renderSavedVoices(); loadSettingsValues(); refreshDiagnostics();
+  bindProvider();
+  bindAi();
+  bindTts();
+  bindOutputDir();
+  bindDiagnostics();
+  loadSettingsValues();
+  refreshDiagnostics();
 }
 window.initSettings = initSettings;
 if (document.readyState === 'loading') {
@@ -155,7 +40,6 @@ function bindViews() {
 }
 
 export function showView(name = 'overview') {
-  mountSettings();
   const views = document.querySelectorAll('#page-settings .settings-view');
   let matched = false;
   views.forEach(v => {
