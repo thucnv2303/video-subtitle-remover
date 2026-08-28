@@ -617,141 +617,142 @@
 
       <!-- ===== SETTINGS PAGE ===== -->
       <section id="page-settings" class="page">
-        <div class="settings-scroll">
-          <div class="settings-header"><h2>⚙️ Cài đặt</h2></div>
+        <div class="settings-scroll" style="padding: 24px 32px; max-width: 1080px; margin: 0 auto;">
+          <div class="settings-header" style="margin-bottom: 24px;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #f1f5f9; margin: 0 0 6px 0;">⚙️ Cài đặt hệ thống</h2>
+            <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">Quản lý API Key AI, cấu hình giọng đọc TTS, thư mục xuất file và phần cứng.</p>
+          </div>
 
           <!-- AI Settings -->
-          <div class="settings-card">
-            <h3>🤖 AI & Lồng tiếng</h3>
-            <div class="form-group">
-              <label class="form-label">Nhà cung cấp AI</label>
-              <select id="ai-provider" class="dropdown form-input">
-                <option value="gemini">Google Gemini</option>
-                <option value="deepseek">DeepSeek</option>
-                <option value="ollama">Local (Ollama)</option>
+          <div class="settings-card" style="background: var(--surface, #0f172a); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+              <h3 style="margin:0; font-size: 1.1rem; color: #38bdf8;">🤖 AI & Viết kịch bản</h3>
+              <button id="settings-btn-manage-prompts" class="btn btn-sm btn-ghost" type="button">📋 Quản lý Prompt</button>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label" style="display:block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Nhà cung cấp AI (Provider)</label>
+              <select id="ai-provider" class="dropdown form-input" style="width: 100%; height: 38px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; padding: 0 10px;">
+                <option value="gemini">Google Gemini (Khuyên dùng - Nhanh, Thông minh, Miễn phí)</option>
+                <option value="deepseek">DeepSeek (V3 / R1 - Siêu rẻ, Tiếng Việt chuẩn)</option>
+                <option value="ollama">Local AI (Ollama - Chạy offline trên máy)</option>
               </select>
             </div>
-            <div class="form-group">
-              <label class="form-label">API Key / Tên Model (Ollama)</label>
-              <input type="password" id="ai-api-key" class="form-input" placeholder="Nhập API Key hoặc tên model (VD: gemma4:12b)...">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Endpoint URL (Ollama)</label>
-              <input type="text" id="ai-endpoint" class="form-input" placeholder="VD: http://localhost:11434/api/chat">
-            </div>
-            <div class="form-divider"></div>
 
-            <!-- OmniVoice TTS Section -->
-            <h3 style="margin-top:8px">🎤 Lồng tiếng AI (OmniVoice TTS)</h3>
-            <div class="form-group">
-              <label class="form-label">Trạng thái TTS</label>
-              <div class="tts-status-row">
-                <span class="status-chip" id="tts-status-chip">⏳ Đang kiểm tra...</span>
+            <div id="ai-api-key-group" class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label" style="display:block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">API Key</label>
+              <div style="display:flex; gap: 8px;">
+                <input type="password" id="ai-api-key" class="form-input" placeholder="Nhập API Key của Gemini hoặc DeepSeek..." style="flex:1; height: 38px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; padding: 0 10px;">
+                <button id="btn-toggle-api-key" class="btn btn-sm btn-ghost" type="button" style="padding: 0 12px;">👁</button>
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Chọn giọng đọc</label>
-              <select id="tts-voice" class="dropdown form-input">
-                <option value="none">Không lồng tiếng</option>
-                <option value="default">Giọng mặc định (OmniVoice)</option>
-                <option value="vi-VN-HoaiMyNeural">Hoài My (Nữ, Miền Nam)</option>
-                <option value="vi-VN-NamMinhNeural">Nam Minh (Nam, Miền Bắc)</option>
-                <option value="zh-CN-XiaoxiaoNeural">Xiaoxiao (Nữ, Tiếng Trung)</option>
-                <option value="zh-CN-YunxiNeural">Yunxi (Nam, Tiếng Trung)</option>
-                <option value="en-US-JennyNeural">Jenny (Nữ, Tiếng Anh)</option>
-                <option value="en-US-GuyNeural">Guy (Nam, Tiếng Anh)</option>
-              </select>
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label" style="display:block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Tên Model (Tùy chọn)</label>
+              <input type="text" id="ai-model" class="form-input" placeholder="VD: gemini-2.0-flash, deepseek-chat, gemma4:12b..." style="width: 100%; height: 38px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; padding: 0 10px;">
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Ngôn ngữ</label>
-              <select id="tts-language" class="dropdown form-input">
-                <option value="vi">🇻🇳 Tiếng Việt</option>
-                <option value="en">🇺🇸 English</option>
-                <option value="zh">🇨🇳 中文</option>
-                <option value="ja">🇯🇵 日本語</option>
-                <option value="ko">🇰🇷 한국어</option>
-              </select>
+            <div id="ai-endpoint-group" class="form-group" style="margin-bottom: 14px; display:none;">
+              <label class="form-label" style="display:block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Endpoint URL (Ollama Local)</label>
+              <input type="text" id="ai-endpoint" class="form-input" placeholder="VD: http://localhost:11434/api/chat" style="width: 100%; height: 38px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; padding: 0 10px;">
             </div>
 
-            <div class="form-group">
-              <label class="form-label"><span>Âm lượng gốc (Nhạc nền)</span><span id="vol-label" class="vol-val">10%</span></label>
-              <input type="range" id="tts-bg-volume" min="0" max="100" value="10">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 18px;">
+              <span id="settings-ai-status" style="font-size: 0.82rem; color: #94a3b8;">Trạng thái: Sẵn sàng cấu hình</span>
+              <div style="display:flex; gap: 8px;">
+                <button id="btn-check-ai" class="btn btn-secondary btn-sm" type="button">Kiểm tra kết nối</button>
+                <button id="btn-save-ai" class="btn btn-primary btn-sm" type="button" style="background: #3b82f6; color: #fff; font-weight: 600;">💾 Lưu cài đặt AI</button>
+              </div>
             </div>
-            
-            <div class="form-group" style="margin-top: 10px;">
-              <label class="chk-label" title="Sử dụng AI để tách nhạc nền, xóa hoàn toàn giọng nói gốc của video. Sẽ tốn thêm thời gian xử lý.">
+          </div>
+
+          <!-- OmniVoice / TTS Section -->
+          <div class="settings-card" style="background: var(--surface, #0f172a); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+              <h3 style="margin:0; font-size: 1.1rem; color: #38bdf8;">🎤 Lồng tiếng AI (TTS Engine)</h3>
+              <span class="status-chip" id="tts-status-chip" style="font-size: 0.8rem;">⏳ Đang kiểm tra...</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+              <div class="form-group">
+                <label class="form-label" style="display:block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Giọng đọc mặc định</label>
+                <select id="tts-voice" class="dropdown form-input" style="width: 100%; height: 38px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; padding: 0 10px;">
+                  <option value="none">Không lồng tiếng</option>
+                  <option value="default">Giọng mặc định (OmniVoice)</option>
+                  <option value="vi-VN-HoaiMyNeural">Hoài My (Nữ, Miền Nam)</option>
+                  <option value="vi-VN-NamMinhNeural">Nam Minh (Nam, Miền Bắc)</option>
+                  <option value="zh-CN-XiaoxiaoNeural">Xiaoxiao (Nữ, Tiếng Trung)</option>
+                  <option value="zh-CN-YunxiNeural">Yunxi (Nam, Tiếng Trung)</option>
+                  <option value="en-US-JennyNeural">Jenny (Nữ, Tiếng Anh)</option>
+                  <option value="en-US-GuyNeural">Guy (Nam, Tiếng Anh)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" style="display:block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Ngôn ngữ</label>
+                <select id="tts-language" class="dropdown form-input" style="width: 100%; height: 38px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; padding: 0 10px;">
+                  <option value="vi">🇻🇳 Tiếng Việt</option>
+                  <option value="en">🇺🇸 English</option>
+                  <option value="zh">🇨🇳 中文</option>
+                  <option value="ja">🇯🇵 日本語</option>
+                  <option value="ko">🇰🇷 한국어</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label" style="display:flex; justify-content:space-between; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">
+                <span>Âm lượng gốc (Nhạc nền)</span>
+                <span id="vol-label" class="vol-val" style="color: #38bdf8;">10%</span>
+              </label>
+              <input type="range" id="tts-bg-volume" min="0" max="100" value="10" style="width: 100%;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="chk-label" style="display:flex; align-items:center; gap: 8px; font-size: 0.88rem; color: #cbd5e1; cursor: pointer;">
                 <input type="checkbox" id="tts-remove-vocal">
-                <span>Xóa giọng gốc (Chỉ gi�            <button id="btn-clone-voice" class="btn btn-accent" style="margin-top:4px" disabled>🧬 Thêm giọng clone</button>
-
-            <div class="form-divider"></div>
-
-            <!-- Saved Voices List -->
-            <h3>📋 Giọng đã lưu</h3>
-            <div id="saved-voices-list" class="saved-voices-list">
-              <div class="voice-empty">Chưa có giọng clone nào.</div>
+                <span>Khử sạch giọng nói gốc của video (chỉ giữ nhạc nền khi lồng tiếng mới)</span>
+              </label>
             </div>
-
-            <div class="form-divider"></div>
 
             <!-- Test TTS -->
-            <h3>🔊 Thử giọng</h3>
-            <div class="form-group">
-              <textarea id="tts-test-text" class="form-input" rows="2" placeholder="Nhập text để thử giọng...">Xin chào, đây là giọng đọc được tạo bởi OmniVoice.</textarea>
-            </div>
-            <div class="tts-test-row">
-              <button id="btn-test-tts" class="btn btn-primary">▶ Thử phát</button>
-              <audio id="tts-test-audio" controls style="flex:1;display:none"></audio>
-            </div>
-
-            <div class="form-divider"></div>
-            <button id="btn-save-ai" class="btn btn-primary" style="margin-top:12px;">💾 Lưu cài đặt AI</button>
-          </div>
-
-          <!-- Storage -->
-          <div class="settings-card">
-            <h3>📁 Lưu trữ & Xuất file</h3>
-            <div class="setting-row">
-              <div><span class="form-label">Thư mục đầu ra</span><br><span class="form-desc" id="output-dir-text">Mặc định (cùng thư mục video gốc)</span></div>
-              <button class="btn btn-outline" id="btn-output-dir">Chọn thư mục</button>
+            <div style="background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; padding: 14px;">
+              <label class="form-label" style="display:block; font-size: 0.82rem; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">🔊 Thử giọng đọc</label>
+              <div style="display:flex; gap: 8px; margin-bottom: 8px;">
+                <input type="text" id="tts-test-text" class="form-input" value="Xin chào, đây là giọng đọc được tạo bởi AI." style="flex:1; height: 36px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; padding: 0 10px; font-size: 0.88rem;">
+                <button id="btn-test-tts" class="btn btn-secondary btn-sm" type="button" style="white-space:nowrap;">▶ Nghe thử</button>
+              </div>
+              <audio id="tts-test-audio" controls style="width: 100%; display:none; height: 32px; margin-top: 6px;"></audio>
             </div>
           </div>
 
-          <!-- Hardware -->
-          <div class="settings-card">
-            <h3>🖥 Phần cứng</h3>
-            <div class="setting-row">
-              <div><span class="form-label">GPU</span><br><span class="form-desc" id="gpu-detail">Đang phát hiện...</span></div>
-              <div class="gpu-chip" id="gpu-chip"><span class="status-dot"></span><span>—</span></div>
-            </div>
-            <div class="setting-row">
-              <div><span class="form-label">CUDA</span><br><span class="form-desc" id="cuda-version">—</span></div>
-            </div>
-          </div>
-        </div>
-      </section>></div>
-            <button id="btn-save-ai" class="btn btn-primary" style="margin-top:12px;">💾 Lưu cài đặt AI</button>
-          </div>
-
-          <!-- Storage -->
-          <div class="settings-card">
-            <h3>📁 Lưu trữ & Xuất file</h3>
-            <div class="setting-row">
-              <div><span class="form-label">Thư mục đầu ra</span><br><span class="form-desc" id="output-dir-text">Mặc định (cùng thư mục video gốc)</span></div>
-              <button class="btn btn-outline" id="btn-output-dir">Chọn thư mục</button>
+          <!-- Storage & Output -->
+          <div class="settings-card" style="background: var(--surface, #0f172a); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+            <h3 style="margin:0 0 16px 0; font-size: 1.1rem; color: #38bdf8; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">📁 Lưu trữ & Xuất file</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <span class="form-label" style="font-size: 0.88rem; font-weight: 600; color: #cbd5e1;">Thư mục đầu ra</span><br>
+                <span class="form-desc" id="output-dir-text" style="font-size: 0.82rem; color: #64748b;">Mặc định (cùng thư mục video gốc)</span>
+              </div>
+              <button class="btn btn-outline btn-sm" id="btn-output-dir" type="button">Chọn thư mục</button>
             </div>
           </div>
 
-          <!-- Hardware -->
-          <div class="settings-card">
-            <h3>🖥 Phần cứng</h3>
-            <div class="setting-row">
-              <div><span class="form-label">GPU</span><br><span class="form-desc" id="gpu-detail">Đang phát hiện...</span></div>
-              <div class="gpu-chip" id="gpu-chip"><span class="status-dot"></span><span>—</span></div>
+          <!-- Hardware Diagnostics -->
+          <div class="settings-card" style="background: var(--surface, #0f172a); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+              <h3 style="margin:0; font-size: 1.1rem; color: #38bdf8;">🖥 Phần cứng & Kết nối</h3>
+              <button id="btn-refresh-diagnostics" class="btn btn-sm btn-ghost" type="button">↻ Kiểm tra lại</button>
             </div>
-            <div class="setting-row">
-              <div><span class="form-label">CUDA</span><br><span class="form-desc" id="cuda-version">—</span></div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div style="background: rgba(0,0,0,0.25); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 0.8rem; color: #94a3b8;">GPU Tăng tốc</span><br>
+                <strong id="gpu-detail" style="font-size: 0.95rem; color: #f1f5f9;">Đang phát hiện...</strong>
+              </div>
+              <div style="background: rgba(0,0,0,0.25); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <span style="font-size: 0.8rem; color: #94a3b8;">CUDA Version</span><br>
+                <strong id="cuda-version" style="font-size: 0.95rem; color: #f1f5f9;">—</strong>
+              </div>
             </div>
           </div>
         </div>

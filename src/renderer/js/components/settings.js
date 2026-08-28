@@ -128,8 +128,15 @@ function ensureSidebarNote() {
 }
 
 export function initSettings() {
+  mountSettings();
   bindShell(); bindViews(); bindProvider(); bindAi(); bindTts(); bindVoiceClone(); bindOutputDir(); bindDiagnostics();
   renderSavedVoices(); loadSettingsValues(); refreshDiagnostics();
+}
+window.initSettings = initSettings;
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => initSettings(), { once: true });
+} else {
+  setTimeout(() => initSettings(), 0);
 }
 
 function bindShell() {
