@@ -689,10 +689,32 @@
       vrLog('Đang gửi văn bản tới AI LLM để tối ưu ngữ điệu và ngắt nhịp...', 'info');
 
       try {
+        const provider = localStorage.getItem('ai_provider') || 'ollama';
+        const model = (localStorage.getItem(`ai_model_${provider}`) || '').trim();
+        const endpoint = localStorage.getItem('ai_endpoint') || (provider === 'ollama' ? 'http://localhost:11434/api/chat' : '');
+        
+        let apiKeys = [];
+        try {
+          const raw = JSON.parse(localStorage.getItem(`ai_api_keys_${provider}`) || '[]');
+          if (Array.isArray(raw)) {
+            apiKeys = raw.map(item => typeof item === 'string' ? item : item?.key).filter(Boolean);
+          }
+        } catch {}
+
+        const legacyKey = (localStorage.getItem('ai_api_key') || '').trim();
+        if (legacyKey && !apiKeys.length) {
+          apiKeys = [legacyKey];
+        }
+
+        if (provider === 'ollama' && !apiKeys.length) {
+          apiKeys = [model || 'qwen2.5'];
+        }
+
         const aiConfig = {
-          provider: localStorage.getItem('ai_provider') || 'gemini',
-          api_keys: [localStorage.getItem('ai_api_key') || ''],
-          endpoint: localStorage.getItem('ai_endpoint') || '',
+          provider,
+          model: model || (provider === 'ollama' ? (apiKeys[0] || 'qwen2.5') : ''),
+          api_keys: apiKeys,
+          endpoint,
           prompt: 'Bạn là chuyên gia lồng tiếng Voice Talent. Hãy viết lại văn bản sau thành kịch bản nói tiếng Việt cực kỳ tự nhiên, câu ngắn 8-14 từ dễ lấy hơi, văn phong nói sống động. Dùng *từ khóa* để nhấn mạnh từ đắt giá, dùng ... để ngắt nhịp lấy hơi, dùng — để chuyển ý, viết số thành chữ. Trả về trực tiếp văn bản kịch bản hoàn chỉnh, không giải thích.',
         };
 

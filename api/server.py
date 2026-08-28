@@ -1194,29 +1194,38 @@ def api_ai_rewrite(req: AIRewriteReq):
             f.write(req.srt_content)
 
         ai_config = req.ai_config
-        provider = ai_config.get('provider', 'gemini')
-        api_keys = ai_config.get('api_keys', [])
-        if not api_keys:
-            api_keys = [ai_config.get('api_key', '')]
-        endpoint = ai_config.get('endpoint', '')
+        provider = str(ai_config.get('provider', 'gemini')).lower()
+        model = str(ai_config.get('model', '')).strip()
+        endpoint = str(ai_config.get('endpoint', '')).strip()
         prompt = ai_config.get('prompt', 'Hãy dịch các phụ đề sau sang Tiếng Việt. Giữ nguyên định dạng SRT.')
-        model = ai_config.get('model', '')
 
-        # Đếm số segment gốc và tổng số từ để AI không viết dài hơn
+        api_keys = ai_config.get('api_keys', [])
+        if not api_keys and ai_config.get('api_key'):
+            api_keys = [ai_config.get('api_key')]
+
+        if provider == 'ollama':
+            if not endpoint:
+                endpoint = "http://localhost:11434/api/chat"
+            ollama_model = model or (api_keys[0] if api_keys else '') or 'qwen2.5'
+            api_keys = [ollama_model]
+
+        # Kiểm tra nội dung là phụ đề SRT hay văn bản kịch bản thường
         import re as _re
-        orig_segments = [b for b in _re.split(r'\n\n+', req.srt_content.strip()) if '-->' in b]
-        orig_word_count = len(req.srt_content.split())
-
-        # Inject constraint vào prompt: giữ ĐÚNG số segment, không thêm nội dung mới
-        length_constraint = (
-            f"\n\nQUAN TRỌNG - GIỚI HẠN ĐỘ DÀI:"
-            f"\n- Bản gốc có {len(orig_segments)} segment phụ đề."
-            f"\n- Output phải có ĐÚNG {len(orig_segments)} segment, không thêm không bớt."
-            f"\n- Mỗi segment chỉ được có 1-2 câu ngắn, KHÔNG được mở rộng thêm ý."
-            f"\n- Giữ nguyên định dạng SRT với số thứ tự và timestamp y chang bản gốc."
-            f"\n- Tổng số từ output KHÔNG được vượt quá {int(orig_word_count * 1.3)} từ."
-        )
-        effective_prompt = prompt + length_constraint
+        is_srt = '-->' in req.srt_content
+        if is_srt:
+            orig_segments = [b for b in _re.split(r'\n\n+', req.srt_content.strip()) if '-->' in b]
+            orig_word_count = len(req.srt_content.split())
+            length_constraint = (
+                f"\n\nQUAN TRỌNG - GIỚI HẠN ĐỘ DÀI:"
+                f"\n- Bản gốc có {len(orig_segments)} segment phụ đề."
+                f"\n- Output phải có ĐÚNG {len(orig_segments)} segment, không thêm không bớt."
+                f"\n- Mỗi segment chỉ được có 1-2 câu ngắn, KHÔNG được mở rộng thêm ý."
+                f"\n- Giữ nguyên định dạng SRT với số thứ tự và timestamp y chang bản gốc."
+                f"\n- Tổng số từ output KHÔNG được vượt quá {int(orig_word_count * 1.3)} từ."
+            )
+            effective_prompt = prompt + length_constraint
+        else:
+            effective_prompt = prompt
 
         messages = [
             {"role": "system", "content": effective_prompt},
