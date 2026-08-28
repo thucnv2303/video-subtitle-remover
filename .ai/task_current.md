@@ -1,24 +1,25 @@
 # Current Task
 
 ## Task ID
-FIX-SERVER-SYNTAX-ERROR-AND-FETCH-FAILED
+FIX-VIDEO-RENDER-HASH-FILENAME-ENCODING-AND-CLIP-PREVIEW
 
 ## Status
 SOURCE_IMPLEMENTED_SYNTAX_PASS_TESTED_OWNER_CONFIRM_WAITING
 
 ## Exact basis
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Scope: `api/server.py`.
+- Scope: `src/renderer/js/video-render.js`.
 
 ## User outcome
-1. Sửa khối `except` bị thiếu trong `api_remove_vocal` trên `api/server.py`, giúp FastAPI server khởi động hoàn toàn sạch sẽ, không còn lỗi SyntaxError.
-2. Khắc phục triệt để lỗi `Failed to fetch` khi bấm "Tách nhạc nền video nguồn" hoặc "Cắt & Ghép video".
+1. Sửa lỗi không phát được video thành phẩm và video nguồn khi tên file chứa ký tự `#` (hashtag từ TikTok/YouTube) bằng hàm `toMediaUrl` mã hóa `%23`.
+2. Khắc phục lỗi bấm xem trước từng phân đoạn (`▶`) bằng cách lắng nghe sự kiện `loadedmetadata` trước khi gán `currentTime`, loại bỏ lỗi video bị đen hoặc không phát được.
 
 ## Gates
-- Automated verification: PASS (Đã kiểm tra import python `api.server` thành công 100%).
+- Automated verification: PASS.
 - Code review: PASS.
 - Owner manual app verification: WAITING.
 - Merge permission: BLOCKED.
+
 
 
 
