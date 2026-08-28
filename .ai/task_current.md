@@ -1,12 +1,12 @@
 # Current Task
 
 ## Task Name
-`RESPONSIVE-FULLSCREEN-LAYOUT-SELECTION-CHECKBOX-AND-CANCEL-BATCH`
+`FIX-VOICE-RENDER-POPUP-AND-SAVE-FLOW`
 
 ## Objective
-1. Tối ưu tỷ lệ màn hình 100% full-width, loại bỏ co cụm, tỷ lệ 3 cột thoáng đẹp.
-2. Thêm checkbox chọn từng job hoặc chọn tất cả, kèm nút "▶ Chạy" riêng lẻ từng job.
-3. Thêm trạng thái và nút "⛔ HỦY XỬ LÝ (CANCEL)" khi tiến trình đang chạy.
+1. Sửa lỗi modal Clone Voice không tự đóng sau khi chọn audio/lưu giọng trong tab Voice Render.
+2. Tự động mở khóa nút Lưu khi đã chọn file audio mẫu, tự động điền tên giọng và đóng popup ngay lập tức sau khi lưu.
+3. Sửa lỗi Save Dialog gắn đúng window context trong Electron main process.
 - Scope: `src/renderer/js/ai-auto-remix.js`, `src/renderer/styles/ai-auto-remix.css`.
 
 ## User outcome
