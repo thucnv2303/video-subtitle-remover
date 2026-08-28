@@ -1,11 +1,11 @@
 # Current Task
 
 ## Task Name
-`FIX-SETTINGS-PAGE-BLANK-DISPLAY`
+`FIX-SETTINGS-PAGE-VIEW-ACTIVATION-AND-CSS-FLEX`
 
 ## Objective
-1. Sửa lỗi thẻ HTML bị vỡ/lặp trong `#page-settings` tại `src/renderer/index.html`.
-2. Gắn `window.initSettings = initSettings` và kích hoạt tự động `initSettings()` khi DOM ready trong `src/renderer/js/components/settings.js` để tab Cài đặt hiển thị đầy đủ giao diện cấu hình AI, TTS, Lưu trữ và Phần cứng.
+1. Cấu hình rõ ràng thuộc tính display flex cho `#page-settings.active`, `.settings-scroll` và `.settings-view.active` trong `src/renderer/styles/settings-approved.css`.
+2. Bổ sung cơ chế kích hoạt an toàn `showSettingsView('overview')` trong `settings.js` và `app.js` khi người dùng bấm vào tab Cài đặt, đảm bảo nội dung thẻ overview và các form con luôn hiển thị tức thì.
 - Scope: `src/renderer/js/ai-auto-remix.js`, `src/renderer/styles/ai-auto-remix.css`.
 
 ## User outcome
