@@ -1,26 +1,26 @@
 # Current Task
 
 ## Task ID
-VIDEO-RENDER-REMOVE-VOCAL-PRESERVE-BGM
+FIX-VIDEO-RENDER-FILE-PICKER-AND-DRAG-DROP
 
 ## Status
 SOURCE_IMPLEMENTED_SYNTAX_PASS_TESTED_OWNER_CONFIRM_WAITING
 
 ## Exact basis
 - Repository: `thucnv2303/video-subtitle-remover`.
-- Scope: `api/server.py`, `src/renderer/js/api.js`, `src/renderer/js/video-render.js`.
+- Scope: `src/renderer/js/video-render.js`.
 
 ## User outcome
-1. Bổ sung tính năng **Xóa giọng nói gốc (Voice/Vocal Removal) và giữ lại toàn bộ âm thanh nền / nhạc nền (BGM)** cho video.
-2. Tích hợp tùy chọn `[x] Xóa giọng nói gốc` trực tiếp trong quy trình Cắt & Ghép video tại Tab **Video Render**.
-3. Cung cấp nút tiện ích 1-Click: **`🎵 Tách nhạc nền video nguồn`** để xuất video không còn lời thoại hoặc bóc tách nhạc nền BGM độc lập.
-4. Backend hỗ trợ xử lý đa tầng (AI Demucs -> Librosa stereo center separation -> FFmpeg cancellation).
+1. Khắc phục triệt để lỗi không mở được hộp thoại chọn file video ở tab Video Render (chuẩn hóa gọi qua `electronAPI.openFile(...)`).
+2. Bổ sung hỗ trợ **Kéo thả chuột trực tiếp (Drag & Drop)** file video vào cửa sổ ứng dụng để mở ngay lập tức.
+3. Thêm fallback input file chuẩn HTML5 để đảm bảo luôn mở được file trong mọi môi trường.
 
 ## Gates
-- Automated verification: PASS (Đã kiểm thử tự động bóc tách vocal và tạo video nền BGM thành công).
+- Automated verification: PASS.
 - Code review: PASS.
 - Owner manual app verification: WAITING.
 - Merge permission: BLOCKED.
+
 
 
 
