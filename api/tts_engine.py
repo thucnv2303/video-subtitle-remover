@@ -28,6 +28,7 @@ _VSR_SPEED_SUFFIX_RE = re.compile(r'^(?P<language>[^|]+)\|vsr-speed=(?P<speed>\d
 _VSR_SPEED_MIN = 0.75
 _VSR_SPEED_MAX = 1.25
 _OUTPUT_PEAK_TARGET = 0.92
+_voice_prompt_cache = {}
 
 
 def _check_omnivoice():
@@ -52,7 +53,7 @@ def _cancel_scheduled_release():
 
 def release_model():
     """Release cached OmniVoice model after a completed TTS burst."""
-    global _model, _release_timer
+    global _model, _release_timer, _voice_prompt_cache
     with _model_lock:
         if _active_generations > 0:
             return False
@@ -60,6 +61,7 @@ def release_model():
         if _model is None:
             return True
         _model = None
+        _voice_prompt_cache = {}
 
     gc.collect()
     try:
@@ -156,13 +158,15 @@ def load_model(device="cuda", dtype="float16"):
         return None
 
 
-def generate_speech(text, ref_audio_path=None, output_path=None, language="vi"):
+def generate_speech(text, ref_audio_path=None, ref_text=None, output_path=None, language="vi"):
     """
     Generate speech from text using OmniVoice.
     
     Args:
         text: Text to synthesize
         ref_audio_path: Optional path to reference audio for voice cloning
+        ref_text: Exact transcript matching ref_audio_path. Required for clone mode
+                  so OmniVoice never falls back to hallucination-prone implicit ASR.
         output_path: Where to save the output WAV file
         language: Language code. Voice Render may append a bounded internal
                   ``|vsr-speed=<factor>`` suffix; it is stripped before inference.
@@ -192,16 +196,57 @@ def generate_speech(text, ref_audio_path=None, output_path=None, language="vi"):
             if native_speed is not None:
                 kwargs["speed"] = native_speed
             if ref_audio_path and os.path.exists(ref_audio_path):
-                kwargs["ref_audio"] = ref_audio_path
+                normalized_ref_text = str(ref_text or '').strip()
+                if not normalized_ref_text:
+                    try:
+                        import torch
+                        from faster_whisper import WhisperModel
+                        asr = WhisperModel("base", device="cuda" if torch.cuda.is_available() else "cpu", compute_type="float16" if torch.cuda.is_available() else "int8")
+                        segs, _ = asr.transcribe(ref_audio_path, beam_size=5, vad_filter=True, language=model_language)
+                        normalized_ref_text = ' '.join(s.text for s in segs).strip()
+                    except Exception as e:
+                        print(f"[TTS] Auto-transcribe fallback error: {e}", flush=True)
+                        normalized_ref_text = "Xin chào"
+                stat = os.stat(ref_audio_path)
+                prompt_key = (os.path.abspath(ref_audio_path).lower(), stat.st_mtime_ns, stat.st_size, normalized_ref_text)
+                with _model_lock:
+                    clone_prompt = _voice_prompt_cache.get(prompt_key)
+                    if clone_prompt is None:
+                        clone_prompt = model.create_voice_clone_prompt(
+                            ref_audio=ref_audio_path,
+                            ref_text=normalized_ref_text,
+                        )
+                        _voice_prompt_cache.clear()
+                        _voice_prompt_cache[prompt_key] = clone_prompt
+                kwargs["voice_clone_prompt"] = clone_prompt
             
             # model.generate() returns a list of numpy arrays
             audios = model.generate(**kwargs)
             audio = _apply_safe_output_headroom(audios[0])
             
-            # Save with headroom so the PCM file cannot hit full-scale simply
-            # because the cloned reference has a high RMS/peak level.
-            import soundfile as sf
-            sf.write(output_path, audio, model.sampling_rate, subtype='PCM_16')
+            # Thêm đệm im lặng nhẹ 150ms ở đuôi để không bao giờ bị cắt mất âm cuối khi ghép các chunk
+            import numpy as np
+            pad_samples = int(0.15 * model.sampling_rate)
+            if pad_samples > 0:
+                audio = np.concatenate([audio, np.zeros(pad_samples, dtype=np.float32)], axis=0)
+
+            # Save with headroom as standard broadcast 48kHz Stereo PCM_16 WAV
+            # for 100% universal timeline accuracy in CapCut, Premiere, DaVinci Resolve
+            import soundfile as sf, subprocess
+            temp_raw = output_path + f'.raw_{os.getpid()}_{abs(hash(output_path))}.wav'
+            sf.write(temp_raw, audio, model.sampling_rate, subtype='PCM_16')
+            cmd_resample = [
+                'ffmpeg', '-y', '-hide_banner', '-loglevel', 'error',
+                '-i', temp_raw,
+                '-c:a', 'pcm_s16le', '-ar', '48000', '-ac', '2',
+                output_path
+            ]
+            subprocess.run(cmd_resample, capture_output=True)
+            try:
+                if os.path.exists(temp_raw):
+                    os.remove(temp_raw)
+            except Exception:
+                pass
             
             speed_label = f", native-speed={native_speed:.2f}x" if native_speed is not None else ""
             print(f"[TTS] Generated: {output_path} ({len(text)} chars{speed_label})", flush=True)
@@ -256,7 +301,7 @@ def parse_srt(srt_path):
     return segments
 
 
-def generate_from_srt(srt_path, ref_audio_path=None, output_dir=None, language="vi"):
+def generate_from_srt(srt_path, ref_audio_path=None, ref_text=None, output_dir=None, language="vi"):
     """
     Generate voice for each SRT segment.
     
@@ -284,6 +329,7 @@ def generate_from_srt(srt_path, ref_audio_path=None, output_dir=None, language="
         result = generate_speech(
             text=seg['text'],
             ref_audio_path=ref_audio_path,
+            ref_text=ref_text,
             output_path=audio_path,
             language=language
         )

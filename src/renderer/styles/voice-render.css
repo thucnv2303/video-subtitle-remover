@@ -559,6 +559,14 @@
 .vr-modal-head p { margin-top: 4px; color: #708aa4; font-size: 9px; }
 .vr-modal-head button { width: 29px; height: 29px; border: 1px solid rgba(96,165,250,.2); border-radius: 6px; background: #0b1b2d; color: #b8cadb; font-size: 17px; cursor: pointer; }
 .vr-file-line { min-height: 32px; margin: -4px 0 10px; padding: 8px 9px; overflow: hidden; border: 1px dashed rgba(96,165,250,.2); border-radius: 6px; color: #829bb4; font-size: 9px; white-space: nowrap; text-overflow: ellipsis; }
+.vr-clean-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: end; margin-bottom: 8px; }
+.vr-clean-row .vr-field { margin: 0; }
+.vr-clean-row .vr-btn { min-width: 118px; margin-bottom: 1px; }
+.vr-clean-status { margin: 0 0 11px; padding: 8px 9px; border: 1px solid rgba(96,165,250,.16); border-radius: 6px; background: #081524; color: #829bb4; font-size: 9px; line-height: 1.45; }
+.vr-clean-status.working { color: #93c5fd; border-color: rgba(96,165,250,.35); }
+.vr-clean-status.success { color: #86efac; border-color: rgba(74,222,128,.3); }
+.vr-clean-status.warn { color: #fde68a; border-color: rgba(251,191,36,.3); }
+.vr-clean-status.error { color: #fca5a5; border-color: rgba(248,113,113,.3); }
 #vr-clone-preview-audio { width: 100%; height: 34px; margin-top: 2px; }
 
 @media (max-width: 1220px) {
@@ -574,3 +582,290 @@
   .vr-shell { min-width: 860px; }
   .global-status-row b { max-width: 88px; }
 }
+
+/* ─── Mode Switcher Tabs ──────────────────────────────────────────────── */
+.vr-mode-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+.vr-mode-tab {
+  padding: 8px 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.vr-mode-tab:hover {
+  color: #f8fafc;
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.vr-mode-tab.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+/* ─── Batch View & Grid ───────────────────────────────────────────────── */
+.vr-batch-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vr-batch-config-card {
+  background: var(--vr-panel, rgba(14, 25, 42, 0.86));
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 10px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1.4fr 1.2fr 1fr;
+  gap: 16px;
+  align-items: end;
+}
+
+@media (max-width: 1200px) {
+  .vr-batch-config-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vr-batch-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .vr-batch-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Batch Table ─────────────────────────────────────────────────────── */
+.vr-table-wrap {
+  background: var(--vr-panel, rgba(14, 25, 42, 0.86));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.vr-table-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vr-table-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.vr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.vr-table th {
+  background: rgba(15, 23, 42, 0.9);
+  color: #94a3b8;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.vr-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+}
+
+.vr-table tr {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.vr-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.vr-table tr.selected td {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-left: 2px solid #3b82f6;
+}
+
+.vr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.vr-badge.waiting {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.vr-badge.processing {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.vr-badge.done {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.vr-badge.error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+/* ─── Inspector & Preview Panel ───────────────────────────────────────── */
+.vr-inspector-panel {
+  background: var(--vr-panel, rgba(14, 25, 42, 0.86));
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vr-inspector-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Common Synchronized Controls ───────────────────────────────────── */
+.vr-input,
+.vr-select,
+.vr-textarea {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.vr-input:focus,
+.vr-select:focus,
+.vr-textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.vr-select {
+  height: 38px;
+  cursor: pointer;
+}
+
+.vr-textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 120px;
+  width: 100%;
+}
+
+.vr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.vr-btn.primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.vr-btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5);
+}
+
+.vr-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.vr-btn.secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.vr-btn.danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.vr-btn.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.vr-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none !important;
+}
+
+.vr-player-wrap {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+

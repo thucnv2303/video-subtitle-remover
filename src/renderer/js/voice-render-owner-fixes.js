@@ -1,6 +1,9 @@
 (function () {
   'use strict';
 
+  if (window.__vsrVoiceRenderOwnerFixesLoaded === true) return;
+  window.__vsrVoiceRenderOwnerFixesLoaded = true;
+
   const RATE_PROFILE_KEY = 'voice_render_rate_profiles_v2';
   const PREVIEW_TEXT = 'Xin chào, đây là đoạn nghe thử nhanh của giọng đang chọn trong Voice Render.';
   const FALLBACK_WPM = { vi: 220, en: 170, ko: 210 };
@@ -313,10 +316,10 @@
         source = 'chunk-render';
       }
 
-      if (voiceId) {
+      if (source === 'preview' && voiceId) {
         const processedPath = await applyProfileTempo(result.audio_path, voiceId);
         result = { ...result, audio_path: processedPath };
-        if (source === 'preview') calibrateAudioFile(processedPath, voiceId, payload.language || selectedLanguage(), payload.text, source);
+        calibrateAudioFile(processedPath, voiceId, payload.language || selectedLanguage(), payload.text, source);
       }
       return result;
     };

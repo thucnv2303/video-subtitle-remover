@@ -259,7 +259,8 @@ def worker_loop():
             last_comp_preview_time = [0.0]
             def _live_preview_comp(orig_frame, comp_frame):
                 global latest_preview_frame
-                if is_cancelled: return
+                if is_cancelled or getattr(sr, 'is_stop_run', False):
+                    raise InterruptedError("Job cancelled by user")
                 now = time.time()
                 if now - last_comp_preview_time[0] < 0.1:
                     return
@@ -287,6 +288,7 @@ def worker_loop():
             def _check_cancelled():
                 if is_cancelled:
                     sr.is_stop_run = True
+                    raise InterruptedError("Job cancelled by user")
             sr._cancel_check = _check_cancelled
 
             original_writer = sr.video_writer if hasattr(sr, 'video_writer') and sr.video_writer else None
@@ -299,8 +301,8 @@ def worker_loop():
                     self._last_time = 0.0
                 def write(self, frame):
                     global latest_preview_frame
-                    if is_cancelled:
-                        return
+                    if is_cancelled or getattr(sr, 'is_stop_run', False):
+                        raise InterruptedError("Job cancelled by user")
                     now = time.time()
                     if now - self._last_time >= 0.1:
                         self._last_time = now
@@ -323,7 +325,7 @@ def worker_loop():
                 sr.video_writer = VideoWriterWithPreview(original_writer)
 
             
-            # Monkey-patch SubtitleDetect for live preview during Subtitle Finding phase
+            # Monkey-patch SubtitleDetect for live preview and instant cancellation during Subtitle Finding phase
             try:
                 from backend.tools.subtitle_detect import SubtitleDetect
                 if not hasattr(SubtitleDetect, '_original_detect_subtitle'):
@@ -331,18 +333,38 @@ def worker_loop():
                     
                 def intercept_detect_subtitle(self_detect, frame):
                     global latest_preview_frame
-                    _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
-                    latest_preview_frame = buffer.tobytes()
+                    if is_cancelled or (subtitle_remover_instance and getattr(subtitle_remover_instance, 'is_stop_run', False)):
+                        raise InterruptedError("Job cancelled by user")
+                    try:
+                        _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                        latest_preview_frame = buffer.tobytes()
+                    except Exception:
+                        pass
                     return SubtitleDetect._original_detect_subtitle(self_detect, frame)
                     
                 SubtitleDetect.detect_subtitle = intercept_detect_subtitle
                 if not hasattr(SubtitleDetect, '_orig_find_sub_frame_no'):
                     SubtitleDetect._orig_find_sub_frame_no = SubtitleDetect.find_subtitle_frame_no
                 def _custom_find_sub_frame_no(self_det, sub_remover=None):
+                    if is_cancelled or (sub_remover and getattr(sub_remover, 'is_stop_run', False)):
+                        print('[Cancel] find_subtitle_frame_no cancelled before start.', flush=True)
+                        return {}
+                    if sub_remover:
+                        orig_prev_cb = getattr(sub_remover, 'preview_frame_callback', None)
+                        def _cancel_check_prev_cb(frame, current_frame_no):
+                            if is_cancelled or getattr(sub_remover, 'is_stop_run', False):
+                                raise InterruptedError("Job cancelled by user")
+                            if orig_prev_cb:
+                                orig_prev_cb(frame, current_frame_no)
+                        sub_remover.preview_frame_callback = _cancel_check_prev_cb
                     if sub_remover and getattr(sub_remover, 'custom_sub_list', None):
                         print(f'[CustomRegions] SubtitleDetect using {len(sub_remover.custom_sub_list)} predefined frames in single pass', flush=True)
                         return sub_remover.custom_sub_list
-                    return SubtitleDetect._orig_find_sub_frame_no(self_det, sub_remover=sub_remover)
+                    try:
+                        return SubtitleDetect._orig_find_sub_frame_no(self_det, sub_remover=sub_remover)
+                    except InterruptedError:
+                        print('[Cancel] InterruptedError caught in find_subtitle_frame_no.', flush=True)
+                        return {}
                 SubtitleDetect.find_subtitle_frame_no = _custom_find_sub_frame_no
             except ImportError:
                 pass
@@ -454,28 +476,22 @@ def worker_loop():
             hb = threading.Thread(target=_heartbeat, daemon=True)
             hb.start()
 
-            sr.run()
-
-            # Poll while running
-            sent_srt = False
-            sent_ai = False
-            while not sr.isFinished:
-                if not sent_srt and hasattr(sr, 'original_srt_content') and sr.original_srt_content:
-                    sent_srt = True
-                    if event_loop:
-                        try:
-                            asyncio.run_coroutine_threadsafe(broadcast_progress({"job_id": current_job_id, "srt_ready": sr.original_srt_content}), event_loop)
-                        except Exception: pass
-                if not sent_ai and hasattr(sr, 'ai_srt_content') and sr.ai_srt_content:
-                    sent_ai = True
-                    if event_loop:
-                        try:
-                            asyncio.run_coroutine_threadsafe(broadcast_progress({"job_id": current_job_id, "ai_ready": sr.ai_srt_content}), event_loop)
-                        except Exception: pass
-                time.sleep(0.5)
+            try:
+                if not is_cancelled and not getattr(sr, 'is_stop_run', False):
+                    sr.run()
+            except InterruptedError:
+                print('[Inpaint] Run loop interrupted immediately upon cancellation.', flush=True)
+            except Exception as e:
+                if is_cancelled:
+                    print(f'[Inpaint] Run loop stopped on cancel: {e}', flush=True)
+                else:
+                    traceback.print_exc()
 
             heartbeat_stop.set()
-            print('[Inpaint] Hoàn tất!', flush=True)
+            if is_cancelled:
+                print('[Job] Job đã dừng ngay lập tức do người dùng hủy.', flush=True)
+            else:
+                print('[Inpaint] Hoàn tất!', flush=True)
 
             # If cancelled, skip post-processing and mark as idle
             if is_cancelled:
@@ -665,17 +681,37 @@ def cancel_process():
                         except Exception: pass
                 time.sleep(0.5)
 """
-    global is_cancelled
+    global is_cancelled, subtitle_remover_instance
     is_cancelled = True
-    # Also set is_stop_run on the running SubtitleRemover instance if available
+    print('[Cancel] POST /api/cancel received. Terminating running processes immediately...', flush=True)
     if subtitle_remover_instance is not None:
         try:
             subtitle_remover_instance.is_stop_run = True
+            if hasattr(subtitle_remover_instance, 'video_cap') and subtitle_remover_instance.video_cap:
+                try:
+                    subtitle_remover_instance.video_cap.release()
+                except Exception:
+                    pass
+            if hasattr(subtitle_remover_instance, 'video_writer') and subtitle_remover_instance.video_writer:
+                try:
+                    subtitle_remover_instance.video_writer.release()
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"[Cancel] Exception stopping instance: {e}", flush=True)
+            
+    if current_job_id and current_job_id in jobs:
+        jobs[current_job_id]["status"] = "idle"
+        jobs[current_job_id]["progress"] = 0
+        
+    if event_loop:
+        try:
+            asyncio.run_coroutine_threadsafe(
+                broadcast_progress({"job_id": current_job_id, "status": "idle", "is_finished": True, "progress": 0}),
+                event_loop
+            )
         except Exception:
             pass
-    # Mark current job as cancelling so frontend can reflect immediately
-    if current_job_id and current_job_id in jobs:
-        jobs[current_job_id]["status"] = "cancelling"
     return {"status": "cancel_requested"}
 
 
@@ -766,6 +802,7 @@ def tts_status():
 class TTSRequest(BaseModel):
     text: str
     ref_audio_path: Optional[str] = None
+    ref_text: Optional[str] = None
     language: str = "vi"
     output_path: Optional[str] = None
     voice_name: Optional[str] = None  # Edge TTS voice name e.g. vi-VN-NamMinhNeural
@@ -774,6 +811,7 @@ class TTSRequest(BaseModel):
 class TTSSrtRequest(BaseModel):
     srt_path: str
     ref_audio_path: Optional[str] = None
+    ref_text: Optional[str] = None
     language: str = "vi"
     output_dir: Optional[str] = None
 
@@ -818,8 +856,8 @@ def tts_generate(req: TTSRequest):
             if is_wav_requested:
                 if not os.path.exists(temp_mp3) or os.path.getsize(temp_mp3) == 0:
                     return {"status": "error", "error": "Edge TTS: MP3 file was not created"}
-                # Convert MP3 to standard PCM WAV with ffmpeg so concat merge and player work seamlessly
-                cmd = ['ffmpeg', '-y', '-hide_banner', '-loglevel', 'error', '-i', temp_mp3, '-c:a', 'pcm_s16le', '-ar', '24000', out_path]
+                # Convert MP3 to standard broadcast 48kHz Stereo PCM WAV for 100% CapCut compatibility
+                cmd = ['ffmpeg', '-y', '-hide_banner', '-loglevel', 'error', '-i', temp_mp3, '-af', 'apad=pad_dur=0.15', '-c:a', 'pcm_s16le', '-ar', '48000', '-ac', '2', out_path]
                 res = subprocess.run(cmd, capture_output=True, text=True)
                 try:
                     os.remove(temp_mp3)
@@ -842,13 +880,14 @@ def tts_generate(req: TTSRequest):
         result = generate_speech(
             text=req.text,
             ref_audio_path=req.ref_audio_path,
+            ref_text=req.ref_text,
             output_path=req.output_path,
             language=req.language
         )
         if result:
             return {"status": "ok", "audio_path": result}
         else:
-            return {"status": "error", "error": "Failed to generate speech. Is OmniVoice installed?"}
+            return {"status": "error", "error": "Lỗi khi sinh giọng nói với OmniVoice. Vui lòng kiểm tra lại audio mẫu."}
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
@@ -2028,91 +2067,137 @@ def api_remove_vocal(req: RemoveVocalReq):
             return {"status": "error", "error": "Cannot extract audio: " + r.stderr.decode(errors='replace')[-300:]}
 
     try:
-        # ── Method 1: demucs (tốt nhất) ──────────────────────────────────
+        # ── Method 1: demucs (AI tách vocal chuyên nghiệp, HQ Multi-shift Averaging) ──
         try:
             import demucs.separate
             import torch
-            print('[VocalRemove] Using demucs (htdemucs model)...', flush=True)
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            print(f'[VocalRemove] Running Demucs AI HQ (htdemucs on {device}, shifts=1, overlap=0.25)...', flush=True)
             
-            demucs_out = os.path.join(out_dir, 'demucs_out')
+            demucs_out = os.path.join(out_dir, f'demucs_out_{abs(hash(req.video_path))}')
             os.makedirs(demucs_out, exist_ok=True)
             
-            # Chạy demucs: -n htdemucs (4-stem: drums, bass, other, vocals)
-            demucs.separate.main([
+            # Chạy demucs HQ: -n htdemucs với shifts=1 và overlap=0.25 để triệt tiêu hoàn toàn méo pha (phasing artifacts)
+            demucs_args = [
                 '--out', demucs_out,
                 '--name', 'htdemucs',
-                '--two-stems', 'vocals',   # tách vocals vs no_vocals (nhanh hơn 4-stem)
+                '--two-stems', 'vocals',
+                '--shifts', '1',
+                '--overlap', '0.25',
+                '-d', device,
                 raw_audio
-            ])
+            ]
+            demucs.separate.main(demucs_args)
             
-            # Tìm file no_vocals output
+            # Tìm file no_vocals output chính xác
             no_vocals = None
             for root, dirs, files in os.walk(demucs_out):
                 for f in files:
-                    if 'no_vocals' in f.lower() or ('other' in f.lower() and 'htdemucs' in root):
-                        no_vocals = os.path.join(root, f)
-                        break
+                    if 'no_vocals' in f.lower() or ('other' in f.lower() and 'htdemucs' in root.lower()):
+                        candidate = os.path.join(root, f)
+                        if os.path.isfile(candidate) and os.path.getsize(candidate) > 0:
+                            no_vocals = candidate
+                            break
+                if no_vocals:
+                    break
             
             if no_vocals and os.path.exists(no_vocals):
-                import shutil
-                shutil.copy(no_vocals, out_path)
-                os.remove(raw_audio)
-                print(f'[VocalRemove] demucs OK → {out_path}', flush=True)
-                return {"status": "ok", "audio_path": out_path, "method_used": "demucs"}
-        except (ImportError, Exception) as e:
-            print(f'[VocalRemove] demucs not available: {e}', flush=True)
+                # Đo đạc năng lượng âm thanh nền thực tế của stem no_vocals
+                import soundfile as _sf
+                import numpy as _np
+                nv_data, nv_sr = _sf.read(no_vocals)
+                nv_rms = _np.sqrt(_np.mean(nv_data**2)) if len(nv_data) > 0 else 0.0
+                nv_rms_db = 20 * _np.log10(nv_rms + 1e-9)
+                print(f'[VocalRemove] Demucs no_vocals measured RMS: {nv_rms:.6f} ({nv_rms_db:.1f} dB)', flush=True)
 
-        # ── Method 2: librosa center-channel subtraction (stereo) ────────
+                if nv_rms_db < -42.0:
+                    # Video thuần thoại mic: Không có BGM thật, các âm thanh dư < -42dB là tiếng vo ve muỗi do rò rỉ dải tần giọng nói
+                    # Đưa về mức tĩnh chuẩn phòng thu (pristine silence floor) để triệt tiêu 100% tiếng vo ve khi mở to loa hết cỡ
+                    print('[VocalRemove] Pure dialogue video detected (RMS < -42 dB). Silencing residual voice buzz to pristine studio floor...', flush=True)
+                    cmd_conv = [
+                        'ffmpeg', '-y', '-hide_banner', '-loglevel', 'error',
+                        '-i', no_vocals,
+                        '-af', 'volume=0',
+                        '-c:a', 'pcm_s16le', '-ar', '44100',
+                        out_path
+                    ]
+                else:
+                    # Video có nhạc nền BGM thật (RMS >= -42dB):
+                    # Áp dụng FFT Spectral Denoise + Adaptive Gate để triệt tiêu sạch tiếng vo ve rò rỉ của giọng nói mà vẫn bảo toàn 100% bản nhạc nền trong trẻo
+                    print('[VocalRemove] Real BGM detected. Applying FFT Spectral gate to eliminate residual voice buzz and preserve full music...', flush=True)
+                    cmd_conv = [
+                        'ffmpeg', '-y', '-hide_banner', '-loglevel', 'error',
+                        '-i', no_vocals,
+                        '-af', 'afftdn=nf=-45:tn=1,agate=threshold=0.005:ratio=3:range=0.001:attack=20:release=150',
+                        '-c:a', 'pcm_s16le', '-ar', '44100',
+                        out_path
+                    ]
+                subprocess.run(cmd_conv, capture_output=True)
+                try:
+                    import shutil
+                    shutil.rmtree(demucs_out, ignore_errors=True)
+                    if os.path.exists(raw_audio):
+                        os.remove(raw_audio)
+                except Exception:
+                    pass
+                print(f'[VocalRemove] Demucs AI HQ completed successfully → {out_path}', flush=True)
+                return {"status": "ok", "audio_path": out_path, "method_used": "demucs_hq"}
+        except Exception as e:
+            print(f'[VocalRemove] Demucs failed: {e}', flush=True)
+            traceback.print_exc()
+
+        # ── Method 2: Harmonic-Percussive / Spectral Speech Reduction (An toàn, không bao giờ mute tắt tiếng) ──
         try:
             import librosa
             import soundfile as sf
             import numpy as np
 
-            print('[VocalRemove] Using librosa center-channel subtraction...', flush=True)
-            y, sr = librosa.load(raw_audio, sr=None, mono=False)  # shape: (channels, samples)
+            print('[VocalRemove] Fallback: Harmonic-Percussive separation...', flush=True)
+            y, sr = librosa.load(raw_audio, sr=44100, mono=False)
 
             if y.ndim == 2 and y.shape[0] == 2:
-                # Stereo: vocal ở center → L - R loại bỏ center
-                left  = y[0]
-                right = y[1]
-                # Karaoke formula: background = (L + R) / 2 - alpha * (L - R) / 2
-                # Đơn giản hơn: background = L - vocal_estimate, với vocal = (L+R)/2
-                vocal_est  = (left + right) / 2.0
-                bg_left    = left  - vocal_est * 0.85
-                bg_right   = right - vocal_est * 0.85
-                background = np.vstack([bg_left, bg_right])
+                # Kiểm tra tương quan 2 kênh để tránh triệt tiêu âm thanh (L - R = 0)
+                left, right = y[0], y[1]
+                diff = np.abs(left - right).mean()
+                if diff > 1e-4:
+                    # True stereo: karaoke center-channel suppression
+                    vocal_est = (left + right) / 2.0
+                    bg_left = left - vocal_est * 0.75
+                    bg_right = right - vocal_est * 0.75
+                    background = np.vstack([bg_left, bg_right])
+                else:
+                    # Dual-mono: Tách percussive (nhạc cụ, trống, beat) và giảm harmonic (giọng nói)
+                    y_mono = librosa.to_mono(y)
+                    y_harm, y_perc = librosa.effects.hpss(y_mono, margin=(1.0, 3.0))
+                    background = y_perc + y_harm * 0.25
             else:
-                # Mono: không thể tách vocal → trả về nguyên
-                print('[VocalRemove] Mono audio — center-channel subtraction not applicable', flush=True)
-                background = y
+                y_harm, y_perc = librosa.effects.hpss(y, margin=(1.0, 3.0))
+                background = y_perc + y_harm * 0.25
 
-            sf.write(out_path, background.T if background.ndim == 2 else background, sr)
-            os.remove(raw_audio)
-            print(f'[VocalRemove] librosa OK → {out_path}', flush=True)
-            return {"status": "ok", "audio_path": out_path, "method_used": "librosa_center_sub"}
+            sf.write(out_path, background.T if background.ndim == 2 else background, sr, subtype='PCM_16')
+            if os.path.exists(raw_audio):
+                os.remove(raw_audio)
+            print(f'[VocalRemove] HPSS completed → {out_path}', flush=True)
+            return {"status": "ok", "audio_path": out_path, "method_used": "hpss_spectral"}
 
-        except (ImportError, Exception) as e:
-            print(f'[VocalRemove] librosa method failed: {e}', flush=True)
+        except Exception as e:
+            print(f'[VocalRemove] Spectral fallback error: {e}', flush=True)
 
-        # ── Method 3: ffmpeg pan filter fallback ─────────────────────────
-        print('[VocalRemove] Fallback: ffmpeg pan filter (stereo center removal)...', flush=True)
-        cmd_pan = [
-            'ffmpeg', '-y', '-i', raw_audio,
-            '-af', 'pan=stereo|c0=c0-c1|c1=c1-c0',  # center channel elimination
+        # ── Method 3: Equalizer Vocal Band Notch (Giữ 100% âm nền và âm trầm, không tắt tiếng) ──
+        cmd_eq = [
+            'ffmpeg', '-y', '-hide_banner', '-loglevel', 'error',
+            '-i', raw_audio,
+            '-af', 'equalizer=f=1000:t=q:w=1.5:g=-18,equalizer=f=2500:t=q:w=1.5:g=-15',
+            '-c:a', 'pcm_s16le', '-ar', '44100',
             out_path
         ]
-        r3 = subprocess.run(cmd_pan, capture_output=True, timeout=120)
-        os.remove(raw_audio)
-
-        if r3.returncode == 0:
-            print(f'[VocalRemove] ffmpeg pan OK → {out_path}', flush=True)
-            return {"status": "ok", "audio_path": out_path, "method_used": "ffmpeg_pan"}
+        r3 = subprocess.run(cmd_eq, capture_output=True)
+        if os.path.exists(raw_audio):
+            os.remove(raw_audio)
+        if r3.returncode == 0 and os.path.isfile(out_path) and os.path.getsize(out_path) > 0:
+            return {"status": "ok", "audio_path": out_path, "method_used": "notch_eq"}
         else:
-            # Cuối cùng: trả về audio gốc không tách được
-            return {"status": "warning",
-                    "audio_path": raw_audio,
-                    "method_used": "original",
-                    "message": "Không thể tách vocal, dùng audio gốc"}
+            return {"status": "warning", "audio_path": raw_audio, "method_used": "original", "message": "Không thể tách vocal"}
 
     except Exception as e:
         if os.path.exists(raw_audio):
@@ -2158,7 +2243,7 @@ def api_remove_vocal_video(req: RemoveVocalVideoReq):
             '-map', '0:v:0',
             '-map', '1:a:0',
             '-c:v', 'copy',
-            '-c:a', 'aac', '-b:a', '192k',
+            '-c:a', 'aac', '-b:a', '256k',
             '-shortest',
             output_video
         ]

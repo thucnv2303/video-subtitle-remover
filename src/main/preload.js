@@ -19,12 +19,15 @@ async function cancelAnyP1Vision(payload) {
 contextBridge.exposeInMainWorld('electronAPI', {
   openFile: (filters) => ipcRenderer.invoke('dialog:openFile', filters),
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
+  scanVideoFiles: (dirPath) => ipcRenderer.invoke('fs:scanVideoFiles', dirPath),
+  fetchText: (url) => ipcRenderer.invoke('net:fetchText', url),
   saveFile: (defaultPath) => ipcRenderer.invoke('dialog:saveFile', defaultPath),
   saveCopy: (payload) => ipcRenderer.invoke('app:saveCopy', payload),
   startPython: () => ipcRenderer.invoke('python:start'),
   stopPython: () => ipcRenderer.invoke('python:stop'),
   getPythonStatus: () => ipcRenderer.invoke('python:status'),
   listOllamaModels: (endpoint) => ipcRenderer.invoke('ollama:listModels', endpoint),
+  validateProviderKeys: (provider, keys) => ipcRenderer.invoke('ai:validateProviderKeys', { provider, keys }),
   analyzeP1Vision: (payload) => ipcRenderer.invoke('ollama:p1AnalyzeVision', payload),
   analyzeP1StandardVision: (payload) => ipcRenderer.invoke('ollama:p1AnalyzeStandardVision', payload),
   fitP1Narration: (payload) => ipcRenderer.invoke('ollama:p1FitNarration', payload),
@@ -38,6 +41,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSystemInfo: () => ipcRenderer.invoke('app:systemInfo'),
   mergeWavFiles: (inputPaths, outputPath) => ipcRenderer.invoke('voice-render:mergeWavFiles', inputPaths, outputPath),
   applyVoiceTempo: (inputPath, speedFactor) => ipcRenderer.invoke('voice-render:applyTempo', inputPath, speedFactor),
+  preprocessCloneAudio: (inputPath, profile = 'balanced') => ipcRenderer.invoke('voice-clone:preprocessAudio', { inputPath, profile }),
   burnP3SubtitleHq: (payload) => ipcRenderer.invoke('p3:burnSubtitleHq', payload),
   retimeP3Video: (payload) => ipcRenderer.invoke('p3:retimeVideo', payload),
   getTalkingPortraitStatus: () => ipcRenderer.invoke('talking-portrait:status'),
@@ -203,7 +207,8 @@ function installP2RuntimeScript() {
 }
 
 function installVoiceRenderScript() {
-  if (document.querySelector('script[data-voice-render]')) return;
+  const alreadyDeclared = [...document.scripts].some((node) => /(?:^|\/)js\/voice-render\.js(?:[?#].*)?$/i.test(node.getAttribute('src') || ''));
+  if (alreadyDeclared || document.querySelector('script[data-voice-render]')) return;
   const script = document.createElement('script');
   script.src = 'js/voice-render.js';
   script.defer = true;

@@ -126,15 +126,20 @@ class APIClient {
    * - refAudioPath: reference audio for OmniVoice clone voice
    * Always sends voice_name so backend can route to Edge TTS or OmniVoice correctly.
    */
-  async generateTTS(text, refAudioPath = null, language = 'vi', voiceName = null) {
+  async generateTTS(text, refAudioPath = null, language = 'vi', voiceName = null, refText = null) {
     const body = { text, ref_audio_path: refAudioPath, language };
     if (voiceName) body.voice_name = voiceName;
+    if (refText) body.ref_text = refText;
     const r = await fetch(`${this.base}/api/tts/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
     return r.json();
+  }
+
+  async transcribeVoiceReference(audioPath, language = 'vi') {
+    return this.post('/api/tts/reference-transcript', { audio_path: audioPath, language });
   }
 
   async generateTTSFromSrt(srtPath, refAudioPath = null, language = 'vi', outputDir = null) {
@@ -336,15 +341,19 @@ class APIClient {
   // voiceValue can be: 'vi-VN-NamMinhNeural', 'clone:0', etc.
   async testTTS({ voice, text }) {
     let refAudio = null;
+    let refText = null;
     const language = 'vi';
     if (voice && voice.startsWith('clone:')) {
       const idx = parseInt(voice.split(':')[1]);
       try {
         const voices = JSON.parse(localStorage.getItem('tts_voices') || '[]');
-        if (voices[idx]) refAudio = voices[idx].audioPath;
+        if (voices[idx]) {
+          refAudio = voices[idx].audioPath;
+          refText = voices[idx].referenceTranscriptSource ? (voices[idx].referenceTranscript || null) : null;
+        }
       } catch (e) {}
     }
-    const result = await this.generateTTS(text, refAudio, language, voice);
+    const result = await this.generateTTS(text, refAudio, language, voice, refText);
     if (result.status === 'ok') return { audio_path: result.audio_path };
     return result;
   }

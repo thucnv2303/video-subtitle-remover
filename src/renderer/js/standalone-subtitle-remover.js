@@ -434,6 +434,23 @@
       }, 50);
       setTimeout(() => clearInterval(renderTimer), 5000);
     }
+
+    // Expose bridge API for other tabs (e.g. Video Render, Voice Render)
+    window.standaloneSubtitleRemover = {
+      enter: enterStandaloneMode,
+      exit: exitStandaloneMode,
+      addVideos: addStandalonePaths,
+      enterAndAdd: (paths) => {
+        enterStandaloneMode();
+        return addStandalonePaths(Array.isArray(paths) ? paths : [paths]);
+      }
+    };
+    window.addVideoToSubtitleRemover = (filePath) => {
+      if (!filePath) return false;
+      enterStandaloneMode();
+      return addStandalonePaths([filePath]) > 0;
+    };
+
     return true;
   }
 

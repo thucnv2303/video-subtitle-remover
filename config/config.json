@@ -2,7 +2,7 @@
     "Main": {
         "CheckUpdateOnStartup": true,
         "HardwareAcceleration": true,
-        "InpaintMode": "lama",
+        "InpaintMode": "sttn-auto",
         "SaveDirectory": "",
         "SubtitleAreaDeviationPixel": 15,
         "SubtitleAreaPixelToleranceXPixel": 20,
