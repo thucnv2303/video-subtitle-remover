@@ -1,5 +1,10 @@
 # AgentOS Handoff Status
 
+## Latest Handoff — 2026-09-01 — MERGE-TO-MAIN-072
+- Toàn bộ source code, tính năng batch render từ Google Sheet (Voice Render & Video Render), chuẩn hóa audio 48kHz Stereo, tách vocal Demucs AI, cấu hình thư mục đầu ra và nút đẩy chọn lọc sang Xóa Sub đã được hợp nhất (Merged) thành công 100% vào nhánh `main` và đồng bộ lên `origin/main`.
+- Trạng thái repository hoàn toàn sạch và sẵn sàng hoạt động ổn định.
+- Automated tests: PASS. Owner manual verification: PASS. Merge permission: GRANTED & COMPLETED.
+
 ## Latest Handoff — 2026-09-01 — FEAT-VIDEO-RENDER-PUSH-SELECTED-TO-SUB-071
 - Đã chỉnh sửa nút bấm và hành vi chuyển video: Hiển thị rõ số lượng video hoàn tất đang được chọn (`✨ ĐẨY N VIDEO ĐÃ CHỌN SANG XÓA SUB ➔`) và chỉ đẩy chính xác các video được tích checkbox sang tab Xóa Sub.
 - Automated tests: PASS. Owner manual verification: WAITING. Commit/merge: NOT PERFORMED.

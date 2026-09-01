@@ -1,19 +1,18 @@
 # Current Task
 
 ## Task Name
-`FEAT-VIDEO-RENDER-PUSH-SELECTED-TO-SUB-071`
+`MERGE-TO-MAIN-072`
 
 ## Objective
-Sửa lại nút đẩy sang Xóa Sub: Hiển thị rõ số lượng video đã chọn và chỉ đẩy các video được tích chọn sang tab Xóa Sub.
+Commit, push và merge toàn bộ tính năng và fix lỗi vào nhánh `main` và đồng bộ lên remote GitHub `origin/main`.
 
 ## Scope
-- `src/renderer/js/video-render.js`
+- Git repository & branches (`review/TALKING-PORTRAIT-ECHOMIMICV3-036`, `main`)
 - `.ai/current_state.md`, `.ai/task_current.md`, `.ai/handoff.md`
 
 ## Acceptance Criteria
-- Tiêu đề nút cập nhật theo số lượng file đã chọn và hoàn tất: `✨ ĐẨY N VIDEO ĐÃ CHỌN SANG XÓA SUB ➔`: PASS.
-- Chỉ đẩy những file được tích chọn (`j.selected && j.status === 'done'`): PASS.
-- Tự động cập nhật khi tích/bỏ tích checkbox: PASS.
-- Node.js syntax check: PASS (Code 0).
-- Owner manual verification: WAITING.
-- Commit/merge: NOT PERFORMED.
+- Đẩy toàn bộ thay đổi lên `origin/review/TALKING-PORTRAIT-ECHOMIMICV3-036`: PASS.
+- Merge sạch sẽ vào `main`: PASS.
+- Đẩy `main` lên `origin/main`: PASS.
+- Cập nhật tài liệu memory `.ai/`: PASS.
+- Status: PASS.

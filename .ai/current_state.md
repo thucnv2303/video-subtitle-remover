@@ -1,5 +1,20 @@
 # Current State
 
+## Latest Update — 2026-09-01 — MERGE-TO-MAIN-072
+- User Request: Tự tạo commit, merge vào main và cập nhật lên Git cùng toàn bộ tài liệu `.ai/`.
+- Thực hiện:
+  1. Commit toàn bộ tính năng và fix lỗi mới vào branch `review/TALKING-PORTRAIT-ECHOMIMICV3-036`:
+     - Commit Source: `0986477` (*feat: batch voice & video render Google Sheets automation, 48kHz audio standard, vocal removal fix, and selective subtitle push*)
+     - Commit Docs: `4b6fff8` (*docs(ai): update memory files for batch voice & video render features and bug fixes*)
+  2. Push nhánh review lên `origin/review/TALKING-PORTRAIT-ECHOMIMICV3-036`.
+  3. Checkout `main` và Fast-Forward merge trực tiếp toàn bộ 42 commits từ nhánh review vào nhánh `main` thành công 100%.
+  4. Push nhánh `main` lên `origin/main` (commit `4b6fff8`).
+- Verification:
+  - Git status: Clean.
+  - Python & Node.js syntaxes: PASS.
+- Owner manual verification: PASS.
+- Commit/merge: COMPLETED & PUSHED TO ORIGIN/MAIN.
+
 ## Latest Update — 2026-09-01 — FEAT-VIDEO-RENDER-PUSH-SELECTED-TO-SUB-071
 - User Request: Sửa lại nút "ĐẨY TOÀN BỘ SANG XÓA SUB" để hiển thị rõ số lượng file đã chọn và chỉ đẩy những file được tích chọn (selected) sang tab Xóa Sub, không tự động đẩy toàn bộ.
 - Triển khai:
