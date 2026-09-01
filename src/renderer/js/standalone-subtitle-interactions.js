@@ -49,11 +49,13 @@
     if (!region || region._standaloneFrameRangeInitialized) return;
     const max = maxFrame();
     const current = clampFrame(state()?.currentFrameOrig || 0, max);
-    const legacyFullRange = Number(region.startFrame || 0) === 0 && Number(region.endFrame) === max;
-    if (legacyFullRange) region.startFrame = current;
-    region.startFrame = clampFrame(region.startFrame ?? current, max);
-    region.endFrame = clampFrame(region.endFrame ?? max, max);
-    if (region.endFrame < region.startFrame) region.endFrame = region.startFrame;
+    let start = region.startFrame != null ? Number(region.startFrame) : current;
+    let end = region.endFrame != null ? Number(region.endFrame) : max;
+    start = clampFrame(start, max);
+    end = clampFrame(end, max);
+    if (end < start) end = start;
+    region.startFrame = start;
+    region.endFrame = end;
     region._standaloneFrameRangeInitialized = true;
   }
 
@@ -68,6 +70,11 @@
     input.style.cssText = 'width:100%;height:24px;border:1px solid #334d67;border-radius:5px;background:#0f1e2d;color:#eaf2fb;padding:2px 6px;font-size:9px;box-sizing:border-box';
     return input;
   }
+
+  const REGION_COLORS = [
+    '#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4',
+    '#ec4899', '#84cc16', '#6366f1', '#14b8a6', '#f97316', '#eab308'
+  ];
 
   function decorateRegionFrameRanges() {
     if (!standaloneActive()) return;
@@ -88,14 +95,41 @@
       row.className = 'standalone-frame-range';
       row.style.cssText = 'grid-column:1/-1;display:grid;grid-template-columns:auto minmax(58px,1fr) auto minmax(58px,1fr);gap:6px;align-items:center;padding:3px 0 2px 18px';
 
+      const jumpToStart = (e) => {
+        if (e) e.stopPropagation();
+        const timeline = document.getElementById('timeline-orig');
+        if (timeline && region.startFrame != null) {
+          timeline.value = region.startFrame;
+          timeline.dispatchEvent(new Event('input'));
+        }
+      };
+
+      const jumpToEnd = (e) => {
+        if (e) e.stopPropagation();
+        const timeline = document.getElementById('timeline-orig');
+        if (timeline && region.endFrame != null) {
+          timeline.value = region.endFrame;
+          timeline.dispatchEvent(new Event('input'));
+        }
+      };
+
       const fromLabel = document.createElement('span');
       fromLabel.textContent = 'Từ frame';
-      fromLabel.style.cssText = 'font-size:9px;color:#8da5bc;white-space:nowrap';
+      fromLabel.style.cssText = 'font-size:9px;color:#8da5bc;white-space:nowrap;cursor:pointer;';
+      fromLabel.title = 'Click để xem frame bắt đầu';
+      fromLabel.addEventListener('click', jumpToStart);
+
       const from = makeFrameInput(region.startFrame, max, `Frame bắt đầu vùng ${region.label}`);
+      from.addEventListener('focus', jumpToStart);
+
       const toLabel = document.createElement('span');
       toLabel.textContent = 'Đến frame';
-      toLabel.style.cssText = fromLabel.style.cssText;
+      toLabel.style.cssText = 'font-size:9px;color:#8da5bc;white-space:nowrap;cursor:pointer;';
+      toLabel.title = 'Click để xem frame kết thúc';
+      toLabel.addEventListener('click', jumpToEnd);
+
       const to = makeFrameInput(region.endFrame, max, `Frame kết thúc vùng ${region.label}`);
+      to.addEventListener('focus', jumpToEnd);
 
       const commit = () => {
         let start = clampFrame(from.value, max);
@@ -106,7 +140,25 @@
         from.value = String(start);
         to.value = String(end);
         const text = item.querySelector('.region-label');
-        if (text) text.textContent = `Vùng #${region.label} (${start}-${end})`;
+        if (text) {
+          const color = REGION_COLORS[index % REGION_COLORS.length];
+          text.innerHTML = `<span style="background:${color};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;">#${region.label || (index + 1)}</span> <span class="p2-jump-start" style="cursor:pointer;text-decoration:underline dotted;" title="Nhảy đến frame đầu">(${start}</span>-<span class="p2-jump-end" style="cursor:pointer;text-decoration:underline dotted;" title="Nhảy đến frame cuối">${end})</span>`;
+          text.querySelector('.p2-jump-start')?.addEventListener('click', (e) => { e.stopPropagation(); jumpToStart(); });
+          text.querySelector('.p2-jump-end')?.addEventListener('click', (e) => { e.stopPropagation(); jumpToEnd(); });
+        }
+        const overlay = document.getElementById('subtitle-overlay');
+        const node = overlay?.querySelector?.(`.region-overlay[data-standalone-region-index="${index}"]`);
+        if (node) {
+          node.dataset.startFrame = String(start);
+          node.dataset.endFrame = String(end);
+        }
+        const timeline = document.getElementById('timeline-orig');
+        const currentFrame = timeline ? Number(timeline.value || 0) : 0;
+        overlay?.querySelectorAll?.('.region-overlay').forEach(n => {
+          const s = Number(n.dataset.startFrame ?? -Infinity);
+          const e = Number(n.dataset.endFrame ?? Infinity);
+          n.style.display = (currentFrame >= s && currentFrame <= e) ? 'block' : 'none';
+        });
         list.dataset.p2RegionSignature = '';
       };
 
@@ -114,6 +166,38 @@
       to.addEventListener('change', commit);
       row.append(fromLabel, from, toLabel, to);
       item.appendChild(row);
+
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('input, select, button')) return;
+        jumpToStart();
+      });
+    });
+  }
+
+  const HANDLE_POSITIONS = ['nw', 'ne', 'se', 'sw', 'n', 's', 'w', 'e'];
+
+  function ensureResizeHandles(node, color) {
+    if (node.querySelector('.region-resize-handle')) return;
+    const size = 8;
+    const half = size / 2;
+    HANDLE_POSITIONS.forEach(pos => {
+      const handle = document.createElement('div');
+      handle.className = `region-resize-handle handle-${pos}`;
+      handle.dataset.handle = pos;
+      let posStyle = '';
+      let cursor = 'nwse-resize';
+      if (pos === 'nw') { posStyle = `top:-${half}px;left:-${half}px;`; cursor = 'nwse-resize'; }
+      else if (pos === 'ne') { posStyle = `top:-${half}px;right:-${half}px;`; cursor = 'nesw-resize'; }
+      else if (pos === 'se') { posStyle = `bottom:-${half}px;right:-${half}px;`; cursor = 'nwse-resize'; }
+      else if (pos === 'sw') { posStyle = `bottom:-${half}px;left:-${half}px;`; cursor = 'nesw-resize'; }
+      else if (pos === 'n') { posStyle = `top:-${half}px;left:calc(50% - ${half}px);`; cursor = 'ns-resize'; }
+      else if (pos === 's') { posStyle = `bottom:-${half}px;left:calc(50% - ${half}px);`; cursor = 'ns-resize'; }
+      else if (pos === 'w') { posStyle = `top:calc(50% - ${half}px);left:-${half}px;`; cursor = 'ew-resize'; }
+      else if (pos === 'e') { posStyle = `top:calc(50% - ${half}px);right:-${half}px;`; cursor = 'ew-resize'; }
+
+      handle.style.cssText = `position:absolute;width:${size}px;height:${size}px;background:#ffffff;border:1.5px solid ${color || '#3b82f6'};border-radius:2px;cursor:${cursor};pointer-events:auto;z-index:20;${posStyle}box-shadow:0 0 2px rgba(0,0,0,0.6);box-sizing:border-box;`;
+      node.appendChild(handle);
     });
   }
 
@@ -127,7 +211,9 @@
       node.dataset.standaloneRegionIndex = String(index);
       node.style.pointerEvents = 'auto';
       node.style.cursor = 'move';
-      node.title = 'Kéo để di chuyển vùng';
+      node.title = 'Kéo để di chuyển, kéo các góc/cạnh để thay đổi kích thước';
+      const color = REGION_COLORS[index % REGION_COLORS.length];
+      ensureResizeHandles(node, color);
     });
   }
 
@@ -178,6 +264,7 @@
 
   function beginRegionDrag(event) {
     if (!standaloneActive() || event.button !== 0) return;
+    const handle = event.target.closest?.('.region-resize-handle');
     const target = event.target.closest?.('.region-overlay[data-standalone-region-index]');
     const job = activeJob();
     const geometry = renderedCanvasGeometry();
@@ -188,11 +275,18 @@
 
     event.preventDefault();
     event.stopImmediatePropagation();
+    if (typeof window.setActiveRegionIndex === 'function') {
+      window.setActiveRegionIndex(index);
+    }
+    const listItem = document.querySelector(`.p2-region-runtime-item[data-standalone-region-index="${index}"]`);
+    if (listItem) listItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const mode = handle ? handle.dataset.handle : 'move';
     dragState = {
       target,
       job,
       region,
       geometry,
+      mode,
       startClientX: event.clientX,
       startClientY: event.clientY,
       xmin: Number(region.xmin),
@@ -200,20 +294,44 @@
       ymin: Number(region.ymin),
       ymax: Number(region.ymax)
     };
-    target.style.cursor = 'grabbing';
+    if (mode === 'move') {
+      target.style.cursor = 'grabbing';
+    }
   }
 
   function moveRegion(event) {
     if (!dragState) return;
-    const { target, region, geometry } = dragState;
+    const { target, region, geometry, mode } = dragState;
     const dx = (event.clientX - dragState.startClientX) * geometry.scaleToSourceX;
     const dy = (event.clientY - dragState.startClientY) * geometry.scaleToSourceY;
-    const width = dragState.xmax - dragState.xmin;
-    const height = dragState.ymax - dragState.ymin;
-    const xmin = Math.min(geometry.sourceWidth - width, Math.max(0, dragState.xmin + dx));
-    const ymin = Math.min(geometry.sourceHeight - height, Math.max(0, dragState.ymin + dy));
-    const xmax = xmin + width;
-    const ymax = ymin + height;
+    
+    let xmin = dragState.xmin;
+    let xmax = dragState.xmax;
+    let ymin = dragState.ymin;
+    let ymax = dragState.ymax;
+    const MIN_SIZE = 10;
+
+    if (mode === 'move') {
+      const width = dragState.xmax - dragState.xmin;
+      const height = dragState.ymax - dragState.ymin;
+      xmin = Math.min(geometry.sourceWidth - width, Math.max(0, dragState.xmin + dx));
+      ymin = Math.min(geometry.sourceHeight - height, Math.max(0, dragState.ymin + dy));
+      xmax = xmin + width;
+      ymax = ymin + height;
+    } else {
+      if (mode.includes('e')) {
+        xmax = Math.min(geometry.sourceWidth, Math.max(dragState.xmin + MIN_SIZE, dragState.xmax + dx));
+      }
+      if (mode.includes('w')) {
+        xmin = Math.max(0, Math.min(dragState.xmax - MIN_SIZE, dragState.xmin + dx));
+      }
+      if (mode.includes('s')) {
+        ymax = Math.min(geometry.sourceHeight, Math.max(dragState.ymin + MIN_SIZE, dragState.ymax + dy));
+      }
+      if (mode.includes('n')) {
+        ymin = Math.max(0, Math.min(dragState.ymax - MIN_SIZE, dragState.ymin + dy));
+      }
+    }
 
     region.xmin = Math.round(xmin);
     region.xmax = Math.round(xmax);
@@ -222,17 +340,100 @@
 
     target.style.left = `${geometry.offsetX + region.xmin * geometry.scaleToDisplayX}px`;
     target.style.top = `${geometry.offsetY + region.ymin * geometry.scaleToDisplayY}px`;
+    target.style.width = `${(region.xmax - region.xmin) * geometry.scaleToDisplayX}px`;
+    target.style.height = `${(region.ymax - region.ymin) * geometry.scaleToDisplayY}px`;
   }
 
   function endRegionDrag() {
     if (!dragState) return;
     const overlay = document.getElementById('subtitle-overlay');
     const list = document.getElementById('regions-list');
-    dragState.target.style.cursor = 'move';
+    if (dragState.target) dragState.target.style.cursor = 'move';
     if (overlay) overlay.dataset.p2RegionSignature = '';
     if (list) list.dataset.p2RegionSignature = '';
     dragState = null;
     queueMicrotask(syncManualUi);
+  }
+
+  function resolveJobVideoPath(job) {
+    if (!job) return '';
+    return job.filePath || job.videoPath || job.inputPath || job.path || state()?.currentVideoPath || state()?.videoPath || '';
+  }
+
+  async function handleAutoScanRegions() {
+    const s = state();
+    const job = activeJob();
+    const vpath = resolveJobVideoPath(job);
+    if (!s || !job || !vpath) {
+      if (window.showToast) window.showToast('Vui lòng mở hoặc chọn video trước khi quét phụ đề!', 'warning');
+      return;
+    }
+    const btn = document.getElementById('btn-auto-scan-regions');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Đang quét...';
+    }
+    try {
+      const currentMask = document.getElementById('mask-mode')?.value || job.maskMode || 'box';
+      const resp = await fetch('http://127.0.0.1:8765/api/auto-detect-regions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ video_path: vpath, sample_step: 12, padding: 12, mask_mode: currentMask })
+      });
+      const data = await resp.json();
+      if (data.status === 'ok' && Array.isArray(data.regions) && data.regions.length > 0) {
+        job.regions = data.regions.map(r => ({
+          ...r,
+          maskMode: currentMask
+        }));
+        job.subtitleMode = 'manual';
+        job.maskMode = currentMask;
+        const list = document.getElementById('regions-list');
+        const overlay = document.getElementById('subtitle-overlay');
+        if (list) list.dataset.p2RegionSignature = '';
+        if (overlay) overlay.dataset.p2RegionSignature = '';
+        if (typeof window.renderManualRegions === 'function') {
+          window.renderManualRegions(job);
+        }
+        syncManualUi();
+        if (window.showToast) {
+          window.showToast(`Đã tự động tìm thấy ${data.regions.length} vùng phụ đề (chế độ: ${currentMask})!`, 'success');
+        }
+      } else {
+        if (window.showToast) {
+          window.showToast(data.message || 'Không tìm thấy phụ đề nào trong video!', 'info');
+        }
+      }
+    } catch (err) {
+      console.error('Lỗi khi tự động quét box:', err);
+      if (window.showToast) window.showToast('Lỗi kết nối khi quét phụ đề!', 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '⚡ Tự quét Box';
+      }
+    }
+  }
+
+  function bindGlobalMaskModeSync() {
+    const maskSelect = document.getElementById('mask-mode');
+    if (maskSelect && !maskSelect.dataset.p2MaskSyncBound) {
+      maskSelect.dataset.p2MaskSyncBound = 'true';
+      maskSelect.addEventListener('change', () => {
+        const job = activeJob();
+        if (!job) return;
+        const newMask = maskSelect.value || 'box';
+        job.maskMode = newMask;
+        if (Array.isArray(job.regions) && job.regions.length > 0) {
+          job.regions.forEach(r => { r.maskMode = newMask; });
+          const list = document.getElementById('regions-list');
+          if (list) list.dataset.p2RegionSignature = '';
+          if (typeof window.renderManualRegions === 'function') {
+            window.renderManualRegions(job);
+          }
+        }
+      });
+    }
   }
 
   function installEventGuards() {
@@ -243,11 +444,13 @@
         const jobId = card.dataset.jobId || card.dataset.pipelineJobId;
         if (jobId && jobId !== state()?.activeJobId) clearResultPreviewForJobSwitch();
       }
-      if (event.target.closest?.('#btn-draw-region, #mode-auto, #mode-manual')) {
+      if (event.target.closest?.('#btn-draw-region, #mode-auto, #mode-manual, #btn-auto-scan-regions')) {
         queueMicrotask(syncManualUi);
       }
     }, true);
 
+    document.getElementById('btn-auto-scan-regions')?.addEventListener('click', handleAutoScanRegions);
+    bindGlobalMaskModeSync();
     document.addEventListener('mousedown', beginRegionDrag, true);
     document.addEventListener('mousemove', moveRegion, true);
     document.addEventListener('mouseup', endRegionDrag, true);

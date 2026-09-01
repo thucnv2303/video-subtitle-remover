@@ -124,8 +124,8 @@
     const jobs = state()?.jobs?.filter(isStandaloneJob) || [];
     const summary = document.getElementById('standalone-queue-summary');
     if (!summary) return;
-    const ready = jobs.filter(job => job.status === 'idle' || job.status === 'error').length;
-    const running = jobs.filter(job => job.status === 'queued' || job.status === 'processing').length;
+    const ready = jobs.filter(job => !['queued', 'processing'].includes(job.status)).length;
+    const running = jobs.filter(job => ['queued', 'processing'].includes(job.status)).length;
     const done = jobs.filter(job => job.status === 'finished').length;
     summary.textContent = `${jobs.length} video · ${ready} sẵn sàng · ${running} đang chạy · ${done} hoàn tất`;
   }
@@ -214,8 +214,10 @@
 
   function mountNav() {
     if (document.getElementById(NAV_ID)) return true;
+    const menu = document.querySelector('.nav-menu');
+    if (!menu) return false;
     const voice = document.getElementById(VOICE_NAV_ID);
-    if (!voice) return false;
+    const settings = menu.querySelector('[data-page="settings"]');
     const item = document.createElement('a');
     item.href = '#';
     item.id = NAV_ID;
@@ -223,7 +225,9 @@
     item.dataset.page = 'subtitle-remover';
     item.title = 'Xóa Sub';
     item.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16"/><path d="M7 7l1 13h8l1-13"/><path d="M9 4h6v3"/></svg><span>Xóa Sub</span>';
-    voice.insertAdjacentElement('afterend', item);
+    if (voice) voice.insertAdjacentElement('afterend', item);
+    else if (settings) menu.insertBefore(item, settings);
+    else menu.appendChild(item);
     item.addEventListener('click', event => {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -267,7 +271,7 @@
     const baseName = fileName.replace(/\.[^.]+$/, '');
     const dir = normalized.replace(/\\/g, '/').replace(/\/[^/]+$/, '');
     return s?.outputDir
-      ? `${s.outputDir.replace(/\\/g, '/')}/${baseName}_no_sub.mp4`
+      ? `${s.outputDir.replace(/\\/g, '/').replace(/\/+$/, '')}/${baseName}_no_sub.mp4`
       : `${dir}/${baseName}_no_sub.mp4`;
   }
 
@@ -360,7 +364,7 @@
       return;
     }
 
-    const jobs = s.jobs.filter(job => isStandaloneJob(job) && ['idle', 'error'].includes(job.status));
+    const jobs = s.jobs.filter(job => isStandaloneJob(job) && !['queued', 'processing'].includes(job.status));
     jobs.forEach(job => {
       job.pipeline = 2;
       job.extractSrt = false;
@@ -430,6 +434,23 @@
       }, 50);
       setTimeout(() => clearInterval(renderTimer), 5000);
     }
+
+    // Expose bridge API for other tabs (e.g. Video Render, Voice Render)
+    window.standaloneSubtitleRemover = {
+      enter: enterStandaloneMode,
+      exit: exitStandaloneMode,
+      addVideos: addStandalonePaths,
+      enterAndAdd: (paths) => {
+        enterStandaloneMode();
+        return addStandalonePaths(Array.isArray(paths) ? paths : [paths]);
+      }
+    };
+    window.addVideoToSubtitleRemover = (filePath) => {
+      if (!filePath) return false;
+      enterStandaloneMode();
+      return addStandalonePaths([filePath]) > 0;
+    };
+
     return true;
   }
 

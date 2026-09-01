@@ -1,0 +1,227 @@
+diff --git a/infer_flash.py b/infer_flash.py
+--- a/infer_flash.py
++++ b/infer_flash.py
+@@ -302,8 +302,15 @@
+             pipeline.transformer = shard_fn(pipeline.transformer)
+
+
+-    pipeline.to(device=device)
++    if GPU_memory_mode == "sequential_cpu_offload":
++        print("VSR_LOW_VRAM_OFFLOAD_V2: sequential CPU offload + chunked long-audio enabled.")
++        pipeline.enable_sequential_cpu_offload()
++    elif GPU_memory_mode == "full_gpu":
++        print("VSR_LOW_VRAM_OFFLOAD_V2: full GPU mode enabled.")
++        pipeline.to(device=device)
++    else:
++        raise ValueError(f"Unsupported GPU_memory_mode: {GPU_memory_mode}")
+
+     coefficients = get_teacache_coefficients(model_name) if enable_teacache else None
+     if coefficients is not None:
+         print(f"Enable TeaCache with threshold {teacache_threshold} and skip the first {num_skip_start_steps} steps.")
+@@ -312,7 +319,5 @@
+         )
+
+     generator = torch.Generator(device=device).manual_seed(seed)
+
+-    pipeline.to(device=device)
+-
+     # Create output directory
+@@ -339,80 +344,140 @@
+         ref_start = np.array(ref_image)
+
+-        # Load audio
++        # Load full audio. video_length is the per-chunk VRAM ceiling, not total output length.
+         audio_clip = AudioFileClip(audio_path)
+-        video_length_actual = min(int(audio_clip.duration * fps), video_length)
+-        video_length_actual = int((video_length_actual - 1) // vae.config.temporal_compression_ratio * vae.config.temporal_compression_ratio) + 1 if video_length_actual != 1 else 1
++        total_video_frames = max(1, int(math.ceil(audio_clip.duration * fps)))
++        chunk_max_frames = max(5, int(video_length))
++        chunk_max_frames = ((chunk_max_frames - 1) // vae.config.temporal_compression_ratio) * vae.config.temporal_compression_ratio + 1
++        if chunk_max_frames < 5:
++            raise ValueError("video_length must allow at least 5 frames for chunked rendering")
++        chunk_stride = chunk_max_frames - 1
+
+-        # Get audio features
++        # Extract Wav2Vec features once for the whole voice on CPU. Only each chunk is moved to CUDA.
+         mel_input, sr = librosa.load(audio_path, sr=16000)
+         mel_input = loudness_norm(mel_input, sr)
+-        mel_input = mel_input[:int(video_length_actual / 25 * sr)]
+-
+-        print(f"Audio length: {int(len(mel_input)/ sr * 25)}, Video length: {video_length_actual}")
+-        audio_feature_wav2vec = get_audio_embed(mel_input, wav2vec_feature_extractor, audio_encoder, video_length_actual, sr=16000, fps=25, device='cpu')
+-
+-        # Get audio batch
+-        audio_embeds = audio_feature_wav2vec.to(device=device, dtype=weight_dtype)
+-
+-        indices = (torch.arange(2 * 2 + 1) - 2) * 1
+-        center_indices = torch.arange(
+-            0,
+-            video_length_actual,
+-            1,).unsqueeze(1) + indices.unsqueeze(0)
+-        center_indices = torch.clamp(center_indices, min=0, max=audio_embeds.shape[0]-1)
+-        audio_embeds = audio_embeds[center_indices] # F w s c [F, 5, 12, 768]
+-        audio_embeds = audio_embeds.unsqueeze(0).to(device=device)
++        print(f"VSR_LONG_AUDIO_V2: duration={audio_clip.duration:.3f}s total_frames={total_video_frames} chunk_frames={chunk_max_frames} stride={chunk_stride}")
++        audio_feature_wav2vec = get_audio_embed(
++            mel_input,
++            wav2vec_feature_extractor,
++            audio_encoder,
++            total_video_frames,
++            sr=16000,
++            fps=fps,
++            device='cpu',
++        )
+
+-        print(f"Audio embeds shape: {audio_embeds.shape}")
++        current_reference = Image.fromarray(ref_start).convert("RGB")
++        rendered_parts = []
++        chunk_index = 0
+
+-        validation_image_start = Image.fromarray(ref_start).convert("RGB")
+-        validation_image_end = None
+-        latent_frames = (video_length_actual - 1) // vae.config.temporal_compression_ratio + 1
++        for chunk_start in range(0, total_video_frames, chunk_stride):
++            raw_chunk_frames = min(chunk_max_frames, total_video_frames - chunk_start)
++            # A later chunk with only the overlap frame adds no new output.
++            if chunk_start > 0 and raw_chunk_frames <= 1:
++                break
+
+-        if enable_riflex:
+-            pipeline.transformer.enable_riflex(k = riflex_k, L_test = latent_frames)
+-        sample_size_0, sample_size_1 = get_sample_size(validation_image_start, sample_size)
++            # Wan VAE requires frame counts in the form 4k+1. Pad only the final chunk, then trim it back.
++            chunk_frames = raw_chunk_frames
++            remainder = (chunk_frames - 1) % vae.config.temporal_compression_ratio
++            if remainder:
++                chunk_frames += vae.config.temporal_compression_ratio - remainder
++            chunk_frames = min(chunk_frames, chunk_max_frames)
+
+-        input_video, input_video_mask, clip_image = get_image_to_video_latent2(validation_image_start, validation_image_end, video_length=video_length_actual, sample_size=[sample_size_0, sample_size_1])
++            chunk_index += 1
++            print(
++                f"VSR_LONG_AUDIO_V2: chunk={chunk_index} start={chunk_start} "
++                f"actual_frames={raw_chunk_frames} infer_frames={chunk_frames}"
++            )
+
+-        sample = pipeline(
+-            prompt,
+-            num_frames = video_length_actual,
+-            negative_prompt = negative_prompt,
+-            audio_embeds = audio_embeds,
+-            audio_scale=audio_scale,
+-            ip_mask = None,
+-            use_un_ip_mask=use_un_ip_mask,
+-            height      = sample_size_0,
+-            width       = sample_size_1,
+-            generator   = generator,
+-            neg_scale = neg_scale,
+-            neg_steps = neg_steps,
+-            use_dynamic_cfg=use_dynamic_cfg,
+-            use_dynamic_acfg=use_dynamic_acfg,
+-            guidance_scale = guidance_scale,
+-            audio_guidance_scale = audio_guidance_scale,
+-            num_inference_steps = num_inference_steps,
+-            video      = input_video,
+-            mask_video   = input_video_mask,
+-            clip_image = clip_image,
+-            cfg_skip_ratio = cfg_skip_ratio,
+-            shift = shift,
+-        ).videos
++            # Build +/-2 frame audio context against global features so boundaries keep real neighboring context.
++            local_centers = torch.arange(chunk_start, chunk_start + chunk_frames).unsqueeze(1)
++            context_offsets = (torch.arange(2 * 2 + 1) - 2).unsqueeze(0)
++            center_indices = local_centers + context_offsets
++            center_indices = torch.clamp(center_indices, min=0, max=audio_feature_wav2vec.shape[0] - 1)
++            audio_embeds = audio_feature_wav2vec[center_indices]
++            audio_embeds = audio_embeds.unsqueeze(0).to(device=device, dtype=weight_dtype)
+
+-        # Save temporary video
++            latent_frames = (chunk_frames - 1) // vae.config.temporal_compression_ratio + 1
++            if enable_riflex:
++                pipeline.transformer.enable_riflex(k=riflex_k, L_test=latent_frames)
++            if coefficients is not None:
++                # Reset TeaCache state for every independent diffusion chunk.
++                pipeline.transformer.enable_teacache(
++                    coefficients,
++                    num_inference_steps,
++                    teacache_threshold,
++                    num_skip_start_steps=num_skip_start_steps,
++                    offload=teacache_offload,
++                )
++
++            sample_size_0, sample_size_1 = get_sample_size(current_reference, sample_size)
++            input_video, input_video_mask, clip_image = get_image_to_video_latent2(
++                current_reference,
++                None,
++                video_length=chunk_frames,
++                sample_size=[sample_size_0, sample_size_1],
++            )
++
++            sample = pipeline(
++                prompt,
++                num_frames=chunk_frames,
++                negative_prompt=negative_prompt,
++                audio_embeds=audio_embeds,
++                audio_scale=audio_scale,
++                ip_mask=None,
++                use_un_ip_mask=use_un_ip_mask,
++                height=sample_size_0,
++                width=sample_size_1,
++                generator=generator,
++                neg_scale=neg_scale,
++                neg_steps=neg_steps,
++                use_dynamic_cfg=use_dynamic_cfg,
++                use_dynamic_acfg=use_dynamic_acfg,
++                guidance_scale=guidance_scale,
++                audio_guidance_scale=audio_guidance_scale,
++                num_inference_steps=num_inference_steps,
++                video=input_video,
++                mask_video=input_video_mask,
++                clip_image=clip_image,
++                cfg_skip_ratio=cfg_skip_ratio,
++                shift=shift,
++            ).videos
++
++            sample = sample[:, :, :raw_chunk_frames].cpu()
++            if chunk_start == 0:
++                rendered_parts.append(sample)
++            else:
++                rendered_parts.append(sample[:, :, 1:])
++
++            # Reuse the actual last retained frame as the next chunk reference to reduce visible resets.
++            last_frame = sample[0, :, raw_chunk_frames - 1].permute(1, 2, 0).float().numpy()
++            last_frame = np.clip(last_frame * 255.0, 0, 255).astype(np.uint8)
++            current_reference = Image.fromarray(last_frame).convert("RGB")
++            del sample, audio_embeds, input_video, input_video_mask, clip_image
++            if torch.cuda.is_available():
++                torch.cuda.empty_cache()
++
++        if not rendered_parts:
++            raise RuntimeError("Chunked EchoMimicV3 produced no frames")
++
++        sample = torch.cat(rendered_parts, dim=2)
++        sample = sample[:, :, :total_video_frames]
++        if sample.shape[2] != total_video_frames:
++            raise RuntimeError(f"Chunked frame mismatch: expected {total_video_frames}, got {sample.shape[2]}")
++
+         tmp_video_path = os.path.join(save_path, f"{image_name}_tmp.mp4")
+-        save_videos_grid(sample[:,:,:video_length_actual], tmp_video_path, fps=fps)
+-
+-        # Add audio to video
++        save_videos_grid(sample, tmp_video_path, fps=fps)
++
++        # Preserve the complete source voice. Video is ceil(duration*fps), so it is never shorter than audio.
+         video_clip = VideoFileClip(tmp_video_path)
+-        audio_clip = audio_clip.subclipped(0, video_length_actual / fps)
+         video_clip = video_clip.with_audio(audio_clip)
+         video_clip.write_videofile(output_video_path, codec="libx264", audio_codec="aac", threads=2)
++        video_clip.close()
++        audio_clip.close()
+
+-        # Clean up temporary file
+         os.remove(tmp_video_path)
++        print(f"VSR_LONG_AUDIO_V2: completed frames={sample.shape[2]} duration={sample.shape[2] / fps:.3f}s")
+         print(f"Saved output to: {output_video_path}")
+
+ if __name__ == "__main__":
+     main()

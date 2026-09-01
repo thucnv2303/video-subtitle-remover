@@ -29,7 +29,8 @@ function ensureVoiceRenderBootstrap() {
       }
 
       const loadOwnerFixes = () => {
-        if (document.querySelector('script[data-voice-render-owner-fixes]')) return;
+        const alreadyDeclared = [...document.scripts].some((node) => /(?:^|\\/)js\\/voice-render-owner-fixes\\.js(?:[?#].*)?$/i.test(node.getAttribute('src') || ''));
+        if (alreadyDeclared || document.querySelector('script[data-voice-render-owner-fixes]')) return;
         const fixes = document.createElement('script');
         fixes.src = 'js/voice-render-owner-fixes.js';
         fixes.dataset.voiceRenderOwnerFixes = 'true';
@@ -145,7 +146,7 @@ function mergeVoiceRenderWavFiles(inputPaths, outputPath) {
     execFile('ffmpeg', [
       '-y', '-hide_banner', '-loglevel', 'error',
       '-f', 'concat', '-safe', '0', '-i', listPath,
-      '-vn', '-c:a', 'pcm_s16le', outputPath,
+      '-vn', '-c:a', 'pcm_s16le', '-ar', '48000', '-ac', '2', outputPath,
     ], { windowsHide: true }, async (error, stdout, stderr) => {
       try { fs.unlinkSync(listPath); } catch {}
       if (error) {
@@ -194,7 +195,7 @@ function applyVoiceRenderTempo(inputPath, speedFactor) {
       '-y', '-hide_banner', '-loglevel', 'error',
       '-i', source,
       '-vn', '-filter:a', `atempo=${factor.toFixed(4)}`,
-      '-c:a', 'pcm_s16le', tempoPath,
+      '-c:a', 'pcm_s16le', '-ar', '48000', '-ac', '2', tempoPath,
     ], { windowsHide: true }, async (error, stdout, stderr) => {
       if (error) {
         try { await fs.promises.unlink(tempoPath); } catch {}
@@ -216,6 +217,102 @@ function applyVoiceRenderTempo(inputPath, speedFactor) {
       }
     });
   });
+}
+
+const CLONE_AUDIO_EXTENSIONS = new Set(['.wav', '.mp3', '.flac', '.ogg', '.m4a', '.aac', '.wma', '.opus']);
+const CLONE_CLEAN_PROFILES = {
+  balanced: {
+    label: 'Cân bằng',
+    filter: 'adeclip,highpass=f=70,lowpass=f=10500,afftdn=nf=-28:tn=1,silenceremove=start_periods=1:start_duration=0.12:start_threshold=-48dB,areverse,silenceremove=start_periods=1:start_duration=0.22:start_threshold=-48dB,areverse,loudnorm=I=-20:TP=-2:LRA=7',
+  },
+  strong: {
+    label: 'Lọc mạnh',
+    filter: 'adeclip,highpass=f=85,lowpass=f=9500,afftdn=nf=-24:tn=1,silenceremove=start_periods=1:start_duration=0.12:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_duration=0.22:start_threshold=-45dB,areverse,loudnorm=I=-20:TP=-2:LRA=6',
+  },
+};
+
+function execMediaTool(command, args) {
+  return new Promise((resolve, reject) => {
+    execFile(command, args, { windowsHide: true, timeout: 120000, maxBuffer: 4 * 1024 * 1024 }, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error(String(stderr || error.message || `${command} failed`).trim()));
+        return;
+      }
+      resolve({ stdout: String(stdout || ''), stderr: String(stderr || '') });
+    });
+  });
+}
+
+async function probeCloneAudio(sourcePath) {
+  const { stdout } = await execMediaTool('ffprobe', [
+    '-v', 'error', '-select_streams', 'a:0',
+    '-show_entries', 'format=duration:stream=sample_rate,channels',
+    '-of', 'json', sourcePath,
+  ]);
+  const parsed = JSON.parse(stdout || '{}');
+  const stream = parsed.streams?.[0] || {};
+  return {
+    duration_seconds: Number(parsed.format?.duration || 0),
+    sample_rate: Number(stream.sample_rate || 0),
+    channels: Number(stream.channels || 0),
+  };
+}
+
+async function preprocessCloneAudio(payload = {}) {
+  const sourcePath = path.resolve(String(payload.inputPath || ''));
+  const profileName = String(payload.profile || 'balanced').toLowerCase();
+  const profile = CLONE_CLEAN_PROFILES[profileName];
+
+  if (!sourcePath || !fs.existsSync(sourcePath) || !fs.statSync(sourcePath).isFile()) {
+    return { ok: false, error: 'Không tìm thấy file audio mẫu.' };
+  }
+  if (!CLONE_AUDIO_EXTENSIONS.has(path.extname(sourcePath).toLowerCase())) {
+    return { ok: false, error: 'Định dạng audio chưa được hỗ trợ để tạo voice clone.' };
+  }
+  if (!profile) {
+    return { ok: false, error: 'Mức lọc âm thanh không hợp lệ.' };
+  }
+
+  let inputInfo;
+  try {
+    inputInfo = await probeCloneAudio(sourcePath);
+  } catch (error) {
+    return { ok: false, error: `Không đọc được audio mẫu: ${error.message}` };
+  }
+  if (!Number.isFinite(inputInfo.duration_seconds) || inputInfo.duration_seconds < 2) {
+    return { ok: false, error: 'Audio mẫu cần dài ít nhất 2 giây.' };
+  }
+  if (inputInfo.duration_seconds > 60) {
+    return { ok: false, error: 'Audio mẫu quá dài. Hãy chọn đoạn giọng nói dưới 60 giây, tốt nhất 5–15 giây.' };
+  }
+
+  const outputDir = path.join(app.getPath('userData'), 'voice-clone-references');
+  await fs.promises.mkdir(outputDir, { recursive: true });
+  const safeStem = path.basename(sourcePath, path.extname(sourcePath)).replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 48) || 'voice';
+  const outputPath = path.join(outputDir, `${safeStem}-${profileName}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.wav`);
+
+  try {
+    await execMediaTool('ffmpeg', [
+      '-y', '-hide_banner', '-loglevel', 'error', '-i', sourcePath,
+      '-vn', '-af', profile.filter,
+      '-ac', '1', '-ar', '24000', '-c:a', 'pcm_s16le', outputPath,
+    ]);
+    const outputInfo = await probeCloneAudio(outputPath);
+    if (outputInfo.duration_seconds < 1.5) throw new Error('Sau khi cắt khoảng lặng, audio còn quá ngắn để clone giọng.');
+    return {
+      ok: true,
+      output_path: outputPath,
+      source_path: sourcePath,
+      profile: profileName,
+      profile_label: profile.label,
+      input: inputInfo,
+      output: outputInfo,
+      warning: inputInfo.duration_seconds > 15 ? 'Audio dài hơn mức khuyên dùng 5–15 giây.' : '',
+    };
+  } catch (error) {
+    try { await fs.promises.unlink(outputPath); } catch {}
+    return { ok: false, error: error?.message || 'Không thể làm sạch audio mẫu.' };
+  }
 }
 
 function createWindow() {
@@ -339,12 +436,66 @@ ipcMain.handle('dialog:openFile', async (event, customFilters) => {
 
 ipcMain.handle('dialog:openDirectory', async () => {
   const options = {
-    title: 'Chọn thư mục đầu ra',
+    title: 'Chọn thư mục',
     properties: ['openDirectory']
   };
-  return mainWindow && !mainWindow.isDestroyed()
-    ? dialog.showOpenDialog(mainWindow, options)
-    : dialog.showOpenDialog(options);
+  return dialog.showOpenDialog(options);
+});
+
+ipcMain.handle('fs:scanVideoFiles', async (event, dirPath) => {
+  if (!dirPath || typeof dirPath !== 'string' || !fs.existsSync(dirPath)) {
+    return { ok: false, error: 'Thư mục không tồn tại.', files: [] };
+  }
+  const videoExts = new Set(['.mp4', '.mkv', '.mov', '.avi', '.ts', '.webm', '.flv', '.wmv', '.m4v']);
+  const results = [];
+
+  function scan(currentDir, depth = 0) {
+    if (depth > 4) return;
+    try {
+      const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(currentDir, entry.name);
+        if (entry.isDirectory()) {
+          scan(fullPath, depth + 1);
+        } else if (entry.isFile()) {
+          const ext = path.extname(entry.name).toLowerCase();
+          if (videoExts.has(ext)) {
+            results.push({
+              name: entry.name,
+              baseName: path.parse(entry.name).name,
+              path: fullPath
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Scan dir error:', e);
+    }
+  }
+
+  scan(dirPath, 0);
+  return { ok: true, files: results };
+});
+
+ipcMain.handle('net:fetchText', async (event, url) => {
+  if (!url || typeof url !== 'string') {
+    return { ok: false, error: 'URL không hợp lệ.' };
+  }
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/csv,text/plain,*/*'
+      }
+    });
+    if (!res.ok) {
+      return { ok: false, status: res.status, error: `HTTP ${res.status} (${res.statusText}) - Hãy chắc chắn Google Sheet đã bật chia sẻ công khai ("Bất kỳ ai có liên kết đều có thể xem").` };
+    }
+    const text = await res.text();
+    return { ok: true, text };
+  } catch (e) {
+    return { ok: false, error: e.message || 'Không thể kết nối tới Google Sheets.' };
+  }
 });
 
 ipcMain.handle('dialog:saveFile', async (event, defaultPath) => {
@@ -356,9 +507,7 @@ ipcMain.handle('dialog:saveFile', async (event, defaultPath) => {
       { name: 'All Files', extensions: ['*'] }
     ]
   };
-  const { canceled, filePath } = mainWindow && !mainWindow.isDestroyed()
-    ? await dialog.showSaveDialog(mainWindow, options)
-    : await dialog.showSaveDialog(options);
+  const { canceled, filePath } = await dialog.showSaveDialog(options);
   if (canceled || !filePath) return null;
   return path.extname(filePath) ? filePath : `${filePath}.wav`;
 });
@@ -408,6 +557,73 @@ ipcMain.handle('ollama:listModels', async (event, endpoint) => {
   }
 });
 
+async function fetchCloudProviderModels(provider, apiKey) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const url = provider === 'gemini'
+      ? `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`
+      : 'https://api.deepseek.com/models';
+    const headers = provider === 'deepseek'
+      ? { Authorization: `Bearer ${apiKey}` }
+      : undefined;
+    const response = await net.fetch(url, { method: 'GET', headers, signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`${providerLabel(provider)} trả về HTTP ${response.status}.`);
+    }
+    const body = await response.json();
+    const models = provider === 'gemini'
+      ? (Array.isArray(body?.models) ? body.models : [])
+          .filter(item => Array.isArray(item?.supportedGenerationMethods) && item.supportedGenerationMethods.includes('generateContent'))
+          .map(item => String(item?.name || '').replace(/^models\//, ''))
+      : (Array.isArray(body?.data) ? body.data : []).map(item => item?.id);
+    return [...new Set(models.filter(name => typeof name === 'string' && name.trim()))];
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function providerLabel(provider) {
+  return provider === 'gemini' ? 'Gemini' : 'DeepSeek';
+}
+
+ipcMain.handle('ai:validateProviderKeys', async (event, payload = {}) => {
+  const provider = String(payload?.provider || '').toLowerCase();
+  if (!['gemini', 'deepseek'].includes(provider)) {
+    return { ok: false, error: 'Chỉ hỗ trợ kiểm tra key Gemini hoặc DeepSeek.', results: [], models: [] };
+  }
+  const keys = Array.isArray(payload?.keys)
+    ? [...new Set(payload.keys.map(key => String(key || '').trim()).filter(Boolean))].slice(0, 20)
+    : [];
+  if (!keys.length) {
+    return { ok: false, error: `Chưa có API key ${providerLabel(provider)}.`, results: [], models: [] };
+  }
+
+  const results = [];
+  const models = new Set();
+  for (let index = 0; index < keys.length; index += 1) {
+    try {
+      const keyModels = await fetchCloudProviderModels(provider, keys[index]);
+      keyModels.forEach(model => models.add(model));
+      results.push({ index, ok: true });
+    } catch (error) {
+      const message = error?.name === 'AbortError'
+        ? `${providerLabel(provider)} không phản hồi trong 10 giây.`
+        : (error?.message || `Không kiểm tra được ${providerLabel(provider)}.`);
+      results.push({ index, ok: false, error: message });
+    }
+  }
+  const validCount = results.filter(item => item.ok).length;
+  return {
+    ok: validCount > 0,
+    error: validCount > 0 ? '' : `Không có API key ${providerLabel(provider)} hợp lệ.`,
+    results,
+    models: [...models],
+    validCount,
+    invalidCount: results.length - validCount,
+  };
+});
+
 ipcMain.handle('python:start', async () => {
   try {
     await pythonBridge.start();
@@ -438,3 +654,4 @@ ipcMain.handle('app:getPath', () => {
 ipcMain.handle('app:systemInfo', async () => getSystemInfoSnapshot());
 ipcMain.handle('voice-render:mergeWavFiles', async (event, inputPaths, outputPath) => mergeVoiceRenderWavFiles(inputPaths, outputPath));
 ipcMain.handle('voice-render:applyTempo', async (event, inputPath, speedFactor) => applyVoiceRenderTempo(inputPath, speedFactor));
+ipcMain.handle('voice-clone:preprocessAudio', async (event, payload) => preprocessCloneAudio(payload));

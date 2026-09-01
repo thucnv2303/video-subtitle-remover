@@ -1,3 +1,5 @@
+@import "settings-approved.css";
+
 /* ───────── Reset & Base ───────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -258,23 +260,26 @@ body {
 
 /* Multi-Region Panel */
 .regions-panel {
-  padding: 4px 8px;
+  padding: 6px 9px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-height: 200px;
+  gap: 6px;
+  max-height: 520px;
+  min-height: 180px;
   overflow-y: auto;
 }
 .regions-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 .regions-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  max-height: 480px;
+  overflow-y: auto;
 }
 .region-empty {
   font-size: 10px;

@@ -146,10 +146,10 @@ async function previewVoice() {
   const button=document.getElementById('step1-btn-preview-voice'); const select=document.getElementById('step1-tts-voice'); const audio=document.getElementById('step1-voice-preview-audio');
   const selected=select?.value || 'none'; if (!button || !audio) return;
   if (selected === 'none') { notify('Hãy chọn một giọng trước khi nghe thử.','warn'); return; }
-  let ref=null;
-  if (selected.startsWith('clone:')) { try { ref=JSON.parse(localStorage.getItem('tts_voices') || '[]')[Number(selected.split(':')[1])]?.audioPath || null; } catch { ref=null; } }
+  let ref=null,refText=null;
+  if (selected.startsWith('clone:')) { try { const saved=JSON.parse(localStorage.getItem('tts_voices') || '[]')[Number(selected.split(':')[1])]; ref=saved?.audioPath || null; refText=saved?.referenceTranscriptSource ? (saved?.referenceTranscript || null) : null; } catch { ref=null; refText=null; } }
   button.disabled=true; button.textContent='Đang tạo giọng thử...';
-  try { const result=await window.api.generateTTS('Xin chào, đây là giọng đọc bạn đang chọn.',ref,localStorage.getItem('tts_language') || 'vi',selected); if (result?.status !== 'ok' || !result.audio_path) throw new Error(result?.error || 'Không tạo được audio thử.'); audio.src='file:///' + result.audio_path.replace(/\\/g,'/'); audio.style.display='block'; audio.playbackRate = Number(document.getElementById('step1-tts-speed')?.value || 1); await audio.play(); }
+  try { const result=await window.api.generateTTS('Xin chào, đây là giọng đọc bạn đang chọn.',ref,localStorage.getItem('tts_language') || 'vi',selected,refText); if (result?.status !== 'ok' || !result.audio_path) throw new Error(result?.error || 'Không tạo được audio thử.'); audio.src='file:///' + result.audio_path.replace(/\\/g,'/'); audio.style.display='block'; audio.playbackRate = Number(document.getElementById('step1-tts-speed')?.value || 1); await audio.play(); }
   catch (error) { notify(error?.message || 'Không thể nghe thử giọng.','error'); }
   finally { button.disabled=false; button.textContent='▶ Nghe thử giọng'; }
 }

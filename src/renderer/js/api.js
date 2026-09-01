@@ -126,15 +126,20 @@ class APIClient {
    * - refAudioPath: reference audio for OmniVoice clone voice
    * Always sends voice_name so backend can route to Edge TTS or OmniVoice correctly.
    */
-  async generateTTS(text, refAudioPath = null, language = 'vi', voiceName = null) {
+  async generateTTS(text, refAudioPath = null, language = 'vi', voiceName = null, refText = null) {
     const body = { text, ref_audio_path: refAudioPath, language };
     if (voiceName) body.voice_name = voiceName;
+    if (refText) body.ref_text = refText;
     const r = await fetch(`${this.base}/api/tts/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
     return r.json();
+  }
+
+  async transcribeVoiceReference(audioPath, language = 'vi') {
+    return this.post('/api/tts/reference-transcript', { audio_path: audioPath, language });
   }
 
   async generateTTSFromSrt(srtPath, refAudioPath = null, language = 'vi', outputDir = null) {
@@ -239,6 +244,74 @@ class APIClient {
     return result;
   }
 
+  async aiRewrite(srtContent, aiConfig = {}) {
+    const r = await fetch(`${this.base}/api/ai-rewrite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ srt_content: srtContent, ai_config: aiConfig })
+    });
+    return r.json();
+  }
+
+  async videoRenderCutAndConcat(videoPath, clips = [], outputPath = null, mode = 'lossless', removeVocal = false) {
+    const r = await fetch(`${this.base}/api/video-render/cut-and-concat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, clips, output_path: outputPath, mode, remove_vocal: removeVocal })
+    });
+    return r.json();
+  }
+
+  async removeVocalVideo(videoPath, outputVideoPath = null) {
+    const r = await fetch(`${this.base}/api/remove-vocal-video`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, output_video_path: outputVideoPath })
+    });
+    return r.json();
+  }
+
+  async detectFaceFreeTimeline(videoPath, sampleStep = 0.35, minClipSec = 1.0) {
+    const r = await fetch(`${this.base}/api/ai-remix/detect-face-free-timeline`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, sample_step_sec: sampleStep, min_clip_sec: minClipSec })
+    });
+    return r.json();
+  }
+
+  async aiRemixAutoDirector(videoPath, faceFreeIntervals = null, aiConfig = null, sampleStep = 0.35) {
+    const r = await fetch(`${this.base}/api/ai-remix/auto-director`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_path: videoPath, face_free_intervals: faceFreeIntervals, ai_config: aiConfig, sample_step_sec: sampleStep })
+    });
+    return r.json();
+  }
+
+  async aiRemixProcessSingleVideo(videoPath, outputPath = null, ttsVoice = 'default', mode = 'lossless', removeVocal = true, generateThumbnail = true, aiConfig = null, remixClips = null, voiceoverScript = null, headline = null, subHeadline = null, badgeText = null, features = null) {
+    const r = await fetch(`${this.base}/api/ai-remix/process-single-video`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        video_path: videoPath,
+        output_path: outputPath,
+        tts_voice: ttsVoice,
+        mode,
+        remove_vocal: removeVocal,
+        generate_thumbnail: generateThumbnail,
+        ai_config: aiConfig,
+        remix_clips: remixClips,
+        voiceover_script: voiceoverScript,
+        headline,
+        sub_headline: subHeadline,
+        badge_text: badgeText,
+        features
+      })
+    });
+    return r.json();
+  }
+
   async detectSubPositions(videoPath, sampleStep = 30) {
     const r = await fetch(`${this.base}/api/detect-sub-positions`, {
       method: 'POST',
@@ -268,15 +341,19 @@ class APIClient {
   // voiceValue can be: 'vi-VN-NamMinhNeural', 'clone:0', etc.
   async testTTS({ voice, text }) {
     let refAudio = null;
+    let refText = null;
     const language = 'vi';
     if (voice && voice.startsWith('clone:')) {
       const idx = parseInt(voice.split(':')[1]);
       try {
         const voices = JSON.parse(localStorage.getItem('tts_voices') || '[]');
-        if (voices[idx]) refAudio = voices[idx].audioPath;
+        if (voices[idx]) {
+          refAudio = voices[idx].audioPath;
+          refText = voices[idx].referenceTranscriptSource ? (voices[idx].referenceTranscript || null) : null;
+        }
       } catch (e) {}
     }
-    const result = await this.generateTTS(text, refAudio, language, voice);
+    const result = await this.generateTTS(text, refAudio, language, voice, refText);
     if (result.status === 'ok') return { audio_path: result.audio_path };
     return result;
   }

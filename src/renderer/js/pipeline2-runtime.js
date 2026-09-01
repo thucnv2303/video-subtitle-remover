@@ -113,19 +113,28 @@
   function isNoisyAccessLog(text) {
     const successfulPolling = /\bINFO:\s+127\.0\.0\.1:\d+\s+-\s+"(?:GET|POST) \/api\/(?:status|preview|health|tts\/status|gpu-info|frame\/[^\s?"]+)\b[^\"]*HTTP\/1\.1"\s+200\s+OK/i.test(text);
     const expectedPreviewNotReady = /\bINFO:\s+127\.0\.0\.1:\d+\s+-\s+"GET \/api\/preview\b[^\"]*HTTP\/1\.1"\s+404\s+Not Found/i.test(text);
-    return successfulPolling || expectedPreviewNotReady;
+    const debugNoise = /\[DEBUG/i.test(text);
+    return successfulPolling || expectedPreviewNotReady || debugNoise;
   }
 
   function isHeartbeat(text) {
-    return /\[Inpaint\]\s+Đang xử lý|processing frame\s+\d+\s+to\s+\d+|Processing:\s*\d+\s*-\s*\d+\s*\/\s*Total|(?:processing|xử lý)[^\n]*frame\s+\d+\s*\/\s*\d+/i.test(text);
+    return /\[Inpaint\]\s+Đang xử lý|processing frame\s+\d+\s+to\s+\d+|Processing:\s*\d+\s*-\s*\d+\s*\/\s*Total|(?:processing|xử lý)[^\n]*frame\s+\d+\s*\/\s*\d+|Subtitle (?:Removing|Finding):\s*\d+%/i.test(text);
   }
 
   function extractHeartbeat(text, job) {
-    const pctMatch = text.match(/tiến độ:\s*(\d+(?:\.\d+)?)%/i);
+    const pctMatch = text.match(/tiến độ:\s*(\d+(?:\.\d+)?)%/i) || text.match(/Subtitle (?:Removing|Finding):\s*(\d+)%/i);
+    const removeMatch = text.match(/Subtitle Removing:\s*\d+%\s*\|\s*[^|]*\|\s*(\d+)\/(\d+)/i);
+    const findMatch = text.match(/Subtitle Finding:\s*\d+%\s*\|\s*[^|]*\|\s*(\d+)\/(\d+)/i);
     const frameRange = text.match(/processing frame\s+(\d+)\s+to\s+(\d+)/i);
     const processingRange = text.match(/Processing:\s*(\d+)\s*-\s*(\d+)\s*\/\s*Total:\s*(\d+)/i);
     const simpleFrame = text.match(/frame\s+(\d+)\s*\/\s*(\d+)/i);
-    if (frameRange) {
+    if (removeMatch) {
+      lastFrame = Math.max(0, Number(removeMatch[1]) - 1);
+      lastStage = 'Đang xóa subtitle';
+    } else if (findMatch) {
+      lastFrame = Math.max(0, Number(findMatch[1]) - 1);
+      lastStage = 'Đang tìm subtitle';
+    } else if (frameRange) {
       lastFrame = Math.max(0, Number(frameRange[2]) - 1);
       lastStage = `Xóa subtitle frame ${frameRange[1]}–${frameRange[2]}`;
     } else if (processingRange) {
@@ -244,23 +253,48 @@
         list.appendChild(empty);
       } else {
         job.regions.forEach((region, index) => {
+          const color = REGION_COLORS[index % REGION_COLORS.length];
           const item = document.createElement('div');
           item.className = 'region-item p2-region-runtime-item';
           item.dataset.p2RegionRuntime = 'true';
-          item.style.cssText = 'display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:6px;padding:5px 0';
+          item.dataset.standaloneRegionIndex = String(index);
+          item.style.cssText = `display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:6px;padding:6px 8px;margin-bottom:6px;border-radius:6px;border:1px solid ${color}66;border-left:4px solid ${color};background:rgba(15,30,45,0.75);transition:all 0.15s;cursor:pointer;`;
 
           const dot = document.createElement('span');
           dot.className = 'region-dot';
-          dot.style.background = REGION_COLORS[index % REGION_COLORS.length];
+          dot.style.background = color;
+          dot.style.width = '8px';
+          dot.style.height = '8px';
+          dot.style.borderRadius = '50%';
+          dot.style.display = 'inline-block';
 
           const label = document.createElement('span');
           label.className = 'region-label';
-          label.textContent = `Vùng #${region.label} (${region.startFrame}-${region.endFrame})`;
+          label.style.cssText = 'font-size:10px;font-weight:600;color:#eaf2fb;display:flex;align-items:center;gap:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+          const sf = region.startFrame ?? 0;
+          const ef = region.endFrame ?? 0;
+          label.innerHTML = `<span style="background:${color};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;">#${region.label || (index + 1)}</span> <span class="p2-jump-start" style="cursor:pointer;text-decoration:underline dotted;" title="Nhảy đến frame đầu">(${sf}</span>-<span class="p2-jump-end" style="cursor:pointer;text-decoration:underline dotted;" title="Nhảy đến frame cuối">${ef})</span>`;
+          label.querySelector('.p2-jump-start')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const timeline = document.getElementById('timeline-orig');
+            if (timeline && region.startFrame != null) {
+              timeline.value = region.startFrame;
+              timeline.dispatchEvent(new Event('input'));
+            }
+          });
+          label.querySelector('.p2-jump-end')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const timeline = document.getElementById('timeline-orig');
+            if (timeline && region.endFrame != null) {
+              timeline.value = region.endFrame;
+              timeline.dispatchEvent(new Event('input'));
+            }
+          });
 
           const mask = document.createElement('select');
           mask.className = 'p2-region-mask-select';
           mask.setAttribute('aria-label', `Mask cho vùng ${region.label}`);
-          mask.style.cssText = 'min-width:72px;height:26px;border:1px solid #334d67;border-radius:5px;background:#0f1e2d;color:#eaf2fb;padding:2px 5px;font-size:9px';
+          mask.style.cssText = 'min-width:68px;height:24px;border:1px solid #334d67;border-radius:5px;background:#0f1e2d;color:#eaf2fb;padding:2px 4px;font-size:9px';
           [['box','Box'], ['tight','Tight'], ['soft','Soft']].forEach(([value, text]) => {
             const option = document.createElement('option');
             option.value = value;
@@ -277,11 +311,40 @@
           remove.className = 'btn-region-del';
           remove.type = 'button';
           remove.textContent = '✕';
-          remove.addEventListener('click', () => {
+          remove.style.cssText = 'background:transparent;border:0;color:#8ba3bc;cursor:pointer;padding:2px 4px;font-size:11px;';
+          remove.addEventListener('click', (e) => {
+            e.stopPropagation();
             job.regions.splice(index, 1);
             list.dataset.p2RegionSignature = '';
             geometry.overlay.dataset.p2RegionSignature = '';
             renderManualRegions(job);
+          });
+
+          item.addEventListener('click', () => {
+            setActiveRegionIndex(index);
+          });
+
+          item.addEventListener('mouseenter', () => {
+            if (selectedRegionIndex !== index) {
+              item.style.background = 'rgba(30, 58, 88, 0.9)';
+              item.style.borderColor = color;
+            }
+            const overlayBox = geometry.overlay.querySelector(`.region-overlay[data-standalone-region-index="${index}"]`);
+            if (overlayBox && selectedRegionIndex !== index) {
+              overlayBox.style.boxShadow = `0 0 12px 2px ${color}`;
+              overlayBox.style.zIndex = '50';
+            }
+          });
+          item.addEventListener('mouseleave', () => {
+            if (selectedRegionIndex !== index) {
+              item.style.background = 'rgba(15,30,45,0.75)';
+              item.style.borderColor = `${color}66`;
+            }
+            const overlayBox = geometry.overlay.querySelector(`.region-overlay[data-standalone-region-index="${index}"]`);
+            if (overlayBox && selectedRegionIndex !== index) {
+              overlayBox.style.boxShadow = 'none';
+              overlayBox.style.zIndex = '10';
+            }
           });
 
           item.append(dot, label, mask, remove);
@@ -296,15 +359,85 @@
     if (!overlayReady) {
       geometry.overlay.querySelectorAll('.region-overlay,[data-p2-region-runtime]').forEach(node => node.remove());
       job.regions.forEach((region, index) => {
+        const color = REGION_COLORS[index % REGION_COLORS.length];
         const div = document.createElement('div');
         div.className = 'region-overlay';
         div.dataset.p2RegionRuntime = 'true';
-        div.style.cssText = `position:absolute;border:2px solid ${REGION_COLORS[index % REGION_COLORS.length]};pointer-events:none;left:${geometry.offsetX + region.xmin * geometry.scaleToDisplayX}px;top:${geometry.offsetY + region.ymin * geometry.scaleToDisplayY}px;width:${(region.xmax-region.xmin) * geometry.scaleToDisplayX}px;height:${(region.ymax-region.ymin) * geometry.scaleToDisplayY}px;`;
+        div.dataset.standaloneRegionIndex = String(index);
+        div.dataset.startFrame = String(region.startFrame ?? 0);
+        div.dataset.endFrame = String(region.endFrame ?? 999999);
+        const topPx = geometry.offsetY + region.ymin * geometry.scaleToDisplayY;
+        const isNearTop = topPx < 22;
+        const badgeTop = isNearTop ? '2px' : '-18px';
+        const badgeRadius = isNearTop ? '0 0 3px 0' : '3px 3px 0 0';
+        div.style.cssText = `position:absolute;border:2px solid ${color};background:rgba(0,0,0,0.1);border-radius:3px;pointer-events:none;left:${geometry.offsetX + region.xmin * geometry.scaleToDisplayX}px;top:${topPx}px;width:${(region.xmax-region.xmin) * geometry.scaleToDisplayX}px;height:${(region.ymax-region.ymin) * geometry.scaleToDisplayY}px;box-sizing:border-box;`;
+
+        const badge = document.createElement('span');
+        badge.className = 'region-box-badge';
+        badge.textContent = `Vùng #${region.label || (index + 1)}`;
+        badge.style.cssText = `position:absolute;top:${badgeTop};left:-2px;background:${color};color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:${badgeRadius};line-height:14px;box-shadow:0 1px 3px rgba(0,0,0,0.5);white-space:nowrap;pointer-events:none;z-index:15;`;
+        div.appendChild(badge);
+
         geometry.overlay.appendChild(div);
       });
       geometry.overlay.dataset.p2RegionSignature = signature;
     }
+    syncOverlayFrameVisibility();
     manualRegionUiJobId = job.id;
+  }
+
+  let selectedRegionIndex = null;
+
+  function setActiveRegionIndex(index) {
+    selectedRegionIndex = index;
+    const list = document.getElementById('regions-list');
+    const overlay = document.getElementById('subtitle-overlay');
+    if (!list) return;
+
+    list.querySelectorAll('.p2-region-runtime-item').forEach((item, idx) => {
+      const color = REGION_COLORS[idx % REGION_COLORS.length];
+      if (idx === index) {
+        item.classList.add('region-item-active');
+        item.style.border = `2px solid ${color}`;
+        item.style.borderLeft = `6px solid ${color}`;
+        item.style.background = 'rgba(25, 55, 90, 0.95)';
+        item.style.boxShadow = `0 0 14px 2px ${color}88`;
+      } else {
+        item.classList.remove('region-item-active');
+        item.style.border = `1px solid ${color}66`;
+        item.style.borderLeft = `4px solid ${color}`;
+        item.style.background = 'rgba(15,30,45,0.75)';
+        item.style.boxShadow = 'none';
+      }
+    });
+  }
+  window.setActiveRegionIndex = setActiveRegionIndex;
+
+  function syncOverlayFrameVisibility() {
+    const overlay = document.getElementById('subtitle-overlay');
+    if (!overlay) return;
+    const timeline = document.getElementById('timeline-orig');
+    const currentFrame = timeline ? Number(timeline.value || 0) : 0;
+    let firstVisibleIndex = null;
+    let selectedStillVisible = false;
+
+    overlay.querySelectorAll('.region-overlay').forEach(node => {
+      const idx = Number(node.dataset.standaloneRegionIndex ?? -1);
+      const start = Number(node.dataset.startFrame ?? -Infinity);
+      const end = Number(node.dataset.endFrame ?? Infinity);
+      const inRange = currentFrame >= start && currentFrame <= end;
+      node.style.display = inRange ? 'block' : 'none';
+      if (inRange) {
+        if (firstVisibleIndex === null) firstVisibleIndex = idx;
+        if (idx === selectedRegionIndex) selectedStillVisible = true;
+      }
+    });
+
+    if (selectedRegionIndex !== null && selectedStillVisible) {
+      setActiveRegionIndex(selectedRegionIndex);
+    } else if (firstVisibleIndex !== null) {
+      setActiveRegionIndex(firstVisibleIndex);
+    }
   }
 
   function syncManualRegionUi() {
@@ -417,6 +550,13 @@
       event.stopImmediatePropagation();
     }, true);
 
+    const timeline = document.getElementById('timeline-orig');
+    if (timeline && !timeline.dataset.p2OverlayBound) {
+      timeline.dataset.p2OverlayBound = 'true';
+      timeline.addEventListener('input', syncOverlayFrameVisibility);
+      timeline.addEventListener('change', syncOverlayFrameVisibility);
+    }
+
     window.addEventListener('resize', () => {
       const overlay = document.getElementById('subtitle-overlay');
       if (overlay) overlay.dataset.p2RegionSignature = '';
@@ -482,6 +622,12 @@
           document.getElementById('result-placeholder')?.classList.add('hidden');
           const info = document.getElementById('frame-info-result');
           if (info) info.textContent = lastFrame !== null ? `LIVE • frame ${Number(lastFrame) + 1}` : 'LIVE';
+
+          const timeline = document.getElementById('timeline-orig');
+          const isUserInteracting = document.activeElement === timeline;
+          if (!isUserInteracting && lastFrame !== null && job.filePath && typeof window.loadOrigFrame === 'function') {
+            window.loadOrigFrame(Number(lastFrame), job.filePath);
+          }
         } finally {
           URL.revokeObjectURL(url);
         }

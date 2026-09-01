@@ -3,13 +3,18 @@ const fs = require('fs');
 const path = require('path');
 const { burnP3SubtitleHq, retimeP3Video } = require('./p3-export-bridge');
 const talkingPortrait = require('./talking-portrait-engine');
+const echoMimicV3 = require('./echomimicv3-engine');
 
 ipcMain.handle('p3:burnSubtitleHq', async (event, payload) => burnP3SubtitleHq(payload));
 ipcMain.handle('p3:retimeVideo', async (event, payload) => retimeP3Video(payload));
-ipcMain.handle('talking-portrait:status', async () => talkingPortrait.engineStatus());
+ipcMain.handle('talking-portrait:status', async () => ({ ...talkingPortrait.engineStatus(), echoMimicV3: echoMimicV3.status() }));
 ipcMain.handle('talking-portrait:chooseEngine', async (event) => talkingPortrait.chooseEngineRoot(event));
-ipcMain.handle('talking-portrait:generate', async (event, payload) => talkingPortrait.spawnJoyVasa(event, payload));
-ipcMain.handle('talking-portrait:cancel', async () => talkingPortrait.cancel());
+ipcMain.handle('talking-portrait:generate', async (event, payload = {}) => payload.quality === 'quality' ? echoMimicV3.generate(event, payload) : talkingPortrait.spawnJoyVasa(event, payload));
+ipcMain.handle('talking-portrait:cancel', async () => {
+  const echo = echoMimicV3.cancel();
+  const joy = talkingPortrait.cancel();
+  return echo.cancelled ? echo : joy;
+});
 ipcMain.handle('app:saveCopy', async (event, payload = {}) => {
   const sourcePath = path.resolve(String(payload.sourcePath || ''));
   if (!sourcePath || !fs.existsSync(sourcePath)) return { ok: false, error: 'Không tìm thấy file kết quả để tải.' };
@@ -20,9 +25,7 @@ ipcMain.handle('app:saveCopy', async (event, payload = {}) => {
   const defaultPath = path.join(path.dirname(sourcePath), suggestedName);
   const owner = BrowserWindow.fromWebContents(event.sender);
   const options = { title: 'Tải kết quả', defaultPath };
-  const result = owner && !owner.isDestroyed()
-    ? await dialog.showSaveDialog(owner, options)
-    : await dialog.showSaveDialog(options);
+  const result = await dialog.showSaveDialog(options);
   if (result.canceled || !result.filePath) return { ok: false, canceled: true };
 
   try {
@@ -33,14 +36,17 @@ ipcMain.handle('app:saveCopy', async (event, payload = {}) => {
   }
 });
 
+function loadRendererModule(window, relativePath, label) {
+  const source = `(async () => { await import(new URL(${JSON.stringify(relativePath)}, location.href).href); return true; })()`;
+  window.webContents.executeJavaScript(source)
+    .catch(error => console.error(`${label} module load failed:`, error));
+}
+
 app.on('browser-window-created', (event, window) => {
   window.webContents.on('did-finish-load', () => {
-    window.webContents.executeJavaScript("import(new URL('./js/pipeline3/preview-ass-parity.js', location.href).href)")
-      .catch(error => console.error('[P3] Preview parity module load failed:', error));
-    window.webContents.executeJavaScript("import(new URL('./js/job-export-controls.js', location.href).href)")
-      .catch(error => console.error('[Job Export] module load failed:', error));
-    window.webContents.executeJavaScript("import(new URL('./js/talking-portrait.js', location.href).href)")
-      .catch(error => console.error('[AI Avatar] module load failed:', error));
+    loadRendererModule(window, './js/pipeline3/preview-ass-parity.js', '[P3] Preview parity');
+    loadRendererModule(window, './js/job-export-controls.js', '[Job Export]');
+    loadRendererModule(window, './js/talking-portrait.js', '[AI Avatar]');
   });
 });
 

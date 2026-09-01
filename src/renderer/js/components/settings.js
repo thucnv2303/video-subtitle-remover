@@ -3,7 +3,11 @@ import { addLog } from '../utils/logger.js';
 
 let legacyMigrated = false;
 let refAudioPath = null;
+let originalRefAudioPath = null;
+let referenceTranscript = null;
+let referenceSelection = null;
 let lastVoice = localStorage.getItem('tts_voice') || 'default';
+let settingsEventsBound = false;
 
 mountSettings();
 ensureStyles();
@@ -47,14 +51,15 @@ function mountSettings() {
         <select id="ai-provider" class="approved-hidden-control" tabindex="-1"><option value="gemini">Gemini</option><option value="deepseek">DeepSeek</option><option value="ollama">Ollama</option></select>
       </div>
       <div class="approved-form-row" id="ai-api-key-group">
-        <label for="ai-api-key">API Key</label>
-        <div class="field-with-actions"><input id="ai-api-key" type="password" class="approved-input" autocomplete="off" placeholder="Nhập API key"><button id="btn-toggle-api-key" class="icon-field-btn" type="button">◉</button><button id="btn-check-ai-key" class="approved-secondary-btn compact" type="button">Kiểm tra</button></div>
-        <p class="field-help">API key được lưu cục bộ và chỉ dùng cho provider đang chọn.</p>
+        <label for="ai-api-key">API Keys</label>
+        <div class="field-with-actions"><input id="ai-api-key" type="password" class="approved-input" autocomplete="off" spellcheck="false" placeholder="Dán một hoặc nhiều key, cách nhau bằng dấu phẩy hoặc xuống dòng"><button id="btn-toggle-api-key" class="icon-field-btn" type="button">◉</button><button id="btn-add-ai-key" class="approved-secondary-btn compact" type="button">＋ Thêm key</button></div>
+        <div id="ai-key-list" class="ai-key-list"><div class="ai-key-empty">Chưa có key cho provider này.</div></div>
+        <p class="field-help">Key được lưu riêng theo provider trên máy này. Mỗi request sẽ xoay key bắt đầu rồi tự chuyển key khác khi lỗi.</p>
       </div>
-      <div class="approved-form-row" id="ai-model-group"><label for="ai-model">Model</label><input id="ai-model" class="approved-input" list="ai-model-suggestions" placeholder="Nhập hoặc chọn model"><datalist id="ai-model-suggestions"><option value="gemini-2.5-flash"><option value="gemini-2.5-pro"><option value="deepseek-chat"><option value="deepseek-reasoner"><option value="qwen3-coder:30b"></datalist><p class="field-help">Model được lưu riêng cho từng provider.</p></div>
+      <div class="approved-form-row" id="ai-model-group"><label for="ai-model">Model</label><input id="ai-model" class="approved-input" list="ai-model-suggestions" placeholder="Kiểm tra key để tải danh sách model"><datalist id="ai-model-suggestions"></datalist><p id="ai-model-load-status" class="field-help">Danh sách model sẽ được tải trực tiếp từ provider sau khi kiểm tra key.</p></div>
       <div class="approved-form-row" id="ai-endpoint-group"><label for="ai-endpoint">Ollama endpoint</label><input id="ai-endpoint" class="approved-input" placeholder="http://localhost:11434/api/chat"><p class="field-help">Chỉ áp dụng cho Ollama local.</p></div>
       <div class="approved-form-row"><label for="ai-prompt">Prompt mặc định</label><textarea id="ai-prompt" class="approved-input approved-textarea" rows="4"></textarea><p class="field-help">Được dùng khi Pipeline 1 không chọn prompt khác.</p></div>
-      <div class="approved-actions-row"><button id="settings-btn-manage-prompts" class="approved-secondary-btn" type="button">☷ Quản lý Prompt</button><button id="btn-check-ai" class="approved-secondary-btn primary-outline" type="button">⌁ Kiểm tra kết nối</button><button id="btn-save-ai" class="approved-primary-btn" type="button">Lưu thay đổi</button></div>
+      <div class="approved-actions-row"><button id="settings-btn-manage-prompts" class="approved-secondary-btn" type="button">☷ Quản lý Prompt</button><button id="btn-check-ai" class="approved-secondary-btn primary-outline" type="button">⌁ Kiểm tra key & tải model</button><button id="btn-save-ai" class="approved-primary-btn" type="button">Lưu thay đổi</button></div>
       <div id="settings-ai-status" class="inline-status"></div>
     </section>
   </div>
@@ -73,7 +78,9 @@ function mountSettings() {
       <div class="clone-list-heading"><h3>Danh sách giọng clone</h3><button id="settings-add-voice" class="approved-secondary-btn primary-outline" type="button">＋ Thêm giọng clone</button></div>
       <div id="saved-voices-list" class="approved-voice-list"><div class="voice-empty">Chưa có giọng clone nào.</div></div>
       <div id="clone-editor" class="clone-editor hidden">
-        <div class="approved-two-col"><div class="approved-form-row compact-field"><label for="clone-voice-name">Tên giọng</label><input id="clone-voice-name" class="approved-input" placeholder="VD: Giọng của tôi"></div><div class="approved-form-row compact-field"><label>Audio mẫu 3–15 giây</label><div class="file-inline"><button id="btn-upload-ref-audio" class="approved-secondary-btn" type="button">Chọn audio</button><span id="ref-audio-name">Chưa chọn file</span></div><audio id="ref-audio-preview" class="hidden-audio" controls></audio></div></div>
+        <div class="approved-two-col"><div class="approved-form-row compact-field"><label for="clone-voice-name">Tên giọng</label><input id="clone-voice-name" class="approved-input" placeholder="VD: Giọng của tôi"></div><div class="approved-form-row compact-field"><label>Audio mẫu 5–15 giây, chỉ một người nói</label><div class="file-inline"><button id="btn-upload-ref-audio" class="approved-secondary-btn" type="button">Chọn audio</button><span id="ref-audio-name">Chưa chọn file</span></div><audio id="ref-audio-preview" class="hidden-audio" controls></audio></div></div>
+        <div id="settings-clone-clean-status" class="settings-clone-clean-status">App sẽ tự lọc ồn, cắt khoảng lặng và chuẩn hóa WAV mono 24 kHz.</div>
+        <div class="approved-form-row compact-field"><label for="settings-clone-transcript">Transcript audio tham chiếu <small>(hãy kiểm tra lại)</small></label><textarea id="settings-clone-transcript" class="approved-input" rows="3" placeholder="Transcript sẽ tự xuất hiện sau khi xử lý audio"></textarea></div>
         <button id="btn-clone-voice" class="approved-primary-btn" type="button" disabled>Thêm giọng clone</button>
       </div>
       <div class="tts-controls-row"><button id="btn-test-tts" class="approved-secondary-btn" type="button">▷ Nghe thử</button><textarea id="tts-test-text" class="approved-hidden-control" tabindex="-1">Xin chào, đây là giọng đọc được tạo bởi Video Subtitle Remover.</textarea><audio id="tts-test-audio" class="tts-test-audio" controls></audio><div class="volume-control"><span>Âm lượng nhạc nền</span><span>◖</span><input id="tts-bg-volume" type="range" min="0" max="100" value="10"><span id="vol-label" class="volume-value">10%</span></div></div>
@@ -128,8 +135,18 @@ function ensureSidebarNote() {
 }
 
 export function initSettings() {
-  bindShell(); bindViews(); bindProvider(); bindAi(); bindTts(); bindVoiceClone(); bindOutputDir(); bindDiagnostics();
+  mountSettings();
+  if (!settingsEventsBound) {
+    bindShell(); bindViews(); bindProvider(); bindAi(); bindTts(); bindVoiceClone(); bindOutputDir(); bindDiagnostics();
+    settingsEventsBound = true;
+  }
   renderSavedVoices(); loadSettingsValues(); refreshDiagnostics();
+}
+window.initSettings = initSettings;
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => initSettings(), { once: true });
+} else {
+  setTimeout(() => initSettings(), 0);
 }
 
 function bindShell() {
@@ -138,8 +155,33 @@ function bindShell() {
   document.querySelectorAll('.nav-item').forEach(x => x.addEventListener('click', () => setTimeout(sync,0)));
   sync();
 }
-function bindViews() { document.querySelectorAll('#page-settings [data-settings-target]').forEach(x => x.addEventListener('click', () => showView(x.dataset.settingsTarget))); }
-function showView(name) { document.querySelectorAll('#page-settings .settings-view').forEach(v => v.classList.toggle('active', v.dataset.settingsView === name)); if (name==='system') refreshDiagnostics(); if (name==='overview') syncOverview(); document.querySelector('#page-settings .settings-scroll')?.scrollTo(0,0); }
+function bindViews() {
+  document.querySelectorAll('#page-settings [data-settings-target]').forEach(x => {
+    x.addEventListener('click', (e) => {
+      e.preventDefault();
+      showView(x.dataset.settingsTarget);
+    });
+  });
+}
+
+export function showView(name = 'overview') {
+  mountSettings();
+  const views = document.querySelectorAll('#page-settings .settings-view');
+  let matched = false;
+  views.forEach(v => {
+    const isTarget = v.dataset.settingsView === name;
+    v.classList.toggle('active', isTarget);
+    if (isTarget) matched = true;
+  });
+  if (!matched && views.length > 0) {
+    views[0].classList.add('active');
+  }
+  if (name === 'system') refreshDiagnostics();
+  if (name === 'overview') syncOverview();
+  document.querySelector('#page-settings .settings-scroll')?.scrollTo(0, 0);
+}
+window.showSettingsView = showView;
+
 
 export function loadSettingsValues() {
   const provider = localStorage.getItem('ai_provider') || 'gemini'; migrateLegacy(provider);
@@ -153,14 +195,68 @@ export function loadSettingsValues() {
   syncOutputDir(); updateVoiceDropdown(getSavedVoices()); syncOverview();
 }
 
-function loadProvider(provider) { const key=document.getElementById('ai-api-key'), model=document.getElementById('ai-model'), endpoint=document.getElementById('ai-endpoint'); if(key) key.value=isCloud(provider)?readKey(provider):''; if(model) model.value=localStorage.getItem(`ai_model_${provider}`)??''; if(endpoint) endpoint.value=provider==='ollama'?(localStorage.getItem('ai_endpoint')||'http://localhost:11434/api/chat'):''; }
-function readKey(provider) { try { const a=JSON.parse(localStorage.getItem(`ai_api_keys_${provider}`)||'[]'); const first=Array.isArray(a)?a[0]:null; return typeof first==='string'?first:(first?.key||''); } catch { return ''; } }
+function loadProvider(provider) {
+  const key=document.getElementById('ai-api-key'), model=document.getElementById('ai-model'), endpoint=document.getElementById('ai-endpoint');
+  if(key) key.value='';
+  if(model) model.value=localStorage.getItem(`ai_model_${provider}`)??'';
+  if(endpoint) endpoint.value=provider==='ollama'?(localStorage.getItem('ai_endpoint')||'http://localhost:11434/api/chat'):'';
+  renderProviderKeys(provider);
+  populateCloudModels(provider, readCachedModels(provider), false);
+}
+
+function readProviderKeys(provider) {
+  try {
+    const raw=JSON.parse(localStorage.getItem(`ai_api_keys_${provider}`)||'[]');
+    if(!Array.isArray(raw)) return [];
+    const seen=new Set();
+    return raw.map(item=>typeof item==='string'?{key:item,status:'unchecked'}:item)
+      .filter(item=>item&&typeof item.key==='string'&&item.key.trim())
+      .map(item=>({key:item.key.trim(),status:['valid','invalid'].includes(item.status)?item.status:'unchecked',lastCheckedAt:item.lastCheckedAt||''}))
+      .filter(item=>{if(seen.has(item.key))return false;seen.add(item.key);return true;});
+  } catch { return []; }
+}
+function writeProviderKeys(provider,records){localStorage.setItem(`ai_api_keys_${provider}`,JSON.stringify(records));}
+function parseKeyInput(value){return [...new Set(String(value||'').split(/[\s,;]+/).map(key=>key.trim()).filter(Boolean))];}
+function addKeysFromInput(provider){
+  if(!isCloud(provider))return 0;
+  const input=document.getElementById('ai-api-key'),incoming=parseKeyInput(input?.value),records=readProviderKeys(provider),seen=new Set(records.map(item=>item.key));
+  let added=0;
+  incoming.forEach(key=>{if(!seen.has(key)){records.push({key,status:'unchecked',lastCheckedAt:''});seen.add(key);added+=1;}});
+  if(added)writeProviderKeys(provider,records);
+  if(input)input.value='';
+  renderProviderKeys(provider);
+  return added;
+}
+function maskKey(key){return key.length<=10?'••••••••':`${key.slice(0,5)}••••${key.slice(-4)}`;}
+function renderProviderKeys(provider){
+  const list=document.getElementById('ai-key-list');if(!list)return;
+  const records=isCloud(provider)?readProviderKeys(provider):[];
+  list.replaceChildren();
+  if(!records.length){const empty=document.createElement('div');empty.className='ai-key-empty';empty.textContent=isCloud(provider)?'Chưa có key cho provider này.':'Ollama local không cần API key.';list.appendChild(empty);return;}
+  records.forEach((record,index)=>{
+    const row=document.createElement('div');row.className='ai-key-row';
+    const mask=document.createElement('span');mask.className='ai-key-mask';mask.textContent=`Key ${index+1} · ${maskKey(record.key)}`;
+    const state=document.createElement('span');state.className=`ai-key-state ${record.status==='valid'?'valid':record.status==='invalid'?'invalid':''}`;state.textContent=record.status==='valid'?'Hợp lệ':record.status==='invalid'?'Không hợp lệ':'Chưa kiểm tra';
+    const remove=document.createElement('button');remove.type='button';remove.className='ai-key-delete';remove.dataset.keyIndex=String(index);remove.title='Xóa key';remove.textContent='×';
+    row.append(mask,state,remove);list.appendChild(row);
+  });
+}
+function readCachedModels(provider){try{const value=JSON.parse(localStorage.getItem(`ai_models_${provider}`)||'[]');return Array.isArray(value)?value:[];}catch{return[];}}
+function populateCloudModels(provider,models,persist=true){
+  if(!isCloud(provider))return;
+  const clean=[...new Set((Array.isArray(models)?models:[]).map(item=>String(item||'').trim()).filter(Boolean))];
+  if(persist&&clean.length)localStorage.setItem(`ai_models_${provider}`,JSON.stringify(clean));
+  const list=document.getElementById('ai-model-suggestions');if(list)list.replaceChildren(...clean.map(value=>{const option=document.createElement('option');option.value=value;return option;}));
+  const model=document.getElementById('ai-model'),saved=localStorage.getItem(`ai_model_${provider}`)||model?.value||'';
+  if(model&&clean.length&&!clean.includes(saved))model.value=clean[0];
+  const status=document.getElementById('ai-model-load-status');if(status)status.textContent=clean.length?`Đã tải ${clean.length} model từ ${providerLabel(provider)}.`:'Chưa có danh sách model. Hãy kiểm tra key.';
+}
 function migrateLegacy(provider) { if(legacyMigrated) return; legacyMigrated=true; if(!isCloud(provider)) return; let keys=[]; try{const p=JSON.parse(localStorage.getItem(`ai_api_keys_${provider}`)||'[]'); keys=Array.isArray(p)?p:[];}catch{} const legacy=(localStorage.getItem('ai_api_key')||'').trim(); if(!keys.length&&legacy) localStorage.setItem(`ai_api_keys_${provider}`,JSON.stringify([{key:legacy}])); if(legacy) localStorage.removeItem('ai_api_key'); }
 function isCloud(p){return p==='gemini'||p==='deepseek';}
 
 function saveSettings() {
   const p=document.getElementById('ai-provider')?.value||'gemini'; localStorage.setItem('ai_provider',p); localStorage.setItem(`ai_model_${p}`,document.getElementById('ai-model')?.value??'');
-  if(isCloud(p)){const key=document.getElementById('ai-api-key')?.value.trim()||''; localStorage.setItem(`ai_api_keys_${p}`,JSON.stringify(key?[{key}]:[]));}
+  if(isCloud(p))addKeysFromInput(p);
   if(p==='ollama') localStorage.setItem('ai_endpoint',document.getElementById('ai-endpoint')?.value.trim()||'');
   localStorage.setItem('ai_prompt',document.getElementById('ai-prompt')?.value??'');
   const enabled=document.getElementById('tts-enabled')?.checked??true, voice=document.getElementById('tts-voice')?.value||'none'; if(enabled&&voice!=='none') lastVoice=voice; localStorage.setItem('tts_voice',enabled?voice:'none');
@@ -171,7 +267,39 @@ function bindProvider() {
   const select=document.getElementById('ai-provider'); document.querySelectorAll('.provider-btn[data-provider]').forEach(b=>b.addEventListener('click',()=>{if(!select)return;select.value=b.dataset.provider;loadProvider(select.value);updateProviderUi(select.value);syncOverview();}));
 }
 function updateProviderUi(provider){document.querySelectorAll('.provider-btn[data-provider]').forEach(b=>b.classList.toggle('active',b.dataset.provider===provider)); const key=document.getElementById('ai-api-key-group'), endpoint=document.getElementById('ai-endpoint-group'); if(key)key.style.display=provider==='ollama'?'none':''; if(endpoint)endpoint.style.display=provider==='ollama'?'':'none';}
-function bindAi(){document.getElementById('btn-toggle-api-key')?.addEventListener('click',()=>{const i=document.getElementById('ai-api-key');if(i)i.type=i.type==='password'?'text':'password';}); const check=async()=>{const s=document.getElementById('settings-ai-status');if(s)s.textContent='Đang kiểm tra backend...';try{await window.api.health();if(s)s.textContent='Backend sẵn sàng. Cấu hình có thể được sử dụng.';}catch{if(s)s.textContent='Backend chưa kết nối.';}}; document.getElementById('btn-check-ai')?.addEventListener('click',check);document.getElementById('btn-check-ai-key')?.addEventListener('click',check);document.getElementById('btn-save-ai')?.addEventListener('click',()=>{saveSettings();addLog('Đã lưu cài đặt AI/TTS.','success');toast('Đã lưu cài đặt','success');});document.getElementById('settings-btn-manage-prompts')?.addEventListener('click',()=>document.getElementById('prompt-modal')?.classList.remove('hidden'));}
+function bindAi(){
+  document.getElementById('btn-toggle-api-key')?.addEventListener('click',()=>{const i=document.getElementById('ai-api-key');if(i)i.type=i.type==='password'?'text':'password';});
+  document.getElementById('btn-add-ai-key')?.addEventListener('click',()=>{const provider=document.getElementById('ai-provider')?.value||'gemini',added=addKeysFromInput(provider);toast(added?`Đã thêm ${added} key ${providerLabel(provider)}.`:'Không có key mới để thêm.',added?'success':'info');});
+  document.getElementById('ai-key-list')?.addEventListener('click',event=>{const button=event.target.closest('[data-key-index]');if(!button)return;const provider=document.getElementById('ai-provider')?.value||'gemini',records=readProviderKeys(provider),index=Number(button.dataset.keyIndex);if(Number.isInteger(index)&&index>=0&&index<records.length){records.splice(index,1);writeProviderKeys(provider,records);renderProviderKeys(provider);syncOverview();}});
+  const check=async()=>{
+    const provider=document.getElementById('ai-provider')?.value||'gemini',s=document.getElementById('settings-ai-status'),button=document.getElementById('btn-check-ai');
+    if(button){button.disabled=true;button.textContent='Đang kiểm tra...';}
+    try{
+      if(provider==='ollama'){
+        const result=await window.electronAPI?.listOllamaModels(document.getElementById('ai-endpoint')?.value||'http://localhost:11434/api/chat');
+        if(!result?.ok)throw new Error(result?.error||'Không kết nối được Ollama.');
+        if(s)s.textContent=`Ollama sẵn sàng · ${result.models?.length||0} model local.`;
+        return;
+      }
+      addKeysFromInput(provider);
+      const records=readProviderKeys(provider);
+      if(!records.length)throw new Error(`Chưa có API key ${providerLabel(provider)}.`);
+      if(!window.electronAPI?.validateProviderKeys)throw new Error('Bridge kiểm tra API key chưa sẵn sàng. Hãy khởi động lại app.');
+      if(s)s.textContent=`Đang kiểm tra ${records.length} key ${providerLabel(provider)}...`;
+      const result=await window.electronAPI.validateProviderKeys(provider,records.map(item=>item.key));
+      const checkedAt=new Date().toISOString();
+      result?.results?.forEach(item=>{if(records[item.index]){records[item.index].status=item.ok?'valid':'invalid';records[item.index].lastCheckedAt=checkedAt;}});
+      writeProviderKeys(provider,records);renderProviderKeys(provider);populateCloudModels(provider,result?.models||[]);
+      if(!result?.ok)throw new Error(result?.error||`Không có key ${providerLabel(provider)} hợp lệ.`);
+      if(s)s.textContent=`${providerLabel(provider)}: ${result.validCount} key hợp lệ, ${result.invalidCount} key lỗi · ${result.models?.length||0} model.`;
+      toast('Kiểm tra key và tải model thành công.','success');
+    }catch(error){if(s)s.textContent=error?.message||'Không kiểm tra được cấu hình AI.';toast(error?.message||'Kiểm tra AI thất bại.','error');}
+    finally{if(button){button.disabled=false;button.textContent='⌁ Kiểm tra key & tải model';}}
+  };
+  document.getElementById('btn-check-ai')?.addEventListener('click',check);
+  document.getElementById('btn-save-ai')?.addEventListener('click',()=>{saveSettings();addLog('Đã lưu cài đặt AI/TTS.','success');toast('Đã lưu cài đặt','success');});
+  document.getElementById('settings-btn-manage-prompts')?.addEventListener('click',()=>document.getElementById('prompt-modal')?.classList.remove('hidden'));
+}
 
 function bindTts(){const vol=document.getElementById('tts-bg-volume');vol?.addEventListener('input',()=>setText('vol-label',vol.value+'%'));['tts-language','tts-bg-volume','tts-remove-vocal'].forEach(id=>document.getElementById(id)?.addEventListener('change',saveSettings)); const enabled=document.getElementById('tts-enabled'), voice=document.getElementById('tts-voice');enabled?.addEventListener('change',()=>{if(!voice)return;if(enabled.checked&&voice.value==='none'){const wanted=lastVoice!=='none'?lastVoice:'default';if([...voice.options].some(o=>o.value===wanted))voice.value=wanted;}else if(!enabled.checked){if(voice.value!=='none')lastVoice=voice.value;voice.value='none';}saveSettings();});voice?.addEventListener('change',()=>{if(voice.value!=='none'){lastVoice=voice.value;if(enabled)enabled.checked=true;}saveSettings();});document.getElementById('btn-test-tts')?.addEventListener('click',testTts);}
 
@@ -180,8 +308,104 @@ function saveVoices(v){localStorage.setItem('tts_voices',JSON.stringify(v));}
 export function renderSavedVoices(){const voices=getSavedVoices(),list=document.getElementById('saved-voices-list');if(!list)return;if(!voices.length)list.innerHTML='<div class="voice-empty">Chưa có giọng clone nào.</div>';else list.innerHTML=voices.map((v,i)=>`<div class="approved-voice-row"><div class="approved-voice-name"><span class="voice-person-icon">♙</span><span>${escapeHtml(v.name||`Giọng clone ${i+1}`)}</span></div><span class="approved-voice-lang">${escapeHtml(v.language||'Tiếng Việt')}</span><button class="voice-row-action" type="button" data-delete-voice="${i}" title="Xóa giọng">⋮</button></div>`).join('');list.querySelectorAll('[data-delete-voice]').forEach(b=>b.addEventListener('click',()=>{const a=getSavedVoices();a.splice(Number(b.dataset.deleteVoice),1);saveVoices(a);renderSavedVoices();toast('Đã xóa giọng clone','info');}));updateVoiceDropdown(voices);}
 export function updateVoiceDropdown(voices){[document.getElementById('tts-voice'),document.getElementById('job-tts-voice'),document.getElementById('step1-tts-voice')].filter(Boolean).forEach(s=>{[...s.options].filter(o=>o.value.startsWith('clone:')).forEach(o=>o.remove());voices.forEach((v,i)=>{const o=document.createElement('option');o.value=`clone:${i}`;o.textContent=`Giọng clone - ${v.name||i+1}`;s.appendChild(o);});const saved=localStorage.getItem('tts_voice')||'none';if([...s.options].some(o=>o.value===saved))s.value=saved;});syncOverview();}
 
-function bindVoiceClone(){const editor=document.getElementById('clone-editor'),upload=document.getElementById('btn-upload-ref-audio'),clone=document.getElementById('btn-clone-voice'),name=document.getElementById('clone-voice-name'),refName=document.getElementById('ref-audio-name'),preview=document.getElementById('ref-audio-preview');document.getElementById('settings-add-voice')?.addEventListener('click',()=>editor?.classList.toggle('hidden'));upload?.addEventListener('click',async()=>{if(!window.electronAPI?.openFile){toast('Chức năng chọn file chỉ khả dụng trong app','warn');return;}const r=await window.electronAPI.openFile([{name:'Audio',extensions:['wav','mp3','flac','ogg','m4a','aac','wma','opus']}]);const p=r&&!r.canceled&&r.filePaths?.[0];if(!p)return;refAudioPath=p;if(refName)refName.textContent=p.split(/[\\/]/).pop();if(preview){preview.src='file:///'+p.replace(/\\/g,'/');preview.style.display='block';}if(clone)clone.disabled=false;});clone?.addEventListener('click',async()=>{const n=name?.value.trim();if(!n){toast('Nhập tên giọng','warn');return;}if(!refAudioPath){toast('Chọn audio mẫu trước','warn');return;}clone.disabled=true;clone.textContent='Đang tạo giọng...';try{const lang=document.getElementById('tts-language')?.value||'vi';const r=await window.api.generateTTS('Xin chào, đây là mẫu giọng được clone.',refAudioPath,lang);if(r?.status!=='ok'||!r.audio_path)throw new Error(r?.error||'Không tạo được mẫu giọng');const a=getSavedVoices();a.push({name:n,language:langLabel(lang),audioPath:refAudioPath,audioFile:refAudioPath.split(/[\\/]/).pop(),samplePath:r.audio_path,date:new Date().toLocaleDateString('vi-VN')});saveVoices(a);renderSavedVoices();name.value='';refAudioPath=null;if(refName)refName.textContent='Chưa chọn file';if(preview)preview.style.display='none';editor?.classList.add('hidden');toast('Đã thêm giọng clone','success');}catch(e){toast(e.message||'Không thể clone giọng','error');}finally{clone.disabled=!refAudioPath;clone.textContent='Thêm giọng clone';}});}
-async function testTts(){const b=document.getElementById('btn-test-tts'),audio=document.getElementById('tts-test-audio'),voice=document.getElementById('tts-voice')?.value||'default';let ref=null;if(voice.startsWith('clone:'))ref=getSavedVoices()[Number(voice.split(':')[1])]?.audioPath||null;b.disabled=true;b.textContent='Đang tạo...';try{const r=await window.api.generateTTS(document.getElementById('tts-test-text')?.value.trim()||'Xin chào',ref,document.getElementById('tts-language')?.value||'vi',voice);if(r?.status==='ok'&&r.audio_path&&audio){audio.src='file:///'+r.audio_path.replace(/\\/g,'/');audio.style.display='block';await audio.play();}else throw new Error(r?.error||'Không tạo được audio thử');}catch(e){toast(e.message||'Không thể phát thử giọng','error');}finally{b.disabled=false;b.textContent='▷ Nghe thử';}}
+function bindVoiceClone() {
+  const editor = document.getElementById('clone-editor');
+  const upload = document.getElementById('btn-upload-ref-audio');
+  const clone = document.getElementById('btn-clone-voice');
+  const name = document.getElementById('clone-voice-name');
+  const refName = document.getElementById('ref-audio-name');
+  const preview = document.getElementById('ref-audio-preview');
+  const cleanStatus = document.getElementById('settings-clone-clean-status');
+  const transcriptInput = document.getElementById('settings-clone-transcript');
+
+  document.getElementById('settings-add-voice')?.addEventListener('click', () => editor?.classList.toggle('hidden'));
+  upload?.addEventListener('click', async () => {
+    if (!window.electronAPI?.openFile || !window.electronAPI?.preprocessCloneAudio) {
+      toast('Bộ lọc voice clone chỉ khả dụng trong app desktop', 'warn');
+      return;
+    }
+    const result = await window.electronAPI.openFile([{ name: 'Audio', extensions: ['wav', 'mp3', 'flac', 'ogg', 'm4a', 'aac', 'wma', 'opus'] }]);
+    const selectedPath = result && !result.canceled && result.filePaths?.[0];
+    if (!selectedPath) return;
+    originalRefAudioPath = selectedPath;
+    refAudioPath = null;
+    referenceTranscript = null;
+    referenceSelection = null;
+    if (transcriptInput) transcriptInput.value = '';
+    if (refName) refName.textContent = selectedPath.split(/[\\/]/).pop();
+    if (clone) clone.disabled = true;
+    if (upload) { upload.disabled = true; upload.textContent = 'Đang lọc…'; }
+    if (cleanStatus) { cleanStatus.className = 'settings-clone-clean-status working'; cleanStatus.textContent = 'Đang lọc tạp âm và chuẩn hóa audio…'; }
+    try {
+      const cleaned = await window.electronAPI.preprocessCloneAudio(selectedPath, 'balanced');
+      if (!cleaned?.ok || !cleaned.output_path) throw new Error(cleaned?.error || 'Không thể làm sạch audio');
+      refAudioPath = cleaned.output_path;
+      if (preview) {
+        preview.src = `file:///${cleaned.output_path.replace(/\\/g, '/')}`;
+        preview.style.display = 'block';
+      }
+      if (cleanStatus) { cleanStatus.className = 'settings-clone-clean-status working'; cleanStatus.textContent = 'Audio đã sạch. Đang nhận dạng transcript tham chiếu…'; }
+      const transcriptResult = await window.api.transcribeVoiceReference(cleaned.output_path, document.getElementById('tts-language')?.value || 'vi');
+      if (transcriptResult?.status !== 'ok' || !transcriptResult.transcript?.trim()) throw new Error(transcriptResult?.error || 'Không bóc được transcript audio mẫu');
+      if (transcriptResult.audio_path) {
+        refAudioPath = transcriptResult.audio_path;
+        if (preview) preview.src = `file:///${transcriptResult.audio_path.replace(/\\/g, '/')}`;
+      }
+      referenceTranscript = transcriptResult.transcript.trim();
+      referenceSelection = transcriptResult.selected_trimmed ? { start: transcriptResult.selected_start, end: transcriptResult.selected_end, score: transcriptResult.selected_score } : null;
+      if (transcriptInput) transcriptInput.value = referenceTranscript;
+      const duration = Number(cleaned.output?.duration_seconds || 0).toFixed(1);
+      if (cleanStatus) {
+        cleanStatus.className = `settings-clone-clean-status ${cleaned.warning ? 'warn' : 'success'}`;
+        const breathInfo = Number(transcriptResult.breath_intervals || 0) > 0 ? ` · giảm hơi thở ${transcriptResult.breath_reduction_db || 14} dB (${transcriptResult.breath_intervals} khoảng)` : '';
+        const selectionInfo = transcriptResult.selected_trimmed ? ` · chọn đoạn tốt nhất ${Number(transcriptResult.selected_start).toFixed(1)}–${Number(transcriptResult.selected_end).toFixed(1)}s` : '';
+        cleanStatus.textContent = `Đã làm sạch, giảm hơi thở và xác nhận transcript · WAV mono 24 kHz · ${duration}s${selectionInfo}${breathInfo}${cleaned.warning ? ` · ${cleaned.warning}` : ''}`;
+      }
+      if (clone) clone.disabled = false;
+    } catch (error) {
+      if (cleanStatus) { cleanStatus.className = 'settings-clone-clean-status error'; cleanStatus.textContent = error?.message || 'Không thể làm sạch audio'; }
+      toast(error?.message || 'Không thể làm sạch audio', 'error');
+    } finally {
+      if (upload) { upload.disabled = false; upload.textContent = 'Chọn audio'; }
+    }
+  });
+
+  clone?.addEventListener('click', async () => {
+    const voiceName = name?.value.trim();
+    referenceTranscript = transcriptInput?.value.trim() || referenceTranscript;
+    if (!voiceName) { toast('Nhập tên giọng', 'warn'); return; }
+    if (!refAudioPath) { toast('Chọn và làm sạch audio mẫu trước', 'warn'); return; }
+    if (!referenceTranscript) { toast('Transcript audio tham chiếu không được để trống', 'warn'); transcriptInput?.focus(); return; }
+    clone.disabled = true;
+    clone.textContent = 'Đang tạo giọng...';
+    try {
+      const lang = document.getElementById('tts-language')?.value || 'vi';
+      const result = await window.api.generateTTS('Xin chào, đây là mẫu giọng được clone.', refAudioPath, lang, null, referenceTranscript);
+      if (result?.status !== 'ok' || !result.audio_path) throw new Error(result?.error || 'Không tạo được mẫu giọng');
+      const voices = getSavedVoices();
+      voices.push({ name: voiceName, language: langLabel(lang), audioPath: refAudioPath, audioFile: refAudioPath.split(/[\\/]/).pop(), sourceAudioPath: originalRefAudioPath, cleanProfile: 'balanced', referenceTranscript, referenceTranscriptSource: 'user-confirmed', breathSuppressed: true, bestSegmentSelected: true, breathReductionDb: 14, referenceStart: referenceSelection?.start ?? null, referenceEnd: referenceSelection?.end ?? null, referenceQualityScore: referenceSelection?.score ?? null, samplePath: result.audio_path, date: new Date().toLocaleDateString('vi-VN') });
+      saveVoices(voices);
+      renderSavedVoices();
+      name.value = '';
+      refAudioPath = null;
+      originalRefAudioPath = null;
+      referenceTranscript = null;
+      referenceSelection = null;
+      if (refName) refName.textContent = 'Chưa chọn file';
+      if (preview) { preview.removeAttribute('src'); preview.style.display = 'none'; }
+      if (transcriptInput) transcriptInput.value = '';
+      if (cleanStatus) { cleanStatus.className = 'settings-clone-clean-status'; cleanStatus.textContent = 'App sẽ tự lọc ồn, cắt khoảng lặng và chuẩn hóa WAV mono 24 kHz.'; }
+      editor?.classList.add('hidden');
+      toast('Đã thêm giọng clone từ audio đã làm sạch', 'success');
+    } catch (error) {
+      toast(error.message || 'Không thể clone giọng', 'error');
+    } finally {
+      clone.disabled = !refAudioPath;
+      clone.textContent = 'Thêm giọng clone';
+    }
+  });
+}
+async function testTts(){const b=document.getElementById('btn-test-tts'),audio=document.getElementById('tts-test-audio'),voice=document.getElementById('tts-voice')?.value||'default';let ref=null,refText=null;if(voice.startsWith('clone:')){const saved=getSavedVoices()[Number(voice.split(':')[1])];ref=saved?.audioPath||null;refText=saved?.referenceTranscriptSource?saved?.referenceTranscript||null:null;}b.disabled=true;b.textContent='Đang tạo...';try{const r=await window.api.generateTTS(document.getElementById('tts-test-text')?.value.trim()||'Xin chào',ref,document.getElementById('tts-language')?.value||'vi',voice,refText);if(r?.status==='ok'&&r.audio_path&&audio){audio.src='file:///'+r.audio_path.replace(/\\/g,'/');audio.style.display='block';await audio.play();}else throw new Error(r?.error||'Không tạo được audio thử');}catch(e){toast(e.message||'Không thể phát thử giọng','error');}finally{b.disabled=false;b.textContent='▷ Nghe thử';}}
 
 function bindOutputDir(){document.getElementById('btn-output-dir')?.addEventListener('click',async()=>{if(!window.electronAPI?.openDirectory)return;const r=await window.electronAPI.openDirectory();const dir=!r?.canceled&&r.filePaths?.[0];if(!dir)return;state.outputDir=dir;if(window._appState)window._appState.outputDir=dir;localStorage.setItem('output_dir',dir);syncOutputDir();syncOverview();addLog(`Thư mục đầu ra: ${dir}`,'info');});}
 function syncOutputDir(){const dir=state.outputDir||window._appState?.outputDir||localStorage.getItem('output_dir')||'';setText('output-dir-text',dir||'Mặc định (cùng thư mục video gốc)');setText('output-dir-current',dir||'Mặc định cùng thư mục video gốc');}

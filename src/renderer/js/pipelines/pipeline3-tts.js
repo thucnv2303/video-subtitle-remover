@@ -31,10 +31,14 @@ export async function triggerAutoTts(job, srtText) {
       addLog('[TTS] 🎤 Bước 1/4 — Đang tạo âm thanh lồng tiếng...', 'info');
 
       let refAudio = null;
+      let refText = null;
       if (voice.startsWith('clone:')) {
         const idx = parseInt(voice.split(':')[1]);
         const voices = JSON.parse(localStorage.getItem('tts_voices') || '[]');
-        if (voices[idx]) refAudio = voices[idx].audioPath;
+        if (voices[idx]) {
+          refAudio = voices[idx].audioPath;
+          refText = voices[idx].referenceTranscriptSource ? (voices[idx].referenceTranscript || null) : null;
+        }
       }
 
       const ttsRes = await fetch(`${api.base}/api/tts-retry`, {
@@ -44,7 +48,8 @@ export async function triggerAutoTts(job, srtText) {
           srt_content:    srtText,
           tts_voice:      voice,
           video_path:     job.filePath,
-          tts_ref_audio:  refAudio
+          tts_ref_audio:  refAudio,
+          tts_ref_text:   refText
         })
       });
       const ttsData = await ttsRes.json();
